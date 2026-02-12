@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import draggable from 'vuedraggable'
 import api from '@/utils/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
 
 // ── Wizard state ──────────────────────────────────────────────────────
 const currentStep = ref(1)
@@ -240,16 +243,17 @@ async function saveAndExport() {
   error.value = ''
 
   try {
-    // Save post to database
+    // Save post to database (strip dragId from slides before saving)
+    const cleanSlides = slides.value.map(({ dragId, ...rest }) => rest)
     const postData = {
       category: selectedCategory.value,
       country: country.value || null,
       platform: selectedPlatform.value,
       template_id: selectedTemplate.value?.id || null,
-      title: slides.value[0]?.headline || 'Neuer Post',
+      title: cleanSlides[0]?.headline || 'Neuer Post',
       status: 'draft',
       tone: tone.value,
-      slide_data: JSON.stringify(slides.value),
+      slide_data: JSON.stringify(cleanSlides),
       caption_instagram: captionInstagram.value,
       caption_tiktok: captionTiktok.value,
       hashtags_instagram: hashtagsInstagram.value,
@@ -270,6 +274,7 @@ async function saveAndExport() {
 
     exportComplete.value = true
     successMsg.value = 'Post gespeichert und exportiert!'
+    toast.success('Post erfolgreich erstellt und gespeichert!', 5000)
   } catch (e) {
     error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
   } finally {
@@ -447,8 +452,27 @@ function getTemplateGradient(template) {
   }
 }
 
+// Ensure each slide has a unique dragId for vuedraggable item-key
+let dragIdCounter = 0
+function ensureDragIds() {
+  for (const slide of slides.value) {
+    if (!slide.dragId) {
+      slide.dragId = `slide-${++dragIdCounter}`
+    }
+  }
+}
+
+function onSlideReorder() {
+  // After drag-and-drop reorder, reset preview to first slide
+  currentPreviewSlide.value = 0
+  ensureDragIds()
+}
+
 // Watch for slide changes
-watch(slides, () => { currentPreviewSlide.value = 0 })
+watch(slides, () => {
+  currentPreviewSlide.value = 0
+  ensureDragIds()
+})
 </script>
 
 <template>
@@ -836,21 +860,35 @@ watch(slides, () => { currentPreviewSlide.value = 0 })
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Edit panel -->
         <div class="space-y-4">
-          <!-- Slide tabs -->
-          <div v-if="slides.length > 1" class="flex gap-1 mb-3 flex-wrap">
-            <button
-              v-for="(s, idx) in slides"
-              :key="idx"
-              @click="currentPreviewSlide = idx"
-              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-              :class="currentPreviewSlide === idx
-                ? 'bg-[#4C8BC2] text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'"
+          <!-- Slide tabs with drag-and-drop reordering -->
+          <div v-if="slides.length > 1" class="mb-3">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400">↕ Slides per Drag & Drop neu anordnen</span>
+            </div>
+            <draggable
+              v-model="slides"
+              item-key="dragId"
+              handle=".drag-handle"
+              animation="200"
+              ghost-class="slide-ghost"
+              class="flex gap-1 flex-wrap"
+              @end="onSlideReorder"
             >
-              Slide {{ idx + 1 }}
-              <span v-if="idx === 0" class="font-normal">(Cover)</span>
-              <span v-if="idx === slides.length - 1 && idx > 0" class="font-normal">(CTA)</span>
-            </button>
+              <template #item="{ element, index }">
+                <button
+                  @click="currentPreviewSlide = index"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
+                  :class="currentPreviewSlide === index
+                    ? 'bg-[#4C8BC2] text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'"
+                >
+                  <span class="opacity-50">⠿</span>
+                  Slide {{ index + 1 }}
+                  <span v-if="index === 0" class="font-normal">(Cover)</span>
+                  <span v-if="index === slides.length - 1 && index > 0" class="font-normal">(CTA)</span>
+                </button>
+              </template>
+            </draggable>
           </div>
 
           <!-- Current slide edit -->
@@ -1144,3 +1182,11 @@ watch(slides, () => { currentPreviewSlide.value = 0 })
     </div>
   </div>
 </template>
+
+<style scoped>
+.slide-ghost {
+  opacity: 0.4;
+  background: #4C8BC2 !important;
+  border-radius: 0.5rem;
+}
+</style>
