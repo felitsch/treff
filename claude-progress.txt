@@ -1,5 +1,51 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #19: User can edit a custom template
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full template editing functionality for custom (non-default) templates
+- Added edit button (pencil icon) on custom template cards, visible on hover with smooth transitions
+- Editor modal now has two modes: preview mode (read-only, for all templates) and edit mode (for custom templates)
+- Edit mode features:
+  - "Template bearbeiten" header with "Bearbeiten" badge
+  - Template name input field at top of controls panel
+  - "Speichern" (Save) button in footer that calls PUT /api/templates/{id}
+  - "Abbrechen" (Cancel) button replaces "Schliessen" (Close) in edit mode
+  - Success message: "Template erfolgreich gespeichert!" with auto-dismiss after 3s
+  - Error handling with user-friendly German error messages
+  - Save sends updated name, colors, and fonts to backend API
+- Template list updates in-place after successful save (no page refresh needed)
+- Default templates are protected: edit button only appears on custom templates (is_default=false)
+- Backend PUT /api/templates/{id} endpoint was already implemented with proper validation
+
+### Files modified:
+- frontend/src/views/TemplatesView.vue - Added edit mode state, save function, edit button, name input, save/cancel buttons
+
+### Verification steps completed:
+1. Created custom template "MY_CUSTOM_TEMPLATE_19" (category: tipps_tricks, format: feed_square)
+2. Clicked edit button on custom template - editor opened in edit mode with "Bearbeiten" badge
+3. Changed template name to "EDITED_TEMPLATE" in the name input field
+4. Clicked "Speichern" - success message appeared, template list updated immediately
+5. Verified "EDITED_TEMPLATE" appears in template list after closing editor
+6. Verified changes persisted in database after full server restart + fresh login
+
+### Mock data grep results: All checks clean (zero matches in frontend/src and backend/app)
+### Server restart persistence: PASS (template name "EDITED_TEMPLATE" still shown after backend restart)
+### Console errors: 0 errors
+### Network: All requests successful, no 500s
+
+### Screenshots:
+- feature19-edit-modal-open.png - Editor modal with template name field and live preview
+- feature19-name-changed.png - Template name changed to "EDITED_TEMPLATE"
+- feature19-save-success.png - Success message after saving
+- feature19-edited-in-list.png - Updated name visible in template grid
+- feature19-persistence-after-restart.png - Full page showing "EDITED_TEMPLATE" persists after restart
+
+### Current state:
+- Feature #19 marked as PASSING
+
 ## Session - Feature #17: Templates can be filtered by platform format
 **Date:** 2026-02-12
 **Status:** PASSING
