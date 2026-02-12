@@ -1,5 +1,43 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #37: Post workflow validates required fields before next step
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added step validation messages to the Create Post wizard workflow
+- When user clicks "Weiter" without completing a required step, an amber warning banner appears
+- Validation messages for each step:
+  - Step 1: "Bitte waehle eine Kategorie aus, bevor du fortfaehrst."
+  - Step 2: "Bitte waehle ein Template aus, bevor du fortfaehrst."
+  - Step 3: "Bitte waehle eine Plattform aus, bevor du fortfaehrst."
+  - Step 5: "Bitte generiere zuerst den Inhalt, bevor du fortfaehrst."
+  - Steps 6-7: "Es sind keine Slides vorhanden. Bitte generiere zuerst Inhalte."
+- Messages auto-clear when user makes a selection (via watcher on reactive refs)
+- Messages clear on step navigation (prevStep, goToStep) and resetWorkflow
+- Button no longer uses disabled attribute; instead shows visual grey state and triggers validation on click
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added validationMessage ref, stepValidationMessages map, watcher, template UI
+
+### Verification steps completed:
+1. Start Create Post workflow - PASS (navigated to /create-post, step 1 shown)
+2. Try to proceed to step 2 without selecting a category - PASS (clicked Weiter, amber validation message appeared: "Bitte waehle eine Kategorie aus...")
+3. Verify error/validation message appears - PASS (alert role element with warning icon and message text)
+4. Select a category and proceed - PASS (selected Laender-Spotlight, message cleared, proceeded to step 2)
+5. Try to proceed without selecting a template - PASS (clicked Weiter on step 2, amber message: "Bitte waehle ein Template aus...")
+6. Verify validation prevents advancing - PASS (still on step 2, message visible)
+
+### Additional verification:
+- Selecting a template clears the validation message and enables proceeding
+- Zero JavaScript console errors
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Screenshots: feature37-step1-validation-no-category.png, feature37-step2-validation-no-template.png
+
+### Current state:
+- Feature #37 marked as PASSING
+- 52/163 features passing (31.9%)
+
 ## Session - Feature #35: User can duplicate a post
 **Date:** 2026-02-12
 **Status:** PASSING
