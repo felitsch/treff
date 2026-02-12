@@ -540,12 +540,12 @@ onMounted(() => {
           <!-- Actions -->
           <div class="flex items-center gap-1 flex-shrink-0">
             <button
-              v-if="post.status !== 'scheduled' && post.status !== 'posted'"
+              v-if="post.status !== 'posted'"
               @click="openScheduleDialog(post)"
               class="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
-              title="Planen"
+              :title="post.status === 'scheduled' || post.status === 'reminded' ? 'Umplanen' : 'Planen'"
             >
-              📅
+              {{ post.status === 'scheduled' || post.status === 'reminded' ? '🔄' : '📅' }}
             </button>
             <button
               v-if="post.status === 'scheduled' || post.status === 'reminded' || post.status === 'exported'"
@@ -630,7 +630,7 @@ onMounted(() => {
                 <span class="text-xl">📅</span>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Post planen</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ postToSchedule?.status === 'scheduled' || postToSchedule?.status === 'reminded' ? 'Post umplanen' : 'Post planen' }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                   "{{ postToSchedule?.title || 'Unbenannter Post' }}"
                 </p>
@@ -679,7 +679,7 @@ onMounted(() => {
                 :disabled="scheduling || !scheduleDate || !scheduleTime"
                 class="px-4 py-2 bg-[#4C8BC2] text-white rounded-lg hover:bg-[#3a7ab1] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ scheduling ? 'Wird geplant...' : 'Post planen' }}
+                {{ scheduling ? 'Wird geplant...' : (postToSchedule?.status === 'scheduled' || postToSchedule?.status === 'reminded' ? 'Umplanen' : 'Post planen') }}
               </button>
             </div>
           </div>
