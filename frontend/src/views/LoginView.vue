@@ -43,7 +43,7 @@ const handleLogin = async () => {
             v-model="email"
             type="email"
             required
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue/20 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue focus:ring-offset-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             placeholder="email@treff.de"
             aria-label="E-Mail Adresse"
           />
@@ -58,7 +58,7 @@ const handleLogin = async () => {
             v-model="password"
             type="password"
             required
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue/20 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue focus:ring-offset-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             placeholder="Mindestens 8 Zeichen"
             aria-label="Passwort"
           />
@@ -84,7 +84,7 @@ const handleLogin = async () => {
 
       <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         Noch kein Konto?
-        <router-link to="/register" class="text-treff-blue hover:underline">
+        <router-link to="/register" class="text-treff-blue hover:underline focus-ring rounded">
           Registrieren
         </router-link>
       </p>

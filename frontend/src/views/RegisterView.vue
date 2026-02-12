@@ -90,7 +90,7 @@ const handleRegister = async () => {
             id="displayName"
             v-model="displayName"
             type="text"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue/20 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue focus:ring-offset-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             placeholder="Dein Name"
             aria-label="Anzeigename"
           />
@@ -106,10 +106,10 @@ const handleRegister = async () => {
             type="email"
             required
             :class="[
-              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white',
+              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:bg-gray-800 dark:text-white',
               submitted && fieldErrors.email
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500'
-                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue/20 dark:border-gray-600'
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue dark:border-gray-600'
             ]"
             placeholder="email@treff.de"
             aria-label="E-Mail Adresse"
@@ -130,10 +130,10 @@ const handleRegister = async () => {
             required
             minlength="8"
             :class="[
-              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white',
+              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:bg-gray-800 dark:text-white',
               submitted && fieldErrors.password
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500'
-                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue/20 dark:border-gray-600'
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue dark:border-gray-600'
             ]"
             placeholder="Mindestens 8 Zeichen"
             aria-label="Passwort"
@@ -163,7 +163,7 @@ const handleRegister = async () => {
 
       <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         Bereits ein Konto?
-        <router-link to="/login" class="text-treff-blue hover:underline">
+        <router-link to="/login" class="text-treff-blue hover:underline focus-ring rounded">
           Anmelden
         </router-link>
       </p>
