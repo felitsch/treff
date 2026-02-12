@@ -1,5 +1,30 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #69: Queue view shows upcoming scheduled posts chronologically
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added "Warteschlange" (Queue) view mode to CalendarView
+- Created backend GET /api/calendar/queue endpoint returning upcoming scheduled posts sorted by date/time ascending
+- Queue view shows numbered chronological list with date, time, title, category, platform, country, status
+- Integrated with existing platform filter
+- Hidden month/week navigation in queue mode
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added /queue endpoint
+- frontend/src/views/CalendarView.vue - Added queue view mode, fetch function, queue list template
+
+### Verification:
+- 3 posts scheduled at different dates (Feb 13, 15, 20) displayed in correct order
+- Position 1: earliest (Feb 13), Position 2: middle (Feb 15), Position 3: latest (Feb 20)
+- Zero JS errors, zero mock data patterns, data persists after server restart
+- Screenshots: feature69-step1-calendar-month-view.png, feature69-step2-queue-view-chronological.png, feature69-step3-queue-persistence-after-restart.png
+
+### Current state:
+- Feature #69 marked as PASSING
+- 77/170 features passing (45.3%)
+
 ## Session - Feature #67: Weekly posting goal indicator shows progress
 **Date:** 2026-02-12
 **Status:** PASSING
