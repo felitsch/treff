@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #68: Post scheduling assigns date and time correctly
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added dedicated PUT /api/posts/{id}/schedule endpoint to backend
+  - Accepts scheduled_date (YYYY-MM-DD) and scheduled_time (HH:MM)
+  - Validates both date and time format
+  - Automatically sets post status to "scheduled"
+  - Returns updated post data
+- Enhanced PUT /api/posts/{id} (update) to auto-set status to "scheduled"
+  when both scheduled_date and scheduled_time are provided and status is "draft"
+- Added scheduling modal UI to HistoryView.vue:
+  - 📅 schedule button on each post card
+  - Modal dialog with date picker and time picker inputs
+  - Shows post title, error handling, loading state
+  - Button disabled until both date and time are filled
+  - On success, post card updates in-place showing new status and schedule info
+- Added scheduled date/time display on post cards (📅 date, 🕐 time)
+
+### Files modified:
+- backend/app/api/routes/posts.py - Added schedule endpoint, date parsing, auto-status logic
+- frontend/src/views/HistoryView.vue - Added schedule dialog, schedule button, date/time display
+
+### Verification steps completed:
+1. Create a draft post - PASS (via API, post id=15, status=draft)
+2. Assign scheduled date: 2025-03-15 - PASS (via UI date picker)
+3. Assign scheduled time: 14:00 - PASS (via UI time picker)
+4. Save and verify status changes to scheduled - PASS (status changed from "Entwurf" to "Geplant")
+5. Verify date and time stored correctly in database - PASS (sqlite3 query confirms: 2025-03-15 00:00:00, 14:00)
+6. Server restart persistence test - PASS (data persisted after full server restart)
+7. Mock data grep checks - PASS (zero matches in frontend/src and backend/app)
+8. Console errors - ZERO errors
+9. Network requests - all clean (200 OK)
+
+### Current state:
+- Feature #68 (Post scheduling assigns date and time correctly): PASSING
+- 24/163 features complete (~14.7%)
+
 ## Session - Feature #82: Post history search finds posts by text content
 **Date:** 2026-02-12
 **Status:** PASSING
