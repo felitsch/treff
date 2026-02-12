@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #126: Posts sorted by date display in correct chronological order
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added sort_by and sort_direction query parameters to backend GET /api/posts endpoint
+- Added sort UI controls to HistoryView.vue (sort field dropdown + direction toggle button)
+- Backend supports sorting by: created_at, updated_at, title, scheduled_date
+- Backend supports asc/desc direction with regex-validated query params
+- Frontend passes sort params to API on every fetch
+
+### Files modified:
+- backend/app/api/routes/posts.py - Added sort_by/sort_direction params with dynamic sorting
+- frontend/src/views/HistoryView.vue - Added sortBy, sortDirection refs, sort controls UI, API param passing
+
+### Verification steps completed:
+1. Created 3 test posts with dates Jan 1, Mar 15, Feb 10 - PASS
+2. Navigated to History page sorted by date (default: desc) - PASS
+   - Order: SORT_TEST_MAR_15 (15.03.2026) -> SORT_TEST_FEB_10 (10.02.2026) -> SORT_TEST_JAN_01 (01.01.2026)
+3. Verified posts appear in correct chronological order (newest first) - PASS
+4. Toggled sort direction to ascending - PASS
+   - Order reversed: SORT_TEST_JAN_01 (01.01.2026) -> SORT_TEST_FEB_10 (10.02.2026) -> SORT_TEST_MAR_15 (15.03.2026)
+5. Verified reverse order works (oldest first) - PASS
+6. Toggled back to descending - PASS (original order restored)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] API sort params validated via regex patterns (only allowed values accepted)
+- [x] Backend API tested directly: desc and asc both return correct order
+- [x] Screenshots captured:
+  - feature126-step1-default-sort-desc.png (default descending: newest first)
+  - feature126-step2-sort-asc.png (ascending: oldest first)
+  - feature126-step3-sort-desc-again.png (toggled back to descending)
+
+### Current state:
+- Feature #126 marked as PASSING
+- 129/170 features passing (75.9%)
+
 ## Session - Feature #123: Malformed URL parameters handled gracefully
 **Date:** 2026-02-12
 **Status:** PASSING
