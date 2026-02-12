@@ -308,3 +308,39 @@
 
 ### Next steps:
 - Continue with remaining authentication features (#8, #9, #10, etc.)
+
+## Session 9 - Feature #9: User can register with email and password
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Navigated to /register page - form loads correctly with Anzeigename, E-Mail, Passwort fields
+- Registered new user: test_feature9@treff.de / TestPass123! / "Test User F9"
+- Registration returned 201 Created, user auto-logged in and redirected to /dashboard
+- "Test User F9" displayed in top-right header confirming successful auth
+- Logged out, then logged back in with same credentials - login successful (200 OK)
+- Verified user persisted in SQLite database (backend/treff.db, row id 5)
+- Password stored as bcrypt hash ($2b$12$...), not plaintext
+- All 7 mock data pattern greps returned zero matches
+- Zero console errors, zero warnings
+- All network requests clean (201/200 only, no 500s)
+
+### No code changes needed:
+- Backend auth.py register endpoint already correctly implemented
+- Frontend RegisterView.vue form and handleRegister() function working
+- Auth store register/login flow working end-to-end
+- Password validation (min 8 chars) enforced both client and server side
+
+### Verification steps completed:
+1. Navigate to registration page - PASS
+2. Enter valid email and password (min 8 chars) - PASS
+3. Submit registration form - PASS (201 Created)
+4. Verify success and user created - PASS (in DB + auto-login + dashboard)
+5. Verify user can login with those credentials - PASS (logout + re-login)
+
+### Current state:
+- Features #1-7, #9, #11 passing (infrastructure + layout + auth)
+- 9/163 features complete (5.5%)
+
+### Next steps:
+- Continue with remaining authentication features (#8, #10, etc.)
