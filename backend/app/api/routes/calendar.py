@@ -483,3 +483,195 @@ async def export_calendar_csv(
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
+
+
+# ========== SEASONAL MARKERS ==========
+# Fixed annual markers for TREFF Sprachreisen business cycle.
+# These are predefined dates that appear on the calendar every year
+# to help the social media team plan deadline-related posts.
+
+SEASONAL_MARKERS = [
+    # Bewerbungsfristen (Application Deadlines)
+    {
+        "type": "bewerbungsfrist",
+        "label": "Bewerbungsfrist USA Classic",
+        "icon": "📋",
+        "color": "red",
+        "month": 3,
+        "day": 31,
+        "description": "Bewerbungsschluss fuer USA Classic Programm (Herbstabreise)",
+    },
+    {
+        "type": "bewerbungsfrist",
+        "label": "Bewerbungsfrist Kanada",
+        "icon": "📋",
+        "color": "red",
+        "month": 4,
+        "day": 30,
+        "description": "Bewerbungsschluss fuer Kanada-Programme (Herbstabreise)",
+    },
+    {
+        "type": "bewerbungsfrist",
+        "label": "Bewerbungsfrist Australien/Neuseeland",
+        "icon": "📋",
+        "color": "red",
+        "month": 5,
+        "day": 31,
+        "description": "Bewerbungsschluss fuer Australien & Neuseeland (Januar-Abreise)",
+    },
+    {
+        "type": "bewerbungsfrist",
+        "label": "Bewerbungsfrist Irland",
+        "icon": "📋",
+        "color": "red",
+        "month": 5,
+        "day": 15,
+        "description": "Bewerbungsschluss fuer Irland-Programme (Herbstabreise)",
+    },
+    {
+        "type": "bewerbungsfrist",
+        "label": "Bewerbungsfrist USA Select",
+        "icon": "📋",
+        "color": "red",
+        "month": 4,
+        "day": 15,
+        "description": "Bewerbungsschluss fuer USA Select Programm (Herbstabreise)",
+    },
+    # Abflugzeiten (Departure Periods)
+    {
+        "type": "abflugzeit",
+        "label": "Abflug USA/Kanada/Irland",
+        "icon": "✈️",
+        "color": "blue",
+        "month": 8,
+        "day": 15,
+        "description": "Abreisezeitraum fuer USA, Kanada und Irland (Mitte August)",
+    },
+    {
+        "type": "abflugzeit",
+        "label": "Abflug Australien/Neuseeland",
+        "icon": "✈️",
+        "color": "blue",
+        "month": 1,
+        "day": 20,
+        "description": "Abreisezeitraum fuer Australien & Neuseeland (Ende Januar)",
+    },
+    # Schuljahresbeginn (School Year Start)
+    {
+        "type": "schuljahresbeginn",
+        "label": "Schulstart USA/Kanada",
+        "icon": "🏫",
+        "color": "green",
+        "month": 9,
+        "day": 1,
+        "description": "Schuljahresbeginn in den USA und Kanada",
+    },
+    {
+        "type": "schuljahresbeginn",
+        "label": "Schulstart Irland",
+        "icon": "🏫",
+        "color": "green",
+        "month": 9,
+        "day": 1,
+        "description": "Schuljahresbeginn in Irland",
+    },
+    {
+        "type": "schuljahresbeginn",
+        "label": "Schulstart Australien/Neuseeland",
+        "icon": "🏫",
+        "color": "green",
+        "month": 2,
+        "day": 1,
+        "description": "Schuljahresbeginn in Australien & Neuseeland (Term 1)",
+    },
+    # Rueckkehr-Saison (Return Season)
+    {
+        "type": "rueckkehr",
+        "label": "Rueckkehr USA/Kanada/Irland",
+        "icon": "🏠",
+        "color": "purple",
+        "month": 6,
+        "day": 15,
+        "description": "Rueckkehrzeitraum fuer USA, Kanada und Irland Austauschschueler",
+    },
+    {
+        "type": "rueckkehr",
+        "label": "Rueckkehr Australien/Neuseeland",
+        "icon": "🏠",
+        "color": "purple",
+        "month": 12,
+        "day": 10,
+        "description": "Rueckkehrzeitraum fuer Australien & Neuseeland Austauschschueler",
+    },
+    # Stipendien-Deadlines (Scholarship Deadlines)
+    {
+        "type": "stipendium",
+        "label": "Stipendien-Bewerbungsfrist",
+        "icon": "🎓",
+        "color": "amber",
+        "month": 10,
+        "day": 15,
+        "description": "Bewerbungsschluss fuer TREFF-Stipendien und Teilstipendien",
+    },
+    # Messen & Events (Fairs & Events)
+    {
+        "type": "messe",
+        "label": "JuBi Messe Herbst",
+        "icon": "🎪",
+        "color": "teal",
+        "month": 11,
+        "day": 1,
+        "description": "Jugendbildungsmesse (JuBi) - Herbsttermine fuer Highschool-Interessenten",
+    },
+    {
+        "type": "messe",
+        "label": "JuBi Messe Fruehling",
+        "icon": "🎪",
+        "color": "teal",
+        "month": 3,
+        "day": 1,
+        "description": "Jugendbildungsmesse (JuBi) - Fruehlingsstermine fuer Highschool-Interessenten",
+    },
+]
+
+
+@router.get("/seasonal-markers")
+async def get_seasonal_markers(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get seasonal markers (Bewerbungsfristen, Abflugzeiten, etc.) for a given month.
+
+    Returns a list of markers with date, label, type, icon, color, and description.
+    These are fixed annual dates relevant to TREFF's Highschool program business cycle.
+    """
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    markers = []
+    for marker in SEASONAL_MARKERS:
+        if marker["month"] == month:
+            # Validate the day is valid for this month/year
+            last_day = monthrange(year, month)[1]
+            day = min(marker["day"], last_day)
+
+            marker_date = date(year, month, day)
+            markers.append({
+                "date": marker_date.isoformat(),
+                "type": marker["type"],
+                "label": marker["label"],
+                "icon": marker["icon"],
+                "color": marker["color"],
+                "description": marker["description"],
+            })
+
+    return {
+        "markers": markers,
+        "month": month,
+        "year": year,
+        "count": len(markers),
+    }

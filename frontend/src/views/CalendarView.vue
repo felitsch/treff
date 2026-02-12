@@ -43,6 +43,10 @@ const goalStats = ref({
   monthly_goal: 12,
 })
 
+// Seasonal markers (Bewerbungsfristen, Abflugzeiten, etc.)
+const seasonalMarkers = ref([])
+const showSeasonalMarkers = ref(true)
+
 // Platform filter options
 const platformOptions = [
   { value: null, label: 'Alle', icon: '📋' },
@@ -399,6 +403,41 @@ async function fetchGaps() {
   }
 }
 
+// Fetch seasonal markers (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn, etc.)
+async function fetchSeasonalMarkers() {
+  try {
+    const res = await fetch(`/api/calendar/seasonal-markers?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    seasonalMarkers.value = data.markers || []
+  } catch (err) {
+    console.error('Seasonal markers fetch error:', err)
+    seasonalMarkers.value = []
+  }
+}
+
+// Get seasonal markers for a specific date
+function getMarkersForDate(dateStr) {
+  if (!showSeasonalMarkers.value) return []
+  return seasonalMarkers.value.filter(m => m.date === dateStr)
+}
+
+// Seasonal marker color mapping
+const markerColorClasses = {
+  red: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-700 dark:text-red-300', border: 'border-red-400', dot: 'bg-red-500', badge: 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200' },
+  blue: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-400', dot: 'bg-blue-500', badge: 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200' },
+  green: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-700 dark:text-green-300', border: 'border-green-400', dot: 'bg-green-500', badge: 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200' },
+  purple: { bg: 'bg-purple-100 dark:bg-purple-900/40', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-400', dot: 'bg-purple-500', badge: 'bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200' },
+  amber: { bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-400', dot: 'bg-amber-500', badge: 'bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200' },
+  teal: { bg: 'bg-teal-100 dark:bg-teal-900/40', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-400', dot: 'bg-teal-500', badge: 'bg-teal-200 dark:bg-teal-800 text-teal-800 dark:text-teal-200' },
+}
+
+function getMarkerColorClasses(color) {
+  return markerColorClasses[color] || markerColorClasses.red
+}
+
 // Fetch goal stats
 async function fetchStats() {
   try {
@@ -454,6 +493,7 @@ function fetchData() {
   if (viewMode.value === 'month') {
     fetchCalendar()
     fetchGaps()
+    fetchSeasonalMarkers()
   } else if (viewMode.value === 'week') {
     fetchWeek()
   } else if (viewMode.value === 'queue') {
@@ -706,6 +746,7 @@ watch([currentMonth, currentYear], () => {
   if (viewMode.value === 'month') {
     fetchCalendar()
     fetchGaps()
+    fetchSeasonalMarkers()
   }
 })
 
@@ -806,6 +847,24 @@ onMounted(() => {
           Luecken
           <span v-if="showGaps && gapCount > 0" class="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ gapCount }}
+          </span>
+        </button>
+
+        <!-- Seasonal markers toggle (only in month view) -->
+        <button
+          v-if="viewMode === 'month'"
+          @click="showSeasonalMarkers = !showSeasonalMarkers"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="showSeasonalMarkers
+            ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Saisonale Markierungen anzeigen/ausblenden (Bewerbungsfristen, Abflugzeiten, etc.)"
+          aria-label="Saisonale Markierungen anzeigen/ausblenden"
+        >
+          <span v-if="showSeasonalMarkers">📋</span><span v-else>📅</span>
+          Fristen
+          <span v-if="showSeasonalMarkers && seasonalMarkers.length > 0" class="bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
+            {{ seasonalMarkers.length }}
           </span>
         </button>
 
@@ -1056,6 +1115,24 @@ onMounted(() => {
               >
                 {{ dayObj.posts.length }}
               </span>
+            </div>
+          </div>
+
+          <!-- Seasonal markers -->
+          <div v-if="getMarkersForDate(dayObj.dateStr).length > 0" class="space-y-0.5 mb-1">
+            <div
+              v-for="(marker, mIdx) in getMarkersForDate(dayObj.dateStr)"
+              :key="'marker-' + mIdx + '-' + dayObj.dateStr"
+              class="rounded-md px-1.5 py-0.5 text-[10px] font-semibold border-l-[3px] flex items-center gap-1 seasonal-marker"
+              :class="[
+                getMarkerColorClasses(marker.color).bg,
+                getMarkerColorClasses(marker.color).text,
+                getMarkerColorClasses(marker.color).border,
+              ]"
+              :title="marker.description"
+            >
+              <span class="flex-shrink-0">{{ marker.icon }}</span>
+              <span class="truncate">{{ marker.label }}</span>
             </div>
           </div>
 
@@ -1320,6 +1397,35 @@ onMounted(() => {
             >
               <span class="w-3 h-3 rounded-full" :class="getCategoryStyle(catId).dot"></span>
               <span class="text-xs text-gray-600 dark:text-gray-400">{{ meta.icon }} {{ meta.label }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="viewMode === 'month' && showSeasonalMarkers">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Saisonale Markierungen</h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-red-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">📋 Bewerbungsfristen</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">✈️ Abflugzeiten</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-green-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">🏫 Schuljahresbeginn</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">🏠 Rueckkehr</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">🎓 Stipendien</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-teal-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">🎪 Messen</span>
             </div>
           </div>
         </div>
