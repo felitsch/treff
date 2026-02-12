@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #76: Analytics frequency line chart renders correctly
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented the posting frequency line chart on the Analytics page using Chart.js/vue-chartjs
+- Backend `/api/analytics/frequency` endpoint was already implemented (by feature #75 agent)
+- Added `<Line>` chart component from vue-chartjs with full configuration
+- Added period selector buttons (Letzte 7 Tage, Letzte 30 Tage, Letztes Quartal, Letztes Jahr)
+- Chart features: gradient fill, interactive tooltips, labeled axes, responsive layout
+
+### Files modified:
+- frontend/src/views/AnalyticsView.vue - Added Chart.js imports, frequency data state, chart computed properties, period switching, and Line chart template
+
+### Verification steps completed:
+1. Create posts spread across multiple weeks - PASS
+   - Created 12 FREQ_TEST posts via API for user freq_test@test.com
+   - Backdated posts across 4 weeks (Jan 15 to Feb 12, 2026)
+2. Navigate to Analytics page - PASS
+   - Logged in as freq_test@test.com, navigated to /analytics
+   - All analytics sections loaded: overview stats, goals, frequency chart, distributions
+3. Verify line chart displays with correct data points - PASS
+   - Week view: 3 peaks at 08.02, 10.02, 12.02 (1 post each)
+   - Month view: 12 peaks across 30 days matching all backdated posts
+   - Quarter view: 13 weekly data points, ramping from 0 to 3 posts/week
+   - Year view: 12 monthly data points, 6 posts in Jan and 6 in Feb
+4. Verify axes are labeled (dates, count) - PASS
+   - X-axis: "Datum" with date labels (dd.mm., KW dd.mm., or month names)
+   - Y-axis: "Anzahl" with integer step counts starting at 0
+5. Verify chart is interactive (hover shows details) - PASS
+   - Hovering shows dark tooltip with date (YYYY-MM-DD) and post count (e.g., "0 Posts")
+   - Points highlight on hover with enlarged radius
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence test: PASS (all 12 posts and chart data survived backend restart)
+- Period switching: all 4 views (week/month/quarter/year) load dynamically without page reload
+- Screenshots: feature76-analytics-frequency-chart.png, feature76-chart-section.png, feature76-month-view.png, feature76-chart-hover.png, feature76-quarter-view.png, feature76-year-view.png, feature76-after-restart.png
+
+### Current state:
+- Feature #76 marked as PASSING
+- 84/170 features passing (49.4%)
+
 ## Session - Feature #73: Accept suggestion starts post creation workflow
 **Date:** 2026-02-12
 **Status:** PASSING
