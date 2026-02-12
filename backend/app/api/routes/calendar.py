@@ -5,7 +5,7 @@ from datetime import datetime, date
 from calendar import monthrange
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, extract, func
+from sqlalchemy import select, and_, or_, extract, func
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
@@ -127,6 +127,29 @@ async def get_calendar_week(
         "start_date": start_of_week.isoformat(),
         "end_date": end_of_week.isoformat(),
         "posts_by_date": posts_by_date,
+    }
+
+
+@router.get("/unscheduled")
+async def get_unscheduled_drafts(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posts that are not yet scheduled (no scheduled_date set)."""
+    query = select(Post).where(
+        and_(
+            Post.user_id == user_id,
+            Post.scheduled_date.is_(None),
+            Post.status.in_(["draft", "exported"]),
+        )
+    ).order_by(Post.created_at.desc())
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    return {
+        "posts": [post_to_calendar_dict(post) for post in posts],
+        "count": len(posts),
     }
 
 

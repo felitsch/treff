@@ -7,10 +7,32 @@ const auth = useAuthStore()
 // State
 const loading = ref(false)
 const error = ref(null)
+
+// Unscheduled drafts sidebar
+const unscheduledPosts = ref([])
+const loadingUnscheduled = ref(false)
+const sidebarCollapsed = ref(false)
+
+// Drag-and-drop state
+const draggedPost = ref(null)
+const dragOverDate = ref(null)
+const schedulingPost = ref(null)
+const scheduleTime = ref('10:00')
+const scheduleTargetDate = ref(null)
+const showTimeDialog = ref(false)
 const currentYear = ref(new Date().getFullYear())
 const currentMonth = ref(new Date().getMonth() + 1) // 1-based
 const postsByDate = ref({})
 const totalPosts = ref(0)
+
+// View mode: 'month' or 'week'
+const viewMode = ref('month')
+
+// Weekly view state
+const weekDate = ref(new Date().toISOString().split('T')[0]) // YYYY-MM-DD for current week
+const weekPostsByDate = ref({})
+const weekStartDate = ref(null)
+const weekEndDate = ref(null)
 
 // German month names
 const monthNames = [
@@ -20,6 +42,9 @@ const monthNames = [
 
 // German day abbreviations (Monday first)
 const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
+// German full day names (Monday first)
+const dayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 
 // Category colors - solid background colors for calendar cards
 const categoryColors = {
@@ -63,10 +88,89 @@ const platformIcons = {
   tiktok: '🎵',
 }
 
+// Time slots for weekly view (6:00 - 23:00)
+const timeSlots = Array.from({ length: 18 }, (_, i) => {
+  const hour = i + 6
+  return {
+    hour,
+    label: `${String(hour).padStart(2, '0')}:00`,
+  }
+})
+
 // Computed: current month label
 const currentMonthLabel = computed(() => {
   return `${monthNames[currentMonth.value - 1]} ${currentYear.value}`
 })
+
+// Computed: week days array (Mon-Sun) with date strings and posts
+const weekDays = computed(() => {
+  if (!weekStartDate.value) return []
+
+  const startDate = new Date(weekStartDate.value + 'T00:00:00')
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  const days = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + i)
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    days.push({
+      dayName: dayNames[i],
+      dayNameFull: dayNamesFull[i],
+      date: d.getDate(),
+      month: d.getMonth() + 1,
+      dateStr,
+      isToday: dateStr === todayStr,
+      posts: weekPostsByDate.value[dateStr] || [],
+    })
+  }
+  return days
+})
+
+// Computed: week label (e.g., "10. - 16. Februar 2026")
+const weekLabel = computed(() => {
+  if (!weekStartDate.value || !weekEndDate.value) return ''
+  const start = new Date(weekStartDate.value + 'T00:00:00')
+  const end = new Date(weekEndDate.value + 'T00:00:00')
+  const startDay = start.getDate()
+  const endDay = end.getDate()
+  const startMonth = monthNames[start.getMonth()]
+  const endMonth = monthNames[end.getMonth()]
+
+  if (start.getMonth() === end.getMonth()) {
+    return `${startDay}. - ${endDay}. ${endMonth} ${end.getFullYear()}`
+  }
+  return `${startDay}. ${startMonth} - ${endDay}. ${endMonth} ${end.getFullYear()}`
+})
+
+// Computed: total posts in the current week
+const weekTotalPosts = computed(() => {
+  let count = 0
+  for (const posts of Object.values(weekPostsByDate.value)) {
+    count += posts.length
+  }
+  return count
+})
+
+// Get posts at a specific time slot for a specific day in weekly view
+function getPostsAtTimeSlot(dayDateStr, hour) {
+  const posts = weekPostsByDate.value[dayDateStr] || []
+  return posts.filter(post => {
+    if (!post.scheduled_time) {
+      // Posts without scheduled_time show in the 09:00 slot by default
+      return hour === 9
+    }
+    const postHour = parseInt(post.scheduled_time.split(':')[0], 10)
+    return postHour === hour
+  })
+}
+
+// Check if a day has any unscheduled-time posts (for the all-day row)
+function getAllDayPosts(dayDateStr) {
+  const posts = weekPostsByDate.value[dayDateStr] || []
+  return posts.filter(post => !post.scheduled_time)
+}
 
 // Computed: calendar grid days (6 rows x 7 cols = 42 cells)
 const calendarDays = computed(() => {
@@ -136,7 +240,7 @@ const calendarDays = computed(() => {
   return days
 })
 
-// Navigation
+// Navigation - Month view
 function prevMonthNav() {
   if (currentMonth.value === 1) {
     currentMonth.value = 12
@@ -155,13 +259,34 @@ function nextMonthNav() {
   }
 }
 
+// Navigation - Week view
+function prevWeekNav() {
+  const d = new Date(weekDate.value + 'T00:00:00')
+  d.setDate(d.getDate() - 7)
+  weekDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function nextWeekNav() {
+  const d = new Date(weekDate.value + 'T00:00:00')
+  d.setDate(d.getDate() + 7)
+  weekDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function goToToday() {
   const now = new Date()
   currentYear.value = now.getFullYear()
   currentMonth.value = now.getMonth() + 1
+  weekDate.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  fetchData()
 }
 
-// Fetch calendar data
+// Switch view mode
+function setViewMode(mode) {
+  viewMode.value = mode
+  fetchData()
+}
+
+// Fetch calendar data (month)
 async function fetchCalendar() {
   loading.value = true
   error.value = null
@@ -178,6 +303,53 @@ async function fetchCalendar() {
     error.value = 'Kalender konnte nicht geladen werden.'
   } finally {
     loading.value = false
+  }
+}
+
+// Fetch week data
+async function fetchWeek() {
+  loading.value = true
+  error.value = null
+  try {
+    const res = await fetch(`/api/calendar/week?date=${weekDate.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    weekPostsByDate.value = data.posts_by_date || {}
+    weekStartDate.value = data.start_date || null
+    weekEndDate.value = data.end_date || null
+  } catch (err) {
+    console.error('Week fetch error:', err)
+    error.value = 'Wochenansicht konnte nicht geladen werden.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fetch unscheduled drafts for sidebar
+async function fetchUnscheduled() {
+  loadingUnscheduled.value = true
+  try {
+    const res = await fetch('/api/calendar/unscheduled', {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    unscheduledPosts.value = data.posts || []
+  } catch (err) {
+    console.error('Unscheduled fetch error:', err)
+  } finally {
+    loadingUnscheduled.value = false
+  }
+}
+
+// Unified fetch based on current view mode
+function fetchData() {
+  if (viewMode.value === 'month') {
+    fetchCalendar()
+  } else {
+    fetchWeek()
   }
 }
 
@@ -207,13 +379,145 @@ function getStatusMeta(status) {
   return statusMeta[status] || { label: status, icon: '📄', color: 'text-gray-500' }
 }
 
-// Watch month/year changes
+// ========== DRAG AND DROP ==========
+
+function onDragStart(event, post) {
+  draggedPost.value = post
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', JSON.stringify({ postId: post.id }))
+  event.target.classList.add('opacity-50')
+}
+
+function onDragEnd(event) {
+  draggedPost.value = null
+  dragOverDate.value = null
+  event.target.classList.remove('opacity-50')
+}
+
+function onDragOver(event, dateStr) {
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'move'
+  dragOverDate.value = dateStr
+}
+
+function onDragLeave(event, dateStr) {
+  if (dragOverDate.value === dateStr) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX
+    const y = event.clientY
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      dragOverDate.value = null
+    }
+  }
+}
+
+function onDrop(event, dateStr) {
+  event.preventDefault()
+  dragOverDate.value = null
+  if (!draggedPost.value) return
+
+  schedulingPost.value = draggedPost.value
+  scheduleTargetDate.value = dateStr
+  scheduleTime.value = '10:00'
+  showTimeDialog.value = true
+  draggedPost.value = null
+}
+
+async function confirmSchedule() {
+  if (!schedulingPost.value || !scheduleTargetDate.value) return
+
+  try {
+    const res = await fetch(`/api/posts/${schedulingPost.value.id}/schedule`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+      body: JSON.stringify({
+        scheduled_date: scheduleTargetDate.value,
+        scheduled_time: scheduleTime.value,
+      }),
+    })
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.detail || `HTTP ${res.status}`)
+    }
+
+    // Refresh both calendar and unscheduled list
+    await Promise.all([fetchData(), fetchUnscheduled()])
+  } catch (err) {
+    console.error('Schedule error:', err)
+    error.value = `Fehler beim Planen: ${err.message}`
+  } finally {
+    showTimeDialog.value = false
+    schedulingPost.value = null
+    scheduleTargetDate.value = null
+  }
+}
+
+function cancelScheduleDialog() {
+  showTimeDialog.value = false
+  schedulingPost.value = null
+  scheduleTargetDate.value = null
+}
+
+function formatDateForDisplay(dateStr) {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  return `${parts[2]}.${parts[1]}.${parts[0]}`
+}
+
+// Prev/Next navigation that respects view mode
+function prevNav() {
+  if (viewMode.value === 'month') {
+    prevMonthNav()
+  } else {
+    prevWeekNav()
+  }
+}
+
+function nextNav() {
+  if (viewMode.value === 'month') {
+    nextMonthNav()
+  } else {
+    nextWeekNav()
+  }
+}
+
+// Computed: navigation label
+const navLabel = computed(() => {
+  if (viewMode.value === 'month') {
+    return currentMonthLabel.value
+  }
+  return weekLabel.value
+})
+
+// Computed: subtitle text
+const subtitleText = computed(() => {
+  if (viewMode.value === 'month') {
+    return `${totalPosts.value} ${totalPosts.value === 1 ? 'Post' : 'Posts'} in ${currentMonthLabel.value}`
+  }
+  return `${weekTotalPosts.value} ${weekTotalPosts.value === 1 ? 'Post' : 'Posts'} in dieser Woche`
+})
+
+// Watch month/year changes (for month view)
 watch([currentMonth, currentYear], () => {
-  fetchCalendar()
+  if (viewMode.value === 'month') {
+    fetchCalendar()
+  }
+})
+
+// Watch weekDate changes (for week view)
+watch(weekDate, () => {
+  if (viewMode.value === 'week') {
+    fetchWeek()
+  }
 })
 
 onMounted(() => {
-  fetchCalendar()
+  fetchData()
+  fetchUnscheduled()
 })
 </script>
 
@@ -224,35 +528,60 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Content-Kalender</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {{ totalPosts }} {{ totalPosts === 1 ? 'Post' : 'Posts' }} in {{ currentMonthLabel }}
+          {{ subtitleText }}
         </p>
       </div>
 
-      <!-- Month navigation -->
-      <div class="flex items-center gap-2">
+      <!-- Controls: view toggle + navigation -->
+      <div class="flex items-center gap-3">
+        <!-- View mode toggle -->
+        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <button
+            @click="setViewMode('month')"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="viewMode === 'month'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >
+            Monat
+          </button>
+          <button
+            @click="setViewMode('week')"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="viewMode === 'week'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >
+            Woche
+          </button>
+        </div>
+
+        <!-- Today button -->
         <button
           @click="goToToday"
           class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Heute
         </button>
+
+        <!-- Prev / Label / Next -->
         <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
           <button
-            @click="prevMonthNav"
+            @click="prevNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors"
-            title="Vorheriger Monat"
+            :title="viewMode === 'month' ? 'Vorheriger Monat' : 'Vorherige Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span class="px-4 py-2 font-semibold text-gray-900 dark:text-white min-w-[180px] text-center">
-            {{ currentMonthLabel }}
+          <span class="px-4 py-2 font-semibold text-gray-900 dark:text-white min-w-[180px] text-center text-sm">
+            {{ navLabel }}
           </span>
           <button
-            @click="nextMonthNav"
+            @click="nextNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors"
-            title="Naechster Monat"
+            :title="viewMode === 'month' ? 'Naechster Monat' : 'Naechste Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -273,8 +602,101 @@ onMounted(() => {
       <span class="ml-3 text-gray-500 dark:text-gray-400">Kalender wird geladen...</span>
     </div>
 
-    <!-- Calendar Grid -->
-    <div v-else class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <!-- Main layout: sidebar + calendar -->
+    <div v-else class="flex gap-4">
+      <!-- Unscheduled drafts sidebar -->
+      <div
+        class="flex-shrink-0 transition-all duration-300"
+        :class="sidebarCollapsed ? 'w-10' : 'w-64'"
+      >
+        <!-- Collapse toggle -->
+        <button
+          @click="sidebarCollapsed = !sidebarCollapsed"
+          class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          :title="sidebarCollapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'"
+        >
+          <span v-if="!sidebarCollapsed" class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Ungeplante Posts
+            <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold px-1.5 py-0.5 rounded-full">
+              {{ unscheduledPosts.length }}
+            </span>
+          </span>
+          <svg
+            class="w-4 h-4 transition-transform"
+            :class="sidebarCollapsed ? 'rotate-180' : ''"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <!-- Sidebar content -->
+        <div
+          v-if="!sidebarCollapsed"
+          class="bg-white dark:bg-gray-800 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-xl overflow-hidden"
+        >
+          <!-- Loading -->
+          <div v-if="loadingUnscheduled" class="p-4 text-center">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="unscheduledPosts.length === 0" class="p-4 text-center">
+            <div class="text-3xl mb-2">🎉</div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Alle Posts sind geplant!
+            </p>
+          </div>
+
+          <!-- Draggable posts list -->
+          <div v-else class="max-h-[600px] overflow-y-auto p-2 space-y-2">
+            <p class="text-xs text-gray-500 dark:text-gray-400 px-1 mb-2">
+              Ziehe einen Post auf ein Datum im Kalender
+            </p>
+            <div
+              v-for="post in unscheduledPosts"
+              :key="'sidebar-' + post.id"
+              draggable="true"
+              @dragstart="onDragStart($event, post)"
+              @dragend="onDragEnd"
+              class="rounded-lg px-3 py-2 border cursor-grab active:cursor-grabbing select-none transition-all hover:shadow-md"
+              :class="[
+                getCategoryStyle(post.category).bg,
+                getCategoryStyle(post.category).text,
+                'border-l-[3px]',
+                getCategoryStyle(post.category).border,
+                'border-gray-200 dark:border-gray-600',
+              ]"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - Ziehen zum Planen`"
+            >
+              <div class="flex items-center gap-1.5">
+                <!-- Drag handle icon -->
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                </svg>
+                <span class="flex-shrink-0 text-sm">{{ getCategoryIcon(post.category) }}</span>
+                <span class="truncate text-sm font-medium">{{ post.title || 'Unbenannt' }}</span>
+              </div>
+              <div class="flex items-center gap-1.5 mt-1 text-xs opacity-75">
+                <span>{{ getPlatformIcon(post.platform) }}</span>
+                <span>{{ getCategoryLabel(post.category) }}</span>
+                <span class="ml-auto" :class="getStatusMeta(post.status).color">
+                  {{ getStatusMeta(post.status).icon }} {{ getStatusMeta(post.status).label }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar content area -->
+      <div class="flex-1 min-w-0">
+
+    <!-- ==================== MONTHLY VIEW ==================== -->
+    <div v-if="viewMode === 'month'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
       <!-- Day headers -->
       <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
         <div
@@ -297,7 +719,11 @@ onMounted(() => {
             dayObj.isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50/50 dark:bg-gray-900/30',
             dayObj.isToday ? 'ring-2 ring-inset ring-blue-500' : '',
             (idx % 7 === 5 || idx % 7 === 6) ? 'bg-gray-50/30 dark:bg-gray-800/50' : '',
+            dragOverDate === dayObj.dateStr ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
           ]"
+          @dragover="onDragOver($event, dayObj.dateStr)"
+          @dragleave="onDragLeave($event, dayObj.dateStr)"
+          @drop="onDrop($event, dayObj.dateStr)"
         >
           <!-- Day number -->
           <div class="flex items-center justify-between mb-1">
@@ -352,6 +778,125 @@ onMounted(() => {
               +{{ dayObj.posts.length - 3 }} weitere
             </div>
           </div>
+
+          <!-- Drop zone indicator when dragging -->
+          <div
+            v-if="draggedPost && dragOverDate === dayObj.dateStr"
+            class="mt-1 rounded-md border-2 border-dashed border-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs text-blue-600 dark:text-blue-400 text-center"
+          >
+            Hier ablegen
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== WEEKLY VIEW ==================== -->
+    <div v-if="viewMode === 'week'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <!-- Day headers for weekly view -->
+      <div class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-200 dark:border-gray-700">
+        <!-- Empty corner cell for time column header -->
+        <div class="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700">
+          Zeit
+        </div>
+        <!-- Day columns -->
+        <div
+          v-for="(day, idx) in weekDays"
+          :key="day.dateStr"
+          class="py-2 px-1 text-center border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+          :class="[
+            day.isToday ? 'bg-blue-50 dark:bg-blue-900/20' : (idx >= 5 ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-white dark:bg-gray-800'),
+          ]"
+        >
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            {{ day.dayName }}
+          </div>
+          <div
+            class="mt-1 text-lg font-bold leading-none"
+            :class="day.isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'"
+          >
+            <span
+              :class="day.isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 inline-flex items-center justify-center' : ''"
+            >
+              {{ day.date }}
+            </span>
+          </div>
+          <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+            {{ day.posts.length }} {{ day.posts.length === 1 ? 'Post' : 'Posts' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- All-day row (posts without a scheduled_time) -->
+      <div class="grid grid-cols-[60px_repeat(7,1fr)] border-b-2 border-gray-300 dark:border-gray-600">
+        <div class="py-2 px-2 text-[10px] font-medium text-gray-400 dark:text-gray-500 text-right border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-end">
+          Ganzt.
+        </div>
+        <div
+          v-for="(day, idx) in weekDays"
+          :key="'allday-' + day.dateStr"
+          class="py-1 px-1 border-r border-gray-200 dark:border-gray-700 last:border-r-0 min-h-[32px]"
+          :class="day.isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : (idx >= 5 ? 'bg-gray-50/30 dark:bg-gray-800/30' : '')"
+        >
+          <div
+            v-for="post in getAllDayPosts(day.dateStr)"
+            :key="'allday-post-' + post.id"
+            class="rounded-md px-1.5 py-0.5 text-xs truncate mb-0.5 border-l-[3px]"
+            :class="[
+              getCategoryStyle(post.category).bg,
+              getCategoryStyle(post.category).text,
+              getCategoryStyle(post.category).border,
+            ]"
+            :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}`"
+          >
+            <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+            <span class="truncate font-medium ml-1">{{ post.title || 'Unbenannt' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time slot rows (scrollable) -->
+      <div class="max-h-[600px] overflow-y-auto">
+        <div
+          v-for="slot in timeSlots"
+          :key="slot.hour"
+          class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-100 dark:border-gray-700/50"
+        >
+          <!-- Time label -->
+          <div class="py-2 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 text-right border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-start justify-end">
+            {{ slot.label }}
+          </div>
+
+          <!-- Day cells -->
+          <div
+            v-for="(day, idx) in weekDays"
+            :key="slot.hour + '-' + day.dateStr"
+            class="min-h-[48px] py-0.5 px-1 border-r border-gray-100 dark:border-gray-700/30 last:border-r-0 transition-colors"
+            :class="[
+              day.isToday ? 'bg-blue-50/30 dark:bg-blue-900/5' : (idx >= 5 ? 'bg-gray-50/20 dark:bg-gray-800/20' : ''),
+            ]"
+          >
+            <div
+              v-for="post in getPostsAtTimeSlot(day.dateStr, slot.hour)"
+              :key="'wk-' + post.id"
+              class="rounded-md px-1.5 py-1 text-xs cursor-default mb-0.5 border-l-[3px]"
+              :class="[
+                getCategoryStyle(post.category).bg,
+                getCategoryStyle(post.category).text,
+                getCategoryStyle(post.category).border,
+              ]"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label} - ${post.scheduled_time || ''}`"
+            >
+              <div class="flex items-center gap-1">
+                <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+                <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
+              </div>
+              <div class="flex items-center gap-1 mt-0.5 opacity-75">
+                <span class="flex-shrink-0 text-[10px]">{{ getPlatformIcon(post.platform) }}</span>
+                <span v-if="post.scheduled_time" class="text-[10px]">{{ post.scheduled_time }}</span>
+                <span class="ml-auto text-[10px]" :class="getStatusMeta(post.status).color">{{ getStatusMeta(post.status).icon }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -373,7 +918,7 @@ onMounted(() => {
 
     <!-- Empty state -->
     <div
-      v-if="!loading && !error && totalPosts === 0"
+      v-if="!loading && !error && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
       class="mt-6 text-center py-8"
     >
       <div class="text-5xl mb-3">📅</div>
@@ -392,6 +937,60 @@ onMounted(() => {
         </svg>
         Post erstellen
       </router-link>
+    </div>
+
+      </div><!-- end flex-1 calendar content area -->
+    </div><!-- end flex gap-4 main layout -->
+
+    <!-- Schedule time picker dialog (modal) -->
+    <div
+      v-if="showTimeDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="cancelScheduleDialog"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
+          Post planen
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {{ schedulingPost?.title || 'Unbenannt' }}
+        </p>
+
+        <!-- Date display -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Datum</label>
+          <div class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
+            {{ formatDateForDisplay(scheduleTargetDate) }}
+          </div>
+        </div>
+
+        <!-- Time picker -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="schedule-time-input">Uhrzeit</label>
+          <input
+            id="schedule-time-input"
+            v-model="scheduleTime"
+            type="time"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <button
+            @click="cancelScheduleDialog"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Abbrechen
+          </button>
+          <button
+            @click="confirmSchedule"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Post planen
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
