@@ -1,5 +1,59 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #71: Post can be rescheduled by changing date and time
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Enabled rescheduling of already-scheduled posts from the History view
+- Previously, the schedule button (📅) was hidden for posts with status "scheduled" or "posted"
+- Changed visibility condition to only hide for "posted" posts (v-if="post.status !== 'posted'")
+- Added visual distinction for rescheduling vs first-time scheduling:
+  - 🔄 icon for already-scheduled/reminded posts, 📅 for unscheduled
+  - Dialog title changes to "Post umplanen" (reschedule) for scheduled posts
+  - Button text changes to "Umplanen" for rescheduling
+- Schedule dialog pre-fills existing date/time values for easy modification
+- Backend PUT /api/posts/{id}/schedule already supported updating existing schedule
+
+### Files modified:
+- frontend/src/views/HistoryView.vue - 3 changes:
+  1. Schedule button visibility: removed `post.status !== 'scheduled'` from v-if
+  2. Dynamic icon: 🔄 for scheduled, 📅 for unscheduled
+  3. Dynamic dialog title and button text: "Post umplanen"/"Umplanen" vs "Post planen"/"Post planen"
+
+### Verification steps completed:
+1. Schedule a post for date A (2026-02-15 at 10:00) - PASS (created post #87, scheduled via API)
+2. Change scheduled date to date B (2026-02-20 at 14:00) - PASS:
+   - Navigated to History page, post shows "Geplant" status with 📅 15.02.2026, 🕐 10:00 Uhr
+   - Clicked 🔄 reschedule button -> dialog opened with "Post umplanen" title
+   - Pre-filled date (2026-02-15) and time (10:00) shown correctly
+   - Changed to 2026-02-20 and 14:00, clicked "Umplanen"
+3. Save changes - PASS (dialog closed, History view updated to show 20.02.2026, 14:00 Uhr)
+4. Verify calendar shows post on date B not date A - PASS:
+   - Feb 15: "Luecke" (gap, no post) ✅
+   - Feb 20: "RESCHEDULE_TEST_71" with 🌍 icon, 📷 14:00, 📅 badge ✅
+5. Verify database updated - PASS:
+   - API GET /api/posts: scheduled_date="2026-02-20T00:00:00", scheduled_time="14:00" ✅
+
+### Server restart persistence test:
+- Stopped and restarted both frontend and backend servers
+- Logged back in as reschedule71@treff.de
+- Dashboard shows "Geplante Posts: 1", post still listed as "scheduled"
+- Calendar still shows post on Feb 20 (not Feb 15) with 14:00 time
+- Database confirmed: scheduled_date=2026-02-20, scheduled_time=14:00
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified
+- [x] Calendar correctly reflects rescheduled date
+- [x] Database correctly updated with new schedule
+- [x] Screenshots captured: feature71-step1-scheduled-post-with-reschedule-btn.png, feature71-step2-reschedule-dialog-prefilled.png, feature71-step3-reschedule-dialog-new-date.png, feature71-step4-rescheduled-history-updated.png, feature71-step5-calendar-after-restart-post-on-feb20.png, feature71-step6-calendar-scrolled-feb20-post.png
+
+### Current state:
+- Feature #71 marked as PASSING
+- 81/170 features passing (47.6%)
+
 ## Session - Feature #165: Switch image generation to Nano Banana Pro (gemini-3-pro-image-preview)
 **Date:** 2026-02-12
 **Status:** PASSING
