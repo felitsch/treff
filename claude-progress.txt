@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #130: No horizontal scroll on any page at any viewport
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified no horizontal scroll on all required pages (Dashboard, Templates, History, Calendar) at all required viewports (1920px, 1280px, 768px, 375px)
+- Fixed CalendarView.vue sidebar layout at mobile widths:
+  - Sidebar now collapses by default on mobile (window.innerWidth < 768)
+  - Sidebar and calendar stack vertically on mobile (flex-col md:flex-row)
+  - Added overflow-hidden and max-w-full to prevent content overflow
+  - Platform filter buttons use overflow-x-auto for mobile scrollability
+- HistoryView.vue: added break-words/break-all on long post titles in delete/schedule modals
+
+### Files modified:
+- frontend/src/views/CalendarView.vue - Mobile-responsive sidebar + overflow handling
+- frontend/src/views/HistoryView.vue - break-words for long title overflow in modals
+
+### Verification steps completed:
+1. Check at 1920px width: no horizontal scroll - PASS (all 4 pages: scrollWidth == clientWidth)
+2. Check at 1280px width: no horizontal scroll - PASS (all 4 pages: scrollWidth == clientWidth)
+3. Check at 768px width: no horizontal scroll - PASS (all 4 pages: scrollWidth == clientWidth)
+4. Check at 375px width: no horizontal scroll - PASS (all 4 pages: scrollWidth == clientWidth)
+5. Verify across: Dashboard, Templates, History, Calendar - PASS (all tested at all viewports)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] No horizontal scrollbar at any viewport on any page
+- [x] Screenshots captured:
+  - feature130-dashboard-1920.png (Dashboard at 1920px - no overflow)
+  - feature130-dashboard-375.png (Dashboard at 375px - mobile responsive)
+  - feature130-templates-375.png (Templates at 375px - no overflow)
+  - feature130-history-375.png (History at 375px - no overflow)
+  - feature130-calendar-375.png (Calendar at 375px BEFORE fix - sidebar clipping)
+  - feature130-calendar-375-fixed.png (Calendar at 375px AFTER fix - sidebar collapsed)
+  - feature130-calendar-1920-final.png (Calendar at 1920px - sidebar + grid layout)
+  - feature130-final-calendar-375.png (Calendar at 375px final verification)
+
+### Current state:
+- Feature #130 marked as PASSING
+- 133/170 features passing (78.2%)
+
 ## Session - Feature #131: Modal dialogs fit within viewport and have overlay
 **Date:** 2026-02-12
 **Status:** PASSING
