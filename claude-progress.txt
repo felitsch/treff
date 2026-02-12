@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #97: API returns 404 for non-existent resource IDs
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that API correctly returns 404 for non-existent post and template IDs
+- No code changes needed - all functionality was already properly implemented:
+  - Backend posts.py: `HTTPException(status_code=404, detail="Post not found")`
+  - Backend templates.py: `HTTPException(status_code=404, detail="Template not found")`
+
+### Verification steps completed:
+1. GET /api/posts/99999 (non-existent) - PASS: Returns 404 with {"detail": "Post not found"}
+2. Verify 404 Not Found response - PASS: HTTP status 404, statusText "Not Found"
+3. GET /api/templates/99999 - PASS: Returns 404 with {"detail": "Template not found"}
+4. Verify 404 response - PASS: HTTP status 404, statusText "Not Found"
+5. Verify error message is meaningful - PASS: "Post not found" and "Template not found" are clear, descriptive error messages
+
+### Additional edge case testing:
+- GET /api/posts/12345 -> 404 "Post not found" (PASS)
+- GET /api/templates/12345 -> 404 "Template not found" (PASS)
+- GET /api/posts/0 -> 404 "Post not found" (PASS)
+- GET /api/templates/0 -> 404 "Template not found" (PASS)
+- GET /api/posts/abc -> 422 validation error (correct type validation)
+- GET /api/posts/99999 without auth -> 401 (auth enforced before 404)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Browser-verified via Playwright with API calls from authenticated browser session
+- [x] Screenshots: feature97-dashboard-logged-in.png, feature97-404-test-results.png
+
+### No code changes needed:
+- posts.py already had `raise HTTPException(status_code=404, detail="Post not found")`
+- templates.py already had `raise HTTPException(status_code=404, detail="Template not found")`
+
+### Current state:
+- Feature #97 marked as PASSING
+- 102/170 features passing (60.0%)
+
 ## Session - Feature #96: API returns 401 for requests without valid JWT
 **Date:** 2026-02-12
 **Status:** PASSING
