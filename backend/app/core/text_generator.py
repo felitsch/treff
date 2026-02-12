@@ -533,3 +533,105 @@ def _generate_tiktok_caption(headline: str, country_data: dict, category: str) -
         f"Auslandsjahr Check: {country_data['name']} Edition {country_data['flag']}",
     ]
     return random.choice(hooks)
+
+
+def regenerate_single_field(
+    field: str,
+    category: str,
+    country: Optional[str] = None,
+    topic: Optional[str] = None,
+    key_points: Optional[str] = None,
+    tone: str = "jugendlich",
+    platform: str = "instagram_feed",
+    slide_index: int = 0,
+    slide_count: int = 1,
+    current_headline: Optional[str] = None,
+    current_body: Optional[str] = None,
+) -> dict:
+    """
+    Regenerate a single text field without changing others.
+
+    Supported fields:
+    - headline: Regenerate just the headline for the given slide
+    - subheadline: Regenerate just the subheadline for the given slide
+    - body_text: Regenerate just the body text for the given slide
+    - cta_text: Regenerate just the CTA text
+    - caption_instagram: Regenerate just the Instagram caption
+    - caption_tiktok: Regenerate just the TikTok caption
+    - hashtags_instagram: Regenerate just the Instagram hashtags
+    - hashtags_tiktok: Regenerate just the TikTok hashtags
+
+    Returns dict with:
+    - field: name of the regenerated field
+    - value: new value for that field
+    """
+    if not country or country not in COUNTRY_DATA:
+        country = random.choice(list(COUNTRY_DATA.keys()))
+
+    c = COUNTRY_DATA[country]
+    cat = CATEGORY_CONTENT.get(category, CATEGORY_CONTENT["laender_spotlight"])
+
+    if field == "headline":
+        if slide_index == 0:
+            headline_template = random.choice(cat["headline_templates"])
+            value = headline_template.format(
+                country=c["name"],
+                adj=c["adjective"],
+                name=random.choice(ALUMNI_NAMES),
+                year=2027,
+                days=random.randint(30, 180),
+                country_a=c["name"],
+                country_b=COUNTRY_DATA[random.choice([k for k in COUNTRY_DATA if k != country])]["name"],
+            )
+        else:
+            value = _generate_slide_headline(category, c, slide_index, slide_count)
+
+    elif field == "subheadline":
+        subheadline_template = random.choice(cat["subheadline_templates"])
+        value = subheadline_template.format(
+            country=c["name"],
+            adj=c["adjective"],
+        )
+
+    elif field == "body_text":
+        if slide_index == 0:
+            body_intro = f"{topic}: " if topic else ""
+            body_texts = BODY_TEXTS.get(category, BODY_TEXTS["laender_spotlight"])
+            body_template = random.choice(body_texts)
+            value = body_intro + body_template.format(
+                country=c["name"],
+                adj=c["adjective"],
+            )
+            if key_points:
+                value = f"{value}\n\n{key_points}"
+        else:
+            value = _generate_slide_body(category, c, slide_index, slide_count)
+
+    elif field == "cta_text":
+        cta_template = random.choice(cat["cta_templates"])
+        value = cta_template.format(country=c["name"])
+
+    elif field == "caption_instagram":
+        # Use the provided current headline/body or generate new ones for context
+        headline = current_headline or "Dein Highschool-Jahr"
+        body = current_body or ""
+        value = _generate_instagram_caption(headline, body, c, category, tone)
+
+    elif field == "caption_tiktok":
+        headline = current_headline or "Dein Highschool-Jahr"
+        value = _generate_tiktok_caption(headline, c, category)
+
+    elif field == "hashtags_instagram":
+        base_hashtags = random.sample(HASHTAGS_INSTAGRAM, 8)
+        country_hashtags = HASHTAGS_COUNTRY.get(country, [])[:4]
+        value = " ".join(base_hashtags + country_hashtags)
+
+    elif field == "hashtags_tiktok":
+        tiktok_tags = random.sample(HASHTAGS_TIKTOK, 6)
+        country_tt = HASHTAGS_COUNTRY.get(country, [])[:2]
+        value = " ".join(tiktok_tags + country_tt)
+
+    else:
+        raise ValueError(f"Unknown field: {field}. Supported: headline, subheadline, body_text, cta_text, caption_instagram, caption_tiktok, hashtags_instagram, hashtags_tiktok")
+
+    return {"field": field, "value": value}

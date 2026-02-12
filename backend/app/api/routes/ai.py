@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
-from app.core.text_generator import generate_text_content
+from app.core.text_generator import generate_text_content, regenerate_single_field
 from app.core.config import settings
 from app.models.asset import Asset
 from app.models.setting import Setting
@@ -317,6 +317,68 @@ async def generate_text(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text generation failed: {str(e)}")
+
+
+@router.post("/regenerate-field")
+async def regenerate_field(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Regenerate a single text field without changing other content.
+
+    Expects:
+    - field (str): Which field to regenerate (headline, subheadline, body_text,
+      cta_text, caption_instagram, caption_tiktok, hashtags_instagram, hashtags_tiktok)
+    - category (str): Post category
+    - country (str, optional): Target country
+    - topic (str, optional): Topic
+    - key_points (str, optional): Key points
+    - tone (str, optional): jugendlich or serioess
+    - platform (str, optional): Target platform
+    - slide_index (int, optional): Which slide to regenerate for (default: 0)
+    - slide_count (int, optional): Total number of slides (default: 1)
+    - current_headline (str, optional): Current headline for caption context
+    - current_body (str, optional): Current body text for caption context
+
+    Returns:
+    - field: name of the regenerated field
+    - value: new value for that field
+    """
+    try:
+        field = request.get("field")
+        if not field:
+            raise HTTPException(status_code=400, detail="Field parameter is required")
+
+        valid_fields = [
+            "headline", "subheadline", "body_text", "cta_text",
+            "caption_instagram", "caption_tiktok",
+            "hashtags_instagram", "hashtags_tiktok",
+        ]
+        if field not in valid_fields:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid field '{field}'. Must be one of: {', '.join(valid_fields)}"
+            )
+
+        result = regenerate_single_field(
+            field=field,
+            category=request.get("category", "laender_spotlight"),
+            country=request.get("country"),
+            topic=request.get("topic"),
+            key_points=request.get("key_points"),
+            tone=request.get("tone", "jugendlich"),
+            platform=request.get("platform", "instagram_feed"),
+            slide_index=request.get("slide_index", 0),
+            slide_count=request.get("slide_count", 1),
+            current_headline=request.get("current_headline"),
+            current_body=request.get("current_body"),
+        )
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Field regeneration failed: {str(e)}")
 
 
 @router.post("/generate-image")

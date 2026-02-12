@@ -54,6 +54,9 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const exportComplete = ref(false)
   const exportQuality = ref('1080')
 
+  // Per-field regeneration state (tracks which field is currently being regenerated)
+  const regeneratingField = ref('')
+
   // Validation state
   const validationMessage = ref('')
 
@@ -82,6 +85,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     exportQuality.value = '1080'
     loading.value = false
     generatingText.value = false
+    regeneratingField.value = ''
     uploadingImage.value = false
     aiImagePrompt.value = ''
     generatingImage.value = false
@@ -143,6 +147,8 @@ export const useCreatePostStore = defineStore('createPost', () => {
     savedPost,
     exportComplete,
     exportQuality,
+    // Per-field regeneration
+    regeneratingField,
     // Validation
     validationMessage,
     // Methods
