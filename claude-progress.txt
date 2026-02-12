@@ -1,5 +1,47 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #65: Calendar filter by platform works
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added platform filter functionality to the calendar view (both monthly and weekly views)
+- Backend: Added `platform` query parameter to `/api/calendar` and `/api/calendar/week` endpoints
+- Frontend: Added platform filter toggle buttons (Alle, IG Feed, IG Story, TikTok) to CalendarView.vue
+- Subtitle dynamically shows active platform filter (e.g., "1 Post in Februar 2026 (📷 IG Feed)")
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added `platform: Optional[str]` parameter to `get_calendar()` and `get_calendar_week()` endpoints with SQL filtering
+- frontend/src/views/CalendarView.vue - Added `platformFilter` ref, `platformOptions` array, `setPlatformFilter()` function, platform filter buttons UI, and platform param in API fetch calls
+
+### Verification steps completed:
+1. Schedule posts for both Instagram and TikTok - PASS
+   - Created 3 test posts via API: Instagram Feed (Feb 15), TikTok (Feb 16), IG Story (Feb 17)
+   - All 3 posts visible on calendar with "Alle" filter (3 Posts in Februar 2026)
+2. Filter calendar to Instagram only - PASS
+   - Clicked "📷 IG Feed" button -> only Instagram post on Feb 15 shown
+   - Subtitle: "1 Post in Februar 2026 (📷 IG Feed)"
+   - Feb 16 (TikTok) and Feb 17 (IG Story) empty
+3. Verify only Instagram posts shown - PASS (confirmed via snapshot and screenshot)
+4. Filter to TikTok only - PASS
+   - Clicked "🎵 TikTok" button -> only TikTok post on Feb 16 shown
+   - Subtitle: "1 Post in Februar 2026 (🎵 TikTok)"
+   - Feb 15 (Instagram) and Feb 17 (IG Story) empty
+5. Verify only TikTok posts shown - PASS (confirmed via snapshot and screenshot)
+
+### Additional verification:
+- IG Story filter also tested: shows only Feb 17 post, subtitle "1 Post in Februar 2026 (📱 IG Story)"
+- "Alle" filter returns all 3 posts, subtitle "3 Posts in Februar 2026" (no platform suffix)
+- Backend API verified: GET /api/calendar?platform=instagram_feed returns 1 post, platform=tiktok returns 1 post, no filter returns 3
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: all 3 posts persist, login works, filters work correctly after restart
+- Screenshots: feature65-step1-all-platforms.png, feature65-step2-ig-feed-filter.png, feature65-step3-tiktok-filter.png, feature65-step4-ig-story-filter.png, feature65-step5-persistence-after-restart.png
+
+### Current state:
+- Feature #65 marked as PASSING
+- 73/163 features passing (44.8%)
+
 ## Session - Feature #66: Calendar shows posting frequency gaps
 **Date:** 2026-02-12
 **Status:** PASSING
