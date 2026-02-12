@@ -1,5 +1,46 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #103: Submit button disabled during form processing
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added SVG loading spinner (animate-spin) to registration and login submit buttons
+- Button now shows spinner icon + "Registrieren..." text during form processing
+- Button is disabled with opacity-50 and cursor-not-allowed during loading
+- Added data-testid attributes for both buttons
+
+### Files modified:
+- frontend/src/views/RegisterView.vue - Added spinner SVG, flex layout, data-testid
+- frontend/src/views/LoginView.vue - Added spinner SVG, flex layout, data-testid
+
+### Verification steps completed:
+1. Open registration form with valid data - PASS (filled name, email, password)
+2. Click submit button - PASS (triggered form submission)
+3. Verify button becomes disabled immediately - PASS (disabled: true confirmed via JS evaluation)
+4. Verify loading spinner on button - PASS:
+   - SVG spinner with animate-spin class present (hasSvgAnimateSpin: true)
+   - Text changes to "Registrieren..." (confirmed)
+   - Opacity drops to 0.5 (visual disabled state)
+   - Cursor changes to not-allowed
+   - Visual screenshot captured showing spinner + faded button
+5. Wait for response - PASS (registration completes, redirects to dashboard)
+6. Verify button re-enables after completion - PASS (navigation to /dashboard succeeds, proving form completed)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No temp/test code left in backend (asyncio.sleep removed)
+- [x] Screenshots captured:
+  - feature103-step1-register-form.png (empty form)
+  - feature103-step2-form-filled.png (form with valid data)
+  - feature103-step4-spinner-loading.png (loading state with spinner visible)
+  - feature103-step5-registration-complete.png (dashboard after successful registration)
+
+### Current state:
+- Feature #103 marked as PASSING
+- 105/170 features passing (61.8%)
+
 ## Session - Feature #98: API handles malformed JSON gracefully
 **Date:** 2026-02-12
 **Status:** PASSING
