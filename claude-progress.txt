@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #20: User can delete a custom template
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified existing delete template functionality end-to-end via browser automation
+- Delete button (trash icon) appears on custom template cards on hover (next to edit button)
+- Delete confirmation modal (Teleport-based) with:
+  - Red trash icon, "Template loeschen?" heading
+  - Template name displayed ("DELETE_ME_TEMPLATE_12345")
+  - "Diese Aktion kann nicht rueckgaengig gemacht werden" warning
+  - "Abbrechen" and "Loeschen" buttons with loading state
+- Backend DELETE /api/templates/{id} protects default templates (is_default=True → 403)
+- Tested complete workflow:
+  1. Created custom template "DELETE_ME_TEMPLATE_12345" via UI (23 templates total)
+  2. Clicked delete button on the custom template card
+  3. Confirmation modal appeared with template name
+  4. Clicked "Loeschen" - template removed from list (22 templates)
+  5. Refreshed page (full login cycle) - template still gone from database
+  6. Verified Tipps & Tricks category count went from 4 back to 3
+
+### Verification checklist:
+- [x] Create a custom template first (DELETE_ME_TEMPLATE_12345)
+- [x] Click delete on the custom template
+- [x] Confirm deletion (modal with Abbrechen/Loeschen buttons)
+- [x] Verify template is removed from the list (22 von 22 Templates)
+- [x] Verify template is gone from database (page refresh confirms)
+- [x] Zero JS console errors
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Screenshots: feature20-step1-templates-page.png, feature20-step2-template-created-with-delete-btn.png, feature20-step3-delete-confirmation-modal.png, feature20-step4-template-deleted-from-list.png
+
+### Current state:
+- Feature #20 marked as PASSING
+- 41/163 features passing (~25.2%)
+
 ## Session - Feature #19: User can edit a custom template
 **Date:** 2026-02-12
 **Status:** PASSING
