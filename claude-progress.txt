@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #122: URL manipulation does not expose other users data
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed security vulnerabilities in slides.py and export.py where post ownership was not verified
+- Verified complete user data isolation between two test users (User A and User B)
+- All API endpoints return 404 when a user tries to access another user's posts
+
+### Security fixes applied:
+1. **slides.py GET /{post_id}/slides** - Added post ownership check (was missing, any user could read any post's slides)
+2. **slides.py POST /{post_id}/slides** - Added post ownership check (was missing, any user could add slides to any post)
+3. **slides.py DELETE /{post_id}/slides/{slide_id}** - Added post ownership check (was missing)
+4. **export.py GET /download/{export_id}** - Added post ownership check via export's post_id (was missing, any user could download any export)
+5. **posts.py** - Already had proper isolation on all 7 endpoints (GET list, GET single, POST create, PUT update, DELETE, POST duplicate, PUT schedule, PUT status)
+
+### Verification steps completed:
+1. Created User A (usera_isolation122@treff.de, id=212) and User B (userb_isolation122@treff.de, id=213)
+2. Created post #140 as User A with title "ISOLATION_TEST_122_SECRET_DATA"
+3. API tests as User B (all returned 404):
+   - GET /api/posts/140 -> 404 "Post not found"
+   - PUT /api/posts/140 -> 404 "Post not found"
+   - DELETE /api/posts/140 -> 404 "Post not found"
+   - GET /api/posts/140/slides -> 404 "Post not found"
+   - POST /api/posts/140/duplicate -> 404 "Post not found"
+4. Unauthenticated access -> 401 "Could not validate credentials"
+5. User A can still access own post -> 200 OK with full data
+6. User B listing all posts -> empty array []
+7. Browser UI verification:
+   - User A dashboard shows the post -> PASS
+   - User A can edit at /create-post?edit=140 -> PASS
+   - User B dashboard shows 0 posts, "Noch keine Posts erstellt" -> PASS
+   - User B at /create-post?edit=140 shows blank create form (no data leaked) -> PASS
+   - User B history page shows "Noch keine Posts erstellt" -> PASS
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (401 for unauthenticated access)
+- [x] Cross-user access blocked (404 for all endpoints)
+- [x] No data leakage via URL manipulation
+- [x] Screenshots captured:
+  - feature122-step1-userA-sees-own-post.png (User A dashboard with post visible)
+  - feature122-step2-userA-can-edit-own-post.png (User A can edit own post)
+  - feature122-step3-userB-empty-dashboard.png (User B sees 0 posts on dashboard)
+  - feature122-step4-userB-cannot-access-userA-post.png (User B at edit URL sees blank form)
+  - feature122-step5-userB-history-empty.png (User B history shows no posts)
+
+### Current state:
+- Feature #122 marked as PASSING
+- 126/170 features passing (74.1%)
+
 ## Session - Feature #121: Direct URL to deleted post shows appropriate error
 **Date:** 2026-02-12
 **Status:** PASSING
