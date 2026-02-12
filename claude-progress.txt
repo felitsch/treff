@@ -498,3 +498,45 @@
 
 ### Next steps:
 - Continue with remaining navigation and feature implementation
+
+## Session 14 - Feature #55: Image upload via drag-and-drop to asset library
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Built complete AssetsView.vue replacing placeholder skeleton
+- Implemented drag-and-drop upload zone with visual feedback (border color change on drag-over)
+- Implemented upload progress indicator (spinner, percentage text, progress bar)
+- Built asset library grid view with thumbnails, filenames, file sizes, types, and dimensions
+- Fixed backend assets.py route:
+  - Added asset_to_dict() for proper SQLAlchemy model serialization (avoids MissingGreenlet)
+  - Fixed file path resolution (was creating nested app/app/ directory)
+  - Added image dimensions extraction via Pillow
+  - Added Form() parameters for category/country/tags
+  - Added file deletion from disk on asset delete
+- Supports JPG, PNG, WebP uploads up to 20MB
+- Search and type filter functionality
+- Delete button with confirmation on hover
+
+### Files modified:
+- backend/app/api/routes/assets.py - Complete rewrite with proper serialization, path resolution, Pillow dimensions
+- frontend/src/views/AssetsView.vue - Complete rewrite with drag-and-drop, progress, grid
+
+### Verification steps completed:
+1. Navigate to Assets page - PASS (drop zone and empty state shown)
+2. Upload JPG file via file picker (simulates drag-and-drop) - PASS (201 Created)
+3. Upload progress indicator shows - PASS (spinner + percentage + progress bar)
+4. Image appears in asset library grid - PASS (thumbnail, filename, size, type, dimensions)
+5. File metadata stored (filename, size, type) - PASS (test_treff_upload.jpg, 2.5 KB, JPEG, 400x300px)
+
+### Mock data grep results: All 7 checks clean (zero matches)
+### Server restart persistence: PASS (asset still visible after stop/restart)
+### Console errors: 0 errors, 0 warnings
+### Network: All requests 200/201, no 500s
+
+### Current state:
+- Features #1-11, #13, #27, #55 passing
+- 13/163 features complete (8.0%)
+
+### Next steps:
+- Continue with remaining asset management, calendar, and content features
