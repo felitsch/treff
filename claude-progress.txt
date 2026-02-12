@@ -1,5 +1,43 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #89: Video thumbnail can be exported as 1:1 for feed preview
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added export format selector (9:16 vs 1:1) to ThumbnailGeneratorView
+- Made all dimensions dynamic (preview and export) based on selected format
+- Updated canvas rendering functions for both 9:16 (1080x1920) and 1:1 (1080x1080)
+- Dynamic preview switches between tall (270x480) and square (340x340) preview
+- Format-aware filenames: TREFF_thumbnail_1x1_... vs TREFF_thumbnail_9x16_...
+- Format-aware platform: instagram_feed for 1:1, tiktok for 9:16
+- Info badge dynamically shows selected format dimensions and ratio
+- Reset function resets format back to 9:16
+
+### Files modified:
+- frontend/src/views/ThumbnailGeneratorView.vue - Added export format selector, dynamic dimensions
+
+### Verification steps completed:
+1. Create a video thumbnail - PASS (entered "FEED_PREVIEW_TEST_89" hook text)
+2. Select export format: 1:1 Feed preview - PASS (clicked 1:1 button, checkmark appears, preview switches to square)
+3. Export thumbnail - PASS (clicked "Speichern & als PNG exportieren", post #121 saved, PNG downloaded)
+4. Verify downloaded image is 1080x1080 - PASS (Pillow: Width=1080, Height=1080, Ratio=1.0000, Format=PNG)
+
+### Additional verification:
+- Info badge shows "1080 x 1080 px - 1:1" when 1:1 selected
+- Preview label shows "Live-Vorschau (1:1)"
+- Downloaded filename: TREFF_thumbnail_1x1_2026-02-12_FEED_PREVIEW_TEST_89.png
+- Post saved to database: platform=instagram_feed, category=reel_tiktok_thumbnails, status=exported
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All 7 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: post persists, visible on dashboard after restart
+- Test data cleaned up after verification
+- Screenshots: feature89-step1-format-selector-visible.png, feature89-step2-1x1-format-selected.png, feature89-step3-export-success.png, feature89-step4-persistence-after-restart.png
+
+### Current state:
+- Feature #89 marked as PASSING
+- 93/170 features passing (54.7%)
+
 ## Session - Feature #91: Registration rejects duplicate email addresses
 **Date:** 2026-02-12
 **Status:** PASSING
