@@ -97,3 +97,44 @@
 - Feature #3: Data persists across server restart
 - Feature #5: Backend API queries real database
 - Then move to authentication features (#6-#11)
+
+## Session 4 - Feature #5: Backend API queries real database
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Enabled SQL_ECHO=True in backend .env to capture SQL queries in server logs
+- Tested POST /api/auth/register via browser (Swagger UI fetch):
+  - Server logs show: SELECT users... WHERE users.email = ? (check for existing)
+  - Server logs show: INSERT INTO users (email, password_hash, display_name, ...) VALUES (?, ?, ?, ?, ?)
+  - Response: 201 Created with user data
+- Tested POST /api/auth/login via browser:
+  - Server logs show: SELECT users... WHERE users.email = ? (find user for auth)
+  - Response: 200 OK with JWT access_token
+- Tested GET /api/posts via browser with JWT auth:
+  - Server logs show: SELECT posts... FROM posts WHERE posts.user_id = ? ORDER BY posts.created_at DESC
+  - Response: 200 OK with empty array (correct for new user)
+- Verified all 10 route files use Depends(get_db) - 47 total real DB dependency usages
+- All mock data pattern greps returned zero matches
+- Zero console errors in browser
+- Reverted SQL_ECHO back to False after verification
+
+### Evidence from server logs (SQL_ECHO=True):
+1. Health check: SELECT 1 + SELECT name FROM sqlite_master
+2. Register: SELECT users WHERE email=? + INSERT INTO users + SELECT users WHERE id=?
+3. Login: SELECT users WHERE email=?
+4. GET posts: SELECT posts WHERE user_id=? ORDER BY created_at DESC
+5. POST posts (from parallel session): INSERT INTO posts VALUES(...)
+
+### Current state:
+- Feature #1 (Database connection established): PASSING
+- Feature #2 (Database schema applied correctly): PASSING
+- Feature #4 (No mock data patterns in codebase): PASSING
+- Feature #5 (Backend API queries real database): PASSING
+- 4/163 features complete (2.5%)
+- Backend running on port 8000
+- Frontend running on port 5173
+
+### Next steps:
+- Feature #3: Data persists across server restart
+- Then move to authentication features (#6-#11)
