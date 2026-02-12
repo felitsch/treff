@@ -1,5 +1,34 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #35: User can duplicate a post
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added duplicate button (clipboard icon) to History page post action bar
+- Backend already had POST /api/posts/{id}/duplicate endpoint - no backend changes needed
+- Added `duplicatePost()` function in HistoryView.vue that calls the API and inserts the copy at the top of the list
+- Duplicate gets title with "(copy)" suffix and status set to "draft"
+
+### Verification steps completed:
+1. Created a test post "DUPTEST_Original_Post" - PASS
+2. Navigated to History page - PASS (post visible with duplicate button)
+3. Clicked duplicate button - PASS (new post "DUPTEST_Original_Post (copy)" appeared)
+4. Verified duplicate has same content (category, country, platform, caption, hashtags, CTA) - PASS
+5. Verified duplicate has status "draft" - PASS
+6. Verified original post is unchanged (same title, same content, same ID) - PASS
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- Zero mock data grep matches in frontend/src and backend/app
+- Server restart persistence test passed - both posts visible after restart
+- Test data cleaned up after verification
+- Screenshots: feature35-step1-history-with-original.png, feature35-step2-after-duplicate.png, feature35-step3-persistence-after-restart.png
+
+### Current state:
+- 51/163 features passing (31.3%)
+- Feature #35 marked as PASSING
+
 ## Session - Feature #29: Login page renders with email and password fields
 **Date:** 2026-02-12
 **Status:** PASSING
