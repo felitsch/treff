@@ -29,6 +29,11 @@ const newTemplate = ref({
 const showEditorModal = ref(false)
 const editorTemplate = ref(null)
 const editorPreviewRef = ref(null)
+const editorIsEditMode = ref(false)
+const editorSaving = ref(false)
+const editorSaveError = ref(null)
+const editorSaveSuccess = ref(false)
+const editorTemplateName = ref('')
 
 // Customization state - these drive the live preview
 const editorCustom = ref({
@@ -137,8 +142,13 @@ const editorPreviewHtml = computed(() => {
   return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + customCss + '</style></head><body>' + html + '</body></html>'
 })
 
-function openEditor(template) {
+function openEditor(template, editMode = false) {
   editorTemplate.value = { ...template }
+  editorIsEditMode.value = editMode && !template.is_default
+  editorSaving.value = false
+  editorSaveError.value = null
+  editorSaveSuccess.value = false
+  editorTemplateName.value = template.name
 
   // Parse existing colors from template
   const colors = parseColors(template.default_colors)
@@ -172,6 +182,59 @@ function openEditor(template) {
   nextTick(() => {
     updatePreviewIframe()
   })
+}
+
+async function saveTemplateEdits() {
+  if (!editorTemplate.value || !editorIsEditMode.value) return
+
+  editorSaving.value = true
+  editorSaveError.value = null
+  editorSaveSuccess.value = false
+
+  try {
+    const c = editorCustom.value
+    const payload = {
+      name: editorTemplateName.value.trim(),
+      default_colors: JSON.stringify({
+        primary: c.primaryColor,
+        secondary: c.secondaryColor,
+        accent: c.accentColor,
+        background: c.backgroundColor,
+      }),
+      default_fonts: JSON.stringify({
+        heading_font: c.headingFont,
+        body_font: c.bodyFont,
+      }),
+    }
+
+    const res = await api.put(`/api/templates/${editorTemplate.value.id}`, payload)
+
+    // Update the template in the local list
+    const idx = templates.value.findIndex(t => t.id === editorTemplate.value.id)
+    if (idx !== -1) {
+      templates.value[idx] = res.data
+    }
+
+    // Update editorTemplate to reflect saved state
+    editorTemplate.value = { ...res.data }
+    editorSaveSuccess.value = true
+
+    // Clear success message after delay
+    setTimeout(() => {
+      editorSaveSuccess.value = false
+    }, 3000)
+  } catch (err) {
+    console.error('Failed to save template:', err)
+    if (err.response?.data?.detail) {
+      editorSaveError.value = typeof err.response.data.detail === 'string'
+        ? err.response.data.detail
+        : 'Fehler beim Speichern des Templates.'
+    } else {
+      editorSaveError.value = 'Template konnte nicht gespeichert werden. Bitte versuche es erneut.'
+    }
+  } finally {
+    editorSaving.value = false
+  }
 }
 
 function closeEditor() {
@@ -535,10 +598,22 @@ onMounted(() => {
           <div
             v-for="template in catTemplates"
             :key="template.id"
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-treff-blue/50 dark:hover:border-treff-blue/50 transition-all cursor-pointer group overflow-hidden"
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-treff-blue/50 dark:hover:border-treff-blue/50 transition-all cursor-pointer group overflow-hidden relative"
             @click="openEditor(template)"
             data-testid="template-card"
           >
+            <!-- Edit button for custom templates -->
+            <button
+              v-if="!template.is_default"
+              @click.stop="openEditor(template, true)"
+              class="absolute top-3 right-3 z-10 p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-treff-blue hover:text-white text-gray-600 dark:text-gray-300 transition-all opacity-0 group-hover:opacity-100"
+              :title="'Template bearbeiten'"
+              data-testid="template-edit-btn"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
             <!-- Visual Thumbnail -->
             <div class="relative">
               <div
@@ -841,12 +916,15 @@ onMounted(() => {
       <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <!-- Modal Header -->
         <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Template bearbeiten</h2>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+              {{ editorIsEditMode ? 'Template bearbeiten' : 'Template-Vorschau' }}
+            </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {{ editorTemplate.name }} &middot;
               {{ getCategoryInfo(editorTemplate.category).icon }} {{ getCategoryInfo(editorTemplate.category).label }} &middot;
               {{ getPlatformInfo(editorTemplate.platform_format).label }}
+              <span v-if="editorIsEditMode" class="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs bg-treff-blue/10 text-treff-blue font-medium">Bearbeiten</span>
             </p>
           </div>
           <button
@@ -863,6 +941,32 @@ onMounted(() => {
         <div class="flex flex-1 overflow-hidden">
           <!-- Left Panel: Customization Controls -->
           <div class="w-[420px] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-5 space-y-5" data-testid="editor-controls">
+
+            <!-- Save success/error messages -->
+            <div v-if="editorSaveSuccess" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
+              <p class="text-green-700 dark:text-green-300 text-sm font-medium">Template erfolgreich gespeichert!</p>
+            </div>
+            <div v-if="editorSaveError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <p class="text-red-600 dark:text-red-400 text-sm">{{ editorSaveError }}</p>
+            </div>
+
+            <!-- Template Name (edit mode only) -->
+            <div v-if="editorIsEditMode" class="space-y-2">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Template-Name
+              </h3>
+              <input
+                v-model="editorTemplateName"
+                type="text"
+                placeholder="Template-Name eingeben..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                data-testid="editor-template-name"
+              />
+              <hr class="border-gray-200 dark:border-gray-700" />
+            </div>
 
             <!-- Section: Colors -->
             <div class="space-y-3">
@@ -1063,14 +1167,29 @@ onMounted(() => {
         <!-- Modal Footer -->
         <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <p class="text-xs text-gray-400 dark:text-gray-500">
-            Vorschau aktualisiert sich automatisch bei jeder Aenderung
+            {{ editorIsEditMode ? 'Aenderungen werden erst nach dem Speichern uebernommen' : 'Vorschau aktualisiert sich automatisch bei jeder Aenderung' }}
           </p>
-          <button
-            @click="closeEditor"
-            class="px-5 py-2.5 text-sm font-medium text-white bg-treff-blue hover:bg-blue-600 rounded-lg transition-colors"
-          >
-            Schliessen
-          </button>
+          <div class="flex items-center gap-3">
+            <button
+              @click="closeEditor"
+              class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              {{ editorIsEditMode ? 'Abbrechen' : 'Schliessen' }}
+            </button>
+            <button
+              v-if="editorIsEditMode"
+              @click="saveTemplateEdits"
+              :disabled="editorSaving || !editorTemplateName.trim()"
+              class="px-5 py-2.5 text-sm font-medium text-white bg-treff-blue hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              data-testid="editor-save-btn"
+            >
+              <svg v-if="editorSaving" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ editorSaving ? 'Wird gespeichert...' : 'Speichern' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
