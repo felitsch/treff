@@ -14,13 +14,34 @@ const loading = ref(false)
 
 const handleRegister = async () => {
   error.value = ''
+
+  // Client-side email validation
+  // Must have content before @, content after @, and a dot in the domain
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!email.value || !emailRegex.test(email.value.trim())) {
+    error.value = 'Bitte gib eine gueltige E-Mail-Adresse ein'
+    return
+  }
+  if (!password.value || password.value.length < 8) {
+    error.value = 'Passwort muss mindestens 8 Zeichen lang sein'
+    return
+  }
+
   loading.value = true
   try {
     await auth.register(email.value, password.value, displayName.value)
     await auth.login(email.value, password.value)
     router.push('/dashboard')
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Registration failed'
+    const detail = err.response?.data?.detail
+    if (Array.isArray(detail)) {
+      // Pydantic validation error format: [{msg: "Value error, ...", ...}]
+      error.value = detail.map(e => e.msg?.replace('Value error, ', '') || e.msg).join('. ')
+    } else if (typeof detail === 'string') {
+      error.value = detail
+    } else {
+      error.value = 'Registrierung fehlgeschlagen'
+    }
   } finally {
     loading.value = false
   }
@@ -35,7 +56,7 @@ const handleRegister = async () => {
         <p class="mt-2 text-gray-600 dark:text-gray-400">Konto erstellen</p>
       </div>
 
-      <form @submit.prevent="handleRegister" class="space-y-4">
+      <form @submit.prevent="handleRegister" novalidate class="space-y-4">
         <div>
           <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Anzeigename
