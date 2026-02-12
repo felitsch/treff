@@ -1,5 +1,42 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #85: User can update display name in settings
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Made the display name field editable in SettingsView.vue (was previously read-only)
+- Added PUT /api/auth/profile backend endpoint for updating user display_name
+- Added UserUpdateRequest schema with display_name validation
+- Frontend saveSettings() now saves display_name via /api/auth/profile, then updates auth store
+- Top bar reflects display name changes immediately after save
+
+### Files modified:
+- backend/app/api/routes/auth.py - Added PUT /api/auth/profile endpoint
+- backend/app/schemas/auth.py - Added UserUpdateRequest schema
+- frontend/src/views/SettingsView.vue - Made display name editable, added profile save logic
+
+### Verification steps completed:
+1. Navigate to Settings - PASS (settings page loads with Konto section, Anzeigename field)
+2. Change display name to NEW_DISPLAY_NAME - PASS (typed in editable field, replaced "Original Name")
+3. Click Save - PASS (clicked "Einstellungen speichern")
+4. Verify success toast appears - PASS ("Einstellungen erfolgreich gespeichert!" green banner)
+5. Refresh page - PASS (navigated to /settings after server restart)
+6. Verify new display name persisted - PASS ("NEW_DISPLAY_NAME" in both input field and top bar)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: display name persists after full backend+frontend restart
+- [x] Unauthenticated access blocked: PUT /api/auth/profile returns "Not authenticated" without token
+- [x] All API requests 200 OK, no 500s
+- [x] Top bar updates immediately after saving display name
+- [x] Screenshots captured: feature85-step1-settings-page.png, feature85-step2-name-changed.png, feature85-step3-save-success.png, feature85-step4-persisted-after-restart.png
+
+### Current state:
+- Feature #85 marked as PASSING
+- 90/170 features passing (52.9%)
+
 ## Session - Feature #83: Post history filter by date range works
 **Date:** 2026-02-12
 **Status:** PASSING
