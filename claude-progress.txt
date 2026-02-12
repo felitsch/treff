@@ -1,5 +1,55 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #60: Asset crop and resize tool works correctly
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full asset crop/resize tool end-to-end (backend + frontend)
+
+### Backend changes:
+- Replaced stub `/api/assets/crop` endpoint with full Pillow-based crop implementation
+- Supports crop coordinates (x, y, width, height), optional resize target dimensions
+- Supports "save as new" (creates new asset) or "overwrite original" mode
+- Handles JPEG/PNG/WebP formats, RGBA-to-RGB conversion for JPEG
+- Validates crop bounds, clamps to image dimensions
+- Creates proper Asset record with source="crop", inherits category/country/tags
+
+### Frontend changes:
+- Created `AssetCropModal.vue` component with:
+  - Visual image preview with dark overlay outside crop area
+  - Draggable crop selection box with rule-of-thirds grid
+  - Resizable crop area via bottom-right handle
+  - Aspect ratio buttons: Frei, 1:1, 4:3, 3:4, 16:9, 9:16
+  - Real-time crop info display (X, Y, Width, Height)
+  - "Save as new asset" checkbox option
+  - German UI labels throughout
+- Integrated crop button into AssetsView.vue hover overlay (next to delete button)
+
+### Verification steps completed:
+1. Upload test image (800x600 PNG) - PASS
+2. Open crop tool from asset hover overlay - PASS
+3. Crop modal shows image preview with crop area - PASS
+4. Select 1:1 aspect ratio -> crop area becomes 600x600, centered at X:100 - PASS
+5. Apply crop -> success toast "Bild erfolgreich zugeschnitten!" - PASS
+6. Verify cropped image saved as new asset (600x600px, 4.2 KB) - PASS
+7. Asset count updated from 1 to 2 - PASS
+8. Zero console errors - PASS
+9. Zero mock data patterns in frontend/src and backend/app - PASS
+10. Server restart persistence test - PASS (both assets survive restart)
+
+### Screenshots:
+- feature60-step1-asset-uploaded-with-crop-btn.png
+- feature60-step2-hover-crop-btn.png
+- feature60-step3b-crop-modal-with-image.png
+- feature60-step4-ratio-1to1-selected.png
+- feature60-step5b-crop-result-2-assets.png
+- feature60-step6-persistence-after-restart.png
+
+### Current state:
+- Feature #60 marked as PASSING
+- 70/163 features passing (42.9%)
+
 ## Session - Feature #58: Asset search finds images by filename or tags
 **Date:** 2026-02-12
 **Status:** PASSING
