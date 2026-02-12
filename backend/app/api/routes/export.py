@@ -158,10 +158,115 @@ async def download_export(
     return FileResponse(file_path, filename=os.path.basename(export.file_path))
 
 
+@router.get("/history")
+async def get_export_history(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+    post_id: int | None = None,
+):
+    """Get export history records, optionally filtered by post_id."""
+    query = (
+        select(ExportHistory)
+        .join(Post, ExportHistory.post_id == Post.id)
+        .where(Post.user_id == user_id)
+        .order_by(ExportHistory.exported_at.desc())
+    )
+    if post_id:
+        query = query.where(ExportHistory.post_id == post_id)
+
+    result = await db.execute(query)
+    exports = result.scalars().all()
+    return [export_to_dict(e) for e in exports]
+
+
 @router.post("/batch")
 async def batch_export(
     request: dict,
     user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Render multiple posts."""
-    return {"message": "Batch export is handled client-side", "status": "ok"}
+    """Record batch export for multiple posts.
+
+    Accepts a list of post_ids and creates export records for each.
+    The actual rendering happens client-side; this records export history.
+    """
+    post_ids = request.get("post_ids", [])
+    platform = request.get("platform", "instagram_feed")
+    resolution = request.get("resolution", "1080")
+
+    if not post_ids or not isinstance(post_ids, list):
+        raise HTTPException(status_code=400, detail="post_ids is required and must be a list")
+
+    if len(post_ids) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 posts per batch export")
+
+    # Verify all posts belong to user
+    result = await db.execute(
+        select(Post).where(Post.id.in_(post_ids), Post.user_id == user_id)
+    )
+    posts = result.scalars().all()
+
+    if len(posts) != len(post_ids):
+        found_ids = {p.id for p in posts}
+        missing = [pid for pid in post_ids if pid not in found_ids]
+        raise HTTPException(
+            status_code=404,
+            detail=f"Posts not found or not owned by user: {missing}"
+        )
+
+    export_records = []
+    now = datetime.now(timezone.utc)
+
+    for post in posts:
+        # Determine slide count from slide_data
+        slide_count = 1
+        if post.slide_data:
+            try:
+                import json
+                slides = json.loads(post.slide_data)
+                if isinstance(slides, list):
+                    slide_count = len(slides)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        fmt = "zip" if slide_count > 1 else "png"
+        suffix = "_carousel.zip" if slide_count > 1 else ".png"
+
+        export = ExportHistory(
+            post_id=post.id,
+            platform=post.platform or platform,
+            format=fmt,
+            file_path=f"exports/post_{post.id}_{post.platform or platform}{suffix}",
+            resolution=resolution,
+            slide_count=slide_count,
+            exported_at=now,
+        )
+        db.add(export)
+
+        # Update post status
+        post.exported_at = now
+        if post.status == "draft":
+            post.status = "exported"
+
+    await db.flush()
+
+    # Collect export records after flush (IDs assigned)
+    for post in posts:
+        # Get the latest export record for this post
+        exp_result = await db.execute(
+            select(ExportHistory)
+            .where(ExportHistory.post_id == post.id)
+            .order_by(ExportHistory.id.desc())
+            .limit(1)
+        )
+        exp = exp_result.scalar_one_or_none()
+        if exp:
+            export_records.append(export_to_dict(exp))
+
+    await db.commit()
+
+    return {
+        "exports": export_records,
+        "count": len(export_records),
+        "status": "ok",
+    }

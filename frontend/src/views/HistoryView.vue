@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import JSZip from 'jszip'
 import api from '@/utils/api'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
 
 const loading = ref(true)
 const error = ref(null)
@@ -431,6 +434,236 @@ async function duplicatePost(post) {
   }
 }
 
+// ── Batch Selection & Export ──
+const selectionMode = ref(false)
+const selectedPostIds = ref(new Set())
+const batchExporting = ref(false)
+
+function toggleSelectionMode() {
+  selectionMode.value = !selectionMode.value
+  if (!selectionMode.value) {
+    selectedPostIds.value = new Set()
+  }
+}
+
+function togglePostSelection(postId) {
+  const newSet = new Set(selectedPostIds.value)
+  if (newSet.has(postId)) {
+    newSet.delete(postId)
+  } else {
+    newSet.add(postId)
+  }
+  selectedPostIds.value = newSet
+}
+
+function isPostSelected(postId) {
+  return selectedPostIds.value.has(postId)
+}
+
+const allOnPageSelected = computed(() => {
+  if (posts.value.length === 0) return false
+  return posts.value.every(p => selectedPostIds.value.has(p.id))
+})
+
+function toggleSelectAll() {
+  if (allOnPageSelected.value) {
+    // Deselect all on current page
+    const newSet = new Set(selectedPostIds.value)
+    posts.value.forEach(p => newSet.delete(p.id))
+    selectedPostIds.value = newSet
+  } else {
+    // Select all on current page
+    const newSet = new Set(selectedPostIds.value)
+    posts.value.forEach(p => newSet.add(p.id))
+    selectedPostIds.value = newSet
+  }
+}
+
+const selectedCount = computed(() => selectedPostIds.value.size)
+
+// Platform dimensions for rendering
+const platformDimensions = {
+  instagram_feed: { w: 1080, h: 1080 },
+  instagram_story: { w: 1080, h: 1920 },
+  tiktok: { w: 1080, h: 1920 },
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/png')
+  })
+}
+
+function wrapTextOnCanvas(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ')
+  let line = ''
+  let currentY = y
+  for (const word of words) {
+    const testLine = line + word + ' '
+    const metrics = ctx.measureText(testLine)
+    if (metrics.width > maxWidth && line !== '') {
+      ctx.fillText(line.trim(), x, currentY)
+      line = word + ' '
+      currentY += lineHeight
+    } else {
+      line = testLine
+    }
+  }
+  ctx.fillText(line.trim(), x, currentY)
+}
+
+function roundRectOnCanvas(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
+}
+
+function renderSlideForPost(slide, platform) {
+  const dims = platformDimensions[platform] || platformDimensions.instagram_feed
+  const canvas = document.createElement('canvas')
+  canvas.width = dims.w
+  canvas.height = dims.h
+  const ctx = canvas.getContext('2d')
+
+  // Background
+  ctx.fillStyle = slide.background_value || '#1A1A2E'
+  ctx.fillRect(0, 0, dims.w, dims.h)
+
+  // Gradient overlay
+  const gradient = ctx.createLinearGradient(0, 0, 0, dims.h)
+  gradient.addColorStop(0, 'rgba(76, 139, 194, 0.3)')
+  gradient.addColorStop(1, 'rgba(26, 26, 46, 0.8)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, dims.w, dims.h)
+
+  // TREFF logo
+  ctx.fillStyle = '#3B7AB1'
+  ctx.font = 'bold 28px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF', 60, 80)
+  ctx.fillStyle = '#9CA3AF'
+  ctx.font = '18px Inter, Arial, sans-serif'
+  ctx.fillText('Sprachreisen', 158, 80)
+
+  // Headline
+  ctx.fillStyle = '#3B7AB1'
+  ctx.font = 'bold 52px Inter, Arial, sans-serif'
+  ctx.textAlign = 'center'
+  wrapTextOnCanvas(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
+
+  // Subheadline
+  if (slide.subheadline) {
+    ctx.fillStyle = '#FDD000'
+    ctx.font = 'bold 32px Inter, Arial, sans-serif'
+    wrapTextOnCanvas(ctx, slide.subheadline, dims.w / 2, 400, dims.w - 160, 40)
+  }
+
+  // Body text
+  if (slide.body_text) {
+    ctx.fillStyle = '#D1D5DB'
+    ctx.font = '24px Inter, Arial, sans-serif'
+    wrapTextOnCanvas(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
+  }
+
+  // CTA
+  if (slide.cta_text) {
+    const ctaY = dims.h - 180
+    ctx.fillStyle = '#FDD000'
+    roundRectOnCanvas(ctx, dims.w / 2 - 150, ctaY, 300, 56, 28)
+    ctx.fill()
+    ctx.fillStyle = '#1A1A2E'
+    ctx.font = 'bold 24px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(slide.cta_text, dims.w / 2, ctaY + 37)
+  }
+
+  // TREFF bottom branding
+  ctx.fillStyle = '#3B7AB1'
+  ctx.font = 'bold 18px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
+
+  return canvas
+}
+
+async function executeBatchExport() {
+  if (selectedPostIds.value.size === 0) return
+  batchExporting.value = true
+
+  try {
+    const postIds = Array.from(selectedPostIds.value)
+
+    // Fetch full post data for all selected posts
+    const postDetails = []
+    for (const pid of postIds) {
+      const resp = await api.get(`/api/posts/${pid}`)
+      postDetails.push(resp.data)
+    }
+
+    // Record batch export in backend
+    await api.post('/api/export/batch', {
+      post_ids: postIds,
+      platform: 'instagram_feed',
+      resolution: '1080',
+    })
+
+    // Generate ZIP with all posts
+    const zip = new JSZip()
+    const date = new Date().toISOString().split('T')[0]
+
+    for (const post of postDetails) {
+      let slides = []
+      try {
+        slides = JSON.parse(post.slide_data || '[]')
+      } catch {
+        slides = [{ headline: post.title || 'Untitled' }]
+      }
+      if (!Array.isArray(slides) || slides.length === 0) {
+        slides = [{ headline: post.title || 'Untitled' }]
+      }
+
+      const platform = post.platform || 'instagram_feed'
+      const postFolder = zip.folder(`post_${post.id}_${(post.title || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40)}`)
+
+      for (let i = 0; i < slides.length; i++) {
+        const canvas = renderSlideForPost(slides[i], platform)
+        const blob = await canvasToBlob(canvas)
+        const slideNum = String(i + 1).padStart(2, '0')
+        postFolder.file(`TREFF_${post.category || 'post'}_${platform}_${date}_slide_${slideNum}.png`, blob)
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    const link = document.createElement('a')
+    link.download = `TREFF_batch_export_${postDetails.length}_posts_${date}.zip`
+    link.href = URL.createObjectURL(zipBlob)
+    link.click()
+    URL.revokeObjectURL(link.href)
+
+    toast.success(`${postDetails.length} Posts erfolgreich exportiert!`, 5000)
+
+    // Refresh posts list to show updated status
+    await fetchPosts(false)
+
+    // Clear selection
+    selectedPostIds.value = new Set()
+    selectionMode.value = false
+  } catch (err) {
+    console.error('Batch export failed:', err)
+    toast.error('Batch-Export fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 5000)
+  } finally {
+    batchExporting.value = false
+  }
+}
+
 // Navigate to edit
 function editPost(postId) {
   router.push(`/posts/${postId}/edit`)
@@ -456,12 +689,54 @@ onMounted(() => {
           Alle erstellten Posts anzeigen und verwalten
         </p>
       </div>
+      <div class="flex items-center gap-2">
+        <button
+          @click="toggleSelectionMode"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm"
+          :class="selectionMode
+            ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
+            : 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+        >
+          <span>☑️</span>
+          <span>{{ selectionMode ? 'Abbrechen' : 'Auswaehlen' }}</span>
+        </button>
+        <button
+          @click="createPost"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
+        >
+          <span>+</span>
+          <span>Neuer Post</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Batch Actions Bar -->
+    <div
+      v-if="selectionMode"
+      class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            :checked="allOnPageSelected"
+            @change="toggleSelectAll"
+            class="w-4 h-4 rounded border-gray-300 text-[#3B7AB1] focus:ring-[#3B7AB1]"
+            aria-label="Alle auf dieser Seite auswaehlen"
+          />
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Alle auswaehlen</span>
+        </label>
+        <span class="text-sm text-gray-500 dark:text-gray-400">
+          {{ selectedCount }} {{ selectedCount === 1 ? 'Post' : 'Posts' }} ausgewaehlt
+        </span>
+      </div>
       <button
-        @click="createPost"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
+        @click="executeBatchExport"
+        :disabled="selectedCount === 0 || batchExporting"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span>+</span>
-        <span>Neuer Post</span>
+        <span>{{ batchExporting ? '⏳' : '📦' }}</span>
+        <span>{{ batchExporting ? 'Exportiere...' : `Batch-Export (${selectedCount})` }}</span>
       </button>
     </div>
 
@@ -674,9 +949,27 @@ onMounted(() => {
       <div
         v-for="post in filteredPosts"
         :key="post.id"
-        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border transition-shadow"
+        :class="[
+          selectionMode && isPostSelected(post.id)
+            ? 'border-[#3B7AB1] bg-blue-50/50 dark:bg-blue-900/10 shadow-md'
+            : 'border-gray-200 dark:border-gray-700 hover:shadow-md',
+          selectionMode ? 'cursor-pointer' : ''
+        ]"
+        @click="selectionMode ? togglePostSelection(post.id) : null"
       >
         <div class="flex items-center p-4 gap-4">
+          <!-- Selection checkbox -->
+          <div v-if="selectionMode" class="flex-shrink-0">
+            <input
+              type="checkbox"
+              :checked="isPostSelected(post.id)"
+              @change="togglePostSelection(post.id)"
+              class="w-5 h-5 rounded border-gray-300 text-[#3B7AB1] focus:ring-[#3B7AB1] cursor-pointer"
+              :aria-label="'Post auswaehlen: ' + (post.title || 'Unbenannter Post')"
+            />
+          </div>
+
           <!-- Thumbnail -->
           <div
             class="w-16 h-16 rounded-lg flex-shrink-0 bg-gradient-to-br flex items-center justify-center text-white text-2xl"
