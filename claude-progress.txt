@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #145: Batch export re-exports multiple posts from history
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full batch export functionality from the History page
+- Backend: Replaced stub /api/export/batch endpoint with real implementation
+  - Accepts post_ids array, validates ownership, creates ExportHistory records per post
+  - Updates post status from draft to exported, sets exported_at timestamp
+  - Returns array of export records with count
+- Backend: Added GET /api/export/history endpoint for querying export records
+  - Supports optional post_id filter
+  - Returns all export records for the authenticated user
+- Frontend: Added batch selection UI to HistoryView.vue
+  - "Auswaehlen" toggle button to enter/exit selection mode
+  - Checkboxes on each post card (click card or checkbox to toggle)
+  - "Alle auswaehlen" checkbox to select/deselect all on current page
+  - Selected count display: "X Posts ausgewaehlt"
+  - "Batch-Export (X)" button, disabled when nothing selected
+  - Visual highlight (blue border) for selected posts
+- Frontend: Implemented client-side batch rendering and ZIP download
+  - Fetches full post data for each selected post
+  - Renders each post's slides to canvas using same rendering logic as CreatePostView
+  - Creates ZIP with per-post folders containing PNG files
+  - Naming: TREFF_batch_export_N_posts_DATE.zip
+  - Records batch export via /api/export/batch endpoint
+  - Shows success toast, refreshes post list, exits selection mode
+
+### Verification steps completed:
+1. Created 3 test posts (BATCH_TEST_Post_1/2/3) with different categories and platforms - PASS
+2. Entered selection mode, selected all 3 posts using "Alle auswaehlen" - PASS
+3. Triggered batch export - PASS (ZIP downloaded with 3 folders, 3 PNGs)
+4. Verified all 3 posts rendered as valid PNGs (valid PNG header, 65-86KB each) - PASS
+5. Verified 3 export history records created in database (IDs 13, 14, 15) - PASS
+6. All 3 posts changed status from "Entwurf" to "Exportiert" - PASS
+7. Data persists after page refresh - PASS
+8. Zero JavaScript console errors (0 errors, 0 warnings) - PASS
+9. Zero mock data grep matches in frontend/src and backend/app - PASS
+10. Test data cleaned up after verification - PASS
+
+### Files modified:
+- backend/app/api/routes/export.py - Batch export endpoint + export history endpoint
+- frontend/src/views/HistoryView.vue - Batch selection UI + rendering + ZIP download
+
+### Current state:
+- Feature #145 marked as PASSING
+- 147/170 features passing (86.5%)
+
 ## Session - Feature #144: Export carousel ZIP contains correct number of files
 **Date:** 2026-02-12
 **Status:** PASSING
