@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #91: Registration rejects duplicate email addresses
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete duplicate email registration rejection end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: POST /api/auth/register checks for existing email, returns HTTP 400 "Email already registered"
+  - Frontend: RegisterView.vue catches error and displays message in red alert box
+  - Frontend: Toast notification shows German message "Diese E-Mail-Adresse ist bereits registriert."
+  - Database: UNIQUE INDEX ix_users_email enforces constraint at DB level
+
+### Verification steps completed:
+1. Register user with email test91@treff.de - PASS (user created, redirected to dashboard)
+2. Log out and try registering again with same email test91@treff.de - PASS
+   - Page stays on /register (no redirect to dashboard)
+   - Inline error: "Email already registered"
+   - Toast: "Diese E-Mail-Adresse ist bereits registriert."
+3. Verify error message: email already in use - PASS (both inline and toast messages displayed)
+4. Verify second registration fails - PASS
+   - DB query confirms only 1 user with test91@treff.de
+   - Also tested with test@treff.de (same result)
+
+### Verification checklist:
+- [x] Zero application console errors (only Vite HMR reconnection noise, not app-related)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Database uniqueness constraint verified: CREATE UNIQUE INDEX ix_users_email ON users (email)
+- [x] Screenshots captured: feature91-step1-duplicate-email-error.png, feature91-step2-test-treff-de-duplicate.png
+
+### No code changes needed:
+- auth.py already checks for duplicate email and returns HTTP 400
+- RegisterView.vue already displays err.response?.data?.detail error message
+- User model already has unique=True on email column
+- Database already has unique index on email
+
+### Current state:
+- Feature #91 marked as PASSING
+- 95/170 features passing (55.9%)
+
 ## Session - Feature #86: User can configure posting goals in settings
 **Date:** 2026-02-12
 **Status:** PASSING
