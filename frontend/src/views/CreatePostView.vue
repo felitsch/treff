@@ -95,6 +95,9 @@ const savedPost = ref(null)
 const exportComplete = ref(false)
 const exportQuality = ref('1080') // '1080' = standard, '2160' = high
 
+// ── Validation state ────────────────────────────────────────────────
+const validationMessage = ref('')
+
 // ── Computed ──────────────────────────────────────────────────────────
 const canProceed = computed(() => {
   switch (currentStep.value) {
@@ -110,6 +113,15 @@ const canProceed = computed(() => {
     default: return false
   }
 })
+
+const stepValidationMessages = {
+  1: 'Bitte waehle eine Kategorie aus, bevor du fortfaehrst.',
+  2: 'Bitte waehle ein Template aus, bevor du fortfaehrst.',
+  3: 'Bitte waehle eine Plattform aus, bevor du fortfaehrst.',
+  5: 'Bitte generiere zuerst den Inhalt, bevor du fortfaehrst.',
+  6: 'Es sind keine Slides vorhanden. Bitte generiere zuerst Inhalte.',
+  7: 'Es sind keine Slides vorhanden. Bitte generiere zuerst Inhalte.',
+}
 
 const stepLabels = [
   'Kategorie',
@@ -131,11 +143,14 @@ const selectedCountryObj = computed(() => countries.find(c => c.id === country.v
 
 function nextStep() {
   if (currentStep.value < totalSteps && canProceed.value) {
+    validationMessage.value = ''
     currentStep.value++
     error.value = ''
     successMsg.value = ''
     if (currentStep.value === 2) loadTemplates()
     if (currentStep.value === 8) loadAssets()
+  } else if (!canProceed.value) {
+    validationMessage.value = stepValidationMessages[currentStep.value] || 'Bitte fuelle alle Pflichtfelder aus.'
   }
 }
 
@@ -144,6 +159,7 @@ function prevStep() {
     currentStep.value--
     error.value = ''
     successMsg.value = ''
+    validationMessage.value = ''
   }
 }
 
@@ -152,10 +168,16 @@ function goToStep(step) {
     currentStep.value = step
     error.value = ''
     successMsg.value = ''
+    validationMessage.value = ''
     if (step === 2) loadTemplates()
     if (step === 8) loadAssets()
   }
 }
+
+// Clear validation message when user makes a selection
+watch([selectedCategory, selectedTemplate, selectedPlatform, generatedContent, slides], () => {
+  validationMessage.value = ''
+})
 
 async function loadTemplates() {
   loadingTemplates.value = true
@@ -533,6 +555,7 @@ function resetWorkflow() {
   ctaText.value = ''
   error.value = ''
   successMsg.value = ''
+  validationMessage.value = ''
   savedPost.value = null
   exportComplete.value = false
   currentPreviewSlide.value = 0
@@ -1382,6 +1405,15 @@ watch(slides, () => {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Validation Message -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="validationMessage" class="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-300 flex items-center gap-2" role="alert" data-testid="validation-message">
+      <span class="text-lg">&#9888;&#65039;</span>
+      <span>{{ validationMessage }}</span>
+      <button @click="validationMessage = ''" class="ml-auto text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 font-bold">&times;</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- Navigation Buttons -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -1397,8 +1429,10 @@ watch(slides, () => {
       <button
         v-if="currentStep < totalSteps && !exportComplete"
         @click="nextStep"
-        :disabled="!canProceed"
-        class="px-6 py-3 rounded-lg bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium transition-colors disabled:cursor-not-allowed"
+        class="px-6 py-3 rounded-lg font-medium transition-colors"
+        :class="canProceed
+          ? 'bg-[#4C8BC2] hover:bg-[#3a7ab3] text-white'
+          : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'"
       >
         Weiter &#8594;
       </button>
