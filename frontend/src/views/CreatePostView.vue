@@ -154,6 +154,7 @@ function nextStep() {
     error.value = ''
     successMsg.value = ''
     if (currentStep.value === 2) loadTemplates()
+    if (currentStep.value === 6 && !previewPlatform.value) previewPlatform.value = selectedPlatform.value
     if (currentStep.value === 8) loadAssets()
   } else if (!canProceed.value) {
     validationMessage.value = stepValidationMessages[currentStep.value] || 'Bitte fuelle alle Pflichtfelder aus.'
@@ -176,6 +177,7 @@ function goToStep(step) {
     successMsg.value = ''
     validationMessage.value = ''
     if (step === 2) loadTemplates()
+    if (step === 6 && !previewPlatform.value) previewPlatform.value = selectedPlatform.value
     if (step === 8) loadAssets()
   }
 }
