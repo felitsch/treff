@@ -1,5 +1,46 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #134: Focus rings visible on focused interactive elements
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Improved focus ring visibility on login and register form input fields
+- Added focus-ring class to navigation links (Registrieren/Anmelden) on login/register pages
+- Verified all interactive elements have visible focus indicators via browser automation
+
+### Changes made:
+- **LoginView.vue**: Changed email/password input focus rings from `focus:ring-treff-blue/20` (20% opacity, barely visible) to `focus:ring-treff-blue focus:ring-offset-2` (full opacity with offset). Added `focus-ring rounded` to "Registrieren" router-link.
+- **RegisterView.vue**: Same changes for displayName, email, password inputs (removed /20 opacity, added ring-offset-2). Added `focus-ring rounded` to "Anmelden" router-link.
+- **SidebarNav.vue**: Already had proper `.focus-ring` class on all nav items and collapse button - no changes needed.
+- **main.css**: Already had `.focus-ring` utility class with `focus:ring-2 focus:ring-treff-blue focus:ring-offset-2` - no changes needed.
+
+### Verification steps completed:
+1. Tab through the login form - PASS
+   - Email input: visible blue focus ring with offset (screenshot: feature134-verify-email-focus.png)
+   - Password input: visible blue focus ring with offset (screenshot: feature134-verify-password-focus.png)
+   - Anmelden button: visible blue focus ring with offset (screenshot: feature134-verify-button-focus.png)
+   - Registrieren link: visible blue focus ring (screenshot: feature134-verify-register-link-focus.png)
+2. Verify each focused element has a visible focus ring/outline - PASS
+   - All 4 interactive elements on login form show clear blue focus rings
+3. Tab through sidebar navigation items - PASS
+   - Create Post: visible blue focus ring (screenshot: feature134-verify-sidebar-createpost-focus.png)
+   - Templates: visible blue focus ring (screenshot: feature134-verify-sidebar-templates-focus.png)
+   - Calendar: visible blue focus ring (screenshot: feature134-verify-sidebar-calendar-focus.png)
+   - All 9 nav items + collapse button have `.focus-ring` class
+4. Verify focus indicator visible on each item - PASS
+   - Consistent blue ring with offset on all sidebar navigation items
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured for all verification steps
+
+### Current state:
+- Feature #134 marked as PASSING
+- 137/170 features passing (80.6%)
+
 ## Session - Feature #133: Tab navigation works through all form fields
 **Date:** 2026-02-12
 **Status:** PASSING
