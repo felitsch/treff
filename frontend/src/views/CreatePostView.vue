@@ -596,6 +596,34 @@ watch(slides, () => {
       </div>
     </div>
 
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center flex-wrap gap-1 text-sm">
+        <li class="flex items-center">
+          <button
+            @click="goToStep(1)"
+            class="text-gray-500 dark:text-gray-400 hover:text-[#4C8BC2] dark:hover:text-blue-400 transition-colors"
+            :class="currentStep === 1 ? 'cursor-default' : 'cursor-pointer'"
+          >Post erstellen</button>
+        </li>
+        <template v-for="(label, idx) in stepLabels.slice(0, currentStep)" :key="'bc-' + idx">
+          <li class="flex items-center">
+            <span class="mx-1.5 text-gray-400 dark:text-gray-500" aria-hidden="true">/</span>
+            <button
+              v-if="idx + 1 < currentStep"
+              @click="goToStep(idx + 1)"
+              class="text-[#4C8BC2] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer"
+            >{{ label }}</button>
+            <span
+              v-else
+              class="font-semibold text-gray-900 dark:text-white"
+              aria-current="step"
+            >{{ label }}</span>
+          </li>
+        </template>
+      </ol>
+    </nav>
+
     <!-- Step Indicator -->
     <div class="mb-8">
       <div class="flex items-center justify-between">
