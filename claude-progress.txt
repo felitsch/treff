@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #51: Export single post as PNG at 1080px resolution
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented export quality selector (standard 1080px / high 2160px) in Step 9 of post creation workflow
+- Fixed filename convention to follow TREFF_[category]_[platform]_[date]_[slide].png pattern
+- Fixed bug where PointerEvent was passed as slideIndex argument in downloadAsImage()
+- Added proper canvas scaling for high-quality (2x) exports
+- Reset exportQuality on workflow reset
+- Export records correct resolution in ExportHistory database table
+
+### Verification steps completed:
+1. Created post through full 9-step wizard (Laender-Spotlight, Instagram Feed, USA) - PASS
+2. Clicked "Als PNG herunterladen" on Step 9 - PASS (file downloaded)
+3. Selected standard quality (1080px) - PASS (default selection highlighted in blue)
+4. Verified PNG file downloaded - PASS (Playwright captured download event)
+5. Verified filename: TREFF_laender_spotlight_instagram_feed_2026-02-12_01.png - PASS
+6. Verified image dimensions: 1080x1080 (Instagram Feed square format) - PASS
+7. Saved post and verified export recorded in database (post_id=6, resolution=1080, format=png) - PASS
+8. Server restart persistence test: export_history record persists - PASS
+
+### Mock data grep results (all 6 checks clean):
+- globalThis: 0 matches
+- dev-store/devStore/mockDb: 0 matches
+- mockData/testData/fakeData/sampleData/dummyData (frontend): 0 matches
+- mockData/testData/fakeData/sampleData/dummyData (backend): 0 matches
+- STUB/MOCK/isDevelopment/isDev (frontend): 0 matches
+- STUB/MOCK/isDevelopment/isDev (backend): 0 matches
+
+### Console errors: 0
+### Network errors: 0
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added quality selector UI, fixed filename with slide number, fixed event guard, canvas scaling for quality
+
+### Current state:
+- 22/163 features complete (13.5%)
+- Feature #51 (Export single post as PNG at 1080px resolution): PASSING
+
+### Next steps:
+- Continue with remaining export and workflow features
+
 ## Session - Feature #75: Analytics overview shows total posts and frequency
 **Date:** 2026-02-12
 **Status:** PASSING
