@@ -1,5 +1,62 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #131: Modal dialogs fit within viewport and have overlay
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete modal dialog display behavior end-to-end via browser
+- No code changes needed - all modal functionality was already fully implemented:
+  - Teleport-based modals render outside component hierarchy via `<Teleport to="body">`
+  - Backdrop overlay: `absolute inset-0 bg-black/50 backdrop-blur-sm` with click-to-close handler
+  - Centering: `fixed inset-0 flex items-center justify-center p-4`
+  - Viewport bounds: `max-w-md w-full` with padding prevents overflow
+
+### Verification steps completed:
+1. Open a confirmation dialog (e.g., delete post) - PASS
+   - Created test post MODAL_TEST_POST_131 via API
+   - Navigated to History, clicked delete (trash) button
+   - Delete confirmation modal appeared with title, warning message, and action buttons
+2. Verify modal is centered in viewport - PASS
+   - Screenshot confirms modal is horizontally and vertically centered on desktop (1280x720)
+   - Flexbox `items-center justify-center` provides consistent centering
+3. Verify backdrop overlay is visible - PASS
+   - bg-black/50 creates visible semi-transparent dark overlay behind modal
+   - backdrop-blur-sm adds subtle blur to background content
+   - Content behind modal is clearly dimmed/grayed out in screenshots
+4. Verify modal does not exceed viewport bounds - PASS
+   - Tested on desktop (1280x720): modal well within viewport with proper spacing
+   - Tested on mobile (375x667): modal shrinks to fit with p-4 padding, no overflow
+   - max-w-md (28rem) constrains width, w-full allows shrinking on small screens
+5. Verify clicking overlay closes modal - PASS
+   - Clicked backdrop overlay element (div.absolute.inset-0 with @click="cancelDelete")
+   - Modal closed completely (removed from DOM)
+   - Post remained intact (not deleted)
+   - History page returned to normal state
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Modal behavior verified on both desktop and mobile viewport sizes
+- [x] Screenshots captured:
+  - feature131-step1-modal-open.png (desktop - modal centered with overlay)
+  - feature131-step2-modal-mobile-viewport.png (mobile 375x667 - modal fits viewport)
+  - feature131-step3-modal-desktop-with-overlay.png (desktop - overlay clearly visible)
+  - feature131-step4-modal-closed-after-overlay-click.png (modal closed after overlay click)
+
+### No code changes needed:
+- HistoryView.vue delete dialog already had proper Teleport, centering, overlay, and click-to-close
+- HistoryView.vue schedule dialog uses same pattern
+- EditPostView.vue slide delete and unsaved changes modals use same pattern
+- TemplatesView.vue template delete modal uses same pattern
+- CalendarView.vue schedule time picker uses same pattern
+- AssetCropModal.vue dedicated component uses same pattern
+
+### Current state:
+- Feature #131 marked as PASSING
+- 133/170 features passing (78.2%)
+
 ## Session - Feature #129: Layout works at tablet 768px width
 **Date:** 2026-02-12
 **Status:** PASSING
