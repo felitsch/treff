@@ -12,6 +12,30 @@ from app.models.template import Template
 router = APIRouter()
 
 
+def template_to_dict(t: Template) -> dict:
+    """Convert a Template model to a plain dict to avoid lazy-loading issues."""
+    return {
+        "id": t.id,
+        "name": t.name,
+        "category": t.category,
+        "platform_format": t.platform_format,
+        "slide_count": t.slide_count,
+        "html_content": t.html_content,
+        "css_content": t.css_content,
+        "default_colors": t.default_colors,
+        "default_fonts": t.default_fonts,
+        "placeholder_fields": t.placeholder_fields,
+        "thumbnail_url": t.thumbnail_url,
+        "is_default": t.is_default,
+        "is_country_themed": t.is_country_themed,
+        "country": t.country,
+        "version": t.version,
+        "parent_template_id": t.parent_template_id,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+    }
+
+
 @router.get("")
 async def list_templates(
     category: Optional[str] = None,
@@ -30,8 +54,10 @@ async def list_templates(
     if country:
         query = query.where(Template.country == country)
 
+    query = query.order_by(Template.category, Template.name)
     result = await db.execute(query)
-    return result.scalars().all()
+    templates = result.scalars().all()
+    return [template_to_dict(t) for t in templates]
 
 
 @router.get("/{template_id}")
@@ -45,7 +71,7 @@ async def get_template(
     template = result.scalar_one_or_none()
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    return template
+    return template_to_dict(template)
 
 
 @router.post("", status_code=201)
@@ -59,7 +85,7 @@ async def create_template(
     db.add(template)
     await db.flush()
     await db.refresh(template)
-    return template
+    return template_to_dict(template)
 
 
 @router.put("/{template_id}")
@@ -83,7 +109,7 @@ async def update_template(
 
     await db.flush()
     await db.refresh(template)
-    return template
+    return template_to_dict(template)
 
 
 @router.delete("/{template_id}")
