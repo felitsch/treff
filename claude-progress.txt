@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #38: Post workflow state persists if user navigates away
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Created Pinia store (`useCreatePostStore`) to persist all Create Post wizard state across navigation
+- Replaced all local `ref()` declarations in CreatePostView.vue with `storeToRefs(store)` destructuring
+- State now survives component unmount/remount since Pinia stores persist in memory
+- Added `onMounted` hook to reload templates/assets when returning to an in-progress workflow
+- Reset workflow function delegates to `store.resetWorkflow()` for centralized state management
+
+### Files created/modified:
+- frontend/src/stores/createPost.js - NEW: Pinia store for Create Post workflow state
+- frontend/src/views/CreatePostView.vue - Modified: use store refs instead of local refs
+
+### Verification steps completed:
+1. Start Create Post workflow - PASS (navigated to /create-post, Step 1 shown)
+2. Complete steps 1-3 (select category, template, platform) - PASS:
+   - Step 1: Selected Laender-Spotlight category
+   - Step 2: Selected Laender-Spotlight Feed template
+   - Step 3: Selected TikTok platform
+3. Navigate away to Dashboard - PASS (clicked Dashboard sidebar link, dashboard loaded)
+4. Navigate back to Create Post - PASS (clicked Create Post sidebar link)
+5. Verify previous selections are preserved - PASS:
+   - Step 3 of 9 shown (not reset to step 1)
+   - Breadcrumb shows: Post erstellen / Kategorie / Template / Plattform
+   - Step indicators show checkmarks for completed steps 1 & 2
+   - TikTok platform still selected (blue highlight)
+6. Continue workflow from where you left off - PASS:
+   - Clicked Weiter, advanced to Step 4 (Thema & Stichpunkte)
+   - All previous step checkmarks preserved
+
+### Additional verification:
+- Navigated back to Step 1 via breadcrumb: Laender-Spotlight still selected
+- Reset button works correctly: clears all state back to initial
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Screenshots captured: feature38-step3-before-navigate-away.png, feature38-step4-after-navigate-back.png, feature38-step5-back-to-step1-selection-preserved.png, feature38-step6-reset-works.png
+
+### Current state:
+- Feature #38 marked as PASSING
+- 54/163 features passing (33.1%)
+
 ## Session - Feature #37: Post workflow validates required fields before next step
 **Date:** 2026-02-12
 **Status:** PASSING
