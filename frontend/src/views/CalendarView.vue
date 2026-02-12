@@ -498,6 +498,23 @@ function getStatusMeta(status) {
   return statusMeta[status] || { label: status, icon: '📄', color: 'text-gray-500' }
 }
 
+// ========== DATE HELPERS ==========
+
+// Get today's date string in YYYY-MM-DD format (local time)
+function getTodayStr() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+// Check if a date string (YYYY-MM-DD) is in the past (before today)
+function isPastDate(dateStr) {
+  if (!dateStr) return false
+  return dateStr < getTodayStr()
+}
+
+// Scheduling error message for past dates
+const scheduleError = ref(null)
+
 // ========== DRAG AND DROP ==========
 
 function onDragStart(event, post) {
@@ -514,6 +531,11 @@ function onDragEnd(event) {
 }
 
 function onDragOver(event, dateStr) {
+  // Prevent dropping on past dates
+  if (isPastDate(dateStr)) {
+    event.dataTransfer.dropEffect = 'none'
+    return
+  }
   event.preventDefault()
   event.dataTransfer.dropEffect = 'move'
   dragOverDate.value = dateStr
@@ -535,15 +557,27 @@ function onDrop(event, dateStr) {
   dragOverDate.value = null
   if (!draggedPost.value) return
 
+  // Prevent scheduling on past dates
+  if (isPastDate(dateStr)) return
+
   schedulingPost.value = draggedPost.value
   scheduleTargetDate.value = dateStr
   scheduleTime.value = '10:00'
+  scheduleError.value = null
   showTimeDialog.value = true
   draggedPost.value = null
 }
 
 async function confirmSchedule() {
   if (!schedulingPost.value || !scheduleTargetDate.value) return
+
+  // Prevent scheduling on past dates
+  if (isPastDate(scheduleTargetDate.value)) {
+    scheduleError.value = 'Vergangene Daten koennen nicht ausgewaehlt werden.'
+    return
+  }
+
+  scheduleError.value = null
 
   try {
     const res = await fetch(`/api/posts/${schedulingPost.value.id}/schedule`, {
@@ -572,6 +606,7 @@ async function confirmSchedule() {
     showTimeDialog.value = false
     schedulingPost.value = null
     scheduleTargetDate.value = null
+    scheduleError.value = null
   }
 }
 
@@ -930,8 +965,9 @@ onMounted(() => {
             dayObj.isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50/50 dark:bg-gray-900/30',
             dayObj.isToday ? 'ring-2 ring-inset ring-blue-500' : '',
             (idx % 7 === 5 || idx % 7 === 6) ? 'bg-gray-50/30 dark:bg-gray-800/50' : '',
-            dragOverDate === dayObj.dateStr ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
+            dragOverDate === dayObj.dateStr && !isPastDate(dayObj.dateStr) ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
             isGapDate(dayObj.dateStr, dayObj.isCurrentMonth) ? 'bg-orange-50 dark:bg-orange-900/20' : '',
+            isPastDate(dayObj.dateStr) && draggedPost ? 'opacity-50 cursor-not-allowed' : '',
           ]"
           @dragover="onDragOver($event, dayObj.dateStr)"
           @dragleave="onDragLeave($event, dayObj.dateStr)"
@@ -1284,16 +1320,24 @@ onMounted(() => {
           {{ schedulingPost?.title || 'Unbenannt' }}
         </p>
 
-        <!-- Date display -->
+        <!-- Date picker (only allows today and future dates) -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Datum</label>
-          <div class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
-            {{ formatDateForDisplay(scheduleTargetDate) }}
-          </div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="schedule-date-input">Datum</label>
+          <input
+            id="schedule-date-input"
+            v-model="scheduleTargetDate"
+            type="date"
+            :min="getTodayStr()"
+            class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :class="isPastDate(scheduleTargetDate) ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+          />
+          <p v-if="isPastDate(scheduleTargetDate)" class="mt-1 text-xs text-red-500 dark:text-red-400">
+            Vergangene Daten koennen nicht ausgewaehlt werden.
+          </p>
         </div>
 
         <!-- Time picker -->
-        <div class="mb-6">
+        <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="schedule-time-input">Uhrzeit</label>
           <input
             id="schedule-time-input"
@@ -1301,6 +1345,11 @@ onMounted(() => {
             type="time"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+        </div>
+
+        <!-- Error message -->
+        <div v-if="scheduleError" class="mb-4 p-2 bg-red-50 dark:bg-red-900/30 rounded-lg">
+          <p class="text-sm text-red-600 dark:text-red-400">{{ scheduleError }}</p>
         </div>
 
         <!-- Actions -->
@@ -1313,7 +1362,9 @@ onMounted(() => {
           </button>
           <button
             @click="confirmSchedule"
-            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            :disabled="isPastDate(scheduleTargetDate)"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+            :class="isPastDate(scheduleTargetDate) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
           >
             Post planen
           </button>
