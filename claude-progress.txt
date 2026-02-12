@@ -1,5 +1,34 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #139: Viewing a deleted post shows error not crash
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that viewing a deleted post shows a friendly error message instead of a crash
+- No code changes needed - all functionality was already fully implemented:
+  - EditPostView.vue catches 404/422 responses and sets notFound = true (lines 191-196)
+  - Displays "Post nicht gefunden" UI with emoji, message, and navigation buttons (lines 605-618)
+  - Toast notification "Post wurde nicht gefunden." shown via global API interceptor
+  - Three navigation options: Zurueck button, Zur History button, Zum Dashboard button
+
+### Verification steps completed:
+1. Open post list in browser - PASS (History page shows STALE_REF_TEST_139, 1 Post gefunden)
+2. Delete the post via API in another tab - PASS (DELETE /api/posts/155 returned 200 OK)
+3. Click on the deleted post in the original list - PASS (clicked Bearbeiten button on stale entry)
+4. Verify error message shown, not a crash - PASS
+5. Verify user can navigate back - PASS (all three nav buttons work)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured: feature139-step1-history-with-post.png, feature139-step3-error-message-shown.png, feature139-step5-navigated-back-to-history.png
+
+### Current state:
+- Feature #139 marked as PASSING
+- 142/170 features passing (83.5%)
+
 ## Session - Feature #138: Concurrent post edits from two sessions handled safely
 **Date:** 2026-02-12
 **Status:** PASSING
