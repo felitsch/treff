@@ -255,6 +255,18 @@ function closeEditor() {
   editorTemplate.value = null
 }
 
+function resetToDefaults() {
+  editorCustom.value = {
+    ...editorCustom.value,
+    primaryColor: '#4C8BC2',
+    secondaryColor: '#FDD000',
+    accentColor: '#FFFFFF',
+    backgroundColor: '#1A1A2E',
+    headingFont: 'Montserrat',
+    bodyFont: 'Inter',
+  }
+}
+
 function updatePreviewIframe() {
   const iframe = editorPreviewRef.value
   if (!iframe) return
@@ -1155,6 +1167,18 @@ onMounted(() => {
                   class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
                 />
               </div>
+
+              <!-- Reset to Defaults Button -->
+              <button
+                @click="resetToDefaults"
+                class="w-full mt-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2"
+                data-testid="editor-reset-defaults-btn"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Standardfarben wiederherstellen
+              </button>
             </div>
 
             <hr class="border-gray-200 dark:border-gray-700" />
