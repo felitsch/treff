@@ -2036,3 +2036,46 @@
 ### Current state:
 - Feature #28 marked as PASSING
 - 50/163 features passing (30.7%)
+
+## Session - Feature #33: User can edit an existing post
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete post editing workflow end-to-end via browser
+- No code changes needed - EditPostView.vue, router, and backend PUT /api/posts/:id were already implemented
+
+### Verification steps completed:
+1. Create a test post first - PASS (created post #44 via API with title "EDIT_TEST_33_Original_Title", category laender_spotlight, 2 slides)
+2. Navigate to History page - PASS (post visible with original title, 1 Post gefunden)
+3. Click on the post to re-edit - PASS (clicked pencil icon, navigated to /posts/44/edit)
+4. Verify editor loads with all original data (text, template, images) - PASS:
+   - Headline: "EDIT_TEST_33_Original_Headline" loaded correctly
+   - Subheadline: "Dein Highschool-Jahr in den USA" loaded correctly
+   - Instagram Caption: "Dein Highschool-Jahr wartet! #treffsprachreisen #highschool" loaded
+   - Hashtags: "#highschool #usa #auslandsjahr #treffsprachreisen" loaded
+   - 2 slides (Cover + CTA) present with drag-and-drop reordering
+   - Live preview shows original headline
+5. Change the headline text - PASS (changed from "EDIT_TEST_33_Original_Headline" to "EDITED_33_New_Headline_Updated", live preview updated in real-time)
+6. Save changes - PASS (clicked "Speichern", success toast "Post gespeichert!" appeared)
+7. Verify updated content persists in database - PASS:
+   - History page shows updated title "EDITED_33_New_Headline_Updated"
+   - Server restart persistence test: stopped and restarted both frontend and backend
+   - After restart: dashboard shows "EDITED_33_New_Headline_Updated"
+   - After restart: edit page /posts/44/edit loads with all updated data preserved
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: all edited data persists across restart
+- [x] Screenshots captured: feature33-step1-history-page.png, feature33-step2-edit-page-loaded.png, feature33-step3-headline-changed.png, feature33-step4-saved-success.png, feature33-step5-history-updated-title.png, feature33-step6-persistence-after-restart.png
+
+### No code changes needed:
+- EditPostView.vue already fully implements post editing (load, edit, save)
+- Router already has /posts/:id/edit route
+- Backend PUT /api/posts/:id already handles updates with ownership verification
+- HistoryView.vue already has edit button that navigates to edit route
+
+### Current state:
+- Feature #33 marked as PASSING
+- 51/163 features passing (31.3%)
