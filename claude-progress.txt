@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #48: Undo redo works for content edits
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified existing undo/redo implementation works correctly end-to-end via browser automation
+- Implementation uses a useUndoRedo composable that tracks content state snapshots
+- Integrated into both CreatePostView.vue (Step 7 editor) and EditPostView.vue
+- Undo/Redo buttons visible in editor toolbar with correct enabled/disabled states
+- Keyboard shortcuts Ctrl+Z (undo) and Ctrl+Y (redo) work correctly
+
+### Files involved (already committed by previous session):
+- frontend/src/composables/useUndoRedo.js - Composable with history stack, snapshot, undo, redo, keyboard shortcuts
+- frontend/src/views/EditPostView.vue - Undo/redo buttons in header, state tracking with debounced watchers
+- frontend/src/views/CreatePostView.vue - Undo/redo buttons in Step 7 header, state tracking
+
+### Verification steps completed:
+1. Open content editor (Edit Post #52) - PASS (editor loads with headline "Original Text")
+2. Type text in headline: "Original Text" - PASS (initial state)
+3. Change headline to "Modified Text" - PASS (typed in field, live preview updated, Undo button enabled)
+4. Click Undo button - PASS (text reverted to "Original Text", Redo button enabled)
+5. Verify text reverts to "Original Text" - PASS (confirmed in both input field and live preview)
+6. Click Redo button - PASS (text returned to "Modified Text", Undo button enabled again)
+7. Verify text returns to "Modified Text" - PASS (confirmed in both input field and live preview)
+8. Ctrl+Z keyboard shortcut - PASS (reverted to "Original Text" from within input field)
+9. Ctrl+Y keyboard shortcut - PASS (restored to "Modified Text" from within input field)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Button states correct: Undo disabled at initial state, Redo disabled at latest state
+- [x] Live preview updates on undo/redo
+- [x] Keyboard shortcuts work while focus is in input field
+- [x] Screenshots captured: feature48-step1-editor-with-original-text.png, feature48-step2-modified-text-undo-enabled.png, feature48-step3-after-undo-original-text.png, feature48-step4-after-redo-modified-text.png, feature48-step5-ctrl-y-redo-works.png
+
+### Current state:
+- Feature #48 marked as PASSING
+- 62/163 features passing (38.0%)
+
 ## Session - Feature #47: User can add and remove slides from carousel
 **Date:** 2026-02-12
 **Status:** PASSING
