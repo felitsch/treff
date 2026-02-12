@@ -1,5 +1,32 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #63: Drag-and-drop posts onto calendar dates works
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified full drag-and-drop scheduling workflow from unscheduled posts sidebar to calendar dates
+- Feature builds on infrastructure added in feature #62 (sidebar + drag-drop handlers)
+- All verification steps pass including persistence after server restart
+
+### Verification steps completed:
+1. Navigate to Calendar page - PASS (loads with sidebar showing unscheduled posts)
+2. Unscheduled drafts appear in sidebar - PASS (2 test posts shown with drag handles)
+3. Drag a draft post onto a calendar date - PASS (visual feedback: blue highlight + "Hier ablegen")
+4. Time picker dialog appears on drop - PASS (modal with date display, time input, confirm/cancel)
+5. Post is scheduled for that date after confirmation - PASS (appears on calendar cell with time)
+6. Sidebar count decreases - PASS (2 → 1 → 0, "Alle Posts sind geplant!" empty state)
+7. Database reflects new schedule - PASS (PUT /api/posts/{id}/schedule called, status → "scheduled")
+8. Zero console errors - PASS
+9. Data persists after server restart - PASS (both servers restarted, posts remain on calendar)
+10. No mock/hardcoded data - PASS (grep found zero matches in frontend/src and backend/app)
+
+### Test data created:
+- DRAG_TEST_63_Draft_Post (category: Laender, platform: Instagram) → scheduled Feb 25, 10:00
+- DRAG_TEST_63_Second_Draft (category: FAQ, platform: TikTok) → scheduled Feb 20, 10:00
+
+---
+
 ## Session - Feature #62: Calendar weekly view shows posts with time slots
 **Date:** 2026-02-12
 **Status:** PASSING
