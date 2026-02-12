@@ -1,5 +1,123 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #129: Layout works at tablet 768px width
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete tablet layout at 768x1024 viewport across all 10 app pages
+- No code changes needed - responsive layout was already fully implemented:
+  - AppLayout.vue: handleResize() auto-collapses sidebar for tablet (768-1024px)
+  - SidebarNav.vue: Collapsed mode shows icon-only (w-16), expanded shows full labels (w-64)
+  - TopBar.vue: Hamburger menu hidden at md: breakpoint, visible below 768px
+  - All page content uses Tailwind responsive classes properly
+
+### Verification steps completed:
+1. Set browser viewport to 768x1024 - PASS
+   - Viewport exactly 768x1024 (tablet portrait)
+2. Navigate through all pages - PASS
+   - Tested: Login, Dashboard, Create Post, Templates, Assets, Calendar, History, Thumbnails, Analytics, Settings
+   - All 10 pages rendered correctly at tablet width
+3. Verify no horizontal scrollbar - PASS
+   - Checked scrollWidth === clientWidth (768 === 768) on every page
+   - Zero horizontal overflow on any page
+4. Verify sidebar collapses or is hidden behind hamburger - PASS
+   - Sidebar auto-collapsed to icon-only mode at 768px (TABLET_BREAKPOINT=1024)
+   - Toggle button (→/←) allows manual expand/collapse
+   - Expanded sidebar shows full text labels, content adjusts properly
+5. Verify content remains readable and usable - PASS
+   - All text readable, all interactive elements properly sized
+   - Two-column grids work (Create Post, Templates, Analytics)
+   - Calendar 7-column grid fits correctly
+   - Forms and filters fully usable
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured:
+  - feature129-step1-login-768.png (login page at 768px)
+  - feature129-step2-dashboard-768.png (dashboard with collapsed sidebar)
+  - feature129-step3-createpost-768.png (create post category grid)
+  - feature129-step4-templates-768.png (templates 2-column layout)
+  - feature129-step5-assets-768.png (assets upload area)
+  - feature129-step6-calendar-768.png (calendar month view)
+  - feature129-step7-history-768.png (post history with filters)
+  - feature129-step8-thumbnails-768.png (thumbnail generator)
+  - feature129-step9-analytics-768.png (analytics dashboard with charts)
+  - feature129-step10-settings-768.png (settings form)
+  - feature129-step11-sidebar-expanded-768.png (sidebar expanded at 768px)
+
+### No code changes needed:
+- AppLayout.vue already had responsive handleResize() with mobile/tablet/desktop breakpoints
+- SidebarNav.vue already had collapsed (w-16) and expanded (w-64) modes
+- TopBar.vue already had hamburger menu with md:hidden class
+- All page views used responsive Tailwind classes
+
+### Current state:
+- Feature #129 marked as PASSING
+- 133/170 features passing (78.2%)
+
+## Session - Feature #128: Layout works at desktop 1920px width
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete desktop layout at 1920x1080 viewport across all 8 main pages
+- No code changes needed - all pages render correctly at 1920px width
+- Existing layout uses flexbox (sidebar + content) with Tailwind CSS responsive classes
+
+### Pages verified at 1920x1080:
+1. **Dashboard** - Sidebar (w-64) on left, content area fills remaining space, stat cards in 3-column grid, calendar widget and recent posts in 2-column layout
+2. **Create Post** - 9-step wizard with category cards in 3-column grid, step indicators properly spaced
+3. **Templates** - Template cards displayed in 2-column grid per category, filter controls properly aligned
+4. **Assets** - Upload zone full width, search/filter bar with dropdowns, empty state centered
+5. **Calendar** - Full calendar grid with 7-day columns, sidebar panel for unplanned posts, category legend
+6. **History** - Search bar + filter dropdowns + sort controls in single row, empty state centered
+7. **Analytics** - Stat cards in 3-column grid, goal tracking, posting frequency chart, category/platform in 2-column layout
+8. **Settings** - Sections (Konto, Marken, API, Posting-Ziele) vertically stacked with full-width form fields
+
+### Horizontal scrollbar check (all pages):
+- Dashboard: overflow=false, scrollWidth=1920, clientWidth=1920
+- Create Post: overflow=false
+- Templates: overflow=false
+- Assets: overflow=false
+- Calendar: overflow=false
+- History: overflow=false
+- Analytics: overflow=false
+- Settings: overflow=false
+
+### Content editor two-column layout:
+- CreatePostView.vue uses `grid grid-cols-1 lg:grid-cols-2 gap-8` at steps 6, 7, and 8
+- At 1920px (well above lg breakpoint of 1024px), this renders as proper two-column layout
+- Left column: preview, Right column: editing controls
+
+### Layout architecture:
+- AppLayout.vue: `flex h-screen overflow-hidden` with sidebar + flex-1 content area
+- SidebarNav.vue: `w-64` expanded (256px), `w-16` collapsed (64px)
+- TopBar.vue: `h-16` (64px) fixed height header
+- Content: `flex-1 overflow-y-auto p-6` fills remaining space with scroll
+
+### Verification checklist:
+- [x] Zero layout issues at 1920x1080
+- [x] No horizontal scrollbar on any page
+- [x] Sidebar and content area properly sized on all pages
+- [x] Content editor two-column layout works (grid-cols-2 at lg breakpoint)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Screenshots captured:
+  - feature128-dashboard-1920.png
+  - feature128-createpost-1920.png
+  - feature128-templates-1920.png
+  - feature128-assets-1920.png
+  - feature128-calendar-1920.png
+  - feature128-history-1920.png
+  - feature128-analytics-1920.png
+  - feature128-settings-1920.png / feature128-settings-1920-correct.png
+
+### Current state:
+- Feature #128 marked as PASSING
+- 131/170 features passing (77.1%)
+
 ## Session - Feature #127: Created-at timestamps are accurate on posts
 **Date:** 2026-02-12
 **Status:** PASSING
