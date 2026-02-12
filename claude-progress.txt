@@ -1,5 +1,44 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #47: User can add and remove slides from carousel
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added "Add Slide" (+Slide) button to carousel editor in both CreatePostView.vue and EditPostView.vue
+- Added "Remove Slide" (Entfernen) button with confirmation modal dialog
+- Slide count badge shows current number of slides (e.g., "4 Slides")
+- New slides created with default headline "Neue Slide" and TREFF blue background
+- After adding, the new slide is automatically selected for editing
+- Deletion prevented when only 1 slide remains (button hidden)
+- Confirmation modal with "Slide entfernen?" heading, warning text, Abbrechen/Entfernen buttons
+- After deletion, current preview index adjusts if needed
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added addSlide(), requestRemoveSlide(), confirmRemoveSlide(), cancelRemoveSlide() functions; added UI buttons and delete modal
+- frontend/src/views/EditPostView.vue - Same add/remove slide functionality added
+
+### Verification steps completed:
+1. Open carousel editor (edit post #49 with 3 slides) - PASS
+2. Note initial slide count (3 slides) - PASS
+3. Click Add Slide button - PASS (new slide added, count becomes 4)
+4. Verify new slide is added with "Neue Slide" headline - PASS
+5. Click Remove/Delete on a slide - PASS (confirmation dialog appears)
+6. Confirm deletion - PASS (slide removed)
+7. Verify slide is removed and indices updated (back to 3 slides) - PASS
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence: stopped servers, restarted, 4 slides still present in post #49
+- [x] ADDED_SLIDE_47_TEST headline persisted across restart
+- [x] Test data cleaned up (post #49 deleted)
+- [x] Screenshots captured: feature47-step1-initial-3-slides.png through feature47-step9-slide4-after-restart.png
+
+### Current state:
+- Feature #47 marked as PASSING
+- 60/163 features passing (36.8%)
+
 ## Session - Feature #44: Content editor shows two-column layout edit and preview
 **Date:** 2026-02-12
 **Status:** PASSING
