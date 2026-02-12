@@ -270,3 +270,41 @@
 
 ### Next steps:
 - Continue with remaining Responsive & Layout and Authentication features
+
+## Session 8 - Feature #11: User sees error on invalid login credentials
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified login error handling already correctly implemented end-to-end
+- Backend returns HTTP 401 with {"detail": "Invalid credentials"} for wrong password
+- Frontend catches the error and displays it in a red alert box with role="alert"
+- Tested with real registered user (feature11_test@treff.de) and wrong password
+- Verified user stays on /login page after failed attempt
+- Verified correct credentials DO redirect to /dashboard (confirming real auth)
+- Zero JavaScript console errors
+- All mock data grep checks passed (zero matches in frontend/src and backend/app)
+- Screenshot captured: feature11-invalid-login-error.png
+
+### No code changes needed:
+- LoginView.vue already had error display with v-if="error" alert box
+- auth.py already returned proper 401 HTTPException with "Invalid credentials" detail
+- auth.js store properly throws errors to caller (no internal catch)
+- Error flow: Backend 401 → axios error → LoginView catch → error.value → red alert
+
+### Verification checklist:
+- [x] Navigate to login page
+- [x] Enter valid email but wrong password
+- [x] Submit login form
+- [x] Error message "Invalid credentials" displayed in red alert box
+- [x] User stays on login page (URL remains /login)
+- [x] Zero JS console errors
+- [x] No mock data patterns in codebase
+- [x] Correct login works (confirms real auth, not broken endpoint)
+
+### Current state:
+- Features #1-7, #11 passing (infrastructure + layout + auth error)
+- 8/163 features complete (4.9%)
+
+### Next steps:
+- Continue with remaining authentication features (#8, #9, #10, etc.)
