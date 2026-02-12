@@ -1,5 +1,36 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #16: Templates can be filtered by category
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified template category filtering works end-to-end with real data
+- No code changes needed - feature was already fully implemented in TemplatesView.vue
+- Frontend uses computed filteredTemplates with category matching
+- Backend supports category query parameter on GET /api/templates
+
+### Verification steps completed:
+1. Navigate to Templates page - PASS (21 of 21 templates shown across 9 categories)
+2. Select category filter: laender_spotlight - PASS (5 of 21 templates shown)
+3. Verify only templates matching that category are shown - PASS (Australien Down Under, Kanada Abenteuer, Laender-Spotlight Feed, Laender-Spotlight Story, USA Highschool Spotlight)
+4. Select category filter: erfahrungsberichte - PASS (2 of 21 templates shown)
+5. Verify templates update to new category - PASS (Erfahrungsbericht Carousel, Erfahrungsbericht Quote)
+6. Clear filter and verify all templates return - PASS (21 of 21 templates, "Alle Kategorien" selected)
+
+### Additional verification:
+- Zero JavaScript console errors
+- Zero mock data pattern matches in frontend/src and backend/app
+- Filter reset button ("✕ Filter zuruecksetzen") appears when filter is active
+- Template count badge updates dynamically (e.g., "5 von 21 Templates")
+- Screenshots captured: feature16-step1-all-templates.png, feature16-step2-laender-spotlight-filter.png, feature16-step4-erfahrungsberichte-filter.png, feature16-step6-filter-cleared.png
+
+### Current state:
+- 38/163 features passing (23.3%)
+- Feature #16 marked as PASSING
+
+---
+
 ## Session - Feature #156: AI image generation request with valid prompt succeeds
 **Date:** 2026-02-12
 **Status:** PASSING
