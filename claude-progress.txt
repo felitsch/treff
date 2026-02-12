@@ -389,3 +389,40 @@
 
 ### Next steps:
 - Continue with remaining navigation and authentication features
+
+## Session 11 - Feature #10: User can login with valid credentials
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Registered test user feature10_login@treff.de / LoginTest123! via /register UI
+- Logged out, navigated to /login page
+- Entered valid credentials and submitted login form
+- Verified successful redirect to /dashboard with "Feature10 Tester" displayed in header
+- Verified JWT tokens stored in localStorage:
+  - access_token: 141 chars, valid JWT format (3 dot-separated parts), starts with eyJhbG...
+  - refresh_token: 143 chars, valid JWT format, different from access_token
+- Network requests clean: POST /api/auth/login => 200, GET /api/auth/me => 200
+- Zero JavaScript console errors
+- All 5 mock data pattern greps returned zero matches
+- Screenshot captured: feature10-login-success-dashboard.png
+
+### No code changes needed:
+- Backend auth.py login endpoint correctly implemented (queries DB, verifies password, returns JWT tokens)
+- Frontend LoginView.vue correctly handles form submission, stores tokens, redirects to /dashboard
+- Auth store (auth.js) correctly saves tokens to localStorage and fetches user info
+
+### Verification steps completed:
+1. Register a test user first - PASS (201 Created)
+2. Navigate to login page - PASS (logout -> /login)
+3. Enter valid email and password - PASS (filled form)
+4. Submit login form - PASS (clicked Anmelden)
+5. Verify JWT access token and refresh token are returned - PASS (both in localStorage, valid JWT format)
+6. Verify redirect to dashboard - PASS (URL = /dashboard, user name displayed)
+
+### Current state:
+- Features #1-11 passing (infrastructure + layout + auth)
+- 11/163 features complete (6.7%)
+
+### Next steps:
+- Continue with remaining authentication and security features
