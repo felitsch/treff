@@ -1,10 +1,1101 @@
 <script setup>
-// Create Post wizard - to be implemented by coding agents
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/utils/api'
+
+const router = useRouter()
+
+// ── Wizard state ──────────────────────────────────────────────────────
+const currentStep = ref(1)
+const totalSteps = 9
+const loading = ref(false)
+const error = ref('')
+const successMsg = ref('')
+
+// Step 1: Category selection
+const selectedCategory = ref('')
+const categories = [
+  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍', desc: 'Informative Posts ueber Ziellaender' },
+  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬', desc: 'Alumni-Erfahrungen & Testimonials' },
+  { id: 'infografiken', label: 'Infografiken', icon: '📊', desc: 'Vergleiche, Statistiken, Fakten' },
+  { id: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰', desc: 'Bewerbungsfristen & Calls-to-Action' },
+  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡', desc: 'Praktische Tipps fuers Auslandsjahr' },
+  { id: 'faq', label: 'FAQ', icon: '❓', desc: 'Haeufig gestellte Fragen' },
+  { id: 'foto_posts', label: 'Foto-Posts', icon: '📸', desc: 'Fotos mit Branding-Overlay' },
+  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬', desc: 'Thumbnails fuer Videos' },
+  { id: 'story_posts', label: 'Story-Posts', icon: '📱', desc: 'Instagram Story Content' },
+]
+
+// Step 2: Template
+const templates = ref([])
+const selectedTemplate = ref(null)
+const loadingTemplates = ref(false)
+
+// Step 3: Platform
+const selectedPlatform = ref('instagram_feed')
+const platforms = [
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷', format: '1:1 / 4:5' },
+  { id: 'instagram_story', label: 'Instagram Story', icon: '📱', format: '9:16' },
+  { id: 'tiktok', label: 'TikTok', icon: '🎵', format: '9:16' },
+]
+
+// Step 4: Topic & Content Input
+const topic = ref('')
+const keyPoints = ref('')
+const country = ref('')
+const tone = ref('jugendlich')
+const countries = [
+  { id: 'usa', label: 'USA', flag: '🇺🇸' },
+  { id: 'canada', label: 'Kanada', flag: '🇨🇦' },
+  { id: 'australia', label: 'Australien', flag: '🇦🇺' },
+  { id: 'newzealand', label: 'Neuseeland', flag: '🇳🇿' },
+  { id: 'ireland', label: 'Irland', flag: '🇮🇪' },
+]
+
+// Step 5: AI Generation
+const generatingText = ref(false)
+const generatedContent = ref(null)
+
+// Step 6: Live Preview + Step 7: Edit
+const slides = ref([])
+const captionInstagram = ref('')
+const captionTiktok = ref('')
+const hashtagsInstagram = ref('')
+const hashtagsTiktok = ref('')
+const ctaText = ref('')
+const currentPreviewSlide = ref(0)
+
+// Step 8: Background Image
+const uploadingImage = ref(false)
+const assets = ref([])
+
+// Step 9: Export
+const exporting = ref(false)
+const savedPost = ref(null)
+const exportComplete = ref(false)
+
+// ── Computed ──────────────────────────────────────────────────────────
+const canProceed = computed(() => {
+  switch (currentStep.value) {
+    case 1: return !!selectedCategory.value
+    case 2: return !!selectedTemplate.value
+    case 3: return !!selectedPlatform.value
+    case 4: return true  // topic/keypoints are optional, country optional
+    case 5: return !!generatedContent.value
+    case 6: return slides.value.length > 0
+    case 7: return slides.value.length > 0
+    case 8: return true  // background image is optional
+    case 9: return true
+    default: return false
+  }
+})
+
+const stepLabels = [
+  'Kategorie',
+  'Template',
+  'Plattform',
+  'Thema',
+  'Generieren',
+  'Vorschau',
+  'Bearbeiten',
+  'Bild',
+  'Export',
+]
+
+const selectedCategoryObj = computed(() => categories.find(c => c.id === selectedCategory.value))
+const selectedPlatformObj = computed(() => platforms.find(p => p.id === selectedPlatform.value))
+const selectedCountryObj = computed(() => countries.find(c => c.id === country.value))
+
+// ── Methods ──────────────────────────────────────────────────────────
+
+function nextStep() {
+  if (currentStep.value < totalSteps && canProceed.value) {
+    currentStep.value++
+    error.value = ''
+    successMsg.value = ''
+    if (currentStep.value === 2) loadTemplates()
+    if (currentStep.value === 8) loadAssets()
+  }
+}
+
+function prevStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--
+    error.value = ''
+    successMsg.value = ''
+  }
+}
+
+function goToStep(step) {
+  if (step <= currentStep.value || (step === currentStep.value + 1 && canProceed.value)) {
+    currentStep.value = step
+    error.value = ''
+    successMsg.value = ''
+    if (step === 2) loadTemplates()
+    if (step === 8) loadAssets()
+  }
+}
+
+async function loadTemplates() {
+  loadingTemplates.value = true
+  try {
+    const params = new URLSearchParams()
+    if (selectedCategory.value) params.append('category', selectedCategory.value)
+    const response = await api.get(`/api/templates?${params.toString()}`)
+    templates.value = response.data
+  } catch (e) {
+    console.error('Failed to load templates:', e)
+    templates.value = []
+  } finally {
+    loadingTemplates.value = false
+  }
+}
+
+async function generateText() {
+  generatingText.value = true
+  error.value = ''
+
+  try {
+    const slideCount = selectedTemplate.value?.slide_count || 1
+    const response = await api.post('/api/ai/generate-text', {
+      category: selectedCategory.value,
+      topic: topic.value.trim() || null,
+      key_points: keyPoints.value.trim() || null,
+      country: country.value || null,
+      platform: selectedPlatform.value,
+      slide_count: slideCount,
+      tone: tone.value,
+    })
+
+    generatedContent.value = response.data
+    slides.value = response.data.slides || []
+    captionInstagram.value = response.data.caption_instagram || ''
+    captionTiktok.value = response.data.caption_tiktok || ''
+    hashtagsInstagram.value = response.data.hashtags_instagram || ''
+    hashtagsTiktok.value = response.data.hashtags_tiktok || ''
+    ctaText.value = response.data.cta_text || ''
+    currentPreviewSlide.value = 0
+
+    successMsg.value = 'Inhalt erfolgreich generiert!'
+    setTimeout(() => { successMsg.value = '' }, 3000)
+  } catch (e) {
+    console.error('Text generation failed:', e)
+    error.value = 'Textgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    generatingText.value = false
+  }
+}
+
+async function loadAssets() {
+  try {
+    const response = await api.get('/api/assets')
+    assets.value = response.data
+  } catch (e) {
+    // Silent fail - assets are optional
+  }
+}
+
+async function uploadBackgroundImage(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  uploadingImage.value = true
+  error.value = ''
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('category', 'background')
+    const response = await api.post('/api/assets/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    // Set as background for current slide
+    const slide = slides.value[currentPreviewSlide.value]
+    if (slide) {
+      slide.background_type = 'image'
+      slide.background_value = `/api/uploads/assets/${response.data.filename}`
+    }
+    successMsg.value = 'Bild hochgeladen!'
+    setTimeout(() => { successMsg.value = '' }, 3000)
+    await loadAssets()
+  } catch (e) {
+    error.value = 'Upload fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+function selectAssetAsBackground(asset) {
+  const slide = slides.value[currentPreviewSlide.value]
+  if (slide) {
+    slide.background_type = 'image'
+    slide.background_value = `/api/uploads/assets/${asset.filename}`
+  }
+  successMsg.value = 'Hintergrundbild gesetzt!'
+  setTimeout(() => { successMsg.value = '' }, 2000)
+}
+
+async function saveAndExport() {
+  exporting.value = true
+  error.value = ''
+
+  try {
+    // Save post to database
+    const postData = {
+      category: selectedCategory.value,
+      country: country.value || null,
+      platform: selectedPlatform.value,
+      template_id: selectedTemplate.value?.id || null,
+      title: slides.value[0]?.headline || 'Neuer Post',
+      status: 'draft',
+      tone: tone.value,
+      slide_data: JSON.stringify(slides.value),
+      caption_instagram: captionInstagram.value,
+      caption_tiktok: captionTiktok.value,
+      hashtags_instagram: hashtagsInstagram.value,
+      hashtags_tiktok: hashtagsTiktok.value,
+      cta_text: ctaText.value,
+    }
+
+    const response = await api.post('/api/posts', postData)
+    savedPost.value = response.data
+
+    // Record the export
+    await api.post('/api/export/render', {
+      post_id: response.data.id,
+      platform: selectedPlatform.value,
+      resolution: '1080',
+      slide_count: slides.value.length,
+    })
+
+    exportComplete.value = true
+    successMsg.value = 'Post gespeichert und exportiert!'
+  } catch (e) {
+    error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    exporting.value = false
+  }
+}
+
+function downloadAsImage() {
+  // Client-side PNG generation using canvas
+  const dims = getDimensions()
+  const canvas = document.createElement('canvas')
+  canvas.width = dims.w
+  canvas.height = dims.h
+  const ctx = canvas.getContext('2d')
+
+  const slide = slides.value[currentPreviewSlide.value] || slides.value[0]
+  if (!slide) return
+
+  // Background
+  ctx.fillStyle = slide.background_value || '#1A1A2E'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Gradient overlay
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+  gradient.addColorStop(0, 'rgba(76, 139, 194, 0.3)')
+  gradient.addColorStop(1, 'rgba(26, 26, 46, 0.8)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // TREFF logo
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 28px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF', 60, 80)
+  ctx.fillStyle = '#9CA3AF'
+  ctx.font = '18px Inter, Arial, sans-serif'
+  ctx.fillText('Sprachreisen', 158, 80)
+
+  // Headline
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 52px Inter, Arial, sans-serif'
+  ctx.textAlign = 'center'
+  wrapText(ctx, slide.headline || '', canvas.width / 2, 260, canvas.width - 160, 62)
+
+  // Subheadline
+  if (slide.subheadline) {
+    ctx.fillStyle = '#FDD000'
+    ctx.font = 'bold 32px Inter, Arial, sans-serif'
+    wrapText(ctx, slide.subheadline, canvas.width / 2, 400, canvas.width - 160, 40)
+  }
+
+  // Body text
+  if (slide.body_text) {
+    ctx.fillStyle = '#D1D5DB'
+    ctx.font = '24px Inter, Arial, sans-serif'
+    wrapText(ctx, slide.body_text, canvas.width / 2, 520, canvas.width - 160, 32)
+  }
+
+  // CTA
+  if (slide.cta_text) {
+    const ctaY = canvas.height - 180
+    ctx.fillStyle = '#FDD000'
+    roundRect(ctx, canvas.width / 2 - 150, ctaY, 300, 56, 28)
+    ctx.fill()
+    ctx.fillStyle = '#1A1A2E'
+    ctx.font = 'bold 24px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(slide.cta_text, canvas.width / 2, ctaY + 37)
+  }
+
+  // TREFF bottom branding
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 18px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF Sprachreisen', 60, canvas.height - 50)
+
+  // Download
+  const link = document.createElement('a')
+  const date = new Date().toISOString().split('T')[0]
+  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}.png`
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ')
+  let line = ''
+  let currentY = y
+  for (const word of words) {
+    const testLine = line + word + ' '
+    const metrics = ctx.measureText(testLine)
+    if (metrics.width > maxWidth && line !== '') {
+      ctx.fillText(line.trim(), x, currentY)
+      line = word + ' '
+      currentY += lineHeight
+    } else {
+      line = testLine
+    }
+  }
+  ctx.fillText(line.trim(), x, currentY)
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
+}
+
+function getDimensions() {
+  const dims = {
+    instagram_feed: { w: 1080, h: 1080 },
+    instagram_story: { w: 1080, h: 1920 },
+    tiktok: { w: 1080, h: 1920 },
+  }
+  return dims[selectedPlatform.value] || dims.instagram_feed
+}
+
+function resetWorkflow() {
+  currentStep.value = 1
+  selectedCategory.value = ''
+  selectedTemplate.value = null
+  selectedPlatform.value = 'instagram_feed'
+  topic.value = ''
+  keyPoints.value = ''
+  country.value = ''
+  tone.value = 'jugendlich'
+  generatedContent.value = null
+  slides.value = []
+  captionInstagram.value = ''
+  captionTiktok.value = ''
+  hashtagsInstagram.value = ''
+  hashtagsTiktok.value = ''
+  ctaText.value = ''
+  error.value = ''
+  successMsg.value = ''
+  savedPost.value = null
+  exportComplete.value = false
+  currentPreviewSlide.value = 0
+}
+
+function nextPreviewSlide() {
+  if (currentPreviewSlide.value < slides.value.length - 1) currentPreviewSlide.value++
+}
+function prevPreviewSlide() {
+  if (currentPreviewSlide.value > 0) currentPreviewSlide.value--
+}
+
+function getTemplateGradient(template) {
+  try {
+    const colors = JSON.parse(template.default_colors || '{}')
+    const primary = colors.primary || '#4C8BC2'
+    const secondary = colors.secondary || '#FDD000'
+    return `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`
+  } catch {
+    return 'linear-gradient(135deg, #4C8BC2 0%, #FDD000 100%)'
+  }
+}
+
+// Watch for slide changes
+watch(slides, () => { currentPreviewSlide.value = 0 })
 </script>
 
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Neuen Post erstellen</h1>
-    <p class="text-gray-500 dark:text-gray-400">Post-Erstellungsworkflow wird implementiert...</p>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Neuen Post erstellen</h1>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-500 dark:text-gray-400">Schritt {{ currentStep }} von {{ totalSteps }}</span>
+        <button
+          @click="resetWorkflow"
+          class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          Zuruecksetzen
+        </button>
+      </div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <template v-for="(label, idx) in stepLabels" :key="idx">
+          <button
+            @click="goToStep(idx + 1)"
+            class="flex flex-col items-center"
+            :class="idx + 1 <= currentStep ? 'cursor-pointer' : 'cursor-not-allowed'"
+          >
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+              :class="{
+                'bg-[#4C8BC2] text-white ring-4 ring-blue-200 dark:ring-blue-900': idx + 1 === currentStep,
+                'bg-green-500 text-white': idx + 1 < currentStep,
+                'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400': idx + 1 > currentStep,
+              }"
+            >
+              <span v-if="idx + 1 < currentStep">&#10003;</span>
+              <span v-else>{{ idx + 1 }}</span>
+            </div>
+            <span
+              class="text-[10px] mt-1 hidden sm:block"
+              :class="{
+                'text-[#4C8BC2] font-semibold dark:text-blue-400': idx + 1 === currentStep,
+                'text-green-600 dark:text-green-400': idx + 1 < currentStep,
+                'text-gray-400 dark:text-gray-500': idx + 1 > currentStep,
+              }"
+            >{{ label }}</span>
+          </button>
+          <div
+            v-if="idx < stepLabels.length - 1"
+            class="flex-1 h-0.5 mx-1"
+            :class="idx + 1 < currentStep ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"
+          ></div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-center gap-2" role="alert">
+      <span>&#9888;</span> {{ error }}
+      <button @click="error = ''" class="ml-auto text-red-500 hover:text-red-700">&times;</button>
+    </div>
+    <div v-if="successMsg" class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-center gap-2">
+      <span>&#10003;</span> {{ successMsg }}
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 1: Category Selection -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 1">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 1: Waehle eine Post-Kategorie</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <button
+          v-for="cat in categories"
+          :key="cat.id"
+          @click="selectedCategory = cat.id"
+          class="p-4 rounded-xl border-2 transition-all text-left hover:shadow-md"
+          :class="selectedCategory === cat.id
+            ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 shadow-md'
+            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+        >
+          <div class="text-2xl mb-2">{{ cat.icon }}</div>
+          <div class="font-semibold text-gray-900 dark:text-white">{{ cat.label }}</div>
+          <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ cat.desc }}</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 2: Template Selection -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 2">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 2: Waehle ein Template</h2>
+      <div v-if="loadingTemplates" class="flex items-center justify-center py-12">
+        <div class="animate-spin h-8 w-8 border-4 border-[#4C8BC2] border-t-transparent rounded-full"></div>
+      </div>
+      <div v-else-if="templates.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+        Keine Templates fuer diese Kategorie verfuegbar.
+      </div>
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <button
+          v-for="tmpl in templates"
+          :key="tmpl.id"
+          @click="selectedTemplate = tmpl"
+          class="rounded-xl border-2 overflow-hidden transition-all hover:shadow-md"
+          :class="selectedTemplate?.id === tmpl.id
+            ? 'border-[#4C8BC2] shadow-md ring-2 ring-[#4C8BC2]/30'
+            : 'border-gray-200 dark:border-gray-700'"
+        >
+          <div class="h-28 flex items-center justify-center" :style="{ background: getTemplateGradient(tmpl) }">
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+              <span class="text-white text-xs font-bold">TREFF</span>
+            </div>
+          </div>
+          <div class="p-2 bg-white dark:bg-gray-800">
+            <div class="text-xs font-medium text-gray-900 dark:text-white truncate">{{ tmpl.name }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ tmpl.platform_format }} &middot; {{ tmpl.slide_count }} Slide{{ tmpl.slide_count > 1 ? 's' : '' }}</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 3: Platform Selection -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 3">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 3: Waehle die Zielplattform</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+        <button
+          v-for="p in platforms"
+          :key="p.id"
+          @click="selectedPlatform = p.id"
+          class="p-6 rounded-xl border-2 transition-all text-center hover:shadow-md"
+          :class="selectedPlatform === p.id
+            ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 shadow-md'
+            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+        >
+          <div class="text-3xl mb-2">{{ p.icon }}</div>
+          <div class="font-semibold text-gray-900 dark:text-white">{{ p.label }}</div>
+          <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ p.format }}</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 4: Topic & Key Points -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 4">
+      <div class="max-w-2xl">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 4: Thema & Stichpunkte</h2>
+
+        <!-- Country -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Land (optional)</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="c in countries"
+              :key="c.id"
+              @click="country = country === c.id ? '' : c.id"
+              class="px-4 py-2 rounded-lg border-2 transition-all text-sm"
+              :class="country === c.id
+                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 text-[#4C8BC2]'
+                : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'"
+            >
+              {{ c.flag }} {{ c.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Topic -->
+        <div class="mb-6">
+          <label for="topic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Thema / Titel</label>
+          <input
+            id="topic"
+            v-model="topic"
+            type="text"
+            placeholder="z.B. Highschool-Jahr in Kanada"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+          />
+        </div>
+
+        <!-- Key Points -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stichpunkte (optional)</label>
+          <textarea
+            v-model="keyPoints"
+            rows="3"
+            placeholder="z.B. Gastfamilien, Schulsystem, Freizeitaktivitaeten..."
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+          ></textarea>
+        </div>
+
+        <!-- Tone -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tonalitaet</label>
+          <div class="flex gap-3">
+            <button
+              @click="tone = 'jugendlich'"
+              class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
+              :class="tone === 'jugendlich'
+                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
+            >
+              <div class="font-semibold text-gray-900 dark:text-white">🎯 Jugendlich</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Locker, Gen-Z-freundlich</div>
+            </button>
+            <button
+              @click="tone = 'serioess'"
+              class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
+              :class="tone === 'serioess'
+                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
+            >
+              <div class="font-semibold text-gray-900 dark:text-white">🏛️ Serioes</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Fuer Eltern & Entscheider</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 5: AI Text Generation -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 5">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 5: Inhalt generieren</h2>
+
+      <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
+        <div class="text-5xl mb-4">&#x2728;</div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">KI-Textgenerierung</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">
+          Texte, Captions und Hashtags werden basierend auf deiner Auswahl generiert.
+        </p>
+
+        <!-- Summary of selections -->
+        <div class="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-left space-y-1">
+          <div><strong>Kategorie:</strong> {{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
+          <div><strong>Template:</strong> {{ selectedTemplate?.name }} ({{ selectedTemplate?.slide_count }} Slide{{ selectedTemplate?.slide_count > 1 ? 's' : '' }})</div>
+          <div><strong>Plattform:</strong> {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
+          <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
+          <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
+          <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
+          <div><strong>Tonalitaet:</strong> {{ tone === 'jugendlich' ? '🎯 Jugendlich' : '🏛️ Serioes' }}</div>
+        </div>
+
+        <button
+          @click="generateText"
+          :disabled="generatingText"
+          class="px-8 py-4 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
+        >
+          <span v-if="generatingText" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+          <span v-else>&#x2728;</span>
+          {{ generatingText ? 'Generiere...' : 'Inhalt generieren' }}
+        </button>
+
+        <!-- Generated content summary -->
+        <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-left">
+          <div class="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3">
+            <span class="text-lg">&#10003;</span>
+            <span class="font-bold">Inhalt generiert!</span>
+          </div>
+          <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+            <li>{{ slides.length }} Slide(s) mit Texten</li>
+            <li>Instagram Caption erstellt</li>
+            <li>TikTok Caption erstellt</li>
+            <li>Hashtags generiert</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 6: Live Preview -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 6">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 6: Live-Vorschau</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Preview -->
+        <div class="flex flex-col items-center">
+          <div
+            id="post-preview-container"
+            class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]"
+            :class="{
+              'aspect-square w-full max-w-[400px]': selectedPlatform === 'instagram_feed',
+              'aspect-[9/16] w-full max-w-[320px]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
+            }"
+          >
+            <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-6 flex flex-col justify-between">
+              <!-- TREFF logo -->
+              <div class="flex items-center gap-2">
+                <div class="bg-[#4C8BC2] rounded-lg px-3 py-1"><span class="text-white text-sm font-bold">TREFF</span></div>
+                <span class="text-gray-400 text-xs">Sprachreisen</span>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 flex flex-col justify-center py-4">
+                <h3 class="text-[#4C8BC2] text-xl font-extrabold leading-tight mb-2">
+                  {{ slides[currentPreviewSlide]?.headline || '' }}
+                </h3>
+                <p v-if="slides[currentPreviewSlide]?.subheadline" class="text-[#FDD000] text-sm font-semibold mb-2">
+                  {{ slides[currentPreviewSlide].subheadline }}
+                </p>
+                <p v-if="slides[currentPreviewSlide]?.body_text" class="text-gray-300 text-xs leading-relaxed line-clamp-5">
+                  {{ slides[currentPreviewSlide].body_text }}
+                </p>
+
+                <!-- Bullet points -->
+                <ul v-if="slides[currentPreviewSlide]?.bullet_points?.length" class="mt-2 space-y-1">
+                  <li
+                    v-for="(bp, bpIdx) in (Array.isArray(slides[currentPreviewSlide].bullet_points) ? slides[currentPreviewSlide].bullet_points : [])"
+                    :key="bpIdx"
+                    class="text-gray-300 text-xs flex items-start gap-1.5"
+                  >
+                    <span class="text-[#FDD000] mt-0.5">&#9679;</span>
+                    <span>{{ bp }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- CTA -->
+              <div v-if="slides[currentPreviewSlide]?.cta_text">
+                <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-5 py-2 rounded-full font-bold text-sm">
+                  {{ slides[currentPreviewSlide].cta_text }}
+                </div>
+              </div>
+
+              <!-- Slide dots -->
+              <div v-if="slides.length > 1" class="flex justify-center gap-1.5 mt-3">
+                <button
+                  v-for="(s, sIdx) in slides"
+                  :key="sIdx"
+                  @click="currentPreviewSlide = sIdx"
+                  class="w-2 h-2 rounded-full transition-colors"
+                  :class="sIdx === currentPreviewSlide ? 'bg-[#4C8BC2]' : 'bg-gray-600'"
+                ></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide navigation -->
+          <div v-if="slides.length > 1" class="flex items-center justify-between w-full max-w-[400px] mt-4">
+            <button @click="prevPreviewSlide" :disabled="currentPreviewSlide === 0"
+              class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
+              &#8592; Vorherige
+            </button>
+            <span class="text-sm text-gray-500 dark:text-gray-400">Slide {{ currentPreviewSlide + 1 }} von {{ slides.length }}</span>
+            <button @click="nextPreviewSlide" :disabled="currentPreviewSlide === slides.length - 1"
+              class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
+              Naechste &#8594;
+            </button>
+          </div>
+        </div>
+
+        <!-- Captions & hashtags sidebar -->
+        <div class="space-y-4">
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📷 Instagram Caption</h4>
+            <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line max-h-32 overflow-auto">{{ captionInstagram }}</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2"># Hashtags</h4>
+            <p class="text-xs text-blue-600 dark:text-blue-400 break-words">{{ hashtagsInstagram }}</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">🎵 TikTok Caption</h4>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ captionTiktok }}</p>
+          </div>
+          <div v-if="ctaText" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📢 Call-to-Action</h4>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ ctaText }}</p>
+          </div>
+          <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400">
+            {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}
+            &middot; {{ selectedCategoryObj?.label }}
+            <span v-if="selectedCountryObj"> &middot; {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 7: Edit Generated Content (Headline etc.) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 7">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 7: Inhalt bearbeiten</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Edit panel -->
+        <div class="space-y-4">
+          <!-- Slide tabs -->
+          <div v-if="slides.length > 1" class="flex gap-1 mb-3 flex-wrap">
+            <button
+              v-for="(s, idx) in slides"
+              :key="idx"
+              @click="currentPreviewSlide = idx"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+              :class="currentPreviewSlide === idx
+                ? 'bg-[#4C8BC2] text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'"
+            >
+              Slide {{ idx + 1 }}
+              <span v-if="idx === 0" class="font-normal">(Cover)</span>
+              <span v-if="idx === slides.length - 1 && idx > 0" class="font-normal">(CTA)</span>
+            </button>
+          </div>
+
+          <!-- Current slide edit -->
+          <div v-if="slides[currentPreviewSlide]" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Headline</label>
+              <input
+                v-model="slides[currentPreviewSlide].headline"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              />
+              <span class="text-xs text-gray-400">{{ slides[currentPreviewSlide].headline?.length || 0 }} Zeichen</span>
+            </div>
+            <div v-if="slides[currentPreviewSlide].subheadline !== undefined">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Subheadline</label>
+              <input
+                v-model="slides[currentPreviewSlide].subheadline"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Text</label>
+              <textarea
+                v-model="slides[currentPreviewSlide].body_text"
+                rows="3"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              ></textarea>
+              <span class="text-xs text-gray-400">{{ slides[currentPreviewSlide].body_text?.length || 0 }} Zeichen</span>
+            </div>
+            <div v-if="slides[currentPreviewSlide].cta_text">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA</label>
+              <input
+                v-model="slides[currentPreviewSlide].cta_text"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <!-- Captions editing -->
+          <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">📷 Instagram Caption</label>
+              <textarea v-model="captionInstagram" rows="3"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+            <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"># Hashtags</label>
+              <textarea v-model="hashtagsInstagram" rows="2"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini live preview (sticky) -->
+        <div class="lg:sticky lg:top-4 self-start">
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Live-Vorschau</div>
+          <div
+            class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]"
+            :class="{
+              'aspect-square': selectedPlatform === 'instagram_feed',
+              'aspect-[9/16]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
+            }"
+            style="max-width: 320px;"
+          >
+            <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between">
+              <div class="flex items-center gap-1.5">
+                <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+              </div>
+              <div class="flex-1 flex flex-col justify-center py-3">
+                <h3 class="text-[#4C8BC2] text-base font-extrabold leading-tight mb-1.5">{{ slides[currentPreviewSlide].headline }}</h3>
+                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5">{{ slides[currentPreviewSlide].subheadline }}</p>
+                <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-300 text-[10px] leading-relaxed line-clamp-4">{{ slides[currentPreviewSlide].body_text }}</p>
+              </div>
+              <div v-if="slides[currentPreviewSlide].cta_text">
+                <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[11px]">{{ slides[currentPreviewSlide].cta_text }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 8: Background Image Upload (Optional) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 8">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 8: Hintergrundbild (optional)</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <!-- Upload -->
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-[#4C8BC2] transition-colors">
+            <div class="text-4xl mb-3">📷</div>
+            <p class="text-gray-600 dark:text-gray-400 mb-3">Hintergrundbild hochladen</p>
+            <label class="inline-block px-6 py-2.5 bg-[#4C8BC2] text-white rounded-lg cursor-pointer hover:bg-[#3a7ab3] transition-colors font-medium">
+              <span v-if="uploadingImage" class="flex items-center gap-2">
+                <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                Hochladen...
+              </span>
+              <span v-else>Datei waehlen</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="uploadBackgroundImage" :disabled="uploadingImage" />
+            </label>
+            <p class="text-xs text-gray-400 mt-2">JPG, PNG oder WebP (max. 20 MB)</p>
+          </div>
+
+          <!-- Existing assets -->
+          <div v-if="assets.length > 0">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Vorhandene Bilder:</h3>
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              <button
+                v-for="asset in assets"
+                :key="asset.id"
+                @click="selectAssetAsBackground(asset)"
+                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] transition-all"
+              >
+                <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-sm text-gray-500 dark:text-gray-400">
+            💡 Dieser Schritt ist optional. Ohne Bild wird der Standard-Farbverlauf verwendet.
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="self-start">
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vorschau</div>
+          <div
+            class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
+            :class="{
+              'aspect-square': selectedPlatform === 'instagram_feed',
+              'aspect-[9/16]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
+            }"
+            :style="{
+              maxWidth: '320px',
+              background: slides[currentPreviewSlide]?.background_type === 'image'
+                ? `url(${slides[currentPreviewSlide].background_value}) center/cover`
+                : 'linear-gradient(135deg, #1A1A2E, #2a2a4e)',
+            }"
+          >
+            <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between bg-black/20">
+              <div class="flex items-center gap-1.5">
+                <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+              </div>
+              <div class="flex-1 flex flex-col justify-center py-3">
+                <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].headline }}</h3>
+                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STEP 9: Export / Save -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div v-if="currentStep === 9">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 9: Exportieren & Speichern</h2>
+
+      <!-- Pre-export summary -->
+      <div v-if="!exportComplete" class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-gray-900 dark:text-white mb-4">Zusammenfassung</h3>
+        <div class="grid grid-cols-2 gap-3 text-sm mb-6">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Kategorie</div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Plattform</div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Template</div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ selectedTemplate?.name }}</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Slides</div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ slides.length }}</div>
+          </div>
+          <div v-if="selectedCountryObj" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Land</div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Headline</div>
+            <div class="font-medium text-gray-900 dark:text-white truncate">{{ slides[0]?.headline }}</div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button
+            @click="saveAndExport"
+            :disabled="exporting"
+            class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <span v-if="exporting" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            {{ exporting ? 'Speichern...' : 'Post speichern & exportieren' }}
+          </button>
+          <button
+            @click="downloadAsImage"
+            :disabled="slides.length === 0"
+            class="flex-1 px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] disabled:bg-gray-300 text-[#1A1A2E] font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            ⬇ Als PNG herunterladen
+          </button>
+        </div>
+      </div>
+
+      <!-- Export complete -->
+      <div v-if="exportComplete" class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-green-200 dark:border-green-800 p-8 text-center">
+        <div class="text-6xl mb-4">🎉</div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post erfolgreich erstellt!</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-4">
+          Dein Post wurde in der Datenbank gespeichert und als exportiert markiert.
+        </p>
+        <div v-if="savedPost" class="text-sm text-gray-600 dark:text-gray-400 mb-6 space-y-1">
+          <div>Post ID: <strong>#{{ savedPost.id }}</strong></div>
+          <div>Status: <strong>{{ savedPost.status }}</strong></div>
+          <div>Kategorie: <strong>{{ selectedCategoryObj?.label }}</strong></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <button @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
+            ⬇ PNG herunterladen
+          </button>
+          <button @click="router.push('/dashboard')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition-colors">
+            Zum Dashboard
+          </button>
+          <button @click="resetWorkflow" class="px-6 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors">
+            Neuen Post erstellen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Navigation Buttons -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <button
+        v-if="currentStep > 1 && !exportComplete"
+        @click="prevStep"
+        class="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
+      >
+        &#8592; Zurueck
+      </button>
+      <div v-else></div>
+
+      <button
+        v-if="currentStep < totalSteps && !exportComplete"
+        @click="nextStep"
+        :disabled="!canProceed"
+        class="px-6 py-3 rounded-lg bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium transition-colors disabled:cursor-not-allowed"
+      >
+        Weiter &#8594;
+      </button>
+    </div>
   </div>
 </template>
