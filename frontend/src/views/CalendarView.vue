@@ -11,7 +11,7 @@ const error = ref(null)
 // Unscheduled drafts sidebar
 const unscheduledPosts = ref([])
 const loadingUnscheduled = ref(false)
-const sidebarCollapsed = ref(false)
+const sidebarCollapsed = ref(window.innerWidth < 768)
 
 // Drag-and-drop state
 const draggedPost = ref(null)
@@ -687,7 +687,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-full">
+  <div class="max-w-full overflow-hidden">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
@@ -698,9 +698,9 @@ onMounted(() => {
       </div>
 
       <!-- Controls: platform filter + view toggle + navigation -->
-      <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-3 flex-wrap max-w-full">
         <!-- Platform filter -->
-        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-x-auto max-w-full">
           <button
             v-for="opt in platformOptions"
             :key="opt.value ?? 'all'"
@@ -849,11 +849,14 @@ onMounted(() => {
     </div>
 
     <!-- Main layout: sidebar + calendar -->
-    <div v-else class="flex gap-4">
+    <div v-else class="flex flex-col md:flex-row gap-4">
       <!-- Unscheduled drafts sidebar -->
       <div
         class="flex-shrink-0 transition-all duration-300"
-        :class="sidebarCollapsed ? 'w-10' : 'w-64'"
+        :class="[
+          sidebarCollapsed ? 'w-10' : 'w-full md:w-64',
+          'max-w-full'
+        ]"
       >
         <!-- Collapse toggle -->
         <button
