@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime, date, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
@@ -53,23 +53,29 @@ async def list_posts(
     date_to: Optional[str] = None,
     sort_by: Optional[str] = Query(default="created_at", pattern="^(created_at|updated_at|title|scheduled_date)$"),
     sort_direction: Optional[str] = Query(default="desc", pattern="^(asc|desc)$"),
+    page: Optional[int] = Query(default=None, ge=1),
+    limit: Optional[int] = Query(default=None, ge=1, le=100),
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List posts with optional filters and sorting."""
-    query = select(Post).where(Post.user_id == user_id)
+    """List posts with optional filters, sorting, and pagination.
+
+    When page and limit are provided, returns paginated results with metadata.
+    When not provided, returns all results as a flat array (backward compatible).
+    """
+    base_where = [Post.user_id == user_id]
 
     if category:
-        query = query.where(Post.category == category)
+        base_where.append(Post.category == category)
     if platform:
-        query = query.where(Post.platform == platform)
+        base_where.append(Post.platform == platform)
     if status:
-        query = query.where(Post.status == status)
+        base_where.append(Post.status == status)
     if country:
-        query = query.where(Post.country == country)
+        base_where.append(Post.country == country)
     if search and search.strip():
         search_pattern = f"%{search.strip()}%"
-        query = query.where(
+        base_where.append(
             or_(
                 Post.title.ilike(search_pattern),
                 Post.slide_data.ilike(search_pattern),
@@ -81,16 +87,19 @@ async def list_posts(
     if date_from:
         try:
             from_date = datetime.strptime(date_from, "%Y-%m-%d")
-            query = query.where(Post.created_at >= from_date)
+            base_where.append(Post.created_at >= from_date)
         except (ValueError, TypeError):
             pass
     if date_to:
         try:
             # Set to end of day (23:59:59) to include the entire day
             to_date = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-            query = query.where(Post.created_at <= to_date)
+            base_where.append(Post.created_at <= to_date)
         except (ValueError, TypeError):
             pass
+
+    # Build the query with filters
+    query = select(Post).where(*base_where)
 
     # Dynamic sorting
     sort_field_map = {
@@ -105,6 +114,35 @@ async def list_posts(
     else:
         query = query.order_by(sort_column.desc())
 
+    # If pagination params provided, return paginated response
+    if page is not None and limit is not None:
+        # Get total count
+        count_query = select(func.count()).select_from(Post).where(*base_where)
+        count_result = await db.execute(count_query)
+        total = count_result.scalar()
+
+        # Calculate total pages
+        total_pages = max(1, (total + limit - 1) // limit)
+
+        # Clamp page to valid range
+        effective_page = min(page, total_pages)
+
+        # Apply pagination
+        offset = (effective_page - 1) * limit
+        query = query.offset(offset).limit(limit)
+
+        result = await db.execute(query)
+        posts = result.scalars().all()
+
+        return {
+            "items": [post_to_dict(p) for p in posts],
+            "total": total,
+            "page": effective_page,
+            "limit": limit,
+            "total_pages": total_pages,
+        }
+
+    # No pagination - return flat array (backward compatible)
     result = await db.execute(query)
     posts = result.scalars().all()
     return [post_to_dict(p) for p in posts]

@@ -9,6 +9,12 @@ const loading = ref(true)
 const error = ref(null)
 const posts = ref([])
 
+// Pagination
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalPosts = ref(0)
+const postsPerPage = ref(10)
+
 // Filters
 const searchQuery = ref('')
 const filterCategory = ref('')
@@ -179,54 +185,8 @@ function formatDateShort(dateStr) {
   })
 }
 
-// Filtered posts
-const filteredPosts = computed(() => {
-  let result = posts.value
-
-  if (searchQuery.value && searchQuery.value.trim()) {
-    const q = searchQuery.value.trim().toLowerCase()
-    result = result.filter(p =>
-      (p.title && p.title.toLowerCase().includes(q)) ||
-      (p.category && p.category.toLowerCase().includes(q)) ||
-      (p.caption_instagram && p.caption_instagram.toLowerCase().includes(q)) ||
-      (p.caption_tiktok && p.caption_tiktok.toLowerCase().includes(q)) ||
-      (p.slide_data && p.slide_data.toLowerCase().includes(q)) ||
-      (p.cta_text && p.cta_text.toLowerCase().includes(q))
-    )
-  }
-
-  if (filterCategory.value) {
-    result = result.filter(p => p.category === filterCategory.value)
-  }
-
-  if (filterPlatform.value) {
-    result = result.filter(p => p.platform === filterPlatform.value)
-  }
-
-  if (filterStatus.value) {
-    result = result.filter(p => p.status === filterStatus.value)
-  }
-
-  if (filterDateFrom.value) {
-    const from = new Date(filterDateFrom.value)
-    from.setHours(0, 0, 0, 0)
-    result = result.filter(p => {
-      if (!p.created_at) return false
-      return new Date(p.created_at) >= from
-    })
-  }
-
-  if (filterDateTo.value) {
-    const to = new Date(filterDateTo.value)
-    to.setHours(23, 59, 59, 999)
-    result = result.filter(p => {
-      if (!p.created_at) return false
-      return new Date(p.created_at) <= to
-    })
-  }
-
-  return result
-})
+// With server-side pagination, posts are already filtered - use directly
+const filteredPosts = computed(() => posts.value)
 
 // Active filters count
 const activeFilters = computed(() => {
@@ -249,10 +209,13 @@ function clearFilters() {
   filterDateTo.value = ''
 }
 
-// Fetch posts from API
-async function fetchPosts() {
+// Fetch posts from API with pagination
+async function fetchPosts(resetPage = true) {
   loading.value = true
   error.value = null
+  if (resetPage) {
+    currentPage.value = 1
+  }
   try {
     const params = {}
     if (filterCategory.value) params.category = filterCategory.value
@@ -263,9 +226,23 @@ async function fetchPosts() {
     if (filterDateTo.value) params.date_to = filterDateTo.value
     params.sort_by = sortBy.value
     params.sort_direction = sortDirection.value
+    params.page = currentPage.value
+    params.limit = postsPerPage.value
 
     const response = await api.get('/api/posts', { params })
-    posts.value = response.data
+    // Handle paginated response
+    if (response.data && response.data.items) {
+      posts.value = response.data.items
+      totalPosts.value = response.data.total
+      totalPages.value = response.data.total_pages
+      currentPage.value = response.data.page
+    } else {
+      // Backward compatible: flat array response
+      posts.value = response.data
+      totalPosts.value = response.data.length
+      totalPages.value = 1
+      currentPage.value = 1
+    }
   } catch (err) {
     console.error('Failed to fetch posts:', err)
     error.value = 'Fehler beim Laden der Posts. Bitte versuche es erneut.'
@@ -273,6 +250,45 @@ async function fetchPosts() {
     loading.value = false
   }
 }
+
+// Pagination navigation
+function goToPage(page) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  fetchPosts(false)
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    goToPage(currentPage.value + 1)
+  }
+}
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    goToPage(currentPage.value - 1)
+  }
+}
+
+// Generate visible page numbers for pagination
+const visiblePages = computed(() => {
+  const pages = []
+  const total = totalPages.value
+  const current = currentPage.value
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
+  }
+  return pages
+})
 
 // Scheduling dialog state
 const showScheduleDialog = ref(false)
@@ -355,15 +371,24 @@ async function executeDelete() {
   const deleteId = postToDelete.value.id
   try {
     await api.delete(`/api/posts/${deleteId}`)
-    posts.value = posts.value.filter(p => p.id !== deleteId)
     showDeleteDialog.value = false
     postToDelete.value = null
+    // Re-fetch current page; if the page is now empty, go back one page
+    await fetchPosts(false)
+    if (posts.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = Math.max(1, currentPage.value - 1)
+      await fetchPosts(false)
+    }
   } catch (err) {
     // If post is already deleted (404), treat as success (idempotent delete)
     if (err.response?.status === 404) {
-      posts.value = posts.value.filter(p => p.id !== deleteId)
       showDeleteDialog.value = false
       postToDelete.value = null
+      await fetchPosts(false)
+      if (posts.value.length === 0 && currentPage.value > 1) {
+        currentPage.value = Math.max(1, currentPage.value - 1)
+        await fetchPosts(false)
+      }
     } else {
       console.error('Failed to delete post:', err)
       // Error toast is shown by global API interceptor
@@ -395,9 +420,10 @@ const duplicating = ref(null)
 async function duplicatePost(post) {
   duplicating.value = post.id
   try {
-    const response = await api.post(`/api/posts/${post.id}/duplicate`)
-    // Add the new duplicate post at the top of the list
-    posts.value.unshift(response.data)
+    await api.post(`/api/posts/${post.id}/duplicate`)
+    // Re-fetch page 1 to show the new duplicate at top
+    currentPage.value = 1
+    await fetchPosts(false)
   } catch (err) {
     console.error('Failed to duplicate post:', err)
   } finally {
@@ -608,7 +634,7 @@ onMounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="filteredPosts.length === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+    <div v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
       <div class="text-5xl mb-4">📝</div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Noch keine Posts erstellt</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-6">Erstelle deinen ersten Social-Media-Post fuer TREFF!</p>
@@ -622,7 +648,7 @@ onMounted(() => {
     </div>
 
     <!-- No results for filter -->
-    <div v-else-if="filteredPosts.length === 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+    <div v-else-if="totalPosts === 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
       <div class="text-5xl mb-4">🔍</div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keine Posts gefunden</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-4">Keine Posts passen zu deinen Filtern.</p>
@@ -637,8 +663,11 @@ onMounted(() => {
     <!-- Posts list -->
     <div v-else class="space-y-3">
       <!-- Results count -->
-      <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-        {{ filteredPosts.length }} {{ filteredPosts.length === 1 ? 'Post' : 'Posts' }} gefunden
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          {{ totalPosts }} {{ totalPosts === 1 ? 'Post' : 'Posts' }} gefunden
+          <span v-if="totalPages > 1" class="ml-1">(Seite {{ currentPage }} von {{ totalPages }})</span>
+        </div>
       </div>
 
       <!-- Post cards -->
@@ -752,6 +781,46 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Pagination Controls -->
+    <div v-if="totalPages > 1 && !loading && !error" class="flex items-center justify-center gap-2 mt-6">
+      <button
+        @click="prevPage"
+        :disabled="currentPage <= 1"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Vorherige Seite"
+      >
+        &larr; Zurueck
+      </button>
+
+      <div class="flex items-center gap-1">
+        <template v-for="(pg, idx) in visiblePages" :key="idx">
+          <span v-if="pg === '...'" class="px-2 py-1 text-sm text-gray-400 dark:text-gray-500">...</span>
+          <button
+            v-else
+            @click="goToPage(pg)"
+            class="w-9 h-9 text-sm rounded-lg border transition-colors"
+            :class="pg === currentPage
+              ? 'bg-[#3B7AB1] text-white border-[#3B7AB1]'
+              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'"
+            :aria-label="'Seite ' + pg"
+            :aria-current="pg === currentPage ? 'page' : undefined"
+          >
+            {{ pg }}
+          </button>
+        </template>
+      </div>
+
+      <button
+        @click="nextPage"
+        :disabled="currentPage >= totalPages"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Naechste Seite"
+      >
+        Weiter &rarr;
+      </button>
+    </div>
+
     <!-- Delete Confirmation Dialog -->
     <Teleport to="body">
       <div v-if="showDeleteDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
