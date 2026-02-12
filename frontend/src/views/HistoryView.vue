@@ -325,18 +325,26 @@ function cancelDelete() {
   postToDelete.value = null
 }
 
-// Execute delete
+// Execute delete (idempotent - guards against double-click)
 async function executeDelete() {
-  if (!postToDelete.value) return
+  if (!postToDelete.value || deleting.value) return
   deleting.value = true
+  const deleteId = postToDelete.value.id
   try {
-    await api.delete(`/api/posts/${postToDelete.value.id}`)
-    posts.value = posts.value.filter(p => p.id !== postToDelete.value.id)
+    await api.delete(`/api/posts/${deleteId}`)
+    posts.value = posts.value.filter(p => p.id !== deleteId)
     showDeleteDialog.value = false
     postToDelete.value = null
   } catch (err) {
-    console.error('Failed to delete post:', err)
-    // Error toast is shown by global API interceptor
+    // If post is already deleted (404), treat as success (idempotent delete)
+    if (err.response?.status === 404) {
+      posts.value = posts.value.filter(p => p.id !== deleteId)
+      showDeleteDialog.value = false
+      postToDelete.value = null
+    } else {
+      console.error('Failed to delete post:', err)
+      // Error toast is shown by global API interceptor
+    }
   } finally {
     deleting.value = false
   }

@@ -224,6 +224,8 @@ async function loadTemplates() {
 }
 
 async function generateText() {
+  // Prevent duplicate requests from rapid clicks
+  if (generatingText.value) return
   generatingText.value = true
   error.value = ''
 
@@ -264,6 +266,8 @@ async function generateText() {
 
 async function regenerateField(field, slideIndex = 0) {
   const fieldKey = slideIndex > 0 ? `${field}_${slideIndex}` : field
+  // Prevent duplicate requests from rapid clicks
+  if (regeneratingField.value) return
   regeneratingField.value = fieldKey
   error.value = ''
 
@@ -375,7 +379,8 @@ async function generateAiImage() {
     aiImageError.value = 'Bitte gib einen Prompt ein.'
     return
   }
-
+  // Prevent duplicate requests from rapid clicks
+  if (generatingImage.value) return
   generatingImage.value = true
   aiImageError.value = ''
   generatedImageResult.value = null
