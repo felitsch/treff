@@ -1,5 +1,36 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #150: Template preview renders without memory leak
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Analyzed TemplatesView.vue template preview rendering for memory leak sources
+- Identified iframe doc.write() calls triggered by deep watcher without debouncing
+- Implemented 50ms debounced preview updates to prevent rapid DOM rewrites
+- Added explicit iframe document cleanup in closeEditor()
+- Added onUnmounted lifecycle cleanup for debounce timer
+- Verified by opening/closing all 22 templates via browser - 0 console errors, 0 warnings
+- Page remains fully functional after all template switches
+
+### Files modified:
+- frontend/src/views/TemplatesView.vue
+  - Added onUnmounted import
+  - Added previewUpdateTimer debounce variable
+  - Enhanced closeEditor() with timer cleanup and iframe document cleanup
+  - Added debouncedPreviewUpdate() function (50ms debounce)
+  - Changed deep watcher to use debounced version
+  - Added onUnmounted cleanup
+
+### Verification steps completed:
+1. Open template editor - PASS
+2. Switch between 20+ templates rapidly - PASS (22 templates opened/closed)
+3. Monitor memory usage - PASS (no growth observed)
+4. No console errors about memory - PASS (0 errors, 0 warnings)
+5. Mock data grep checks - PASS (no mock/placeholder data found)
+
+---
+
 ## Session - Feature #149: Search responds within 500ms
 **Date:** 2026-02-13
 **Status:** PASSING
