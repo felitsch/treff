@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #95: Post creation requires category selection
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete category selection validation in Create Post workflow end-to-end via browser
+- No code changes needed - all validation was already fully implemented:
+  - `canProceed` computed property checks `!!selectedCategory.value` for step 1
+  - `nextStep()` shows validation message when `canProceed` is false
+  - `stepValidationMessages[1]` = "Bitte waehle eine Kategorie aus, bevor du fortfaehrst."
+  - Validation message clears when category is selected (watch on selectedCategory)
+
+### Verification steps completed:
+1. Start Create Post workflow - PASS
+   - Navigated to /create-post, Step 1 displayed with 9 categories
+2. Attempt to proceed without selecting a category - PASS
+   - Clicked "Weiter →" without selecting any category
+   - Validation alert shown: "Bitte waehle eine Kategorie aus, bevor du fortfaehrst."
+3. Verify error/validation prevents advancement - PASS
+   - Still on Step 1 (no advancement to Step 2)
+   - Step indicator still shows "1" as active blue circle
+4. Select a category - PASS
+   - Selected "Laender-Spotlight" category
+   - Validation message immediately cleared
+   - Button became active (cursor: pointer)
+5. Verify user can now proceed to next step - PASS
+   - Clicked "Weiter →" successfully
+   - Advanced to Step 2 (Template selection)
+   - Kategorie step shows green checkmark (✓)
+   - Breadcrumb shows "Post erstellen / Kategorie / Template"
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Screenshots captured:
+  - feature95-validation-error-no-category.png
+  - feature95-category-selected.png
+  - feature95-advanced-to-step2.png
+
+### No code changes needed:
+- CreatePostView.vue already had complete validation for category selection
+- canProceed computed blocks advancement when no category selected
+- stepValidationMessages provides German error message
+
+### Current state:
+- Feature #95 marked as PASSING
+- 100/170 features passing (58.8%)
+
 ## Session - Feature #93: Registration validates email format
 **Date:** 2026-02-12
 **Status:** PASSING
