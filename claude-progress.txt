@@ -1,5 +1,42 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #82: Post history search finds posts by text content
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Enhanced backend search in GET /api/posts to search across multiple text fields:
+  - title, slide_data (JSON), caption_instagram, caption_tiktok, cta_text
+  - Previously only searched Post.title
+  - Now uses SQLAlchemy `or_()` with `ilike()` across all text content fields
+- Enhanced frontend client-side filtering in HistoryView.vue to also match:
+  - slide_data, caption_tiktok, cta_text (in addition to existing title, category, caption_instagram)
+
+### Verification steps completed:
+1. Created post with title "UNIQUE_SEARCH_TEST_TEXT" via API - PASS (201 Created, id: 16)
+2. Navigated to History page - PASS (post visible, "1 Post gefunden")
+3. Searched for "UNIQUE_SEARCH_TEST_TEXT" - PASS (matching post appears, "1 Post gefunden")
+4. Searched for nonexistent "ZZZZNONEXISTENT_TERM_12345" - PASS (empty results shown)
+5. Verified empty results message: "Keine Posts gefunden" + "Keine Posts passen zu deinen Filtern." - PASS
+6. Verified "Filter zuruecksetzen" button appears - PASS
+7. Cleaned up test data (deleted test post) - PASS
+
+### Verification checklist:
+- [x] Search finds posts by title text content
+- [x] Search for nonexistent text shows empty results with message
+- [x] Zero JS console errors (0 errors, 0 warnings)
+- [x] Mock data greps: zero matches in frontend/src and backend/app
+- [x] No 500s in network requests
+- [x] Screenshots: feature82-search-found.png, feature82-search-empty.png
+
+### Files modified:
+- backend/app/api/routes/posts.py - Added `or_()` import, expanded search to include slide_data, caption_instagram, caption_tiktok, cta_text
+- frontend/src/views/HistoryView.vue - Expanded client-side search filter to include slide_data, caption_tiktok, cta_text
+
+### Current state:
+- 26/163 features passing (16.0%)
+- Feature #82 marked as PASSING
+
 ## Session - Feature #51: Export single post as PNG at 1080px resolution
 **Date:** 2026-02-12
 **Status:** PASSING
