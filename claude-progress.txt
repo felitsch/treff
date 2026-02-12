@@ -4836,3 +4836,47 @@
 ### Current state:
 - Feature #108 marked as PASSING
 - 110/170 features passing (64.7%)
+
+## Session - Feature #114: Special characters in search do not crash app
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that special characters in the History search box do not crash the app
+- Tested three types of malicious/special input:
+  1. XSS payload: `<script>alert(1)</script>` - no alert popup, no crash, rendered as literal text
+  2. URL-encoded special chars: `%25&=?#` - no crash, graceful empty results
+  3. SQL injection: `'; DROP TABLE posts; --` - no crash, parameterized queries prevent injection
+- All tests showed "Keine Posts gefunden" with zero console errors
+- Filter reset button works correctly after special character searches
+
+### Why no code changes were needed:
+- Backend: SQLAlchemy ORM uses parameterized queries via `.ilike()` - SQL injection impossible
+- Frontend: Vue 3 auto-escapes all template interpolations `{{ }}` - XSS impossible
+- Frontend: axios properly URL-encodes query parameters - special chars handled by HTTP layer
+- Backend: FastAPI properly decodes URL-encoded parameters
+
+### Verification steps completed:
+1. Navigate to History - PASS (logged in as special114@treff.de, navigated to /history)
+2. Search for `<script>alert(1)</script>` - PASS (no error, no crash, no XSS execution)
+3. Verify no error or crash occurs - PASS (zero console errors, graceful "Keine Posts gefunden")
+4. Search for `%25&=?#` - PASS (no error, no crash, graceful empty results)
+5. Verify graceful handling with empty results - PASS (all special chars displayed as literal text)
+
+### Additional tests:
+- SQL injection `'; DROP TABLE posts; --` - PASS (parameterized queries safe)
+- Filter reset after special chars - PASS (app recovers to normal state)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Screenshots captured:
+  - feature114-step1-xss-search.png (XSS payload in search - no crash)
+  - feature114-step2-special-chars-search.png (%25&=?# in search - no crash)
+  - feature114-step3-sql-injection-search.png (SQL injection attempt - no crash)
+
+### Current state:
+- Feature #114 marked as PASSING
+- 116/170 features passing (68.2%)
