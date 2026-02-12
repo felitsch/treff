@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import api from '@/utils/api'
 
 const loading = ref(true)
@@ -250,7 +250,26 @@ async function saveTemplateEdits() {
   }
 }
 
+// Debounce timer for preview updates - declared early so closeEditor() can access it
+let previewUpdateTimer = null
+
 function closeEditor() {
+  // Clear any pending debounced preview update
+  if (previewUpdateTimer) {
+    clearTimeout(previewUpdateTimer)
+    previewUpdateTimer = null
+  }
+  // Explicitly clean up iframe document to prevent memory leaks
+  // when rapidly switching between templates
+  const iframe = editorPreviewRef.value
+  if (iframe) {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (doc) {
+      doc.open()
+      doc.write('')
+      doc.close()
+    }
+  }
   showEditorModal.value = false
   editorTemplate.value = null
 }
@@ -277,12 +296,31 @@ function updatePreviewIframe() {
   doc.close()
 }
 
+// Debounced preview update to prevent memory accumulation from rapid doc.write() calls
+function debouncedPreviewUpdate() {
+  if (previewUpdateTimer) {
+    clearTimeout(previewUpdateTimer)
+  }
+  previewUpdateTimer = setTimeout(() => {
+    previewUpdateTimer = null
+    nextTick(() => {
+      updatePreviewIframe()
+    })
+  }, 50) // 50ms debounce - responsive but prevents excessive rewrites
+}
+
 // Watch for any customization change and update the iframe preview
 watch(editorCustom, () => {
-  nextTick(() => {
-    updatePreviewIframe()
-  })
+  debouncedPreviewUpdate()
 }, { deep: true })
+
+// Clean up debounce timer on component unmount to prevent memory leaks
+onUnmounted(() => {
+  if (previewUpdateTimer) {
+    clearTimeout(previewUpdateTimer)
+    previewUpdateTimer = null
+  }
+})
 
 // Get platform dimensions for preview
 function getPreviewDimensions(platformFormat) {
