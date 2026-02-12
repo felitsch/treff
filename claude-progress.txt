@@ -1,5 +1,43 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #79: Analytics goal tracking shows progress bars
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Updated backend `/api/analytics/goals` endpoint to read target values from user Settings table
+  instead of hardcoded 4/16 values
+- Goals endpoint now reads `posts_per_week` and `posts_per_month` from the Settings model
+- Falls back to defaults (4/week, 16/month) when no settings exist or values are invalid
+- Added `from app.models.setting import Setting` import to analytics.py
+
+### Files modified:
+- backend/app/api/routes/analytics.py - Read goal targets from Settings table instead of hardcoded values
+
+### Verification steps completed:
+1. Set weekly target to 4, monthly target to 16 via PUT /api/settings - PASS
+2. Created 2 test posts (GOAL_TEST_79_Post_1, GOAL_TEST_79_Post_2) to partially meet goals - PASS
+3. Navigate to Analytics page - PASS (Zielverfolgung section visible)
+4. Verify progress bars show correct percentage - PASS:
+   - Wochenziel: blue progress bar at 50% (2/4)
+   - Monatsziel: yellow progress bar at 13% (2/16, rounds from 12.5%)
+5. Verify actual vs target numbers displayed - PASS:
+   - "2 / 4 Posts" for weekly
+   - "2 / 16 Posts" for monthly
+   - "50% erreicht" and "13% erreicht" labels shown
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: goals, settings, posts all persist after restart
+- [x] Analytics page shows identical data after restart (2/4 weekly, 2/16 monthly)
+- [x] No 500 errors in network requests
+- [x] Screenshots captured: feature79-step1-analytics-goals.png, feature79-step2-after-restart.png
+
+### Current state:
+- Feature #79 marked as PASSING
+- 88/170 features passing (51.8%)
+
 ## Session - Feature #77: Analytics category distribution pie chart renders
 **Date:** 2026-02-12
 **Status:** PASSING
