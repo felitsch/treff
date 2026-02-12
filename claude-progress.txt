@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #124: Scheduled post shows correct date in calendar timezone
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete scheduled post date/time display in calendar views end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: PUT /api/posts/{post_id}/schedule endpoint stores scheduled_date and scheduled_time
+  - Backend: GET /api/calendar?month=3&year=2025 returns posts grouped by date with correct date/time
+  - Frontend: CalendarView.vue month view shows post card on correct date with time
+  - Frontend: CalendarView.vue week view shows post card in correct 14:00 time slot
+
+### Verification steps completed:
+1. Schedule a post for 2025-03-15 at 14:00 - PASS
+   - Created post #142 "SCHEDULE_TEST_124_March15" (category: laender_spotlight, platform: instagram_feed)
+   - Scheduled via PUT /api/posts/142/schedule with scheduled_date: "2025-03-15", scheduled_time: "14:00"
+   - API response confirmed: scheduled_date "2025-03-15T00:00:00", scheduled_time "14:00", status "scheduled"
+2. Navigate to Calendar - PASS
+   - Navigated to /calendar, switched to March 2025 month view
+   - Header shows "1 Post in Maerz 2025"
+3. Verify post appears on March 15th - PASS
+   - Month view: Post card visible on day 15 with title "SCHEDULE_TEST_124_March15", category icon, badge "1"
+   - Week view: SA 15 column shows "1 Post"
+   - API GET /api/calendar?month=3&year=2025 returns post under "2025-03-15" key in posts_by_date
+4. Verify time displays as 14:00 in user's timezone - PASS
+   - Month view: Post card shows "14:00" text
+   - Month view tooltip: "SCHEDULE_TEST_124_March15 - Laender - Geplant um 14:00"
+   - Week view: Post card placed in 14:00 time slot row (between 13:00 and 15:00)
+   - Week view: Post card shows "14:00" text
+   - Week view tooltip: "SCHEDULE_TEST_124_March15 - Laender - Geplant - 14:00"
+   - API response: scheduled_time: "14:00"
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Post correctly stored in database with scheduled_date and scheduled_time
+- [x] Screenshots captured:
+  - feature124-step1-calendar-march2025.png (month view showing post on day 15)
+  - feature124-step2-day15-post.png (close-up of post card with 14:00 time)
+  - feature124-step3-week-view-14h-slot.png (week view header SA 15 = 1 Post)
+  - feature124-step4-week-view-14h-visible.png (week view with post in 14:00 slot)
+
+### No code changes needed:
+- posts.py schedule_post() already correctly stores date/time and sets status to "scheduled"
+- calendar.py get_calendar() already groups posts by date and returns scheduled_time
+- CalendarView.vue already displays post.scheduled_time in both month and week views
+- Week view getPostsAtTimeSlot() correctly matches post hour to time slot
+
+### Current state:
+- Feature #124 marked as PASSING
+- 126/170 features passing (74.1%)
+
 ## Session - Feature #122: URL manipulation does not expose other users data
 **Date:** 2026-02-12
 **Status:** PASSING
