@@ -57,6 +57,12 @@ const {
 
 const totalSteps = 9
 
+// ── Race condition protection for AI generation ──────────────────────────
+// Track generation requests so late responses don't overwrite manual edits
+let generationRequestCounter = 0
+let pendingGenerationData = ref(null)  // Holds AI response when user edited during generation
+const showOverwriteDialog = ref(false) // Controls the overwrite confirmation dialog
+
 // Step 1: Category selection (static data - no need for store)
 const categories = [
   { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍', desc: 'Informative Posts ueber Ziellaender' },
@@ -230,6 +236,10 @@ async function generateText() {
   generatingText.value = true
   error.value = ''
 
+  // Capture state before generation to detect manual edits during the request
+  const requestId = ++generationRequestCounter
+  const stateBeforeGeneration = slides.value.length > 0 ? JSON.stringify(slides.value) : null
+
   try {
     const slideCount = selectedTemplate.value?.slide_count || 1
     const response = await api.post('/api/ai/generate-text', {
@@ -242,21 +252,26 @@ async function generateText() {
       tone: tone.value,
     })
 
-    generatedContent.value = response.data
-    slides.value = response.data.slides || []
-    captionInstagram.value = response.data.caption_instagram || ''
-    captionTiktok.value = response.data.caption_tiktok || ''
-    hashtagsInstagram.value = response.data.hashtags_instagram || ''
-    hashtagsTiktok.value = response.data.hashtags_tiktok || ''
-    ctaText.value = response.data.cta_text || ''
-    currentPreviewSlide.value = 0
+    // Check if this is still the latest request (another generation may have started)
+    if (requestId !== generationRequestCounter) {
+      // A newer generation request was initiated - discard this late response
+      return
+    }
 
-    successMsg.value = 'Inhalt erfolgreich generiert!'
-    setTimeout(() => { successMsg.value = '' }, 3000)
+    // Check if user manually edited content while generation was in progress
+    const currentState = slides.value.length > 0 ? JSON.stringify(slides.value) : null
+    const userEditedDuringGeneration = stateBeforeGeneration !== null && currentState !== stateBeforeGeneration
 
-    // Initialize undo/redo history with newly generated content
-    ensureDragIds()
-    initFromState(getEditableState())
+    if (userEditedDuringGeneration) {
+      // User edited content while AI was generating - don't overwrite silently
+      // Store the pending data and show confirmation dialog
+      pendingGenerationData.value = response.data
+      showOverwriteDialog.value = true
+      toast.info('KI-Generierung abgeschlossen. Deine manuellen Aenderungen werden beibehalten, bis du die neuen Inhalte uebernimmst.')
+    } else {
+      // No manual edits during generation - apply normally
+      applyGeneratedContent(response.data)
+    }
   } catch (e) {
     console.error('Text generation failed:', e)
     error.value = 'Textgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
@@ -265,12 +280,78 @@ async function generateText() {
   }
 }
 
+// Apply AI-generated content to all fields
+function applyGeneratedContent(data) {
+  generatedContent.value = data
+  slides.value = data.slides || []
+  captionInstagram.value = data.caption_instagram || ''
+  captionTiktok.value = data.caption_tiktok || ''
+  hashtagsInstagram.value = data.hashtags_instagram || ''
+  hashtagsTiktok.value = data.hashtags_tiktok || ''
+  ctaText.value = data.cta_text || ''
+  currentPreviewSlide.value = 0
+
+  successMsg.value = 'Inhalt erfolgreich generiert!'
+  setTimeout(() => { successMsg.value = '' }, 3000)
+
+  // Initialize undo/redo history with newly generated content
+  ensureDragIds()
+  initFromState(getEditableState())
+}
+
+// Accept pending AI-generated content (user confirmed overwrite)
+function acceptPendingGeneration() {
+  if (pendingGenerationData.value) {
+    applyGeneratedContent(pendingGenerationData.value)
+    pendingGenerationData.value = null
+    showOverwriteDialog.value = false
+    toast.success('KI-generierte Inhalte uebernommen.')
+  }
+}
+
+// Dismiss pending AI-generated content (keep manual edits)
+function dismissPendingGeneration() {
+  pendingGenerationData.value = null
+  showOverwriteDialog.value = false
+  toast.info('Manuelle Aenderungen beibehalten.')
+}
+
 async function regenerateField(field, slideIndex = 0) {
   const fieldKey = slideIndex > 0 ? `${field}_${slideIndex}` : field
   // Prevent duplicate requests from rapid clicks
   if (regeneratingField.value) return
   regeneratingField.value = fieldKey
   error.value = ''
+
+  // Capture the field's current value before the async request
+  // to detect if user manually edited it during regeneration
+  let valueBeforeRegeneration = null
+  switch (field) {
+    case 'headline':
+      valueBeforeRegeneration = slides.value[slideIndex]?.headline || ''
+      break
+    case 'subheadline':
+      valueBeforeRegeneration = slides.value[slideIndex]?.subheadline || ''
+      break
+    case 'body_text':
+      valueBeforeRegeneration = slides.value[slideIndex]?.body_text || ''
+      break
+    case 'cta_text':
+      valueBeforeRegeneration = slides.value[slideIndex]?.cta_text || ''
+      break
+    case 'caption_instagram':
+      valueBeforeRegeneration = captionInstagram.value
+      break
+    case 'caption_tiktok':
+      valueBeforeRegeneration = captionTiktok.value
+      break
+    case 'hashtags_instagram':
+      valueBeforeRegeneration = hashtagsInstagram.value
+      break
+    case 'hashtags_tiktok':
+      valueBeforeRegeneration = hashtagsTiktok.value
+      break
+  }
 
   try {
     const response = await api.post('/api/ai/regenerate-field', {
@@ -288,6 +369,41 @@ async function regenerateField(field, slideIndex = 0) {
     })
 
     const newValue = response.data.value
+
+    // Check if user manually edited this field while regeneration was in progress
+    let currentFieldValue = null
+    switch (field) {
+      case 'headline':
+        currentFieldValue = slides.value[slideIndex]?.headline || ''
+        break
+      case 'subheadline':
+        currentFieldValue = slides.value[slideIndex]?.subheadline || ''
+        break
+      case 'body_text':
+        currentFieldValue = slides.value[slideIndex]?.body_text || ''
+        break
+      case 'cta_text':
+        currentFieldValue = slides.value[slideIndex]?.cta_text || ''
+        break
+      case 'caption_instagram':
+        currentFieldValue = captionInstagram.value
+        break
+      case 'caption_tiktok':
+        currentFieldValue = captionTiktok.value
+        break
+      case 'hashtags_instagram':
+        currentFieldValue = hashtagsInstagram.value
+        break
+      case 'hashtags_tiktok':
+        currentFieldValue = hashtagsTiktok.value
+        break
+    }
+
+    if (currentFieldValue !== valueBeforeRegeneration) {
+      // User edited this field during regeneration - don't overwrite
+      toast.info('Feld wurde waehrend der Regenerierung bearbeitet. Manuelle Aenderungen beibehalten.')
+      return
+    }
 
     // Apply the regenerated value to the correct field
     switch (field) {
@@ -1283,6 +1399,19 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       </div>
     </div>
 
+    <!-- Pending AI generation banner (shown on steps 6-7 when user edited during generation) -->
+    <div v-if="pendingGenerationData && (currentStep === 6 || currentStep === 7)" class="mb-4 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl flex items-center gap-3" data-testid="pending-generation-banner">
+      <span class="text-2xl">&#x26A0;&#xFE0F;</span>
+      <div class="flex-1">
+        <p class="text-amber-800 dark:text-amber-200 font-medium text-sm">Neue KI-Inhalte verfuegbar</p>
+        <p class="text-amber-600 dark:text-amber-400 text-xs">Die KI hat neue Inhalte generiert. Moechtest du sie uebernehmen?</p>
+      </div>
+      <div class="flex gap-2">
+        <button @click="dismissPendingGeneration" class="px-3 py-1.5 text-xs border border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-800/50 transition-colors" data-testid="banner-keep-edits-btn">Verwerfen</button>
+        <button @click="acceptPendingGeneration" class="px-3 py-1.5 text-xs bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors" data-testid="banner-accept-ai-btn">Uebernehmen</button>
+      </div>
+    </div>
+
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- STEP 6: Live Preview -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -2178,6 +2307,38 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               data-testid="unsaved-leave-btn"
             >
               Verwerfen & Verlassen
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Overwrite Confirmation Dialog (race condition protection) -->
+    <Teleport to="body">
+      <div v-if="showOverwriteDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="overwrite-dialog">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all">
+          <div class="text-center mb-4">
+            <div class="text-4xl mb-2">&#x26A0;&#xFE0F;</div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Neue KI-Inhalte verfuegbar</h3>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
+            Du hast Inhalte manuell bearbeitet, waehrend die KI neue Texte generiert hat.
+            Moechtest du deine manuellen Aenderungen durch die neuen KI-Inhalte ersetzen?
+          </p>
+          <div class="flex gap-3">
+            <button
+              @click="dismissPendingGeneration"
+              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+              data-testid="keep-manual-edits-btn"
+            >
+              Meine Aenderungen behalten
+            </button>
+            <button
+              @click="acceptPendingGeneration"
+              class="flex-1 px-4 py-2 bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white rounded-lg transition-colors font-medium"
+              data-testid="accept-ai-content-btn"
+            >
+              KI-Inhalte uebernehmen
             </button>
           </div>
         </div>
