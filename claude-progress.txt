@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #41: AI generates TikTok captions shorter and hook-focused
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete TikTok caption generation workflow end-to-end via browser
+- Added TikTok Hashtags display section in Step 6 (Preview) sidebar
+- Added editable TikTok Hashtags textarea in Step 7 (Edit) view
+- Renamed generic "# Hashtags" labels to "# Instagram Hashtags" for clarity
+- Fixed Vite proxy configuration to use 127.0.0.1 instead of localhost (IPv6 fix)
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added TikTok Hashtags display in preview and edit
+- frontend/vite.config.js - Fixed proxy target to 127.0.0.1
+
+### Verification steps completed:
+1. Create a post targeting TikTok platform - PASS
+   - Selected Laender-Spotlight category, Laender-Spotlight Feed template
+   - Selected TikTok platform in Step 3
+   - Selected Australien as country, entered topic "TIKTOK_TEST_41 Surfcamp in Australien"
+   - Selected Jugendlich tone
+2. Generate AI text - PASS
+   - Clicked "Inhalt generieren" -> "Inhalt erfolgreich generiert!"
+   - Confirmation shows: "TikTok Caption erstellt", "Hashtags generiert"
+3. Verify TikTok caption is generated - PASS
+   - TikTok caption: "POV: Du machst ein Auslandsjahr in Australien" (short hook)
+4. Verify TikTok caption is shorter than Instagram caption - PASS
+   - Instagram caption: ~350+ chars (long-form with story, emojis, branding, CTA)
+   - TikTok caption: ~50 chars (one-liner hook like "POV: Du machst ein Auslandsjahr...")
+5. Verify TikTok hashtags are generated separately - PASS
+   - Instagram: 12 hashtags, mixed case (#Highschool #TREFFSprachreisen #HighschoolAbroad)
+   - TikTok: 8 hashtags, lowercase + trend tags (#highschoolyear #trending #viral #auslandsjahr)
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All API requests returned 200 OK
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- TikTok hashtags now visible in both Step 6 preview and Step 7 edit views
+- Screenshots: feature41-step1-preview-with-tiktok-caption.png, feature41-step3-preview-tiktok-hashtags-separate.png, feature41-step4-edit-tiktok-hashtags.png
+
+### Current state:
+- Feature #41 marked as PASSING
+- 56/163 features passing (34.4%)
+
 ## Session - Feature #42: AI tone selector switches between jugendlich and serioess
 **Date:** 2026-02-12
 **Status:** PASSING
