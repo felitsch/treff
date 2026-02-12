@@ -1,5 +1,70 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #153: Seasonal markers appear on calendar for Bewerbungsfristen
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented seasonal markers (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn, etc.) on the Content-Kalender
+- Backend: Created GET /api/calendar/seasonal-markers endpoint with 16 predefined annual markers
+  - 5 Bewerbungsfristen (red): USA Classic (Mar 31), USA Select (Apr 15), Kanada (Apr 30), Irland (May 15), Australien/Neuseeland (May 31)
+  - 2 Abflugzeiten (blue): USA/Kanada/Irland (Aug 15), Australien/Neuseeland (Jan 20)
+  - 3 Schuljahresbeginn (green): USA/Kanada (Sep 1), Irland (Sep 1), Australien/Neuseeland (Feb 1)
+  - 2 Rueckkehr (purple): USA/Kanada/Irland (Jun 15), Australien/Neuseeland (Dec 10)
+  - 1 Stipendium (amber): Bewerbungsfrist (Oct 15)
+  - 2 Messen (teal): JuBi Herbst (Nov 1), JuBi Fruehling (Mar 1)
+- Frontend: CalendarView.vue enhancements:
+  - fetchSeasonalMarkers() fetches markers for current month/year
+  - getMarkersForDate() filters markers for specific calendar cells
+  - Colored marker badges with icons rendered inside day cells
+  - Toggle button "Fristen" in header with count badge (red when active)
+  - Legend section showing all 6 marker types with colored dots
+  - Markers are visually distinct from posts using different color scheme and font-semibold styling
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added SEASONAL_MARKERS data + /seasonal-markers endpoint
+- frontend/src/views/CalendarView.vue - Added marker state, fetch, display, toggle, legend
+
+### Verification steps completed:
+1. Navigate to Calendar page - PASS (logged in, navigated to /calendar)
+2. Scroll to months where application deadlines typically fall - PASS
+   - February: 1 marker (Schulstart Australien/Neuseeland Feb 1, green)
+   - March: 2 markers (JuBi Messe Fruehling Mar 1 teal, Bewerbungsfrist USA Classic Mar 31 red)
+   - April: 2 markers (Bewerbungsfrist USA Select Apr 15, Bewerbungsfrist Kanada Apr 30)
+   - May: 2 markers (Bewerbungsfrist Irland May 15, Bewerbungsfrist Australien/Neuseeland May 31)
+   - June: 1 marker (Rueckkehr USA/Kanada/Irland Jun 15, purple)
+   - August: 1 marker (Abflug USA/Kanada/Irland Aug 15, blue)
+3. Verify seasonal markers/highlights are shown - PASS (colored badge-style markers in day cells)
+4. Verify marker labels include Bewerbungsfristen, Abflugzeiten, etc. - PASS
+   - Bewerbungsfristen: red, 📋 icon
+   - Abflugzeiten: blue, ✈️ icon
+   - Schuljahresbeginn: green, 🏫 icon
+   - Rueckkehr: purple, 🏠 icon
+   - Stipendien: amber, 🎓 icon
+   - Messen: teal, 🎪 icon
+5. Verify markers are visually distinct - PASS
+   - Each type has unique color (bg, border, text) and icon
+   - Different from post cards (border-l-3px style, font-semibold, smaller text)
+   - Toggle button hides/shows all markers
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Toggle on/off works correctly (markers appear/disappear, legend shows/hides)
+- Fristen badge count updates per month (1 for Feb, 2 for Mar/Apr/May, etc.)
+- Tooltips show full description on hover
+
+### Screenshots:
+- feature153-step1-february-seasonal-marker.png (Feb calendar with Schulstart marker)
+- feature153-step2-march-two-markers.png (Mar with JuBi + Bewerbungsfrist)
+- feature153-step3-april-two-deadlines.png (Apr with USA Select + Kanada deadlines)
+- feature153-step4-markers-hidden.png (toggle off - markers hidden)
+- feature153-step5-august-abflugzeit-marker.png (Aug with Abflug marker)
+
+### Current state:
+- Feature #153 marked as PASSING
+- 155/170 features passing (91.2%)
+
 ## Session - Feature #154: Calendar correctly handles month boundaries
 **Date:** 2026-02-13
 **Status:** PASSING
