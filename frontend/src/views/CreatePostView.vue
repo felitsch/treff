@@ -8,6 +8,7 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import { useCreatePostStore } from '@/stores/createPost'
 import { useUndoRedo } from '@/composables/useUndoRedo'
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 
 const router = useRouter()
 const route = useRoute()
@@ -969,6 +970,13 @@ onMounted(() => {
 onUnmounted(() => {
   stopListening()
   clearTimeout(undoSnapshotTimer)
+})
+
+// ── Unsaved changes warning ───────────────────────────────────────────
+const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChanges(() => {
+  // Dirty if user has started the workflow (selected a category or beyond step 1)
+  // AND the post hasn't been exported yet
+  return store.hasWorkflowState() && !exportComplete.value
 })
 </script>
 
@@ -2142,6 +2150,34 @@ onUnmounted(() => {
               data-testid="confirm-delete-slide-btn"
             >
               Entfernen
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Unsaved Changes Warning Dialog -->
+    <Teleport to="body">
+      <div v-if="showLeaveDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="unsaved-changes-dialog">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Aenderungen</h3>
+          <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
+            Du hast ungespeicherte Aenderungen. Wenn du die Seite verlaesst, gehen diese verloren.
+          </p>
+          <div class="flex gap-3 justify-end">
+            <button
+              @click="cancelLeave"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+              data-testid="unsaved-stay-btn"
+            >
+              Auf Seite bleiben
+            </button>
+            <button
+              @click="confirmLeave"
+              class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium text-sm"
+              data-testid="unsaved-leave-btn"
+            >
+              Verwerfen & Verlassen
             </button>
           </div>
         </div>

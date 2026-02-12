@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
 import api from '@/utils/api'
 import { useUndoRedo } from '@/composables/useUndoRedo'
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +15,7 @@ const saving = ref(false)
 const error = ref('')
 const successMsg = ref('')
 const post = ref(null)
+const notFound = ref(false)
 const slides = ref([])
 const currentPreviewSlide = ref(0)
 
@@ -174,8 +176,15 @@ async function loadPost() {
 
     // Initialize undo/redo history with loaded state
     initFromState(getEditableState())
+
+    // Capture initial state for unsaved changes detection (without dragId)
+    initialStateSnapshot.value = getCleanState()
   } catch (e) {
-    error.value = 'Fehler beim Laden: ' + (e.response?.data?.detail || e.message)
+    if (e.response?.status === 404) {
+      notFound.value = true
+    } else {
+      error.value = 'Fehler beim Laden: ' + (e.response?.data?.detail || e.message)
+    }
   } finally {
     loading.value = false
   }
@@ -199,6 +208,9 @@ async function savePost() {
     }
 
     await api.put(`/api/posts/${postId.value}`, updateData)
+
+    // Update initial state snapshot (form is now clean after save)
+    initialStateSnapshot.value = getCleanState()
 
     successMsg.value = 'Post gespeichert!'
     setTimeout(() => { successMsg.value = '' }, 3000)
@@ -225,6 +237,23 @@ onUnmounted(() => {
   stopListening()
   clearTimeout(snapshotTimer)
 })
+
+// ── Unsaved changes warning ───────────────────────────────────────────
+const initialStateSnapshot = ref(null)
+
+function getCleanState() {
+  // Get editable state without dragId (for comparison only)
+  const state = getEditableState()
+  state.slides = state.slides.map(({ dragId, ...rest }) => rest)
+  return JSON.stringify(state)
+}
+
+const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChanges(() => {
+  // Not dirty until initial state is loaded
+  if (!initialStateSnapshot.value) return false
+  // Compare current state to initial (ignoring dragId which is transient)
+  return getCleanState() !== initialStateSnapshot.value
+})
 </script>
 
 <template>
@@ -243,7 +272,7 @@ onUnmounted(() => {
           <span v-if="post" class="text-base font-normal text-gray-500 dark:text-gray-400">#{{ post.id }}</span>
         </h1>
       </div>
-      <div class="flex gap-2">
+      <div v-if="post" class="flex gap-2">
         <!-- Undo / Redo buttons -->
         <button
           @click="undo"
@@ -564,14 +593,34 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Empty state / not found -->
-    <div v-else-if="!loading" class="text-center py-20">
+    <!-- 404 / Not Found state -->
+    <div v-else-if="notFound" class="text-center py-20" data-testid="post-not-found">
       <div class="text-6xl mb-4">&#128533;</div>
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post nicht gefunden</h2>
-      <p class="text-gray-500 dark:text-gray-400 mb-4">Der Post mit ID #{{ postId }} existiert nicht oder gehoert dir nicht.</p>
-      <button @click="router.push('/history')" class="px-6 py-3 bg-[#4C8BC2] text-white rounded-lg font-medium hover:bg-[#3a7ab3]">
-        Zur History
-      </button>
+      <p class="text-gray-500 dark:text-gray-400 mb-6">Der Post mit ID #{{ postId }} existiert nicht, wurde geloescht oder gehoert dir nicht.</p>
+      <div class="flex items-center justify-center gap-3">
+        <button @click="router.push('/history')" class="px-6 py-3 bg-[#4C8BC2] text-white rounded-lg font-medium hover:bg-[#3a7ab3] transition-colors" data-testid="back-to-history-btn">
+          Zur History
+        </button>
+        <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-testid="back-to-dashboard-btn">
+          Zum Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- Generic error state / other load failures -->
+    <div v-else-if="!loading && !post" class="text-center py-20">
+      <div class="text-6xl mb-4">&#9888;</div>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Fehler beim Laden</h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-6">{{ error || 'Ein unbekannter Fehler ist aufgetreten.' }}</p>
+      <div class="flex items-center justify-center gap-3">
+        <button @click="loadPost()" class="px-6 py-3 bg-[#4C8BC2] text-white rounded-lg font-medium hover:bg-[#3a7ab3] transition-colors">
+          Erneut versuchen
+        </button>
+        <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          Zum Dashboard
+        </button>
+      </div>
     </div>
 
     <!-- Delete Slide Confirmation Modal -->
@@ -606,6 +655,34 @@ onUnmounted(() => {
               data-testid="confirm-delete-slide-btn"
             >
               Entfernen
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Unsaved Changes Warning Dialog -->
+    <Teleport to="body">
+      <div v-if="showLeaveDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="unsaved-changes-dialog">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Aenderungen</h3>
+          <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
+            Du hast ungespeicherte Aenderungen. Wenn du die Seite verlaesst, gehen diese verloren.
+          </p>
+          <div class="flex gap-3 justify-end">
+            <button
+              @click="cancelLeave"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+              data-testid="unsaved-stay-btn"
+            >
+              Auf Seite bleiben
+            </button>
+            <button
+              @click="confirmLeave"
+              class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium text-sm"
+              data-testid="unsaved-leave-btn"
+            >
+              Verwerfen & Verlassen
             </button>
           </div>
         </div>

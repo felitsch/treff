@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #120: Direct URL access to post editor with valid ID works
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified direct URL deep linking to post editor works end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Router: /posts/:id/edit route defined in router/index.js
+  - EditPostView.vue: loads post by ID from route.params.id via API GET /api/posts/:id
+  - All fields (slides, captions, hashtags, category, platform, country) correctly populated
+  - Live preview renders correctly with all slide content
+
+### Verification steps completed:
+1. Created test post #139 via API with 3 slides, captions, and hashtags (category: laender_spotlight, platform: instagram_feed, country: kanada)
+2. Navigated directly to /posts/139/edit via browser URL bar - PASS
+   - Editor opens with correct post data: "Post bearbeiten #139"
+   - Category info bar shows: Laender-Spotlight · instagram_feed · kanada · draft
+3. Verified all fields populated correctly - PASS:
+   - Slide 1 (Cover): Headline "DEEPLINK_TEST_120_Headline", Subheadline "Dein Highschool-Jahr in Kanada", Body text loaded, CTA "Jetzt informieren!", Background #4C8BC2
+   - Slide 2: Headline "Warum Kanada?", Subheadline "Die Top 3 Gruende", Body text with 3 reasons, Background #1A1A2E
+   - Slide 3 (CTA): Headline "Bereit fuer Kanada?", Body text loaded, CTA "Jetzt bewerben", Background #2D6A4F
+   - Instagram Caption: "Kanada ruft! Erlebe dein Highschool-Abenteuer mit TREFF Sprachreisen. Link in Bio!"
+   - Hashtags: "#TREFFSprachreisen #HighschoolKanada #Auslandsjahr #Schueleraustausch #Kanada"
+4. Verified live preview shows correct content for each slide
+5. Navigated away to dashboard, then back to /posts/139/edit - PASS (data loads correctly on repeat navigation)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication respected (JWT token preserved across navigation)
+- [x] Screenshots captured:
+  - feature120-step2-direct-url-editor-loaded.png (full editor with Slide 1 data)
+  - feature120-step3-slide3-and-captions.png (Slide 3 CTA with green background)
+
+### No code changes needed:
+- EditPostView.vue already loads post by ID from route params via API
+- Router already has /posts/:id/edit route with lazy-loaded component
+- Backend GET /api/posts/:id already returns full post data with ownership check
+- All fields (slide_data JSON, captions, hashtags) already parsed and populated in editor
+
+### Current state:
+- Feature #120 marked as PASSING
+- 123/170 features passing (72.4%)
+
 ## Session - Feature #118: Page refresh preserves current page and data
 **Date:** 2026-02-12
 **Status:** PASSING
