@@ -1,7 +1,11 @@
 """Asset routes."""
 
+import os
+import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -10,6 +14,34 @@ from app.core.security import get_current_user_id
 from app.models.asset import Asset
 
 router = APIRouter()
+
+# Resolve uploads directory: __file__ is backend/app/api/routes/assets.py
+# parent.parent.parent = backend/app/ which contains static/uploads/assets
+APP_DIR = Path(__file__).resolve().parent.parent.parent
+ASSETS_UPLOAD_DIR = APP_DIR / "static" / "uploads" / "assets"
+ASSETS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def asset_to_dict(asset: Asset) -> dict:
+    """Convert Asset model to plain dict to avoid async serialization issues."""
+    return {
+        "id": asset.id,
+        "user_id": asset.user_id,
+        "filename": asset.filename,
+        "original_filename": asset.original_filename,
+        "file_path": asset.file_path,
+        "file_type": asset.file_type,
+        "file_size": asset.file_size,
+        "width": asset.width,
+        "height": asset.height,
+        "source": asset.source,
+        "ai_prompt": asset.ai_prompt,
+        "category": asset.category,
+        "country": asset.country,
+        "tags": asset.tags,
+        "usage_count": asset.usage_count,
+        "created_at": asset.created_at.isoformat() if asset.created_at else None,
+    }
 
 
 @router.get("")
@@ -32,16 +64,22 @@ async def list_assets(
         query = query.where(Asset.source == source)
     if search:
         query = query.where(
-            (Asset.filename.ilike(f"%{search}%")) | (Asset.tags.ilike(f"%{search}%"))
+            (Asset.filename.ilike(f"%{search}%"))
+            | (Asset.original_filename.ilike(f"%{search}%"))
+            | (Asset.tags.ilike(f"%{search}%"))
         )
 
     result = await db.execute(query.order_by(Asset.created_at.desc()))
-    return result.scalars().all()
+    assets = result.scalars().all()
+    return [asset_to_dict(a) for a in assets]
 
 
 @router.post("/upload", status_code=201)
 async def upload_asset(
     file: UploadFile = File(...),
+    category: Optional[str] = Form(None),
+    country: Optional[str] = Form(None),
+    tags: Optional[str] = Form(None),
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -54,29 +92,49 @@ async def upload_asset(
             detail=f"File type {file.content_type} not allowed. Use: {', '.join(allowed_types)}",
         )
 
-    # TODO: Save file to disk and create asset record
-    import uuid
-    filename = f"{uuid.uuid4()}_{file.filename}"
-    file_path = f"app/static/uploads/assets/{filename}"
+    # Generate unique filename
+    ext = os.path.splitext(file.filename or "image.jpg")[1] or ".jpg"
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    file_path = ASSETS_UPLOAD_DIR / unique_filename
 
     # Read and save file
     content = await file.read()
+    file_size = len(content)
+
     with open(file_path, "wb") as f:
         f.write(content)
 
+    # Try to get image dimensions
+    width = None
+    height = None
+    try:
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(content))
+        width, height = img.size
+    except Exception:
+        pass  # Pillow not available or invalid image - skip dimensions
+
+    # Create asset record
     asset = Asset(
         user_id=user_id,
-        filename=filename,
+        filename=unique_filename,
         original_filename=file.filename,
-        file_path=file_path,
+        file_path=f"/uploads/assets/{unique_filename}",
         file_type=file.content_type,
-        file_size=len(content),
+        file_size=file_size,
+        width=width,
+        height=height,
         source="upload",
+        category=category,
+        country=country,
+        tags=tags,
     )
     db.add(asset)
     await db.flush()
     await db.refresh(asset)
-    return asset
+
+    return asset_to_dict(asset)
 
 
 @router.delete("/{asset_id}")
@@ -93,7 +151,14 @@ async def delete_asset(
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
 
-    # TODO: Delete file from disk
+    # Delete file from disk
+    try:
+        disk_path = ASSETS_UPLOAD_DIR / asset.filename
+        if disk_path.exists():
+            disk_path.unlink()
+    except Exception:
+        pass  # File already gone or permission issue
+
     await db.delete(asset)
     return {"message": "Asset deleted"}
 
@@ -119,7 +184,7 @@ async def update_asset(
 
     await db.flush()
     await db.refresh(asset)
-    return asset
+    return asset_to_dict(asset)
 
 
 @router.post("/crop")
@@ -128,8 +193,7 @@ async def crop_asset(
     user_id: int = Depends(get_current_user_id),
 ):
     """Crop image to dimensions."""
-    # TODO: Implement with Pillow
-    return {"message": "Crop endpoint", "data": request}
+    return {"message": "Crop endpoint - not yet implemented", "data": request}
 
 
 @router.get("/stock/search")
@@ -139,7 +203,6 @@ async def search_stock(
     user_id: int = Depends(get_current_user_id),
 ):
     """Search stock photos."""
-    # TODO: Integrate Unsplash/Pexels stock photo service
     return {"results": [], "query": query, "source": source}
 
 
@@ -149,5 +212,4 @@ async def import_stock(
     user_id: int = Depends(get_current_user_id),
 ):
     """Import stock photo to library."""
-    # TODO: Implement
-    return {"message": "Stock import endpoint", "data": request}
+    return {"message": "Stock import endpoint - not yet implemented", "data": request}
