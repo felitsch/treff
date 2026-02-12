@@ -281,6 +281,91 @@ async def get_calendar_stats(
     }
 
 
+@router.get("/reminders")
+async def get_due_reminders(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posts that are due for publishing (scheduled time has arrived or passed).
+    Returns posts with status 'scheduled' where the scheduled date/time is now or in the past,
+    that haven't been marked as 'reminded' yet.
+    Also includes posts scheduled for today whose time has passed but are still 'scheduled'."""
+    from datetime import timedelta
+
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+    current_time_str = now.strftime("%H:%M")
+
+    # Start of today
+    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+
+    # Find posts that are scheduled and due:
+    # 1. Posts scheduled for a date BEFORE today (overdue)
+    # 2. Posts scheduled for today where the time has passed
+    # Status must be 'scheduled' (not yet reminded/posted/exported)
+    query = select(Post).where(
+        and_(
+            Post.user_id == user_id,
+            Post.scheduled_date.isnot(None),
+            Post.status == "scheduled",
+        )
+    ).order_by(Post.scheduled_date.asc())
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    due_posts = []
+    for post in posts:
+        post_date_str = post.scheduled_date.strftime("%Y-%m-%d")
+        post_time = post.scheduled_time or "00:00"
+
+        if post_date_str < today_str:
+            # Overdue - scheduled date is in the past
+            due_posts.append(post)
+        elif post_date_str == today_str and post_time <= current_time_str:
+            # Due today - scheduled time has passed
+            due_posts.append(post)
+
+    return {
+        "reminders": [post_to_calendar_dict(post) for post in due_posts],
+        "count": len(due_posts),
+    }
+
+
+@router.put("/reminders/{post_id}/acknowledge")
+async def acknowledge_reminder(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Acknowledge a reminder by changing post status from 'scheduled' to 'reminded'.
+    This prevents the reminder from showing again."""
+    query = select(Post).where(
+        and_(
+            Post.id == post_id,
+            Post.user_id == user_id,
+        )
+    )
+    result = await db.execute(query)
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if post.status != "scheduled":
+        raise HTTPException(status_code=400, detail="Post is not in scheduled status")
+
+    post.status = "reminded"
+    await db.commit()
+
+    return {
+        "success": True,
+        "post_id": post.id,
+        "status": "reminded",
+        "message": f"Reminder acknowledged for post '{post.title}'",
+    }
+
+
 @router.get("/queue")
 async def get_calendar_queue(
     platform: Optional[str] = None,

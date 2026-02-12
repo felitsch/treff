@@ -1,14 +1,25 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import SidebarNav from './SidebarNav.vue'
 import TopBar from './TopBar.vue'
+import { useReminders } from '@/composables/useReminders'
 
 const sidebarCollapsed = ref(false)
+const { startPolling, stopPolling } = useReminders()
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
+
+// Start reminder polling when the layout mounts (user is authenticated)
+onMounted(() => {
+  startPolling()
+})
+
+onUnmounted(() => {
+  stopPolling()
+})
 </script>
 
 <template>

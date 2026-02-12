@@ -353,6 +353,7 @@ onMounted(() => {
               <option value="1">1 Post</option>
               <option value="2">2 Posts</option>
               <option value="3">3 Posts</option>
+              <option value="4">4 Posts</option>
               <option value="5">5 Posts</option>
               <option value="7">7 Posts (taeglich)</option>
             </select>
