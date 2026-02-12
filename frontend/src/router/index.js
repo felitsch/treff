@@ -88,8 +88,11 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
+
+  // Initialize auth state on first navigation (fetches user data if tokens exist)
+  await auth.initializeAuth()
 
   if (to.meta.requiresAuth !== false && !auth.isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
