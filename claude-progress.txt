@@ -426,3 +426,38 @@
 
 ### Next steps:
 - Continue with remaining authentication and security features
+
+## Session 12 - Feature #13: Protected routes redirect to login when not authenticated
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Cleared all auth tokens from localStorage
+- Tested all protected routes as unauthenticated user:
+  - /dashboard → redirects to /login?redirect=/dashboard ✅
+  - /posts → redirects to /login?redirect=/posts ✅
+  - /settings → redirects to /login?redirect=/settings ✅
+  - /templates → redirects to /login?redirect=/templates ✅
+  - /analytics → redirects to /login?redirect=/analytics ✅
+- Verified backend API also rejects unauthenticated requests:
+  - /api/posts → 403 "Not authenticated"
+  - /api/auth/me → 403 "Not authenticated"
+  - /api/settings → 403 "Not authenticated"
+  - /api/templates → 403 "Not authenticated"
+  - /api/analytics/overview → 403 "Not authenticated"
+- Zero JavaScript console errors
+- All mock data grep checks passed (zero matches in frontend/src and backend/app)
+- Screenshots captured: feature13-dashboard-redirect.png, feature13-settings-redirect.png
+
+### No code changes needed:
+- Router beforeEach guard already correctly checks `to.meta.requiresAuth !== false && !auth.isAuthenticated`
+- All routes under AppLayout (/) have meta.requiresAuth: true (inherited by children)
+- Catch-all route also triggers auth guard (no meta.requiresAuth: false)
+- Backend uses Depends(get_current_user) on all protected endpoints returning 403
+
+### Current state:
+- Features #1-11, #13 passing (infrastructure + layout + auth + security)
+- 11/163 features complete (6.7%)
+
+### Next steps:
+- Continue with remaining authentication features (#12, etc.)
