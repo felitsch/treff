@@ -1,5 +1,36 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #93: Registration validates email format
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Strengthened client-side email validation in RegisterView.vue
+- Enhanced regex from simple `includes('@')` to `^[^\s@]+@[^\s@]+\.[^\s@]+$`
+- This catches all invalid formats: no @, missing domain, missing TLD
+
+### Verification steps completed:
+1. Try registering with invalid email: notanemail - PASS
+   - Shows "Bitte gib eine gueltige E-Mail-Adresse ein" error
+   - Form does NOT submit, stays on register page
+2. Try registering with invalid email: test@ - PASS
+   - Shows "Bitte gib eine gueltige E-Mail-Adresse ein" error
+   - Form does NOT submit, stays on register page
+3. Register with valid email: valid@test.com - PASS
+   - Registration succeeds
+   - User redirected to Dashboard
+   - valid@test.com shown in header
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Backend also validates email format via Pydantic field_validator
+- Screenshots: feature93-step1-notanemail-error.png, feature93-step2-testat-error.png, feature93-step3-valid-email-success.png
+
+### Current state:
+- Feature #93 marked as PASSING
+- 97/170 features passing (57.1%)
+
 ## Session - Feature #92: Registration requires minimum 8 character password
 **Date:** 2026-02-12
 **Status:** PASSING
