@@ -1,5 +1,51 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #44: Content editor shows two-column layout edit and preview
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the content editor (EditPostView.vue) has a proper two-column layout at 1920px desktop width
+- No code changes needed - the layout was already correctly implemented
+
+### Layout verification:
+- **Left panel (edit controls):** Post info bar (category, platform, country, status), slide tabs with drag-and-drop reordering, headline/subheadline/text/CTA inputs, Instagram Caption textarea, Hashtags textarea
+- **Right panel (live preview):** "Live-Vorschau" heading, rendered slide preview with TREFF branding, slide navigation dots and prev/next buttons
+- **Grid layout:** `grid grid-cols-1 lg:grid-cols-2 gap-8` (two equal columns at lg+ breakpoint)
+- **Sticky preview:** `lg:sticky lg:top-4 self-start` (position: sticky, top: 16px, align-self: flex-start)
+
+### Verification steps completed:
+1. Open a post in the content editor - PASS (navigated to /posts/47/edit, post loaded with 4 slides)
+2. Verify left panel contains edit controls - PASS (post info, slide tabs, headline/subheadline/text/CTA, captions, hashtags)
+3. Verify right panel shows live preview - PASS ("Live-Vorschau" heading, rendered slide with TREFF branding)
+4. Verify both panels visible side by side at 1920px - PASS (screenshot confirms two-column grid layout)
+5. Verify preview panel is sticky and scrolls with content - PASS:
+   - Scrolled main to bottom (scrollTop: 349 of 1005)
+   - Left panel scrolled (bottom fields visible: CTA, Instagram Caption, Hashtags)
+   - Right panel (Live-Vorschau) remained pinned at top (stickyTop: 104px, position: sticky)
+   - Computed style confirmed: position=sticky, top=16px, alignSelf=flex-start
+
+### Technical details:
+- EditPostView.vue line 169: `grid grid-cols-1 lg:grid-cols-2 gap-8` (two-column grid)
+- EditPostView.vue line 272: `lg:sticky lg:top-4 self-start` (sticky preview)
+- Grid template columns at 1920px: 472px 472px (equal columns within max-w-7xl container)
+- Main element: overflow: auto, scrollHeight: 1005 > clientHeight: 656 (scrollable)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors after fresh page load)
+- [x] All API requests 200 OK, no 500s (GET /api/posts/47 => 200)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Screenshots captured: feature44-step1-editor-full-1920px.png, feature44-step5-sticky-scrolled-bottom.png
+
+### No code changes needed:
+- EditPostView.vue already had complete two-column layout with sticky preview
+- Grid layout responsive (single column on mobile, two columns at lg+)
+- Sticky positioning works correctly with overflow: auto scroll container
+
+### Current state:
+- Feature #44 marked as PASSING
+- 59/163 features passing (36.2%)
+
 ## Session - Feature #45: Character counters display for text fields in editor
 **Date:** 2026-02-12
 **Status:** PASSING
