@@ -3813,3 +3813,61 @@
 ### Current state:
 - Feature #74 marked as PASSING
 - 83/170 features passing (48.8%)
+
+## Session - Feature #87: Settings persist across sessions
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete settings persistence across logout/login sessions and server restart
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: GET/PUT /api/settings endpoints with SQLite persistence (settings.py)
+  - Frontend: SettingsView.vue with fetchSettings()/saveSettings() and all form fields
+  - Database: settings table with user_id + key unique constraint (setting.py model)
+  - Profile update: PUT /api/auth/profile for display_name changes
+
+### Verification steps completed:
+1. Registered test user settings87@treff.de with display name "Settings Test 87"
+2. Navigated to Settings page and updated ALL settings with unique test values:
+   - Display Name: "PERSIST_TEST_87_Name"
+   - Primary Color: #FF5733 (was #4C8BC2)
+   - Secondary Color: #33FF57 (was #FDD000)
+   - Accent Color: #1A1A2E (was #FFFFFF)
+   - Gemini API Key: PERSIST_GEMINI_KEY_87
+   - OpenAI API Key: PERSIST_OPENAI_KEY_87
+   - Unsplash API Key: PERSIST_UNSPLASH_KEY_87
+   - Posts per Week: 5 (was 3)
+   - Posts per Month: 20 (was 12)
+   - Preferred Posting Time: 14:30 (was 10:00)
+   - Preferred Platform: TikTok (was Instagram Feed)
+3. Clicked "Einstellungen speichern" - success message shown
+4. Logged out completely - returned to login page
+5. Logged in again with same credentials
+6. Navigated to Settings - ALL 11 settings values preserved exactly
+7. Server restart persistence test:
+   - Stopped both backend and frontend servers
+   - Restarted both servers
+   - Logged in again
+   - ALL 11 settings values still preserved
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: all settings persist across full server restart
+- [x] No 500s in network requests
+- [x] Screenshots captured:
+  - feature87-step1-settings-before-save.png
+  - feature87-step2-settings-saved-success.png
+  - feature87-step3-logged-out.png
+  - feature87-step4-settings-persisted-after-relogin.png
+  - feature87-step5-settings-persist-after-restart.png
+
+### No code changes needed:
+- SettingsView.vue already had complete save/load for all 10 settings + display name
+- Backend settings.py already had GET/PUT with SQLite persistence via SQLAlchemy
+- Backend auth.py already had PUT /api/auth/profile for display name updates
+- Setting model already had proper user_id foreign key and unique constraint
+
+### Current state:
+- Feature #87 marked as PASSING
+- 92/170 features passing (54.1%)
