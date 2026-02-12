@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #61: Calendar monthly view displays scheduled posts
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Rewrote backend calendar.py API to query posts directly by scheduled_date (not separate calendar_entries table)
+  - GET /api/calendar?month=...&year=... returns posts grouped by date with proper serialization
+  - Also improved /week, /gaps, and /stats endpoints with real database queries
+- Built complete CalendarView.vue replacing placeholder skeleton:
+  - Monthly calendar grid (6 rows x 7 columns, Monday-first German layout)
+  - Posts displayed as color-coded cards on their scheduled dates
+  - Category-based coloring: blue (Laender), purple (Erfahrung), teal (FAQ), amber (Tipps), orange (Story), etc.
+  - Each card shows: category icon, title, platform icon, scheduled time, status icon
+  - Post count badge per day, "today" highlight with blue ring
+  - Month navigation (prev/next arrows, "Heute" button)
+  - Category legend at bottom with colored dots
+  - Empty state with link to create post
+- Fixed posts.py create_post endpoint to parse scheduled_date string to datetime
+- Fixed CalendarView to use auth.accessToken (not auth.token)
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Complete rewrite: query posts by scheduled_date, group by date
+- backend/app/api/routes/posts.py - Added scheduled_date string-to-datetime parsing in create_post
+- frontend/src/views/CalendarView.vue - Complete rewrite: monthly calendar grid with color-coded post cards
+
+### Verification steps completed:
+1. Create posts and schedule them on different dates - PASS (5 posts on Feb 12, 15, 15, 20, 25)
+2. Navigate to Calendar page - PASS (/calendar URL, sidebar link)
+3. Verify monthly calendar view is displayed - PASS (Feb 2026, 6x7 grid, Mo-So headers)
+4. Verify scheduled posts appear on correct dates as color-coded cards - PASS
+   - Feb 12: CAL_TEST_Story_Abreise (orange/Story, posted, 08:30)
+   - Feb 15: CAL_TEST_USA_Spotlight (blue/Laender, scheduled, 10:00) + CAL_TEST_Kanada_Erfahrung (purple/Erfahrung, scheduled, 14:00)
+   - Feb 20: CAL_TEST_FAQ_Visum (teal/FAQ, scheduled, 09:00)
+   - Feb 25: CAL_TEST_Tipps_Packliste (amber/Tipps, draft, 16:00)
+5. Verify post thumbnails are visible on calendar - PASS (category icons, platform icons, status icons visible)
+
+### Mock data grep results: All checks clean (zero matches in frontend/src and backend/app)
+### Server restart persistence: PASS (all 5 posts still on calendar after full stop/restart)
+### Console errors: 0 errors, 0 warnings
+### Network: GET /api/calendar?month=2&year=2026 => 200, no 500s
+### Screenshots: feature61-calendar-complete.png, feature61-calendar-after-restart.png
+
+### Current state:
+- Feature #61 marked as PASSING
+- 30/163 features passing (~18.4%)
+
+### Next steps:
+- Continue with remaining calendar, content, and UI features
+
 ## Session - Feature #36: Post status transitions: draft to scheduled to posted
 **Date:** 2026-02-12
 **Status:** PASSING
