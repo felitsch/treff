@@ -5,8 +5,10 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
@@ -74,6 +76,56 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Custom exception handlers for graceful error responses
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with meaningful messages.
+
+    - Malformed JSON → 400 Bad Request
+    - Missing/invalid fields → 422 Unprocessable Entity with field details
+    """
+    errors = exc.errors()
+
+    # Check if this is a JSON decode error (malformed JSON body)
+    for error in errors:
+        if error.get("type") == "json_invalid":
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "detail": "Bad Request: The request body contains malformed JSON. Please send a valid JSON object.",
+                    "errors": [
+                        {
+                            "type": error.get("type"),
+                            "message": str(error.get("msg", "Invalid JSON")),
+                        }
+                    ],
+                },
+            )
+
+    # For field validation errors (missing fields, wrong types, etc.) → 422
+    field_errors = []
+    for error in errors:
+        loc = error.get("loc", [])
+        # Build a human-readable field path (skip 'body' prefix)
+        field_path = ".".join(str(part) for part in loc if part != "body")
+        field_errors.append(
+            {
+                "field": field_path,
+                "message": error.get("msg", "Validation error"),
+                "type": error.get("type", "unknown"),
+            }
+        )
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Validation error: One or more fields failed validation.",
+            "errors": field_errors,
+        },
+    )
+
 
 # Static files for uploads
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
