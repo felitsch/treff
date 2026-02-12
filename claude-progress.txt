@@ -1,5 +1,55 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #90: Onboarding tour highlights key features for first-time user
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete onboarding tour workflow for first-time users
+- All code was already implemented from a prior session:
+  - OnboardingTour.vue component with 5-step guided tour
+  - data-tour attributes on SidebarNav (sidebar, create-post, templates) and DashboardView (dashboard-stats, quick-actions)
+  - Tour status tracked via `onboarding_completed` setting in backend SQLite (existing settings key-value store)
+  - DashboardView checks onboarding status on mount and shows tour for new users
+
+### Verification steps completed:
+1. Register a new user account - PASS (tourtest90@treff.de)
+2. Login for the first time - PASS (redirected to dashboard)
+3. Verify onboarding tour/tooltip appears - PASS (tour overlay with step 1/5 "Navigation" appeared automatically)
+4. Verify tour highlights key sections:
+   - Step 1/5: Navigation (sidebar) - PASS (blue highlight ring around sidebar nav)
+   - Step 2/5: Post erstellen (create post link) - PASS (highlighted in sidebar)
+   - Step 3/5: Vorlagen (templates link) - PASS (highlighted in sidebar)
+   - Step 4/5: Dein Dashboard (stats cards) - PASS (highlighted stats section)
+   - Step 5/5: Schnellzugriff (quick action buttons) - PASS (highlighted buttons)
+5. Complete or skip the tour - PASS (clicked "Tour beenden" on final step, overlay closed)
+6. Verify tour does not show on next login - PASS:
+   - Logged out, logged back in - NO tour shown
+   - Server restart persistence - NO tour shown after full server restart
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings - Vite HMR reconnect errors excluded)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: onboarding_completed setting persists in SQLite
+- [x] Tour appears for first-time user, does NOT appear for returning user
+- [x] Screenshots captured:
+  - feature90-step1-navigation.png (tour step 1/5, sidebar highlighted)
+  - feature90-step2-create-post.png (tour step 2/5, create post highlighted)
+  - feature90-step3-templates.png (tour step 3/5, templates highlighted)
+  - feature90-step4-dashboard-stats.png (tour step 4/5, stats highlighted)
+  - feature90-step5-quick-actions.png (tour step 5/5, quick actions highlighted)
+  - feature90-step6-no-tour-second-login.png (clean dashboard, no tour)
+  - feature90-step7-no-tour-after-restart.png (clean dashboard after server restart)
+
+### Files involved (already committed):
+- frontend/src/components/common/OnboardingTour.vue - 5-step tour overlay component
+- frontend/src/components/layout/SidebarNav.vue - data-tour attributes on nav links
+- frontend/src/views/DashboardView.vue - Tour integration, onboarding status check/save
+
+### Current state:
+- Feature #90 marked as PASSING
+- 95/170 features passing (55.9%)
+
 ## Session - Feature #89: Video thumbnail can be exported as 1:1 for feed preview
 **Date:** 2026-02-12
 **Status:** PASSING
