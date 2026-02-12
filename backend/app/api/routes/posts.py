@@ -49,6 +49,8 @@ async def list_posts(
     status: Optional[str] = None,
     country: Optional[str] = None,
     search: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -74,6 +76,19 @@ async def list_posts(
                 Post.cta_text.ilike(search_pattern),
             )
         )
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d")
+            query = query.where(Post.created_at >= from_date)
+        except (ValueError, TypeError):
+            pass
+    if date_to:
+        try:
+            # Set to end of day (23:59:59) to include the entire day
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+            query = query.where(Post.created_at <= to_date)
+        except (ValueError, TypeError):
+            pass
 
     query = query.order_by(Post.created_at.desc())
     result = await db.execute(query)

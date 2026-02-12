@@ -14,6 +14,39 @@ const searchQuery = ref('')
 const filterCategory = ref('')
 const filterPlatform = ref('')
 const filterStatus = ref('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
+
+// Quick date range presets
+const dateRangePresets = [
+  { label: 'Letzte 7 Tage', days: 7 },
+  { label: 'Letzte 30 Tage', days: 30 },
+  { label: 'Letzte 90 Tage', days: 90 },
+]
+
+function applyDatePreset(days) {
+  const now = new Date()
+  const from = new Date(now)
+  from.setDate(from.getDate() - days)
+  filterDateFrom.value = from.toISOString().split('T')[0]
+  filterDateTo.value = now.toISOString().split('T')[0]
+  fetchPosts()
+}
+
+function clearDateFilter() {
+  filterDateFrom.value = ''
+  filterDateTo.value = ''
+  fetchPosts()
+}
+
+function isPresetActive(days) {
+  if (!filterDateFrom.value || !filterDateTo.value) return false
+  const now = new Date()
+  const expectedFrom = new Date(now)
+  expectedFrom.setDate(expectedFrom.getDate() - days)
+  return filterDateFrom.value === expectedFrom.toISOString().split('T')[0] &&
+         filterDateTo.value === now.toISOString().split('T')[0]
+}
 
 const categories = [
   { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍' },
@@ -153,6 +186,24 @@ const filteredPosts = computed(() => {
     result = result.filter(p => p.status === filterStatus.value)
   }
 
+  if (filterDateFrom.value) {
+    const from = new Date(filterDateFrom.value)
+    from.setHours(0, 0, 0, 0)
+    result = result.filter(p => {
+      if (!p.created_at) return false
+      return new Date(p.created_at) >= from
+    })
+  }
+
+  if (filterDateTo.value) {
+    const to = new Date(filterDateTo.value)
+    to.setHours(23, 59, 59, 999)
+    result = result.filter(p => {
+      if (!p.created_at) return false
+      return new Date(p.created_at) <= to
+    })
+  }
+
   return result
 })
 
@@ -163,6 +214,7 @@ const activeFilters = computed(() => {
   if (filterCategory.value) count++
   if (filterPlatform.value) count++
   if (filterStatus.value) count++
+  if (filterDateFrom.value || filterDateTo.value) count++
   return count
 })
 
@@ -172,6 +224,8 @@ function clearFilters() {
   filterCategory.value = ''
   filterPlatform.value = ''
   filterStatus.value = ''
+  filterDateFrom.value = ''
+  filterDateTo.value = ''
 }
 
 // Fetch posts from API
@@ -184,6 +238,8 @@ async function fetchPosts() {
     if (filterPlatform.value) params.platform = filterPlatform.value
     if (filterStatus.value) params.status = filterStatus.value
     if (searchQuery.value) params.search = searchQuery.value
+    if (filterDateFrom.value) params.date_from = filterDateFrom.value
+    if (filterDateTo.value) params.date_to = filterDateTo.value
 
     const response = await api.get('/api/posts', { params })
     posts.value = response.data
@@ -412,6 +468,58 @@ onMounted(() => {
           class="text-sm text-[#4C8BC2] hover:text-[#3a7ab1] transition-colors"
         >
           Filter zuruecksetzen ({{ activeFilters }})
+        </button>
+      </div>
+
+      <!-- Date range filter row -->
+      <div class="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">📅 Zeitraum:</span>
+
+        <!-- Quick presets -->
+        <div class="flex gap-1.5">
+          <button
+            v-for="preset in dateRangePresets"
+            :key="preset.days"
+            @click="applyDatePreset(preset.days)"
+            class="px-2.5 py-1 text-xs rounded-md border transition-colors"
+            :class="isPresetActive(preset.days)
+              ? 'bg-[#4C8BC2] text-white border-[#4C8BC2]'
+              : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-[#4C8BC2] hover:text-[#4C8BC2]'"
+          >
+            {{ preset.label }}
+          </button>
+        </div>
+
+        <span class="text-gray-300 dark:text-gray-600">|</span>
+
+        <!-- Custom date inputs -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 dark:text-gray-400">Von:</label>
+          <input
+            v-model="filterDateFrom"
+            type="date"
+            @change="fetchPosts"
+            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-500 dark:text-gray-400">Bis:</label>
+          <input
+            v-model="filterDateTo"
+            type="date"
+            @change="fetchPosts"
+            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+          />
+        </div>
+
+        <!-- Clear date filter -->
+        <button
+          v-if="filterDateFrom || filterDateTo"
+          @click="clearDateFilter"
+          class="text-xs text-gray-400 hover:text-red-500 transition-colors"
+          title="Zeitraum-Filter entfernen"
+        >
+          ✕
         </button>
       </div>
     </div>
