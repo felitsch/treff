@@ -16,8 +16,9 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const selectedTemplate = ref(null)
   const loadingTemplates = ref(false)
 
-  // Step 3: Platform
+  // Step 3: Platform (single selection for preview/primary, multi-select for export)
   const selectedPlatform = ref('instagram_feed')
+  const selectedPlatforms = ref(['instagram_feed'])
 
   // Step 4: Topic & Content Input
   const topic = ref('')
@@ -68,6 +69,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     selectedCategory.value = ''
     selectedTemplate.value = null
     selectedPlatform.value = 'instagram_feed'
+    selectedPlatforms.value = ['instagram_feed']
     topic.value = ''
     keyPoints.value = ''
     country.value = ''
@@ -123,6 +125,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     loadingTemplates,
     // Step 3
     selectedPlatform,
+    selectedPlatforms,
     // Step 4
     topic,
     keyPoints,

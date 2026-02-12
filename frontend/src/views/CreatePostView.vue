@@ -24,6 +24,7 @@ const {
   selectedTemplate,
   loadingTemplates,
   selectedPlatform,
+  selectedPlatforms,
   topic,
   keyPoints,
   country,
@@ -100,7 +101,7 @@ const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1: return !!selectedCategory.value
     case 2: return !!selectedTemplate.value
-    case 3: return !!selectedPlatform.value
+    case 3: return selectedPlatforms.value.length > 0
     case 4: return true  // topic/keypoints are optional, country optional
     case 5: return !!generatedContent.value
     case 6: return slides.value.length > 0
@@ -147,6 +148,25 @@ watch(selectedPlatform, (val) => {
 
 // ── Methods ──────────────────────────────────────────────────────────
 
+function togglePlatform(platformId) {
+  const idx = selectedPlatforms.value.indexOf(platformId)
+  if (idx >= 0) {
+    // Don't allow deselecting the last platform
+    if (selectedPlatforms.value.length <= 1) return
+    selectedPlatforms.value.splice(idx, 1)
+    // If we deselected the primary/preview platform, switch to the first remaining one
+    if (selectedPlatform.value === platformId) {
+      selectedPlatform.value = selectedPlatforms.value[0]
+    }
+  } else {
+    selectedPlatforms.value.push(platformId)
+  }
+  // Keep primary platform in sync: primary is always the first selected platform
+  if (!selectedPlatforms.value.includes(selectedPlatform.value)) {
+    selectedPlatform.value = selectedPlatforms.value[0]
+  }
+}
+
 function nextStep() {
   if (currentStep.value < totalSteps && canProceed.value) {
     validationMessage.value = ''
@@ -183,7 +203,7 @@ function goToStep(step) {
 }
 
 // Clear validation message when user makes a selection
-watch([selectedCategory, selectedTemplate, selectedPlatform, generatedContent, slides], () => {
+watch([selectedCategory, selectedTemplate, selectedPlatform, selectedPlatforms, generatedContent, slides], () => {
   validationMessage.value = ''
 })
 
@@ -540,6 +560,80 @@ function renderSlideToCanvas(slideIndex) {
   return canvas
 }
 
+function renderSlideToCanvasForPlatform(slideIndex, platform) {
+  // Render a single slide to a canvas for a specific platform's dimensions
+  const dims = getDimensionsForPlatform(platform)
+  const scale = exportQuality.value === '2160' ? 2 : 1
+  const canvas = document.createElement('canvas')
+  canvas.width = dims.w * scale
+  canvas.height = dims.h * scale
+  const ctx = canvas.getContext('2d')
+  ctx.scale(scale, scale)
+
+  const slide = slides.value[slideIndex]
+  if (!slide) return null
+
+  // Background
+  ctx.fillStyle = slide.background_value || '#1A1A2E'
+  ctx.fillRect(0, 0, dims.w, dims.h)
+
+  // Gradient overlay
+  const gradient = ctx.createLinearGradient(0, 0, 0, dims.h)
+  gradient.addColorStop(0, 'rgba(76, 139, 194, 0.3)')
+  gradient.addColorStop(1, 'rgba(26, 26, 46, 0.8)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, dims.w, dims.h)
+
+  // TREFF logo
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 28px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF', 60, 80)
+  ctx.fillStyle = '#9CA3AF'
+  ctx.font = '18px Inter, Arial, sans-serif'
+  ctx.fillText('Sprachreisen', 158, 80)
+
+  // Headline
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 52px Inter, Arial, sans-serif'
+  ctx.textAlign = 'center'
+  wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
+
+  // Subheadline
+  if (slide.subheadline) {
+    ctx.fillStyle = '#FDD000'
+    ctx.font = 'bold 32px Inter, Arial, sans-serif'
+    wrapText(ctx, slide.subheadline, dims.w / 2, 400, dims.w - 160, 40)
+  }
+
+  // Body text
+  if (slide.body_text) {
+    ctx.fillStyle = '#D1D5DB'
+    ctx.font = '24px Inter, Arial, sans-serif'
+    wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
+  }
+
+  // CTA
+  if (slide.cta_text) {
+    const ctaY = dims.h - 180
+    ctx.fillStyle = '#FDD000'
+    roundRect(ctx, dims.w / 2 - 150, ctaY, 300, 56, 28)
+    ctx.fill()
+    ctx.fillStyle = '#1A1A2E'
+    ctx.font = 'bold 24px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(slide.cta_text, dims.w / 2, ctaY + 37)
+  }
+
+  // TREFF bottom branding
+  ctx.fillStyle = '#4C8BC2'
+  ctx.font = 'bold 18px Inter, Arial, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
+
+  return canvas
+}
+
 function canvasToBlob(canvas) {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), 'image/png')
@@ -566,6 +660,77 @@ async function downloadAsZip() {
   link.href = URL.createObjectURL(zipBlob)
   link.click()
   URL.revokeObjectURL(link.href)
+}
+
+async function exportAllPlatforms() {
+  // Export for all selected platforms — creates a ZIP with per-platform folders
+  exporting.value = true
+  error.value = ''
+
+  try {
+    // Step 1: Save the post to database
+    const cleanSlides = slides.value.map(({ dragId, ...rest }) => rest)
+    const postData = {
+      category: selectedCategory.value,
+      country: country.value || null,
+      platform: selectedPlatforms.value.join(','),
+      template_id: selectedTemplate.value?.id || null,
+      title: cleanSlides[0]?.headline || 'Neuer Post',
+      status: 'draft',
+      tone: tone.value,
+      slide_data: JSON.stringify(cleanSlides),
+      caption_instagram: captionInstagram.value,
+      caption_tiktok: captionTiktok.value,
+      hashtags_instagram: hashtagsInstagram.value,
+      hashtags_tiktok: hashtagsTiktok.value,
+      cta_text: ctaText.value,
+    }
+
+    const response = await api.post('/api/posts', postData)
+    savedPost.value = response.data
+
+    // Step 2: Record export for each platform
+    for (const platform of selectedPlatforms.value) {
+      const exportEndpoint = slides.value.length > 1 ? '/api/export/render-carousel' : '/api/export/render'
+      await api.post(exportEndpoint, {
+        post_id: response.data.id,
+        platform: platform,
+        resolution: exportQuality.value,
+        slide_count: slides.value.length,
+      })
+    }
+
+    // Step 3: Generate and download ZIP with all platforms
+    const zip = new JSZip()
+    const date = new Date().toISOString().split('T')[0]
+
+    for (const platform of selectedPlatforms.value) {
+      const platformFolder = zip.folder(platform)
+      for (let i = 0; i < slides.value.length; i++) {
+        const canvas = renderSlideToCanvasForPlatform(i, platform)
+        if (!canvas) continue
+        const blob = await canvasToBlob(canvas)
+        const slideNum = String(i + 1).padStart(2, '0')
+        const filename = `TREFF_${selectedCategory.value}_${platform}_${date}_slide_${slideNum}.png`
+        platformFolder.file(filename, blob)
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    const link = document.createElement('a')
+    link.download = `TREFF_${selectedCategory.value}_all_platforms_${date}.zip`
+    link.href = URL.createObjectURL(zipBlob)
+    link.click()
+    URL.revokeObjectURL(link.href)
+
+    exportComplete.value = true
+    successMsg.value = `Post fuer ${selectedPlatforms.value.length} Plattformen gespeichert und exportiert!`
+    toast.success(`Post erfolgreich fuer ${selectedPlatforms.value.length} Plattformen erstellt!`, 5000)
+  } catch (e) {
+    error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    exporting.value = false
+  }
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -600,13 +765,17 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-function getDimensions() {
+function getDimensionsForPlatform(platform) {
   const dims = {
     instagram_feed: { w: 1080, h: 1080 },
     instagram_story: { w: 1080, h: 1920 },
     tiktok: { w: 1080, h: 1920 },
   }
-  return dims[selectedPlatform.value] || dims.instagram_feed
+  return dims[platform] || dims.instagram_feed
+}
+
+function getDimensions() {
+  return getDimensionsForPlatform(selectedPlatform.value)
 }
 
 function resetWorkflow() {
@@ -930,24 +1099,31 @@ onUnmounted(() => {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- STEP 3: Platform Selection -->
+    <!-- STEP 3: Platform Selection (Multi-Select) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 3">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 3: Waehle die Zielplattform</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 3: Waehle die Zielplattform(en)</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Du kannst mehrere Plattformen waehlen — beim Export werden separate Dateien fuer jede Plattform erstellt.</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <button
           v-for="p in platforms"
           :key="p.id"
-          @click="selectedPlatform = p.id"
-          class="p-6 rounded-xl border-2 transition-all text-center hover:shadow-md"
-          :class="selectedPlatform === p.id
+          @click="togglePlatform(p.id)"
+          class="p-6 rounded-xl border-2 transition-all text-center hover:shadow-md relative"
+          :class="selectedPlatforms.includes(p.id)
             ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 shadow-md'
             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
         >
+          <div v-if="selectedPlatforms.includes(p.id)" class="absolute top-2 right-2 w-6 h-6 bg-[#4C8BC2] rounded-full flex items-center justify-center">
+            <span class="text-white text-xs font-bold">&#10003;</span>
+          </div>
           <div class="text-3xl mb-2">{{ p.icon }}</div>
           <div class="font-semibold text-gray-900 dark:text-white">{{ p.label }}</div>
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ p.format }}</div>
         </button>
+      </div>
+      <div v-if="selectedPlatforms.length > 1" class="mt-4 text-sm text-[#4C8BC2] font-medium">
+        {{ selectedPlatforms.length }} Plattformen ausgewaehlt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
       </div>
     </div>
 
@@ -1747,8 +1923,12 @@ onUnmounted(() => {
             <div class="font-medium text-gray-900 dark:text-white">{{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-            <div class="text-gray-500 dark:text-gray-400 text-xs">Plattform</div>
-            <div class="font-medium text-gray-900 dark:text-white">{{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs">Plattform{{ selectedPlatforms.length > 1 ? 'en' : '' }}</div>
+            <div class="font-medium text-gray-900 dark:text-white">
+              <span v-for="(pId, idx) in selectedPlatforms" :key="pId">
+                {{ platforms.find(p => p.id === pId)?.icon }} {{ platforms.find(p => p.id === pId)?.label }}<span v-if="idx < selectedPlatforms.length - 1">, </span>
+              </span>
+            </div>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-gray-500 dark:text-gray-400 text-xs">Template</div>
@@ -1802,7 +1982,20 @@ onUnmounted(() => {
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
+          <!-- Multi-platform export button (shown when multiple platforms selected) -->
           <button
+            v-if="selectedPlatforms.length > 1"
+            @click="exportAllPlatforms"
+            :disabled="exporting"
+            data-testid="export-all-platforms-btn"
+            class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <span v-if="exporting" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            {{ exporting ? 'Exportiere...' : `Alle ${selectedPlatforms.length} Plattformen exportieren` }}
+          </button>
+          <!-- Single-platform export button (shown when only one platform selected) -->
+          <button
+            v-else
             @click="saveAndExport"
             :disabled="exporting"
             class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -1840,9 +2033,13 @@ onUnmounted(() => {
           <div>Post ID: <strong>#{{ savedPost.id }}</strong></div>
           <div>Status: <strong>{{ savedPost.status }}</strong></div>
           <div>Kategorie: <strong>{{ selectedCategoryObj?.label }}</strong></div>
+          <div v-if="selectedPlatforms.length > 1">Plattformen: <strong>{{ selectedPlatforms.length }}</strong> ({{ selectedPlatforms.map(pId => platforms.find(p => p.id === pId)?.label).join(', ') }})</div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button v-if="slides.length > 1" @click="downloadAsZip" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
+          <button v-if="selectedPlatforms.length > 1" @click="exportAllPlatforms" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
+            📦 Alle Plattformen erneut herunterladen
+          </button>
+          <button v-else-if="slides.length > 1" @click="downloadAsZip" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
             📦 ZIP herunterladen ({{ slides.length }} Slides)
           </button>
           <button v-else @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
