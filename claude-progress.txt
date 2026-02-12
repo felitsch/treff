@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #86: User can configure posting goals in settings
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete posting goals configuration workflow end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Frontend: SettingsView.vue has Posting-Ziele section with dropdowns for posts_per_week and posts_per_month
+  - Backend: settings.py PUT endpoint saves key-value pairs to settings table
+  - Backend: analytics.py /goals endpoint reads posts_per_week/posts_per_month from user settings
+  - Backend: calendar.py /stats endpoint reads posts_per_week/posts_per_month from user settings
+  - Both endpoints fall back to defaults (4/week, 16/month for analytics; 3/week, 12/month for calendar) when no settings exist
+
+### Verification steps completed:
+1. Navigate to Settings - PASS
+   - Settings page loaded with Posting-Ziele section visible
+   - Default values: 3 Posts/week, 12 Posts/month
+2. Set weekly target to 5 - PASS
+   - Selected "5 Posts" from Posts pro Woche dropdown
+3. Set monthly target to 20 - PASS
+   - Selected "20 Posts" from Posts pro Monat dropdown
+4. Save settings - PASS
+   - Clicked "Einstellungen speichern"
+   - Success message "Einstellungen erfolgreich gespeichert!" appeared
+   - Database confirmed: user_id=32, posts_per_week=5, posts_per_month=20
+5. Navigate to Analytics - PASS
+   - Zielverfolgung shows "3 / 5 Posts" (Wochenziel, 60% erreicht)
+   - Zielverfolgung shows "3 / 20 Posts" (Monatsziel, 15% erreicht)
+6. Navigate to Calendar - PASS
+   - Woechentliches Posting-Ziel shows "1/5" (20% erreicht, Noch 4 Posts diese Woche)
+7. Server restart persistence test - PASS
+   - Killed and restarted backend server
+   - Re-logged in, navigated to Settings
+   - Posts pro Woche still shows "5 Posts" [selected]
+   - Posts pro Monat still shows "20 Posts" [selected]
+   - Analytics still shows 3/5 and 3/20 goals after restart
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Database persistence confirmed across server restart
+- Screenshots: feature86-step1-settings-page.png, feature86-step2-goals-set.png, feature86-step3-settings-saved.png, feature86-step4-analytics-goals.png, feature86-step5-calendar-goals.png, feature86-step6-persistence-after-restart.png
+
+### No code changes needed:
+- SettingsView.vue already had complete posting goals UI with dropdowns
+- settings.py already had GET/PUT endpoints for key-value settings
+- analytics.py /goals already read user settings for weekly/monthly targets
+- calendar.py /stats already read user settings for weekly goal
+
+### Current state:
+- Feature #86 marked as PASSING
+- 91/170 features passing (53.5%)
+
 ## Session - Feature #85: User can update display name in settings
 **Date:** 2026-02-12
 **Status:** PASSING
