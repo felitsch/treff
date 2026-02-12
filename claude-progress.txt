@@ -1,5 +1,38 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #151: Image upload shows progress indicator
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete upload progress indicator functionality end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Frontend: AssetsView.vue with uploading ref, uploadProgress ref, onUploadProgress callback
+  - Frontend: Progress bar UI with spinner, percentage text, and animated width bar
+  - Backend: POST /api/assets/upload with multipart/form-data handling
+  - Axios onUploadProgress callback calculates and displays percentage
+
+### Verification steps completed:
+1. Select a large image file (5MB+) for upload - PASS
+   - Created 8.11 MB test image (3000x3000px PNG) and 5.43 MB test image (2500x2500px PNG)
+   - Both successfully uploaded via file chooser
+2. Verify progress bar or percentage indicator appears - PASS
+   - Progress bar with spinner, "Wird hochgeladen... X%" text, and blue bar visible
+   - Verified at 45%, 85%, and 100% states via DOM inspection and screenshots
+3. Verify progress updates during upload - PASS
+   - Progress bar width visibly increases from 45% to 85% to 100%
+   - onUploadProgress callback correctly calculates percentage
+4. Verify completion indicator shown when done - PASS
+   - After upload: new asset immediately appears in grid, counter updates
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: 2 assets persist across full server restart
+- [x] Screenshots: feature151-step1 through feature151-step6
+
+### No code changes needed - feature was already fully implemented.
+
 ## Session - Feature #150: Template preview renders without memory leak
 **Date:** 2026-02-13
 **Status:** PASSING
