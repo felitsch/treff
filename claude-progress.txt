@@ -2163,3 +2163,56 @@
 ### Current state:
 - Feature #40 marked as PASSING
 - 54/163 features passing (33.1%)
+
+## Session - Feature #52: Export carousel as ZIP containing all slide PNGs
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete carousel ZIP export workflow end-to-end via browser
+- No code changes needed - the functionality was already fully implemented:
+  - JSZip library (^3.10.1) in package.json
+  - `downloadAsZip()` function in CreatePostView.vue (lines 471-491)
+  - `renderSlideToCanvas()` for client-side Canvas 2D rendering (lines 391-462)
+  - Backend `/api/export/render-carousel` endpoint records ZIP exports
+  - Export history tracked in database with format='zip', slide_count
+
+### Verification steps completed:
+1. Create a carousel post with 3 slides - PASS
+   - Used FAQ category with "FAQ Story" template (3 slides)
+   - Selected Instagram Feed platform (1080x1080)
+   - Country: USA, Topic: "ZIP_TEST_52 Carousel Export Test"
+   - Generated content with 3 slides confirmed at every step
+2. Click Export - PASS
+   - Clicked "Post speichern & exportieren" on step 9
+   - Post saved to database as Post #46 (status: exported)
+   - ZIP file auto-downloaded: TREFF_faq_instagram_feed_2026-02-12_carousel.zip
+3. Verify ZIP file is downloaded - PASS
+   - ZIP file captured by Playwright: 237,796 bytes
+   - Saved to .playwright-mcp/TREFF-faq-instagram-feed-2026-02-12-carousel.zip
+4. Extract ZIP and verify it contains 3 PNG files - PASS
+   - TREFF_faq_instagram_feed_2026-02-12_slide_01.png (96,999 bytes)
+   - TREFF_faq_instagram_feed_2026-02-12_slide_02.png (64,243 bytes)
+   - TREFF_faq_instagram_feed_2026-02-12_slide_03.png (76,016 bytes)
+5. Verify each PNG is correctly rendered - PASS
+   - All 3 PNGs: 1080x1080px, RGBA, PNG format (correct Instagram Feed square)
+   - Slide 1 (Cover): "Das wirst du am haeufigsten gefragt" + subheadline + body text + TREFF branding
+   - Slide 2: "Haeufige Frage #1" + body text + TREFF branding
+   - Slide 3 (CTA): "Bereit fuer USA?" + body text + yellow CTA button + TREFF branding
+
+### Additional verification:
+- Database: Post #46 status=exported, 3 slides with correct headlines
+- Export history record: format=zip, platform=instagram_feed, resolution=1080, slide_count=3
+- Zero JavaScript console errors (0 errors)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Dashboard shows post after frontend restart: "Das wirst du am haeufigsten gefragt" - FAQ - exported
+- Screenshots: feature52-step6-preview-3slides.png, feature52-step9-export-summary.png, feature52-export-success.png, feature52-persistence-dashboard.png
+
+### No code changes needed:
+- CreatePostView.vue already had complete JSZip export implementation
+- Backend export.py already recorded carousel exports with format='zip'
+- All slide rendering via Canvas 2D already working correctly
+
+### Current state:
+- Feature #52 marked as PASSING
+- 54/163 features passing (33.1%)
