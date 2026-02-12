@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #75: Analytics overview shows total posts and frequency
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Built complete AnalyticsView.vue replacing placeholder stub
+- Frontend fetches data from 5 backend analytics endpoints in parallel:
+  - GET /api/analytics/overview (total posts, this week, this month)
+  - GET /api/analytics/categories (category distribution)
+  - GET /api/analytics/platforms (platform distribution)
+  - GET /api/analytics/countries (country distribution)
+  - GET /api/analytics/goals (weekly/monthly targets vs actual)
+- No backend changes needed - all analytics endpoints were already implemented
+
+### Analytics page sections:
+1. **Overview stats cards**: Posts gesamt, Posts diese Woche, Posts diesen Monat
+   - Uses TREFF brand colors (blue for week, yellow for month)
+2. **Zielverfolgung (Goal tracking)**: Weekly 5/4 posts (100%), Monthly 5/16 (31%)
+   - Color-coded progress bars (green when 100%, brand colors otherwise)
+3. **Kategorieverteilung**: Horizontal bar chart with color-coded categories
+4. **Plattformverteilung**: Platform bars with emoji icons (Instagram Feed, Story, TikTok)
+5. **Laenderverteilung**: Country cards with flag emojis
+
+### Files modified:
+- frontend/src/views/AnalyticsView.vue - Complete rewrite from stub to full analytics dashboard
+
+### Verification steps completed:
+1. Created 5 test posts via API with different categories, platforms, and countries
+2. Navigate to Analytics page - PASS (sidebar link, /analytics URL)
+3. Verify total posts count matches (5) - PASS
+4. Verify posts-this-week (5) and posts-this-month (5) counts correct - PASS
+5. Server restart persistence test - PASS (all counts intact after init.sh restart)
+6. Mock data grep - PASS (zero matches in frontend/src and backend/app)
+7. Console errors - PASS (0 errors, 0 warnings)
+8. Network requests - PASS (all 200 OK, no 500s)
+
+### Important note for future sessions:
+- There are TWO treff.db files: one in root dir and one in backend/ dir
+- init.sh runs from backend/ dir, so the correct DB is backend/treff.db
+- Manual uvicorn restarts must be done from backend/ dir to use the same DB
+
+### Current state:
+- 24/163 features passing (14.7%)
+- Feature #75 marked as PASSING
+
 ## Session - Feature #32: User can view list of saved posts in History
 **Date:** 2026-02-12
 **Status:** PASSING
