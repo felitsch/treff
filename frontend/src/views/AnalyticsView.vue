@@ -1,6 +1,32 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { Line, Doughnut } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js'
 import api from '@/utils/api'
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+)
 
 const loading = ref(true)
 const error = ref(null)
@@ -28,6 +54,11 @@ const goals = ref({
   monthly_target: 16,
   monthly_actual: 0,
 })
+
+// Frequency chart data
+const frequencyPeriod = ref('week')
+const frequencyData = ref([])
+const frequencyLoading = ref(false)
 
 // Computed values
 const weeklyProgress = computed(() => {
@@ -76,7 +107,23 @@ function platformIcon(platform) {
   }
 }
 
-// Category colors for distribution bars
+// Category hex colors for Chart.js doughnut chart
+function categoryHexColor(cat) {
+  const colors = {
+    laender_spotlight: '#3B82F6',
+    erfahrungsberichte: '#22C55E',
+    infografiken: '#A855F7',
+    fristen_cta: '#EF4444',
+    tipps_tricks: '#EAB308',
+    faq: '#6366F1',
+    foto_posts: '#EC4899',
+    reel_tiktok_thumbnails: '#F97316',
+    story_posts: '#14B8A6',
+  }
+  return colors[cat] || '#6B7280'
+}
+
+// Category colors for distribution bars (kept for backwards compat)
 function categoryColor(cat) {
   const colors = {
     laender_spotlight: 'bg-blue-500',
@@ -102,16 +149,209 @@ const totalPlatformPosts = computed(() => {
   return platforms.value.reduce((sum, p) => sum + p.count, 0)
 })
 
+// Doughnut chart data for category distribution
+const categoryChartData = computed(() => {
+  if (categories.value.length === 0) {
+    return { labels: [], datasets: [] }
+  }
+  return {
+    labels: categories.value.map(c => categoryLabel(c.category)),
+    datasets: [
+      {
+        data: categories.value.map(c => c.count),
+        backgroundColor: categories.value.map(c => categoryHexColor(c.category)),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        hoverBorderColor: '#ffffff',
+        hoverBorderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  }
+})
+
+// Doughnut chart options
+const categoryChartOptions = computed(() => {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '55%',
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: {
+            size: 12,
+          },
+          color: isDark ? '#D1D5DB' : '#374151',
+        },
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        titleFont: { size: 13, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function (context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const value = context.parsed
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0
+            return `${context.label}: ${value} (${percentage}%)`
+          },
+        },
+      },
+    },
+  }
+})
+
+// Frequency chart configuration
+const frequencyChartData = computed(() => {
+  return {
+    labels: frequencyData.value.map(d => d.label),
+    datasets: [
+      {
+        label: 'Posts',
+        data: frequencyData.value.map(d => d.count),
+        borderColor: '#4C8BC2',
+        backgroundColor: 'rgba(76, 139, 194, 0.15)',
+        pointBackgroundColor: '#4C8BC2',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#4C8BC2',
+        pointHoverBorderColor: '#ffffff',
+        pointHoverBorderWidth: 3,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.3,
+      },
+    ],
+  }
+})
+
+const frequencyChartOptions = computed(() => {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      title: {
+        display: false,
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        titleFont: { size: 13, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          title: function (context) {
+            const idx = context[0].dataIndex
+            const item = frequencyData.value[idx]
+            return item ? item.date : context[0].label
+          },
+          label: function (context) {
+            const count = context.parsed.y
+            return count === 1 ? '1 Post' : `${count} Posts`
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          text: 'Datum',
+          color: '#9CA3AF',
+          font: { size: 12, weight: 'bold' },
+        },
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#9CA3AF',
+          font: { size: 11 },
+          maxRotation: 45,
+          autoSkip: true,
+          maxTicksLimit: 15,
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: 'Anzahl',
+          color: '#9CA3AF',
+          font: { size: 12, weight: 'bold' },
+        },
+        beginAtZero: true,
+        ticks: {
+          color: '#9CA3AF',
+          font: { size: 11 },
+          stepSize: 1,
+          precision: 0,
+        },
+        grid: {
+          color: 'rgba(156, 163, 175, 0.15)',
+        },
+      },
+    },
+  }
+})
+
+const periodLabels = {
+  week: 'Letzte 7 Tage',
+  month: 'Letzte 30 Tage',
+  quarter: 'Letztes Quartal',
+  year: 'Letztes Jahr',
+}
+
+async function fetchFrequency() {
+  frequencyLoading.value = true
+  try {
+    const res = await api.get(`/api/analytics/frequency?period=${frequencyPeriod.value}`)
+    frequencyData.value = res.data.data || []
+  } catch (err) {
+    console.error('Failed to load frequency data:', err)
+    frequencyData.value = []
+  } finally {
+    frequencyLoading.value = false
+  }
+}
+
+// Watch for period change
+watch(frequencyPeriod, () => {
+  fetchFrequency()
+})
+
 async function fetchAnalytics() {
   loading.value = true
   error.value = null
   try {
-    const [overviewRes, categoriesRes, platformsRes, countriesRes, goalsRes] = await Promise.all([
+    const [overviewRes, categoriesRes, platformsRes, countriesRes, goalsRes, frequencyRes] = await Promise.all([
       api.get('/api/analytics/overview'),
       api.get('/api/analytics/categories'),
       api.get('/api/analytics/platforms'),
       api.get('/api/analytics/countries'),
       api.get('/api/analytics/goals'),
+      api.get(`/api/analytics/frequency?period=${frequencyPeriod.value}`),
     ])
 
     overview.value = overviewRes.data
@@ -119,6 +359,7 @@ async function fetchAnalytics() {
     platforms.value = platformsRes.data
     countries.value = countriesRes.data
     goals.value = goalsRes.data
+    frequencyData.value = frequencyRes.data.data || []
   } catch (err) {
     console.error('Failed to load analytics:', err)
     error.value = 'Fehler beim Laden der Analytics-Daten.'
@@ -247,29 +488,58 @@ onMounted(fetchAnalytics)
         </div>
       </div>
 
+      <!-- Posting frequency line chart -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="frequency-chart">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Posting-Frequenz</h2>
+          <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <button
+              v-for="(label, key) in periodLabels"
+              :key="key"
+              @click="frequencyPeriod = key"
+              class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+              :class="frequencyPeriod === key
+                ? 'bg-white dark:bg-gray-600 text-[#4C8BC2] shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              :data-testid="'period-' + key"
+            >
+              {{ label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Chart loading -->
+        <div v-if="frequencyLoading" class="h-72 flex items-center justify-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4C8BC2]"></div>
+        </div>
+
+        <!-- Chart content -->
+        <div v-else class="h-72" data-testid="frequency-line-chart">
+          <Line
+            :data="frequencyChartData"
+            :options="frequencyChartOptions"
+          />
+        </div>
+      </div>
+
       <!-- Distribution charts row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Category distribution -->
+        <!-- Category distribution - Doughnut Chart -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="category-distribution">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kategorieverteilung</h2>
           <div v-if="categories.length === 0" class="text-center py-8">
             <p class="text-gray-400 dark:text-gray-500">Noch keine Posts erstellt</p>
           </div>
-          <div v-else class="space-y-3">
-            <div v-for="cat in categories" :key="cat.category" class="flex items-center gap-3">
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-32 truncate" :title="categoryLabel(cat.category)">
-                {{ categoryLabel(cat.category) }}
-              </span>
-              <div class="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  class="h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-                  :class="categoryColor(cat.category)"
-                  :style="{ width: Math.max(10, (cat.count / totalCategoryPosts) * 100) + '%' }"
-                >
-                  <span class="text-xs font-bold text-white">{{ cat.count }}</span>
-                </div>
-              </div>
+          <div v-else>
+            <div class="relative" style="height: 320px;" data-testid="category-pie-chart">
+              <Doughnut
+                :data="categoryChartData"
+                :options="categoryChartOptions"
+              />
             </div>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {{ totalCategoryPosts }} Posts insgesamt
+            </p>
           </div>
         </div>
 
