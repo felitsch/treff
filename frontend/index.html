@@ -11,6 +11,12 @@
   </head>
   <body class="bg-treff-light dark:bg-treff-dark">
     <div id="app"></div>
+    <script>
+      // Initialize dark mode before Vue loads to prevent flash
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark')
+      }
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
