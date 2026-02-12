@@ -73,6 +73,22 @@ const currentPreviewSlide = ref(0)
 const uploadingImage = ref(false)
 const assets = ref([])
 
+// Step 8: AI Image Generation
+const aiImagePrompt = ref('')
+const generatingImage = ref(false)
+const generatedImageResult = ref(null)
+const aiImageError = ref('')
+const promptSuggestions = [
+  'American high school hallway with students',
+  'Canadian Rocky Mountains landscape at sunset',
+  'Sydney Opera House and harbour at golden hour',
+  'New Zealand green hills with sheep',
+  'Dublin cobblestone streets with colorful doors',
+  'German exchange student arriving at American host family',
+  'Group of international students in school cafeteria',
+  'Teenagers playing sports on American football field',
+]
+
 // Step 9: Export
 const exporting = ref(false)
 const savedPost = ref(null)
@@ -237,6 +253,53 @@ function selectAssetAsBackground(asset) {
   }
   successMsg.value = 'Hintergrundbild gesetzt!'
   setTimeout(() => { successMsg.value = '' }, 2000)
+}
+
+async function generateAiImage() {
+  if (!aiImagePrompt.value.trim()) {
+    aiImageError.value = 'Bitte gib einen Prompt ein.'
+    return
+  }
+
+  generatingImage.value = true
+  aiImageError.value = ''
+  generatedImageResult.value = null
+
+  try {
+    const response = await api.post('/api/ai/generate-image', {
+      prompt: aiImagePrompt.value.trim(),
+      width: 1024,
+      height: 1024,
+      category: 'ai_generated',
+      country: country.value || null,
+    })
+
+    generatedImageResult.value = response.data
+
+    // Auto-set as background for current slide
+    if (response.data.image_url) {
+      const slide = slides.value[currentPreviewSlide.value]
+      if (slide) {
+        slide.background_type = 'image'
+        slide.background_value = response.data.image_url
+      }
+    }
+
+    successMsg.value = response.data.message || 'Bild erfolgreich generiert!'
+    setTimeout(() => { successMsg.value = '' }, 4000)
+
+    // Refresh assets list to include the new AI-generated image
+    await loadAssets()
+  } catch (e) {
+    console.error('AI image generation failed:', e)
+    aiImageError.value = 'Bildgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    generatingImage.value = false
+  }
+}
+
+function selectPromptSuggestion(suggestion) {
+  aiImagePrompt.value = suggestion
 }
 
 async function saveAndExport() {
@@ -1015,12 +1078,89 @@ watch(slides, () => {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- STEP 8: Background Image Upload (Optional) -->
+    <!-- STEP 8: Background Image Upload / AI Generation (Optional) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 8">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 8: Hintergrundbild (optional)</h2>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="space-y-6">
+
+          <!-- AI Image Generation -->
+          <div class="border-2 border-purple-300 dark:border-purple-600 rounded-xl p-6 bg-purple-50/50 dark:bg-purple-900/10">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-2xl">🤖</span>
+              <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300">KI-Bild generieren</h3>
+            </div>
+
+            <!-- Prompt Input -->
+            <div class="mb-3">
+              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Bildbeschreibung (Prompt)</label>
+              <textarea
+                v-model="aiImagePrompt"
+                rows="3"
+                maxlength="500"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none"
+                placeholder="z.B. American high school hallway with students"
+                :disabled="generatingImage"
+              ></textarea>
+              <div class="flex justify-between items-center mt-1">
+                <span class="text-xs text-gray-400">{{ aiImagePrompt.length }}/500</span>
+              </div>
+            </div>
+
+            <!-- Prompt Suggestions -->
+            <div class="mb-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Vorschlaege:</p>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="suggestion in promptSuggestions"
+                  :key="suggestion"
+                  @click="selectPromptSuggestion(suggestion)"
+                  class="text-xs px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors truncate max-w-[200px]"
+                  :disabled="generatingImage"
+                >
+                  {{ suggestion }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button
+              @click="generateAiImage"
+              :disabled="generatingImage || !aiImagePrompt.trim()"
+              class="w-full px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              <span v-if="generatingImage" class="flex items-center gap-2">
+                <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                Bild wird generiert...
+              </span>
+              <span v-else>🎨 Bild generieren</span>
+            </button>
+
+            <!-- AI Error -->
+            <div v-if="aiImageError" class="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
+              {{ aiImageError }}
+            </div>
+
+            <!-- Generated Image Result -->
+            <div v-if="generatedImageResult && generatedImageResult.status === 'success'" class="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-green-600">✓</span>
+                <span class="text-sm font-medium text-green-700 dark:text-green-300">{{ generatedImageResult.message }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span>Quelle: {{ generatedImageResult.source === 'gemini' ? 'Gemini AI' : 'Lokale Generierung' }}</span>
+                <span v-if="generatedImageResult.asset">| {{ generatedImageResult.asset.width }}x{{ generatedImageResult.asset.height }}px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
+            <div class="relative flex justify-center"><span class="bg-white dark:bg-gray-900 px-3 text-sm text-gray-400">oder</span></div>
+          </div>
+
           <!-- Upload -->
           <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-[#4C8BC2] transition-colors">
             <div class="text-4xl mb-3">📷</div>
@@ -1044,9 +1184,10 @@ watch(slides, () => {
                 v-for="asset in assets"
                 :key="asset.id"
                 @click="selectAssetAsBackground(asset)"
-                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] transition-all"
+                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] transition-all relative group"
               >
                 <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
+                <div v-if="asset.source === 'ai_generated'" class="absolute top-1 right-1 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">KI</div>
               </button>
             </div>
           </div>
