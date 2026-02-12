@@ -214,13 +214,8 @@ function onDrop(e) {
 
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
-    // Upload first valid image file
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        uploadFile(file)
-        break
-      }
-    }
+    // Try to upload the first file - uploadFile() handles type validation
+    uploadFile(files[0])
   }
 }
 
