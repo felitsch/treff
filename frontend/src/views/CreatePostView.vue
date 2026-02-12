@@ -46,6 +46,7 @@ const {
   savedPost,
   exportComplete,
   exportQuality,
+  regeneratingField,
   validationMessage,
 } = storeToRefs(store)
 
@@ -220,6 +221,66 @@ async function generateText() {
     error.value = 'Textgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
   } finally {
     generatingText.value = false
+  }
+}
+
+async function regenerateField(field, slideIndex = 0) {
+  const fieldKey = slideIndex > 0 ? `${field}_${slideIndex}` : field
+  regeneratingField.value = fieldKey
+  error.value = ''
+
+  try {
+    const response = await api.post('/api/ai/regenerate-field', {
+      field,
+      category: selectedCategory.value,
+      country: country.value || null,
+      topic: topic.value.trim() || null,
+      key_points: keyPoints.value.trim() || null,
+      tone: tone.value,
+      platform: selectedPlatform.value,
+      slide_index: slideIndex,
+      slide_count: slides.value.length || 1,
+      current_headline: slides.value[currentPreviewSlide.value]?.headline || '',
+      current_body: slides.value[currentPreviewSlide.value]?.body_text || '',
+    })
+
+    const newValue = response.data.value
+
+    // Apply the regenerated value to the correct field
+    switch (field) {
+      case 'headline':
+        if (slides.value[slideIndex]) slides.value[slideIndex].headline = newValue
+        break
+      case 'subheadline':
+        if (slides.value[slideIndex]) slides.value[slideIndex].subheadline = newValue
+        break
+      case 'body_text':
+        if (slides.value[slideIndex]) slides.value[slideIndex].body_text = newValue
+        break
+      case 'cta_text':
+        if (slides.value[slideIndex]) slides.value[slideIndex].cta_text = newValue
+        break
+      case 'caption_instagram':
+        captionInstagram.value = newValue
+        break
+      case 'caption_tiktok':
+        captionTiktok.value = newValue
+        break
+      case 'hashtags_instagram':
+        hashtagsInstagram.value = newValue
+        break
+      case 'hashtags_tiktok':
+        hashtagsTiktok.value = newValue
+        break
+    }
+
+    successMsg.value = 'Feld neu generiert!'
+    setTimeout(() => { successMsg.value = '' }, 2000)
+  } catch (e) {
+    console.error('Field regeneration failed:', e)
+    error.value = 'Regenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+  } finally {
+    regeneratingField.value = ''
   }
 }
 
@@ -977,12 +1038,16 @@ onMounted(() => {
             <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line max-h-32 overflow-auto">{{ captionInstagram }}</p>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2"># Hashtags</h4>
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2"># Instagram Hashtags</h4>
             <p class="text-xs text-blue-600 dark:text-blue-400 break-words">{{ hashtagsInstagram }}</p>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
             <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">🎵 TikTok Caption</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ captionTiktok }}</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">🎵 TikTok Hashtags</h4>
+            <p class="text-xs text-blue-600 dark:text-blue-400 break-words">{{ hashtagsTiktok }}</p>
           </div>
           <div v-if="ctaText" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
             <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📢 Call-to-Action</h4>
@@ -1080,8 +1145,14 @@ onMounted(() => {
               ></textarea>
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"># Hashtags</label>
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"># Instagram Hashtags</label>
               <textarea v-model="hashtagsInstagram" rows="2"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+            <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">🎵 TikTok Hashtags</label>
+              <textarea v-model="hashtagsTiktok" rows="2"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
               ></textarea>
             </div>
