@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #57: Assets can be filtered by category and country
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added category and country filter dropdowns to the Asset Library page
+- Added upload metadata section for tagging new uploads with category, country, and tags
+- Category/country badges displayed on asset cards
+- Active filter indicators with removable filter chips
+- "Filter zuruecksetzen" button to clear all filters at once
+- Client-side filtering for instant results (no API refetch needed)
+
+### Implementation details:
+- **Frontend (AssetsView.vue):** Added `selectedCategory`, `selectedCountry` filter refs, `uploadCategory`, `uploadCountry`, `uploadTags` upload metadata refs, `categoryOptions` and `countryOptions` arrays, `filteredAssets` computed filters by category/country/type/search, `hasActiveFilters` computed, `clearFilters()` function, upload metadata section in template, filter bar with 3 dropdowns + clear button, active filter indicator row with chips, category/country badges on asset cards
+- **Backend:** Already supported category/country query params on GET /api/assets and category/country form fields on POST /api/assets/upload - no backend changes needed
+
+### Verification steps completed:
+1. Upload assets tagged with different categories and countries - PASS
+   - test_logo_usa.png: category=logo, country=usa
+   - test_photo_kanada.png: category=photo, country=kanada
+   - test_bg_australien.png: category=background, country=australien
+2. Apply category filter (Logo) - PASS
+   - Only test_logo_usa.png shown, "1 Ergebnis" indicator
+3. Apply country filter (USA) - PASS
+   - Only test_logo_usa.png shown, "1 Ergebnis" indicator
+4. Clear filters and verify all assets return - PASS
+   - All 3 assets shown after clicking "Filter zuruecksetzen"
+5. Zero JavaScript console errors (0 errors)
+6. Mock data grep clean (zero hits in frontend/src and backend/app)
+7. Persistence after server restart verified - all 3 assets with categories/countries intact
+
+### Screenshots captured:
+- feature57-step1-assets-page-with-filters.png
+- feature57-step2-all-assets-with-badges.png
+- feature57-step3-category-filter-logo.png (duplicate as step4)
+- feature57-step4-category-logo-filter.png
+- feature57-step5-country-usa-filter.png
+- feature57-step6-filters-cleared-all-assets.png
+- feature57-step7-persistence-after-restart.png
+
+### Current state:
+- Feature #57 marked as PASSING
+- 66/163 features passing (40.5%)
+
 ## Session - Feature #54: Export quality selector switches between 1080px and 2160px
 **Date:** 2026-02-12
 **Status:** PASSING
