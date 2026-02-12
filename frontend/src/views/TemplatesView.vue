@@ -8,34 +8,49 @@ const templates = ref([])
 const selectedCategory = ref('')
 const selectedPlatform = ref('')
 
+// Create template modal state
+const showCreateModal = ref(false)
+const creating = ref(false)
+const createError = ref(null)
+const createSuccess = ref(false)
+const newTemplate = ref({
+  name: '',
+  category: '',
+  platform_format: 'feed_square',
+  slide_count: 1,
+  html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
+  css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #4C8BC2 100%);\n  min-height: 100%;\n}',
+  placeholder_fields: '["title", "content"]',
+})
+
 // Category definitions with German labels and colors
 const categories = {
-  laender_spotlight: { label: 'Laender-Spotlight', icon: '🌍', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: '💬', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
-  infografiken: { label: 'Infografiken', icon: '📊', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-  fristen_cta: { label: 'Fristen & CTA', icon: '⏰', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-  tipps_tricks: { label: 'Tipps & Tricks', icon: '💡', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-  faq: { label: 'FAQ', icon: '❓', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
-  foto_posts: { label: 'Foto-Posts', icon: '📸', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
-  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '🎬', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-  story_posts: { label: 'Story-Posts', icon: '📱', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
+  laender_spotlight: { label: 'Laender-Spotlight', icon: '\u{1F30D}', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: '\u{1F4AC}', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
+  infografiken: { label: 'Infografiken', icon: '\u{1F4CA}', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  fristen_cta: { label: 'Fristen & CTA', icon: '\u{23F0}', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+  tipps_tricks: { label: 'Tipps & Tricks', icon: '\u{1F4A1}', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+  faq: { label: 'FAQ', icon: '\u{2753}', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
+  foto_posts: { label: 'Foto-Posts', icon: '\u{1F4F8}', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
+  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '\u{1F3AC}', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+  story_posts: { label: 'Story-Posts', icon: '\u{1F4F1}', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
 }
 
 // Platform format labels
 const platformLabels = {
-  feed_square: { label: '1:1 Feed', icon: '⬜', dim: '1080x1080' },
-  feed_portrait: { label: '4:5 Portrait', icon: '📱', dim: '1080x1350' },
-  story: { label: '9:16 Story', icon: '📲', dim: '1080x1920' },
-  tiktok: { label: '9:16 TikTok', icon: '🎵', dim: '1080x1920' },
+  feed_square: { label: '1:1 Feed', icon: '\u{2B1C}', dim: '1080x1080' },
+  feed_portrait: { label: '4:5 Portrait', icon: '\u{1F4F1}', dim: '1080x1350' },
+  story: { label: '9:16 Story', icon: '\u{1F4F2}', dim: '1080x1920' },
+  tiktok: { label: '9:16 TikTok', icon: '\u{1F3B5}', dim: '1080x1920' },
 }
 
 // Country flags
 const countryFlags = {
-  usa: '🇺🇸',
-  canada: '🇨🇦',
-  australia: '🇦🇺',
-  newzealand: '🇳🇿',
-  ireland: '🇮🇪',
+  usa: '\u{1F1FA}\u{1F1F8}',
+  canada: '\u{1F1E8}\u{1F1E6}',
+  australia: '\u{1F1E6}\u{1F1FA}',
+  newzealand: '\u{1F1F3}\u{1F1FF}',
+  ireland: '\u{1F1EE}\u{1F1EA}',
 }
 
 // Unique categories from templates
@@ -83,12 +98,21 @@ const categoryCount = computed(() => {
   return counts
 })
 
+// Validate create form
+const canCreate = computed(() => {
+  return newTemplate.value.name.trim().length > 0 &&
+    newTemplate.value.category.length > 0 &&
+    newTemplate.value.platform_format.length > 0 &&
+    newTemplate.value.html_content.trim().length > 0 &&
+    newTemplate.value.css_content.trim().length > 0
+})
+
 function getCategoryInfo(cat) {
-  return categories[cat] || { label: cat, icon: '📄', color: 'bg-gray-100 text-gray-700' }
+  return categories[cat] || { label: cat, icon: '\u{1F4C4}', color: 'bg-gray-100 text-gray-700' }
 }
 
 function getPlatformInfo(platform) {
-  return platformLabels[platform] || { label: platform, icon: '📄', dim: '' }
+  return platformLabels[platform] || { label: platform, icon: '\u{1F4C4}', dim: '' }
 }
 
 function getCountryFlag(country) {
@@ -123,6 +147,71 @@ async function fetchTemplates() {
   }
 }
 
+function openCreateModal() {
+  newTemplate.value = {
+    name: '',
+    category: '',
+    platform_format: 'feed_square',
+    slide_count: 1,
+    html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
+    css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #4C8BC2 100%);\n  min-height: 100%;\n}',
+    placeholder_fields: '["title", "content"]',
+  }
+  createError.value = null
+  createSuccess.value = false
+  showCreateModal.value = true
+}
+
+function closeCreateModal() {
+  showCreateModal.value = false
+  createError.value = null
+  createSuccess.value = false
+}
+
+async function createTemplate() {
+  if (!canCreate.value) return
+
+  creating.value = true
+  createError.value = null
+  createSuccess.value = false
+
+  try {
+    const payload = {
+      name: newTemplate.value.name.trim(),
+      category: newTemplate.value.category,
+      platform_format: newTemplate.value.platform_format,
+      slide_count: parseInt(newTemplate.value.slide_count) || 1,
+      html_content: newTemplate.value.html_content.trim(),
+      css_content: newTemplate.value.css_content.trim(),
+      placeholder_fields: newTemplate.value.placeholder_fields.trim() || '["title", "content"]',
+    }
+
+    const res = await api.post('/api/templates', payload)
+
+    // Add the new template to the list
+    templates.value.push(res.data)
+    createSuccess.value = true
+
+    // Close modal after short delay so user sees success
+    setTimeout(() => {
+      closeCreateModal()
+    }, 1200)
+  } catch (err) {
+    console.error('Failed to create template:', err)
+    if (err.response?.data?.detail) {
+      if (Array.isArray(err.response.data.detail)) {
+        createError.value = err.response.data.detail.map(e => e.msg).join(', ')
+      } else {
+        createError.value = err.response.data.detail
+      }
+    } else {
+      createError.value = 'Template konnte nicht erstellt werden. Bitte versuche es erneut.'
+    }
+  } finally {
+    creating.value = false
+  }
+}
+
 onMounted(() => {
   fetchTemplates()
 })
@@ -131,11 +220,20 @@ onMounted(() => {
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">
-        Waehle ein Template fuer deinen naechsten Post. Alle Templates sind fuer TREFF Sprachreisen optimiert.
-      </p>
+    <div class="mb-6 flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          Waehle ein Template fuer deinen naechsten Post. Alle Templates sind fuer TREFF Sprachreisen optimiert.
+        </p>
+      </div>
+      <button
+        @click="openCreateModal"
+        class="flex items-center gap-2 px-4 py-2.5 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm whitespace-nowrap"
+      >
+        <span class="text-lg leading-none">+</span>
+        Neues Template erstellen
+      </button>
     </div>
 
     <!-- Loading State -->
@@ -218,7 +316,7 @@ onMounted(() => {
 
       <!-- Empty state -->
       <div v-if="filteredTemplates.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">📄</div>
+        <div class="text-5xl mb-4">\u{1F4C4}</div>
         <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Keine Templates gefunden</p>
         <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
           Versuche andere Filter oder setze sie zurueck.
@@ -278,6 +376,13 @@ onMounted(() => {
                   :class="template.is_country_themed && template.country ? 'right-12' : 'right-3'"
                 >
                   {{ template.slide_count }} Slides
+                </div>
+
+                <!-- Custom badge for non-default templates -->
+                <div v-if="!template.is_default" class="absolute bottom-3 right-3">
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-treff-blue/80 text-white backdrop-blur-sm">
+                    Eigenes
+                  </span>
                 </div>
 
                 <!-- Mockup content lines -->
@@ -345,6 +450,13 @@ onMounted(() => {
                 >
                   Standard
                 </span>
+                <!-- Custom badge -->
+                <span
+                  v-if="!template.is_default"
+                  class="text-xs px-2 py-0.5 rounded-full bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20"
+                >
+                  Eigenes
+                </span>
               </div>
               <!-- Slide count info -->
               <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
@@ -353,6 +465,171 @@ onMounted(() => {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Template Modal -->
+    <div
+      v-if="showCreateModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      @click.self="closeCreateModal"
+    >
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeCreateModal"></div>
+
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-2xl z-10">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Neues Template erstellen</h2>
+            <button
+              @click="closeCreateModal"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-5 space-y-5">
+          <!-- Success Message -->
+          <div v-if="createSuccess" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
+            <p class="text-green-700 dark:text-green-300 font-medium">Template erfolgreich erstellt!</p>
+          </div>
+
+          <!-- Error Message -->
+          <div v-if="createError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+            <p class="text-red-600 dark:text-red-400 text-sm">{{ createError }}</p>
+          </div>
+
+          <!-- Template Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Template-Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="newTemplate.name"
+              type="text"
+              placeholder="z.B. Mein Custom Template"
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+            />
+          </div>
+
+          <!-- Category + Platform Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Kategorie <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="newTemplate.category"
+                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+              >
+                <option value="" disabled>Kategorie waehlen...</option>
+                <option v-for="(info, key) in categories" :key="key" :value="key">
+                  {{ info.icon }} {{ info.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Platform Format -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Plattform-Format <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="newTemplate.platform_format"
+                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+              >
+                <option v-for="(info, key) in platformLabels" :key="key" :value="key">
+                  {{ info.icon }} {{ info.label }} ({{ info.dim }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Slide Count -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Anzahl Slides
+            </label>
+            <input
+              v-model.number="newTemplate.slide_count"
+              type="number"
+              min="1"
+              max="10"
+              class="w-32 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+            />
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">1 = Einzelbild, 2+ = Carousel</p>
+          </div>
+
+          <!-- HTML Content -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              HTML-Inhalt <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              v-model="newTemplate.html_content"
+              rows="6"
+              placeholder="<div class='template'>...</div>"
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
+            ></textarea>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Verwende {{feldname}} als Platzhalter fuer dynamische Inhalte.</p>
+          </div>
+
+          <!-- CSS Content -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              CSS-Styling <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              v-model="newTemplate.css_content"
+              rows="6"
+              placeholder=".template { padding: 40px; }"
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
+            ></textarea>
+          </div>
+
+          <!-- Placeholder Fields -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Platzhalter-Felder (JSON)
+            </label>
+            <input
+              v-model="newTemplate.placeholder_fields"
+              type="text"
+              placeholder='["title", "content", "cta_text"]'
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
+            />
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JSON-Array der Platzhalter-Namen, die im HTML verwendet werden.</p>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 rounded-b-2xl flex items-center justify-end gap-3">
+          <button
+            @click="closeCreateModal"
+            class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            Abbrechen
+          </button>
+          <button
+            @click="createTemplate"
+            :disabled="!canCreate || creating"
+            class="px-6 py-2.5 text-sm font-medium text-white bg-treff-blue hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg v-if="creating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ creating ? 'Wird erstellt...' : 'Template erstellen' }}
+          </button>
         </div>
       </div>
     </div>
