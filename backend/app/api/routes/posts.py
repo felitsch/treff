@@ -104,6 +104,15 @@ async def create_post(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new post."""
+    # Parse scheduled_date string to datetime if provided
+    if "scheduled_date" in post_data and post_data["scheduled_date"] and isinstance(post_data["scheduled_date"], str):
+        try:
+            post_data["scheduled_date"] = datetime.fromisoformat(post_data["scheduled_date"].replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            try:
+                post_data["scheduled_date"] = datetime.strptime(post_data["scheduled_date"], "%Y-%m-%d")
+            except (ValueError, TypeError):
+                pass
     post = Post(user_id=user_id, **post_data)
     db.add(post)
     await db.flush()
