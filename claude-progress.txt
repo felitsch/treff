@@ -3394,3 +3394,47 @@
 ### Current state:
 - Feature #167 marked as PASSING
 - 78/170 features passing (45.9%)
+
+## Session - Feature #74: Dismiss suggestion removes it from list
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete dismiss suggestion workflow end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: PUT /api/suggestions/{id}/dismiss endpoint in suggestions.py
+  - Frontend: dismissSuggestion() function in DashboardView.vue
+  - Database: content_suggestions table with status column
+
+### Verification steps completed:
+1. View content suggestions on dashboard - PASS
+   - Dashboard shows "Content-Vorschlaege" section with "3 offen" badge
+   - 3 pending suggestions displayed with Annehmen/Ablehnen buttons
+2. Click Dismiss (Ablehnen) on "FAQ: Visum und Versicherung" - PASS
+   - Suggestion immediately removed from the list
+   - Badge updated from "3 offen" to "2 offen"
+3. Verify suggestion disappears from dashboard - PASS
+   - Only 2 suggestions remain visible after dismiss
+   - Dismissed suggestion is completely gone from the UI
+4. Verify suggestion status is dismissed in database - PASS
+   - Queried backend/treff.db directly
+   - Suggestion #3 status = "dismissed" confirmed
+5. Server restart persistence test - PASS
+   - Restarted backend server
+   - Dashboard shows "1 offen" (only 1 pending suggestion left)
+   - Dismissed suggestion does NOT reappear after restart
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Database persistence confirmed across server restart
+- Screenshots: feature74-step1-suggestions-bottom.png, feature74-step2-after-dismiss.png, feature74-step3-persistence-after-restart.png
+
+### No code changes needed:
+- suggestions.py already had dismiss endpoint with status update + db.commit()
+- DashboardView.vue already had dismissSuggestion() with API call + UI filter
+- Analytics dashboard endpoint already filters by status == "pending"
+
+### Current state:
+- Feature #74 marked as PASSING
+- 83/170 features passing (48.8%)
