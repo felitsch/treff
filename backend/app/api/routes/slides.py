@@ -39,6 +39,13 @@ async def get_slides(
     db: AsyncSession = Depends(get_db),
 ):
     """Get all slides for a post."""
+    # Verify post belongs to user
+    post_result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    if not post_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Post not found")
+
     result = await db.execute(
         select(PostSlide).where(PostSlide.post_id == post_id).order_by(PostSlide.slide_index)
     )
@@ -97,6 +104,13 @@ async def add_slide(
     db: AsyncSession = Depends(get_db),
 ):
     """Add a slide to a post."""
+    # Verify post belongs to user
+    post_result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    if not post_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Post not found")
+
     # Get max slide_index
     result = await db.execute(
         select(PostSlide).where(PostSlide.post_id == post_id).order_by(PostSlide.slide_index.desc())
@@ -127,6 +141,13 @@ async def delete_slide(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a slide from a post."""
+    # Verify post belongs to user
+    post_result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    if not post_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Post not found")
+
     result = await db.execute(
         select(PostSlide).where(PostSlide.id == slide_id, PostSlide.post_id == post_id)
     )

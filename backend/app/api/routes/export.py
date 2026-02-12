@@ -144,6 +144,13 @@ async def download_export(
     if not export:
         raise HTTPException(status_code=404, detail="Export not found")
 
+    # Verify the export's post belongs to the current user
+    post_result = await db.execute(
+        select(Post).where(Post.id == export.post_id, Post.user_id == user_id)
+    )
+    if not post_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Export not found")
+
     file_path = os.path.join(EXPORT_DIR, os.path.basename(export.file_path))
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Export file not found on disk")

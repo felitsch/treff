@@ -149,6 +149,15 @@ function cancelRemoveSlide() {
 async function loadPost() {
   loading.value = true
   error.value = ''
+
+  // Validate that the post ID is a positive integer
+  const idNum = Number(postId.value)
+  if (!postId.value || !Number.isInteger(idNum) || idNum <= 0) {
+    notFound.value = true
+    loading.value = false
+    return
+  }
+
   try {
     const response = await api.get(`/api/posts/${postId.value}`)
     post.value = response.data
@@ -180,7 +189,7 @@ async function loadPost() {
     // Capture initial state for unsaved changes detection (without dragId)
     initialStateSnapshot.value = getCleanState()
   } catch (e) {
-    if (e.response?.status === 404) {
+    if (e.response?.status === 404 || e.response?.status === 422) {
       notFound.value = true
     } else {
       error.value = 'Fehler beim Laden: ' + (e.response?.data?.detail || e.message)
