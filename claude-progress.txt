@@ -889,3 +889,44 @@
 
 ### Next steps:
 - Continue with remaining template, calendar, and content features
+
+## Session - Feature #34: User can delete a post from history
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Upgraded HistoryView.vue delete functionality from native confirm() to proper modal dialog
+- Modal dialog features:
+  - Teleport-based overlay with backdrop blur
+  - Warning icon, "Post loeschen?" heading
+  - Displays post title being deleted ("DELETE_ME_TEST")
+  - "Abbrechen" (Cancel) and "Loeschen" (Delete) buttons
+  - Loading state during deletion
+- Verified complete delete flow end-to-end via browser automation:
+  1. Created test post "DELETE_ME_TEST" via API (POST /api/posts => 201)
+  2. Navigated to History page - post appears in list with title, category, platform, date, status
+  3. Clicked delete button (🗑️) - confirmation dialog appeared
+  4. Clicked "Loeschen" button - post removed from list, empty state shown
+  5. Verified via GET /api/posts => 200, count: 0 - post truly gone from database
+- Also verified API-level deletion: create post, verify exists, DELETE, verify gone (Python script)
+- Backend DELETE /api/posts/{id} endpoint already correctly implemented with user_id check
+
+### Files modified:
+- frontend/src/views/HistoryView.vue - Replaced confirm() with Teleport-based modal dialog
+
+### Verification checklist:
+- [x] Create test post with unique title DELETE_ME_TEST
+- [x] Navigate to History page
+- [x] Verify post appears in list
+- [x] Click delete on the post
+- [x] Confirm deletion dialog (modal with Abbrechen/Loeschen)
+- [x] Verify post is removed from list
+- [x] Verify post is gone from database (GET /api/posts => 0 posts)
+- [x] Zero JS console errors
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured: feature34-post-in-history.png, feature34-delete-confirmation-dialog.png, feature34-after-delete-verified.png
+
+### Current state:
+- 21/163 features passing (12.9%)
+- Feature #34 marked as PASSING
