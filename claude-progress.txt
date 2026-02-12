@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #165: Switch image generation to Nano Banana Pro (gemini-3-pro-image-preview)
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Switched AI image generation from gemini-2.0-flash-exp to Nano Banana Pro (gemini-3-pro-image-preview)
+- Added aspect_ratio parameter (supports 1:1, 9:16, 16:9, etc.) to generate-image endpoint
+- Added image_size parameter (1K, 2K, 4K) to generate-image endpoint - defaults to 2K
+- Updated image extraction to use part.as_image() with image.image_bytes (new SDK method)
+- Added ImageConfig with aspectRatio and imageSize for Nano Banana Pro
+- Kept gemini-2.0-flash-exp as fallback if Nano Banana Pro fails
+- Kept Pillow placeholder as final fallback if no API key or both models fail
+- Validated all aspect_ratio and image_size values with proper defaults
+
+### Files modified:
+- backend/app/api/routes/ai.py - Complete rewrite of _generate_with_gemini() function and update to generate_image endpoint
+
+### Verification steps completed:
+1. Model changed from gemini-2.0-flash-exp to gemini-3-pro-image-preview - PASS (line 133)
+2. GenerateContentConfig updated with responseModalities=['TEXT', 'IMAGE'] - PASS (line 136)
+3. ImageConfig added with aspectRatio and imageSize - PASS (lines 122-125)
+4. Image extraction uses part.as_image() with image.image_bytes - PASS (lines 144-147)
+5. aspect_ratio parameter available in /generate-image endpoint - PASS (parsed from request)
+6. image_size parameter available in /generate-image endpoint - PASS (parsed from request)
+7. Pillow fallback retained - PASS (_generate_placeholder_image still present)
+8. POST /api/ai/generate-image with test prompt returns image with source='gemini' - PASS
+   - Prompt: "American high school hallway with students"
+   - Result: 2048x2048px image, 3.1 MB, source=gemini
+   - Success message: "Bild erfolgreich generiert!" with "Quelle: Gemini AI"
+9. Generated image saved as asset and accessible via image_url - PASS
+   - Asset ID=12, filename=ai_0166b3d026ca.png
+   - Visible in Asset-Bibliothek with correct metadata
+   - Persists after server restart
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: AI-generated asset persists across restart
+- [x] Screenshots captured: feature165-step1-ai-image-section.png, feature165-step2-image-generated-success.png, feature165-step3-asset-saved-in-library.png, feature165-step4-persistence-after-restart.png
+
+### Current state:
+- Feature #165 marked as PASSING
+- 80/170 features passing (47.1%)
+
 ## Session - Feature #70: In-app reminder shown when post is due for publishing
 **Date:** 2026-02-12
 **Status:** PASSING
