@@ -1929,3 +1929,43 @@
 ### Current state:
 - Feature #30 marked as PASSING
 - 49/163 features passing (30.1%)
+
+## Session - Feature #28: Dark mode toggle works and persists
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified existing dark mode toggle in TopBar.vue works correctly end-to-end
+- Added early dark mode initialization script in index.html to prevent flash of light mode
+  (inline script reads localStorage('darkMode') and applies 'dark' class before Vue mounts)
+- Tailwind already configured with darkMode: 'class'
+- All views already have dark: variant classes applied
+
+### Implementation details:
+- Dark mode toggle: TopBar.vue button toggles document.documentElement.classList('dark')
+- Persistence: localStorage key 'darkMode' stores 'true'/'false'
+- Early init: index.html inline script applies dark class before Vue loads
+- Icon changes: moon (🌙) for light mode, sun (☀️) for dark mode
+- Aria label: "Dunkler Modus" / "Heller Modus"
+
+### Files modified:
+- frontend/index.html - Added inline script for early dark mode initialization
+
+### Verification steps completed:
+1. Login to the application - PASS (logged in as darktest@treff.de)
+2. Click dark mode toggle - PASS (button clicked, UI switched to dark theme)
+3. Verify UI switches to dark theme (dark background colors) - PASS (dark backgrounds on sidebar, topbar, main content, cards)
+4. Refresh the page (F5) - PASS (page refreshed)
+5. Verify dark mode is still active (preference persisted) - PASS (button shows "Heller Modus" ☀️, localStorage darkMode=true, dark class on html)
+6. Toggle back to light mode - PASS (button clicked)
+7. Verify light theme restored - PASS (light backgrounds restored, button shows "Dunkler Modus" 🌙, localStorage darkMode=false)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] All API requests 200 OK, no 500s
+- [x] Screenshots captured: feature28-step1-light-mode.png, feature28-step2-dark-mode-enabled.png, feature28-step4-dark-persisted-after-f5.png, feature28-step5-light-mode-restored.png
+
+### Current state:
+- Feature #28 marked as PASSING
+- 50/163 features passing (30.7%)
