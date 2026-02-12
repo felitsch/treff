@@ -3186,3 +3186,64 @@
 ### Current state:
 - Feature #164 marked as PASSING
 - 77/170 features passing (45.3%)
+
+## Session - Feature #167: Replace rule-based text generation with Gemini 2.5 Flash
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Replaced rule-based text generator with Gemini 2.5 Flash AI-powered text generation
+- Created `generate_text_with_gemini()` function in `text_generator.py` with:
+  - Comprehensive TREFF brand system prompt (company profile, prices, country data, tone guidelines)
+  - Structured JSON output via `response_mime_type="application/json"`
+  - `gemini-2.5-flash` model with temperature=0.8, max_output_tokens=4096
+  - Full response validation (required keys, slide structure, field defaults)
+- Created `_build_gemini_system_prompt(tone)` with distinct jugendlich/serioess instructions:
+  - Jugendlich: Du-Anrede, 3-5 emojis, begeisternd, country flags
+  - Serioess: Sie-Anrede, max 2-3 emojis, Sicherheit/Erfahrung/Betreuung focus
+- Created `_build_gemini_content_prompt()` with category, country, topic, slide_count details
+- Modified `generate_text_content()` to accept optional `api_key` parameter:
+  - Tries Gemini first when api_key provided
+  - Falls back to rule-based templates when no key or API error
+  - Returns `"source": "gemini"` or `"source": "rule_based"` field
+- Created `_regenerate_field_with_gemini()` for single field AI regeneration
+- Updated `regenerate_single_field()` with same Gemini-first, fallback logic
+- Updated AI routes (ai.py):
+  - `/generate-text` now fetches API key via `_get_gemini_api_key()` and passes to text generator
+  - `/regenerate-field` similarly passes API key for AI-powered field regeneration
+  - Both endpoints now include `db: AsyncSession` dependency for API key lookup
+
+### Files modified:
+- backend/app/core/text_generator.py - Added Gemini text generation with system prompt, structured output, fallback logic
+- backend/app/api/routes/ai.py - Updated generate-text and regenerate-field routes to pass API key
+
+### Verification steps completed:
+1. generate_text_with_gemini() created - PASS (function exists, imports work)
+2. System prompt with TREFF Brand Guidelines - PASS (includes company profile, prices, countries, tone instructions)
+3. Gemini 2.5 Flash model used - PASS (model="gemini-2.5-flash" in generate_content call)
+4. Structured output configured - PASS (response_mime_type="application/json", response validated)
+5. Fallback to rule-based when no API key - PASS (tested: no key => source="rule_based", invalid key => source="rule_based")
+6. generate_text_content() tries Gemini first, then fallback - PASS (api_key param added, Gemini tried first)
+7. POST /api/ai/generate-text returns KI-generated text - PASS:
+   - Curl test with jugendlich tone: source="gemini", 3 slides with German text, emojis, TREFF branding
+   - Curl test with serioess tone: source="gemini", Sie-Anrede, "Seit 1984", professional language
+8. Generated text is German with TREFF branding - PASS:
+   - All content in German
+   - TREFF Sprachreisen mentioned in captions
+   - Country flags (🇺🇸, 🇨🇦) used correctly
+   - Hashtags mix German/English (#TREFFSprachreisen #Auslandsjahr #StudyAbroad)
+9. Tone switching (jugendlich vs serioess) works - PASS:
+   - Jugendlich: "Hey du! 🤩", Du-Anrede, exciting emojis, "Dein Abenteuer"
+   - Serioess: "Ihr Highschool-Abenteuer", Sie-Anrede, "Erfahrung seit 1984", "Sicherheit, Qualitaet"
+   - Verified both tones end-to-end via browser UI (Create Post workflow steps 1-6)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] API endpoint returns correct JSON structure with source field
+- [x] Fallback works when no API key or API errors
+- [x] Screenshots captured: feature167-step1-content-generated.png, feature167-step3-serioes-settings.png, feature167-step4-serioes-preview.png
+
+### Current state:
+- Feature #167 marked as PASSING
+- 78/170 features passing (45.9%)
