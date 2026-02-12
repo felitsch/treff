@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #144: Export carousel ZIP contains correct number of files
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete carousel ZIP export workflow with a 5-slide carousel end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - JSZip library in package.json
+  - `downloadAsZip()` function in CreatePostView.vue
+  - `renderSlideToCanvas()` for client-side Canvas 2D rendering
+  - Naming convention: TREFF_[category]_[platform]_[date]_slide_[NN].png
+
+### Verification steps completed:
+1. Create a carousel with 5 slides - PASS
+   - Selected Laender-Spotlight category with "Laender-Spotlight Feed" template (5 slides)
+   - Selected Instagram Feed platform (1080x1080)
+   - Country: USA, Topic: "ZIP_TEST_144 Five Slide Carousel Export", Tone: Jugendlich
+   - AI generated content confirmed: "5 Slide(s) mit Texten"
+   - Step 7 editor shows all 5 slides: Slide 1 (Cover), Slide 2, Slide 3, Slide 4, Slide 5 (CTA)
+2. Export as ZIP - PASS
+   - Clicked "Als ZIP herunterladen (5 Slides)" button on Step 9
+   - ZIP file auto-downloaded: TREFF_laender_spotlight_instagram_feed_2026-02-12_carousel.zip (466,511 bytes)
+3. Extract ZIP contents - PASS
+   - Extracted using Python zipfile module
+4. Verify exactly 5 PNG files inside - PASS
+   - TREFF_laender_spotlight_instagram_feed_2026-02-12_slide_01.png (98,854 bytes)
+   - TREFF_laender_spotlight_instagram_feed_2026-02-12_slide_02.png (92,098 bytes)
+   - TREFF_laender_spotlight_instagram_feed_2026-02-12_slide_03.png (90,597 bytes)
+   - TREFF_laender_spotlight_instagram_feed_2026-02-12_slide_04.png (91,059 bytes)
+   - TREFF_laender_spotlight_instagram_feed_2026-02-12_slide_05.png (92,881 bytes)
+   - All 5 PNGs: 1080x1080px, RGBA, PNG format (correct Instagram Feed square)
+5. Verify each file is named following convention - PASS
+   - Pattern: TREFF_laender_spotlight_instagram_feed_YYYY-MM-DD_slide_NN.png
+   - All 5 files match regex pattern
+   - Slide numbers sequential 01-05
+
+### Additional verification:
+- Slide 1 (Cover): "Dein High School Traum in den USA!" + TREFF branding
+- Slide 3: "Dein Stundenplan, deine Wahl!" + content text
+- Slide 5 (CTA): "Dein US-Abenteuer wartet!" + yellow CTA button
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Screenshots: feature144-step9-export-summary.png
+
+### No code changes needed:
+- CreatePostView.vue already had complete JSZip export with correct naming
+- All slide rendering via Canvas 2D already working correctly
+- Template with 5 slides (Laender-Spotlight Feed) already seeded in database
+
+### Current state:
+- Feature #144 marked as PASSING
+- 146/170 features passing (85.9%)
+
 ## Session - Feature #143: Export single post produces valid PNG file
 **Date:** 2026-02-12
 **Status:** PASSING
