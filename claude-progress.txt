@@ -1,5 +1,57 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #42: AI tone selector switches between jugendlich and serioess
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that the AI tone selector correctly switches between "jugendlich" and "serioess" tones
+- Tested complete end-to-end workflow: select tone -> generate text -> verify output style differs
+- No code changes needed - all functionality was already fully implemented
+
+### Verification steps completed:
+1. Start post creation - PASS (navigated to Create Post, selected Laender-Spotlight category)
+2. Select tone: jugendlich (youth-focused) - PASS (selected "Jugendlich" button on Step 4)
+3. Generate text and note the style - PASS (generated with jugendlich tone, caption shows:
+   - "✨ Dein Abenteuer beginnt bei TREFF Sprachreisen!"
+   - "💙 Seit 1984 schicken wir Schueler in die Welt"
+   - "📩 Link in Bio fuer mehr Infos!"
+   - Uses informal "Du/Dein", abundant emojis, adventure-focused language)
+4. Change tone to serioess (serious/parent-focused) - PASS (navigated back to Step 4, selected "Serioes" button)
+5. Regenerate text - PASS (regenerated on Step 5 with serioess tone, caption shows:
+   - "Seit 1984 begleitet TREFF Sprachreisen junge Menschen auf ihrem Weg ins Ausland."
+   - "Vertrauen Sie auf 40 Jahre Erfahrung."
+   - "📩 Kostenlose Beratung: Link in Bio"
+   - Uses formal "Sie", minimal emojis, trust & experience-focused language)
+6. Verify the text style is noticeably different (more formal) - PASS:
+   - Jugendlich: informal "Du", emojis (✨💙📩), adventure-focused
+   - Serioess: formal "Sie", minimal emojis (📩 only), trust-focused (40 Jahre Erfahrung)
+
+### Key differences between tones:
+| Aspect | Jugendlich | Serioess |
+|--------|-----------|----------|
+| Address | Du (informal) | Sie (formal) |
+| Emojis | ✨💙📩 (abundant) | 📩 (minimal) |
+| Focus | Adventure, excitement | Trust, experience |
+| CTA | "Link in Bio fuer mehr Infos!" | "Kostenlose Beratung: Link in Bio" |
+| Value prop | "Dein Abenteuer beginnt" | "Vertrauen Sie auf 40 Jahre Erfahrung" |
+
+### Verification checklist:
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Network requests: 2x POST /api/ai/generate-text returned 200 OK (one per tone)
+- [x] One transient 500 error from server restart recovery (not a code issue)
+- [x] Screenshots captured: feature42-step1-jugendlich-selected.png, feature42-step1-jugendlich-caption.png, feature42-step2-serioes-selected.png, feature42-step3-serioes-caption.png
+
+### No code changes needed:
+- text_generator.py _generate_instagram_caption() already uses tone parameter (lines 515-524)
+- CreatePostView.vue tone selector UI already implemented (Step 4, lines 812-837)
+- Pinia store (createPost.js) already manages tone state
+- API endpoint (ai.py) already passes tone to text generator
+
+### Current state:
+- Feature #42 marked as PASSING
+- 56/163 features passing (34.4%)
+
 ## Session - Feature #38: Post workflow state persists if user navigates away
 **Date:** 2026-02-12
 **Status:** PASSING
