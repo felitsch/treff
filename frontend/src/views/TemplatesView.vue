@@ -19,6 +19,13 @@ const showCreateModal = ref(false)
 const creating = ref(false)
 const createError = ref(null)
 const createSuccess = ref(false)
+const createSubmitted = ref(false)
+const createFieldErrors = ref({
+  name: '',
+  category: '',
+  html_content: '',
+  css_content: '',
+})
 const newTemplate = ref({
   name: '',
   category: '',
@@ -418,6 +425,8 @@ function openCreateModal() {
   }
   createError.value = null
   createSuccess.value = false
+  createSubmitted.value = false
+  createFieldErrors.value = { name: '', category: '', html_content: '', css_content: '' }
   showCreateModal.value = true
 }
 
@@ -427,8 +436,34 @@ function closeCreateModal() {
   createSuccess.value = false
 }
 
+function validateCreateForm() {
+  let valid = true
+  createFieldErrors.value = { name: '', category: '', html_content: '', css_content: '' }
+
+  if (!newTemplate.value.name.trim()) {
+    createFieldErrors.value.name = 'Template-Name ist erforderlich'
+    valid = false
+  }
+  if (!newTemplate.value.category) {
+    createFieldErrors.value.category = 'Kategorie ist erforderlich'
+    valid = false
+  }
+  if (!newTemplate.value.html_content.trim()) {
+    createFieldErrors.value.html_content = 'HTML-Inhalt ist erforderlich'
+    valid = false
+  }
+  if (!newTemplate.value.css_content.trim()) {
+    createFieldErrors.value.css_content = 'CSS-Styling ist erforderlich'
+    valid = false
+  }
+
+  return valid
+}
+
 async function createTemplate() {
-  if (!canCreate.value) return
+  createSubmitted.value = true
+
+  if (!validateCreateForm()) return
 
   creating.value = true
   createError.value = null
@@ -844,8 +879,17 @@ onMounted(() => {
               v-model="newTemplate.name"
               type="text"
               placeholder="z.B. Mein Custom Template"
-              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+              :class="[
+                'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 text-sm',
+                createSubmitted && createFieldErrors.name
+                  ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500 dark:border-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-treff-blue focus:border-transparent'
+              ]"
+              data-testid="create-template-name"
             />
+            <p v-if="createSubmitted && createFieldErrors.name" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-name-error">
+              {{ createFieldErrors.name }}
+            </p>
           </div>
 
           <!-- Category + Platform Row -->
@@ -857,13 +901,22 @@ onMounted(() => {
               </label>
               <select
                 v-model="newTemplate.category"
-                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
+                :class="[
+                  'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 text-sm',
+                  createSubmitted && createFieldErrors.category
+                    ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500 dark:border-red-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:ring-treff-blue focus:border-transparent'
+                ]"
+                data-testid="create-template-category"
               >
                 <option value="" disabled>Kategorie waehlen...</option>
                 <option v-for="(info, key) in categories" :key="key" :value="key">
                   {{ info.icon }} {{ info.label }}
                 </option>
               </select>
+              <p v-if="createSubmitted && createFieldErrors.category" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-category-error">
+                {{ createFieldErrors.category }}
+              </p>
             </div>
 
             <!-- Platform Format -->
@@ -906,9 +959,18 @@ onMounted(() => {
               v-model="newTemplate.html_content"
               rows="6"
               placeholder="<div class='template'>...</div>"
-              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
+              :class="[
+                'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 text-sm font-mono',
+                createSubmitted && createFieldErrors.html_content
+                  ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500 dark:border-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-treff-blue focus:border-transparent'
+              ]"
+              data-testid="create-template-html"
             ></textarea>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Verwende {{feldname}} als Platzhalter fuer dynamische Inhalte.</p>
+            <p v-if="createSubmitted && createFieldErrors.html_content" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-html-error">
+              {{ createFieldErrors.html_content }}
+            </p>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500 mt-1">Verwende {{feldname}} als Platzhalter fuer dynamische Inhalte.</p>
           </div>
 
           <!-- CSS Content -->
@@ -920,8 +982,17 @@ onMounted(() => {
               v-model="newTemplate.css_content"
               rows="6"
               placeholder=".template { padding: 40px; }"
-              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
+              :class="[
+                'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 text-sm font-mono',
+                createSubmitted && createFieldErrors.css_content
+                  ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500 dark:border-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-treff-blue focus:border-transparent'
+              ]"
+              data-testid="create-template-css"
             ></textarea>
+            <p v-if="createSubmitted && createFieldErrors.css_content" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-css-error">
+              {{ createFieldErrors.css_content }}
+            </p>
           </div>
 
           <!-- Placeholder Fields -->
@@ -949,7 +1020,7 @@ onMounted(() => {
           </button>
           <button
             @click="createTemplate"
-            :disabled="!canCreate || creating"
+            :disabled="creating"
             class="px-6 py-2.5 text-sm font-medium text-white bg-treff-blue hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <svg v-if="creating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
