@@ -1,5 +1,35 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #121: Direct URL to deleted post shows appropriate error
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete 404 handling for non-existent posts in EditPostView end-to-end via browser
+- No code changes needed - all functionality was already fully implemented in feature #120:
+  - `notFound` ref flag for 404 detection (separate from generic errors)
+  - Clean "Post nicht gefunden" state with emoji, descriptive message, and dynamic post ID
+  - "Zur History" and "Zum Dashboard" buttons for navigation back to safety
+  - "← Zurueck" header link navigates to /history
+  - Undo/redo/save buttons hidden when post not found (v-if="post")
+
+### Verification steps completed:
+1. Navigate to /posts/99999/edit (non-existent) - PASS
+   - API returned 404, page shows "Post nicht gefunden" with ID #99999
+   - Two navigation buttons: "Zur History" and "Zum Dashboard"
+2. Verify 404 page or error message displayed - PASS
+   - Clean 404 state (no raw error), also tested /posts/1/edit
+3. Verify user can navigate back to safety - PASS
+   - "Zur History" → /history, "Zum Dashboard" → /dashboard, "← Zurueck" → /history
+
+### Verification checklist:
+- [x] Zero JS console errors, zero mock data grep matches, no 500s
+- [x] Screenshots: feature121-step1-404-page.png, feature121-step2-404-different-id.png, feature121-step3-navigated-back-to-history.png
+
+### Current state:
+- Feature #121 marked as PASSING
+- 123/170 features passing (72.4%)
+
 ## Session - Feature #119: Unsaved changes warning before leaving editor
 **Date:** 2026-02-12
 **Status:** PASSING
