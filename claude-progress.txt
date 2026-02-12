@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #81: Post history can be filtered by platform
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete post history platform filter workflow end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Frontend: HistoryView.vue has platform filter dropdown (instagram_feed, instagram_story, tiktok)
+  - Frontend: filteredPosts computed property filters by platform, fetchPosts sends platform param to API
+  - Backend: GET /api/posts endpoint accepts platform query param, filters with WHERE clause
+  - Database: posts table has platform column (NOT NULL)
+
+### Verification steps completed:
+1. Create posts for different platforms - PASS
+   - Created 5 test posts via API: 2x Instagram Feed, 2x TikTok, 1x Instagram Story
+   - All posts visible on History page ("5 Posts gefunden")
+2. Navigate to History - PASS
+   - History page loads with all posts, filter dropdowns visible
+3. Filter by Instagram Feed - PASS
+   - Selected "Instagram Feed" in platform dropdown
+   - Shows "2 Posts gefunden" with only Instagram Feed posts
+   - "FILTER_TEST Instagram Feed Kanada" and "FILTER_TEST Instagram Feed USA" shown
+   - No TikTok or Instagram Story posts visible
+4. Verify only Instagram Feed posts shown - PASS (screenshot: feature81-step3-instagram-feed-filter.png)
+5. Filter by TikTok - PASS
+   - Selected "TikTok" in platform dropdown
+   - Shows "2 Posts gefunden" with only TikTok posts
+   - "FILTER_TEST TikTok FAQ" and "FILTER_TEST TikTok Tipps" shown
+   - No Instagram posts visible
+6. Verify only TikTok posts shown - PASS (screenshot: feature81-step5-tiktok-filter.png)
+
+### Additional verification:
+- Instagram Story filter also tested: shows 1 post correctly
+- Filter reset returns all 5 posts
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence test: PASS - all 5 posts survive restart, filter works after restart
+- Test data cleaned up after verification (all FILTER_TEST posts deleted)
+- Screenshots: feature81-step1-all-posts.png, feature81-step3-instagram-feed-filter.png, feature81-step5-tiktok-filter.png, feature81-step6-persistence-after-restart.png
+
+### No code changes needed:
+- HistoryView.vue already had complete platform filter UI and logic
+- posts.py already had platform query parameter filtering
+- Both client-side and server-side filtering work correctly
+
+### Current state:
+- Feature #81 marked as PASSING
+- 89/170 features passing (52.4%)
+
 ## Session - Feature #79: Analytics goal tracking shows progress bars
 **Date:** 2026-02-12
 **Status:** PASSING
