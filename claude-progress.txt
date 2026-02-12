@@ -1,5 +1,46 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #36: Post status transitions: draft to scheduled to posted
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented complete post status transition workflow: draft → scheduled → posted
+- Enhanced backend PUT /api/posts/{id}/status endpoint:
+  - Added status validation (only valid statuses: draft, scheduled, reminded, exported, posted)
+  - Auto-sets posted_at timestamp when status changes to "posted"
+  - Auto-sets exported_at timestamp when status changes to "exported"
+  - Added timezone import for proper UTC timestamps
+- Added "Mark as Posted" (✅) button to History page:
+  - Only visible for posts with status scheduled/reminded/exported
+  - Schedule (📅) button hidden for already-scheduled or posted posts
+  - Calls PUT /api/posts/{id}/status with {"status": "posted"}
+  - Updates local post list immediately with response data
+
+### Verification steps completed:
+1. Created test post "STATUS_TRANSITION_TEST_36" (status: draft) - PASS
+2. Verified "Entwurf" badge in History list with 📅 schedule button visible - PASS
+3. Clicked 📅, filled date (2026-02-15) and time (14:30), clicked "Post planen" - PASS
+4. Status changed to "Geplant" (scheduled), date/time shown, ✅ button appeared - PASS
+5. Clicked ✅ mark as posted - PASS
+6. Status changed to "Veroeffentlicht" (posted), ✅ button disappeared - PASS
+7. Verified via API: status="posted", posted_at="2026-02-12T11:35:43", scheduled_date/time preserved - PASS
+8. Status filter "Veroeffentlicht" correctly shows the post - PASS
+9. Server restart persistence test: stopped servers, restarted via init.sh, logged in fresh - PASS
+10. Post still shows "Veroeffentlicht" with correct scheduled date/time after restart - PASS
+
+### Mock data grep: Zero matches in frontend/src and backend/app
+### Console errors: 0 errors on clean session after restart
+### Screenshots: feature36-step1-draft-status.png, feature36-step2-scheduled-status.png, feature36-step3-posted-status.png, feature36-step4-persisted-after-restart.png
+
+### Files modified:
+- backend/app/api/routes/posts.py - Enhanced status endpoint with validation, timestamps, timezone import
+- frontend/src/views/HistoryView.vue - Added markAsPosted(), conditional ✅ button, conditional 📅 button
+
+### Current state:
+- 28/163 features passing (17.2%)
+- Feature #36 marked as PASSING
+
 ## Session - Feature #72: AI content suggestions appear on dashboard
 **Date:** 2026-02-12
 **Status:** PASSING
