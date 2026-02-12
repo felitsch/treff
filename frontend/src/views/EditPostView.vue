@@ -117,7 +117,7 @@ function addSlide() {
     body_text: '',
     cta_text: '',
     background_type: 'color',
-    background_value: '#4C8BC2',
+    background_value: '#3B7AB1',
   }
   slides.value.push(newSlide)
   ensureDragIds()
@@ -310,7 +310,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <button
           @click="savePost"
           :disabled="saving"
-          class="px-5 py-2.5 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          class="px-5 py-2.5 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
         >
           <span v-if="saving" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
           {{ saving ? 'Speichern...' : 'Speichern' }}
@@ -329,7 +329,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <div class="animate-spin h-10 w-10 border-4 border-[#4C8BC2] border-t-transparent rounded-full"></div>
+      <div class="animate-spin h-10 w-10 border-4 border-[#3B7AB1] border-t-transparent rounded-full"></div>
     </div>
 
     <!-- Post Editor -->
@@ -374,7 +374,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   @click="currentPreviewSlide = index"
                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
                   :class="currentPreviewSlide === index
-                    ? 'bg-[#4C8BC2] text-white'
+                    ? 'bg-[#3B7AB1] text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
                 >
                   <span class="opacity-50">&#10495;</span>
@@ -387,7 +387,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <!-- Add Slide button -->
             <button
               @click="addSlide"
-              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#4C8BC2] hover:text-[#4C8BC2] dark:hover:border-[#4C8BC2] dark:hover:text-[#4C8BC2]"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#3B7AB1] hover:text-[#3B7AB1] dark:hover:border-[#3B7AB1] dark:hover:text-[#3B7AB1]"
               title="Neue Slide hinzufuegen"
               data-testid="add-slide-btn"
             >
@@ -419,7 +419,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Headline</label>
             <input
               v-model="slides[currentPreviewSlide].headline"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
             <div class="flex items-center justify-between mt-0.5">
@@ -433,7 +433,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Subheadline</label>
             <input
               v-model="slides[currentPreviewSlide].subheadline"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
             <div class="flex items-center justify-between mt-0.5">
@@ -448,7 +448,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <textarea
               v-model="slides[currentPreviewSlide].body_text"
               rows="3"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
               :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
@@ -462,7 +462,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA</label>
             <input
               v-model="slides[currentPreviewSlide].cta_text"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
             <div class="flex items-center justify-between mt-0.5">
@@ -480,11 +480,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="flex items-center gap-3">
             <div class="flex gap-1.5 flex-wrap">
               <button
-                v-for="preset in ['#1A1A2E', '#4C8BC2', '#FDD000', '#2D6A4F', '#E63946', '#7B2CBF', '#FF6B35', '#264653']"
+                v-for="preset in ['#1A1A2E', '#3B7AB1', '#FDD000', '#2D6A4F', '#E63946', '#7B2CBF', '#FF6B35', '#264653']"
                 :key="preset"
                 @click="slides[currentPreviewSlide].background_value = preset; slides[currentPreviewSlide].background_type = 'color'"
                 class="w-7 h-7 rounded-lg border-2 transition-all hover:scale-110"
-                :class="slides[currentPreviewSlide].background_value === preset ? 'border-white ring-2 ring-[#4C8BC2] scale-110' : 'border-gray-300 dark:border-gray-600'"
+                :class="slides[currentPreviewSlide].background_value === preset ? 'border-white ring-2 ring-[#3B7AB1] scale-110' : 'border-gray-300 dark:border-gray-600'"
                 :style="{ backgroundColor: preset }"
                 :title="preset"
                 data-testid="color-preset"
@@ -510,7 +510,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <span>Bild als Hintergrund gesetzt</span>
             <button
               @click="slides[currentPreviewSlide].background_type = 'color'; slides[currentPreviewSlide].background_value = '#1A1A2E'"
-              class="ml-auto text-xs text-[#4C8BC2] hover:underline"
+              class="ml-auto text-xs text-[#3B7AB1] hover:underline"
             >Farbe verwenden</button>
           </div>
         </div>
@@ -520,7 +520,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Instagram Caption</label>
             <textarea v-model="captionInstagram" rows="3"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
               :class="(captionInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (captionInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
@@ -533,7 +533,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"># Hashtags</label>
             <textarea v-model="hashtagsInstagram" rows="2"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
               :class="(hashtagsInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
@@ -564,7 +564,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         >
           <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between">
             <div class="flex items-center gap-1.5">
-              <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+              <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
             </div>
             <div class="flex-1 flex flex-col justify-center py-3">
               <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
@@ -581,7 +581,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :key="sIdx"
                 @click="currentPreviewSlide = sIdx"
                 class="w-2 h-2 rounded-full transition-colors"
-                :class="sIdx === currentPreviewSlide ? 'bg-[#4C8BC2]' : 'bg-gray-600'"
+                :class="sIdx === currentPreviewSlide ? 'bg-[#3B7AB1]' : 'bg-gray-600'"
               ></button>
             </div>
           </div>
@@ -608,7 +608,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post nicht gefunden</h2>
       <p class="text-gray-500 dark:text-gray-400 mb-6">Der Post mit ID #{{ postId }} existiert nicht, wurde geloescht oder gehoert dir nicht.</p>
       <div class="flex items-center justify-center gap-3">
-        <button @click="router.push('/history')" class="px-6 py-3 bg-[#4C8BC2] text-white rounded-lg font-medium hover:bg-[#3a7ab3] transition-colors" data-testid="back-to-history-btn">
+        <button @click="router.push('/history')" class="px-6 py-3 bg-[#3B7AB1] text-white rounded-lg font-medium hover:bg-[#2E6A9E] transition-colors" data-testid="back-to-history-btn">
           Zur History
         </button>
         <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-testid="back-to-dashboard-btn">
@@ -618,12 +618,12 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     </div>
 
     <!-- Generic error state / other load failures -->
-    <div v-else-if="!loading && !post" class="text-center py-20">
+    <div v-else-if="!loading && !post" class="text-center py-20" role="alert">
       <div class="text-6xl mb-4">&#9888;</div>
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Fehler beim Laden</h2>
       <p class="text-gray-500 dark:text-gray-400 mb-6">{{ error || 'Ein unbekannter Fehler ist aufgetreten.' }}</p>
       <div class="flex items-center justify-center gap-3">
-        <button @click="loadPost()" class="px-6 py-3 bg-[#4C8BC2] text-white rounded-lg font-medium hover:bg-[#3a7ab3] transition-colors">
+        <button @click="loadPost()" class="px-6 py-3 bg-[#3B7AB1] text-white rounded-lg font-medium hover:bg-[#2E6A9E] transition-colors">
           Erneut versuchen
         </button>
         <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -703,7 +703,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 <style scoped>
 .slide-ghost {
   opacity: 0.4;
-  background: #4C8BC2 !important;
+  background: #3B7AB1 !important;
   border-radius: 0.5rem;
 }
 </style>

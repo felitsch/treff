@@ -197,7 +197,7 @@ def _generate_placeholder_image(prompt: str, width: int = 1024, height: int = 10
     draw = ImageDraw.Draw(img)
 
     # TREFF brand colors
-    treff_blue = (76, 139, 194)  # #4C8BC2
+    treff_blue = (59, 122, 177)  # #3B7AB1
     treff_yellow = (253, 208, 0)  # #FDD000
     dark_bg = (26, 26, 46)  # #1A1A2E
 

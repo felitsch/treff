@@ -106,7 +106,7 @@ async def create_template(
         html_content=template_data.html_content,
         css_content=template_data.css_content,
         default_colors=template_data.default_colors or json.dumps({
-            "primary": "#4C8BC2",
+            "primary": "#3B7AB1",
             "secondary": "#FDD000",
             "accent": "#FFFFFF",
             "background": "#1A1A2E"

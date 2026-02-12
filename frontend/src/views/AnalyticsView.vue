@@ -113,7 +113,7 @@ function categoryHexColor(cat) {
     laender_spotlight: '#3B82F6',
     erfahrungsberichte: '#22C55E',
     infografiken: '#A855F7',
-    fristen_cta: '#EF4444',
+    fristen_cta: '#DC2626',
     tipps_tricks: '#EAB308',
     faq: '#6366F1',
     foto_posts: '#EC4899',
@@ -219,14 +219,14 @@ const frequencyChartData = computed(() => {
       {
         label: 'Posts',
         data: frequencyData.value.map(d => d.count),
-        borderColor: '#4C8BC2',
+        borderColor: '#3B7AB1',
         backgroundColor: 'rgba(76, 139, 194, 0.15)',
-        pointBackgroundColor: '#4C8BC2',
+        pointBackgroundColor: '#3B7AB1',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
         pointRadius: 5,
         pointHoverRadius: 7,
-        pointHoverBackgroundColor: '#4C8BC2',
+        pointHoverBackgroundColor: '#3B7AB1',
         pointHoverBorderColor: '#ffffff',
         pointHoverBorderWidth: 3,
         borderWidth: 3,
@@ -386,7 +386,7 @@ onMounted(fetchAnalytics)
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
       <p class="text-red-600 dark:text-red-400 mb-3">{{ error }}</p>
       <button
         @click="fetchAnalytics"
@@ -420,11 +420,11 @@ onMounted(fetchAnalytics)
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Posts diese Woche</p>
-              <p class="text-3xl font-bold text-[#4C8BC2] mt-1" data-testid="posts-this-week">
+              <p class="text-3xl font-bold text-[#3B7AB1] mt-1" data-testid="posts-this-week">
                 {{ overview.posts_this_week }}
               </p>
             </div>
-            <div class="w-12 h-12 bg-[#4C8BC2]/10 rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 bg-[#3B7AB1]/10 rounded-xl flex items-center justify-center">
               <span class="text-2xl">📅</span>
             </div>
           </div>
@@ -461,7 +461,7 @@ onMounted(fetchAnalytics)
             <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full transition-all duration-500"
-                :class="weeklyProgress >= 100 ? 'bg-green-500' : 'bg-[#4C8BC2]'"
+                :class="weeklyProgress >= 100 ? 'bg-green-500' : 'bg-[#3B7AB1]'"
                 :style="{ width: weeklyProgress + '%' }"
               ></div>
             </div>
@@ -499,7 +499,7 @@ onMounted(fetchAnalytics)
               @click="frequencyPeriod = key"
               class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
               :class="frequencyPeriod === key
-                ? 'bg-white dark:bg-gray-600 text-[#4C8BC2] shadow-sm'
+                ? 'bg-white dark:bg-gray-600 text-[#3B7AB1] shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
               :data-testid="'period-' + key"
             >
@@ -510,7 +510,7 @@ onMounted(fetchAnalytics)
 
         <!-- Chart loading -->
         <div v-if="frequencyLoading" class="h-72 flex items-center justify-center">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4C8BC2]"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B7AB1]"></div>
         </div>
 
         <!-- Chart content -->
@@ -557,7 +557,7 @@ onMounted(fetchAnalytics)
               </span>
               <div class="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  class="h-full bg-[#4C8BC2] rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                  class="h-full bg-[#3B7AB1] rounded-full flex items-center justify-end pr-2 transition-all duration-500"
                   :style="{ width: Math.max(10, (p.count / totalPlatformPosts) * 100) + '%' }"
                 >
                   <span class="text-xs font-bold text-white">{{ p.count }}</span>

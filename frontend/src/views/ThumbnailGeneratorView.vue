@@ -22,9 +22,9 @@ const exportFormat = ref('9:16')
 // Predefined TREFF brand color schemes
 const colorPresets = [
   { name: 'Dunkel', bg: '#1A1A2E', text: '#FFFFFF' },
-  { name: 'TREFF Blau', bg: '#4C8BC2', text: '#FFFFFF' },
+  { name: 'TREFF Blau', bg: '#3B7AB1', text: '#FFFFFF' },
   { name: 'Gelb Akzent', bg: '#FDD000', text: '#1A1A2E' },
-  { name: 'Gradient Blau', bg: 'linear-gradient(135deg, #4C8BC2, #1A1A2E)', text: '#FFFFFF' },
+  { name: 'Gradient Blau', bg: 'linear-gradient(135deg, #3B7AB1, #1A1A2E)', text: '#FFFFFF' },
   { name: 'Gradient Gold', bg: 'linear-gradient(135deg, #FDD000, #FF8C00)', text: '#1A1A2E' },
   { name: 'Rot Energie', bg: '#E63946', text: '#FFFFFF' },
   { name: 'Gruen Natur', bg: '#2D6A4F', text: '#FFFFFF' },
@@ -223,7 +223,7 @@ function downloadAsPng() {
   const txtColor = backgroundType.value === 'image' ? '#FFFFFF' : selectedPreset.value.text
 
   // TREFF logo top-left
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   roundRect(ctx, 60, 60, 120, 48, 12)
   ctx.fill()
   ctx.fillStyle = '#FFFFFF'
@@ -373,7 +373,7 @@ function drawTextElements(ctx) {
   const txtColor = backgroundType.value === 'image' ? '#FFFFFF' : selectedPreset.value.text
 
   // TREFF logo
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   roundRect(ctx, 60, 60, 120, 48, 12)
   ctx.fill()
   ctx.fillStyle = '#FFFFFF'
@@ -530,7 +530,7 @@ loadAssets()
             rows="3"
             maxlength="120"
             placeholder="z.B. Das hat NIEMAND erwartet"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent text-lg"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent text-lg"
           ></textarea>
           <div class="flex items-center justify-between mt-2">
             <span class="text-xs text-gray-400">{{ hookText.length }} / 120 Zeichen</span>
@@ -544,7 +544,7 @@ loadAssets()
                   @click="fontSize = opt.id"
                   class="w-8 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center"
                   :class="fontSize === opt.id
-                    ? 'bg-[#4C8BC2] text-white'
+                    ? 'bg-[#3B7AB1] text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'"
                 >
                   {{ opt.label }}
@@ -570,7 +570,7 @@ loadAssets()
                 :title="preset.name"
                 class="w-full aspect-square rounded-lg border-2 transition-all hover:scale-105"
                 :class="selectedPreset.name === preset.name && backgroundType === 'color'
-                  ? 'border-[#4C8BC2] ring-2 ring-[#4C8BC2]/30 scale-105'
+                  ? 'border-[#3B7AB1] ring-2 ring-[#3B7AB1]/30 scale-105'
                   : 'border-gray-200 dark:border-gray-600'"
                 :style="{
                   background: preset.bg.startsWith('linear-gradient') ? preset.bg : preset.bg,
@@ -611,7 +611,7 @@ loadAssets()
                 Bild entfernen
               </button>
             </div>
-            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-center hover:border-[#4C8BC2] transition-colors">
+            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-center hover:border-[#3B7AB1] transition-colors">
               <label class="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium">
                 Bild hochladen
                 <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="uploadImage" />
@@ -629,7 +629,7 @@ loadAssets()
                   @click="selectAssetBackground(asset)"
                   class="aspect-square rounded-lg overflow-hidden border-2 transition-all"
                   :class="selectedAsset?.id === asset.id
-                    ? 'border-[#4C8BC2] ring-2 ring-[#4C8BC2]/30'
+                    ? 'border-[#3B7AB1] ring-2 ring-[#3B7AB1]/30'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
                 >
                   <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
@@ -653,7 +653,7 @@ loadAssets()
                 @click="exportFormat = fmt.id"
                 class="relative p-3 rounded-lg border-2 transition-all text-left"
                 :class="exportFormat === fmt.id
-                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/5 dark:bg-[#4C8BC2]/10'
+                  ? 'border-[#3B7AB1] bg-[#3B7AB1]/5 dark:bg-[#3B7AB1]/10'
                   : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
               >
                 <div class="flex items-center gap-3">
@@ -672,7 +672,7 @@ loadAssets()
                 </div>
                 <span
                   v-if="exportFormat === fmt.id"
-                  class="absolute top-2 right-2 text-[#4C8BC2] text-sm font-bold"
+                  class="absolute top-2 right-2 text-[#3B7AB1] text-sm font-bold"
                 >&#10003;</span>
               </button>
             </div>
@@ -689,7 +689,7 @@ loadAssets()
             <button
               @click="saveAndExport"
               :disabled="!canExport || exporting"
-              class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+              class="flex-1 px-6 py-3 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
             >
               <span v-if="exporting" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
               {{ exporting ? 'Exportiere...' : 'Speichern & als PNG exportieren' }}
@@ -745,7 +745,7 @@ loadAssets()
           <div class="absolute inset-0 p-5 flex flex-col justify-between" style="z-index: 1;">
             <!-- TREFF logo -->
             <div class="flex items-center gap-1.5">
-              <div class="bg-[#4C8BC2] rounded px-2 py-0.5">
+              <div class="bg-[#3B7AB1] rounded px-2 py-0.5">
                 <span class="text-white text-[10px] font-bold">TREFF</span>
               </div>
               <span class="text-gray-400 text-[9px]">Sprachreisen</span>

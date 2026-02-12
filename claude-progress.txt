@@ -1,5 +1,83 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #136: Color contrast meets WCAG AA standards
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Calculated WCAG AA contrast ratios for all three required color pairs
+- Fixed two failing color contrast issues:
+  1. White text on primary blue buttons: #4C8BC2 (3.63:1 FAIL) -> #3B7AB1 (4.56:1 PASS)
+  2. Error red text: #EF4444 (3.76:1 FAIL) -> #DC2626 (4.83:1 PASS) in analytics chart
+- Updated hover state: #3a7ab3 -> #2E6A9E (5.72:1 PASS)
+- Primary text #1A1A2E on white already passed at 17.06:1
+
+### Files modified:
+- frontend/tailwind.config.js - Updated treff-blue from #4C8BC2 to #3B7AB1
+- frontend/src/views/AnalyticsView.vue - Updated blue and error red colors
+- frontend/src/views/CreatePostView.vue - Updated blue and hover colors
+- frontend/src/views/EditPostView.vue - Updated blue and hover colors
+- frontend/src/views/HistoryView.vue - Updated blue and hover colors
+- frontend/src/views/SettingsView.vue - Updated blue default/placeholder
+- frontend/src/views/TemplatesView.vue - Updated blue in template defaults
+- frontend/src/views/ThumbnailGeneratorView.vue - Updated blue and hover colors
+- backend/app/core/seed_templates.py - Updated TREFF_BLUE constant
+- backend/app/core/text_generator.py - Updated brand color in Gemini prompt
+- backend/app/api/routes/templates.py - Updated default template color
+- backend/app/api/routes/ai.py - Updated RGB tuple for image generation
+
+### Verification steps completed:
+1. Check primary text (#1A1A2E) on white background - PASS (17.06:1 >= 4.5:1)
+2. Verify contrast ratio >= 4.5:1 - PASS
+3. Check button text on primary blue (#3B7AB1) - PASS (white text, 4.56:1)
+4. Verify contrast ratio >= 4.5:1 - PASS
+5. Check error text (#DC2626) on white background - PASS (4.83:1)
+6. Verify contrast ratio >= 4.5:1 - PASS
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No remaining #4C8BC2 or #EF4444 references in codebase
+- [x] All three required contrast ratios pass WCAG AA (>= 4.5:1)
+- [x] Screenshots captured:
+  - feature136-step1-dashboard-blue-buttons.png (dashboard with updated blue)
+  - feature136-step2-create-post-buttons.png (create post step indicator)
+  - feature136-step3-history-buttons.png (history page buttons)
+  - feature136-step4-analytics-blue.png (analytics page with updated colors)
+  - feature136-step5-error-text-contrast.png (login error message red text)
+
+### Current state:
+- Feature #136 marked as PASSING
+- 138/170 features passing (81.2%)
+
+## Session - Feature #135: ARIA labels present on form inputs
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added aria-label attributes to all form inputs, select elements, and icon-only buttons across the entire frontend for screen reader accessibility
+- Verified all changes via Playwright accessibility snapshots in the browser
+
+### Changes made:
+- **SettingsView.vue**: Added aria-labels to email input, display name, 3 color pickers (primary/secondary/accent) with both color and hex inputs, 3 API key inputs (Gemini/OpenAI/Unsplash), posts-per-week/month selects, preferred posting time, preferred platform select
+- **TemplatesView.vue**: Added aria-labels to category/format filter selects, edit/delete icon buttons, editor form fields (template name, category, platform, colors, fonts, text fields), create/editor modal close buttons
+- **HistoryView.vue**: Added aria-labels to search input, category/platform/status filter selects, sort-by select, sort direction toggle button, date filter clear button, action buttons (schedule, mark posted, duplicate, edit, delete)
+- **CalendarView.vue**: Added aria-labels to prev/next navigation buttons (dynamic based on view mode), gaps toggle button, sidebar collapse toggle
+- **AssetsView.vue**: Added aria-labels to crop and delete icon buttons, added role="alert" to error state
+- **AssetCropModal.vue**: Added aria-label to close button
+
+### Verification steps completed:
+1. Login/Register forms: Both already had proper aria-label attributes - verified via accessibility snapshot (textbox "E-Mail Adresse", textbox "Passwort", textbox "Anzeigename")
+2. Settings page: All 12+ form fields verified with proper aria-labels in accessibility tree
+3. Templates page: combobox "Kategorie filtern", combobox "Format filtern", button "Template bearbeiten", button "Template loeschen" all verified
+4. History page: textbox "Posts durchsuchen", combobox "Kategorie filtern", combobox "Plattform filtern", combobox "Status filtern", combobox "Sortierung", button "Absteigend sortieren" all verified
+5. Calendar/Assets pages: aria-labels added to all icon-only buttons and navigation controls
+
+### Commit:
+- `3d62a82` - feat: add ARIA labels to all form inputs and icon-only buttons (feature #135)
+
+---
+
 ## Session - Feature #134: Focus rings visible on focused interactive elements
 **Date:** 2026-02-12
 **Status:** PASSING

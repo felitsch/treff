@@ -8,7 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        'treff-blue': '#4C8BC2',
+        'treff-blue': '#3B7AB1',
         'treff-yellow': '#FDD000',
         'treff-dark': '#1A1A2E',
         'treff-light': '#F5F5F5',

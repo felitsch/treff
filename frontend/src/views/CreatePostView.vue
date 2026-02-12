@@ -518,7 +518,7 @@ function renderSlideToCanvas(slideIndex) {
   ctx.fillRect(0, 0, dims.w, dims.h)
 
   // TREFF logo
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 28px Inter, Arial, sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('TREFF', 60, 80)
@@ -527,7 +527,7 @@ function renderSlideToCanvas(slideIndex) {
   ctx.fillText('Sprachreisen', 158, 80)
 
   // Headline
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 52px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
@@ -559,7 +559,7 @@ function renderSlideToCanvas(slideIndex) {
   }
 
   // TREFF bottom branding
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 18px Inter, Arial, sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
@@ -592,7 +592,7 @@ function renderSlideToCanvasForPlatform(slideIndex, platform) {
   ctx.fillRect(0, 0, dims.w, dims.h)
 
   // TREFF logo
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 28px Inter, Arial, sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('TREFF', 60, 80)
@@ -601,7 +601,7 @@ function renderSlideToCanvasForPlatform(slideIndex, platform) {
   ctx.fillText('Sprachreisen', 158, 80)
 
   // Headline
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 52px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
@@ -633,7 +633,7 @@ function renderSlideToCanvasForPlatform(slideIndex, platform) {
   }
 
   // TREFF bottom branding
-  ctx.fillStyle = '#4C8BC2'
+  ctx.fillStyle = '#3B7AB1'
   ctx.font = 'bold 18px Inter, Arial, sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
@@ -800,11 +800,11 @@ function prevPreviewSlide() {
 function getTemplateGradient(template) {
   try {
     const colors = JSON.parse(template.default_colors || '{}')
-    const primary = colors.primary || '#4C8BC2'
+    const primary = colors.primary || '#3B7AB1'
     const secondary = colors.secondary || '#FDD000'
     return `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`
   } catch {
-    return 'linear-gradient(135deg, #4C8BC2 0%, #FDD000 100%)'
+    return 'linear-gradient(135deg, #3B7AB1 0%, #FDD000 100%)'
   }
 }
 
@@ -835,7 +835,7 @@ function addSlide() {
     body_text: '',
     cta_text: '',
     background_type: 'color',
-    background_value: '#4C8BC2',
+    background_value: '#3B7AB1',
   }
   slides.value.push(newSlide)
   ensureDragIds()
@@ -1002,7 +1002,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <li class="flex items-center">
           <button
             @click="goToStep(1)"
-            class="text-gray-500 dark:text-gray-400 hover:text-[#4C8BC2] dark:hover:text-blue-400 transition-colors"
+            class="text-gray-500 dark:text-gray-400 hover:text-[#3B7AB1] dark:hover:text-blue-400 transition-colors"
             :class="currentStep === 1 ? 'cursor-default' : 'cursor-pointer'"
           >Post erstellen</button>
         </li>
@@ -1012,7 +1012,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <button
               v-if="idx + 1 < currentStep"
               @click="goToStep(idx + 1)"
-              class="text-[#4C8BC2] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer"
+              class="text-[#3B7AB1] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer"
             >{{ label }}</button>
             <span
               v-else
@@ -1036,7 +1036,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div
               class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
               :class="{
-                'bg-[#4C8BC2] text-white ring-4 ring-blue-200 dark:ring-blue-900': idx + 1 === currentStep,
+                'bg-[#3B7AB1] text-white ring-4 ring-blue-200 dark:ring-blue-900': idx + 1 === currentStep,
                 'bg-green-500 text-white': idx + 1 < currentStep,
                 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400': idx + 1 > currentStep,
               }"
@@ -1047,7 +1047,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <span
               class="text-[10px] mt-1 hidden sm:block"
               :class="{
-                'text-[#4C8BC2] font-semibold dark:text-blue-400': idx + 1 === currentStep,
+                'text-[#3B7AB1] font-semibold dark:text-blue-400': idx + 1 === currentStep,
                 'text-green-600 dark:text-green-400': idx + 1 < currentStep,
                 'text-gray-400 dark:text-gray-500': idx + 1 > currentStep,
               }"
@@ -1083,7 +1083,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           @click="selectedCategory = cat.id"
           class="p-4 rounded-xl border-2 transition-all text-left hover:shadow-md"
           :class="selectedCategory === cat.id
-            ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 shadow-md'
+            ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 shadow-md'
             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
         >
           <div class="text-2xl mb-2">{{ cat.icon }}</div>
@@ -1099,7 +1099,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <div v-if="currentStep === 2">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 2: Waehle ein Template</h2>
       <div v-if="loadingTemplates" class="flex items-center justify-center py-12">
-        <div class="animate-spin h-8 w-8 border-4 border-[#4C8BC2] border-t-transparent rounded-full"></div>
+        <div class="animate-spin h-8 w-8 border-4 border-[#3B7AB1] border-t-transparent rounded-full"></div>
       </div>
       <div v-else-if="templates.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
         Keine Templates fuer diese Kategorie verfuegbar.
@@ -1111,7 +1111,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           @click="selectedTemplate = tmpl"
           class="rounded-xl border-2 overflow-hidden transition-all hover:shadow-md"
           :class="selectedTemplate?.id === tmpl.id
-            ? 'border-[#4C8BC2] shadow-md ring-2 ring-[#4C8BC2]/30'
+            ? 'border-[#3B7AB1] shadow-md ring-2 ring-[#3B7AB1]/30'
             : 'border-gray-200 dark:border-gray-700'"
         >
           <div class="h-28 flex items-center justify-center" :style="{ background: getTemplateGradient(tmpl) }">
@@ -1140,10 +1140,10 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           @click="togglePlatform(p.id)"
           class="p-6 rounded-xl border-2 transition-all text-center hover:shadow-md relative"
           :class="selectedPlatforms.includes(p.id)
-            ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 shadow-md'
+            ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 shadow-md'
             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
         >
-          <div v-if="selectedPlatforms.includes(p.id)" class="absolute top-2 right-2 w-6 h-6 bg-[#4C8BC2] rounded-full flex items-center justify-center">
+          <div v-if="selectedPlatforms.includes(p.id)" class="absolute top-2 right-2 w-6 h-6 bg-[#3B7AB1] rounded-full flex items-center justify-center">
             <span class="text-white text-xs font-bold">&#10003;</span>
           </div>
           <div class="text-3xl mb-2">{{ p.icon }}</div>
@@ -1151,7 +1151,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ p.format }}</div>
         </button>
       </div>
-      <div v-if="selectedPlatforms.length > 1" class="mt-4 text-sm text-[#4C8BC2] font-medium">
+      <div v-if="selectedPlatforms.length > 1" class="mt-4 text-sm text-[#3B7AB1] font-medium">
         {{ selectedPlatforms.length }} Plattformen ausgewaehlt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
       </div>
     </div>
@@ -1173,7 +1173,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               @click="country = country === c.id ? '' : c.id"
               class="px-4 py-2 rounded-lg border-2 transition-all text-sm"
               :class="country === c.id
-                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 text-[#4C8BC2]'
+                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 text-[#3B7AB1]'
                 : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'"
             >
               {{ c.flag }} {{ c.label }}
@@ -1189,7 +1189,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             v-model="topic"
             type="text"
             placeholder="z.B. Highschool-Jahr in Kanada"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
           />
         </div>
 
@@ -1200,7 +1200,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             v-model="keyPoints"
             rows="3"
             placeholder="z.B. Gastfamilien, Schulsystem, Freizeitaktivitaeten..."
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
           ></textarea>
         </div>
 
@@ -1212,7 +1212,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               @click="tone = 'jugendlich'"
               class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
               :class="tone === 'jugendlich'
-                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
             >
               <div class="font-semibold text-gray-900 dark:text-white">🎯 Jugendlich</div>
@@ -1222,7 +1222,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               @click="tone = 'serioess'"
               class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
               :class="tone === 'serioess'
-                ? 'border-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
             >
               <div class="font-semibold text-gray-900 dark:text-white">🏛️ Serioes</div>
@@ -1260,7 +1260,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <button
           @click="generateText"
           :disabled="generatingText"
-          class="px-8 py-4 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
+          class="px-8 py-4 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
         >
           <span v-if="generatingText" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
           <span v-else>&#x2728;</span>
@@ -1299,7 +1299,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               @click="previewPlatform = p.id"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
               :class="effectivePreviewPlatform === p.id
-                ? 'bg-white dark:bg-gray-700 text-[#4C8BC2] shadow-sm'
+                ? 'bg-white dark:bg-gray-700 text-[#3B7AB1] shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
               :data-testid="'preview-toggle-' + p.id"
             >
@@ -1320,13 +1320,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-6 flex flex-col justify-between">
               <!-- TREFF logo -->
               <div class="flex items-center gap-2">
-                <div class="bg-[#4C8BC2] rounded-lg px-3 py-1"><span class="text-white text-sm font-bold">TREFF</span></div>
+                <div class="bg-[#3B7AB1] rounded-lg px-3 py-1"><span class="text-white text-sm font-bold">TREFF</span></div>
                 <span class="text-gray-400 text-xs">Sprachreisen</span>
               </div>
 
               <!-- Content -->
               <div class="flex-1 flex flex-col justify-center py-4">
-                <h3 class="text-[#4C8BC2] text-xl font-extrabold leading-tight mb-2">
+                <h3 class="text-[#3B7AB1] text-xl font-extrabold leading-tight mb-2">
                   {{ slides[currentPreviewSlide]?.headline || '' }}
                 </h3>
                 <p v-if="slides[currentPreviewSlide]?.subheadline" class="text-[#FDD000] text-sm font-semibold mb-2">
@@ -1363,7 +1363,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   :key="sIdx"
                   @click="currentPreviewSlide = sIdx"
                   class="w-2 h-2 rounded-full transition-colors"
-                  :class="sIdx === currentPreviewSlide ? 'bg-[#4C8BC2]' : 'bg-gray-600'"
+                  :class="sIdx === currentPreviewSlide ? 'bg-[#3B7AB1]' : 'bg-gray-600'"
                 ></button>
               </div>
             </div>
@@ -1407,7 +1407,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </div>
           <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400" data-testid="preview-platform-info">
             {{ effectivePreviewPlatformObj?.icon }} {{ effectivePreviewPlatformObj?.label }}
-            <span v-if="effectivePreviewPlatform !== selectedPlatform" class="text-[#4C8BC2] font-medium">(Vorschau)</span>
+            <span v-if="effectivePreviewPlatform !== selectedPlatform" class="text-[#3B7AB1] font-medium">(Vorschau)</span>
             &middot; {{ selectedCategoryObj?.label }}
             <span v-if="selectedCountryObj"> &middot; {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</span>
           </div>
@@ -1474,7 +1474,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                     @click="currentPreviewSlide = index"
                     class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
                     :class="currentPreviewSlide === index
-                      ? 'bg-[#4C8BC2] text-white'
+                      ? 'bg-[#3B7AB1] text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
                   >
                     <span class="opacity-50">&#10495;</span>
@@ -1487,7 +1487,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <!-- Add Slide button -->
               <button
                 @click="addSlide"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#4C8BC2] hover:text-[#4C8BC2] dark:hover:border-[#4C8BC2] dark:hover:text-[#4C8BC2]"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#3B7AB1] hover:text-[#3B7AB1] dark:hover:border-[#3B7AB1] dark:hover:text-[#3B7AB1]"
                 title="Neue Slide hinzufuegen"
                 data-testid="add-slide-btn"
               >
@@ -1521,7 +1521,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('headline', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'Headline neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === (currentPreviewSlide > 0 ? 'headline_' + currentPreviewSlide : 'headline') }" class="text-sm">&#x1F504;</span>
@@ -1530,7 +1530,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
               <input
                 v-model="slides[currentPreviewSlide].headline"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
                 :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               />
               <div class="flex items-center justify-between mt-0.5">
@@ -1546,7 +1546,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('subheadline', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'Subheadline neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === (currentPreviewSlide > 0 ? 'subheadline_' + currentPreviewSlide : 'subheadline') }" class="text-sm">&#x1F504;</span>
@@ -1555,7 +1555,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
               <input
                 v-model="slides[currentPreviewSlide].subheadline"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
                 :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               />
               <div class="flex items-center justify-between mt-0.5">
@@ -1571,7 +1571,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('body_text', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'Text neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === (currentPreviewSlide > 0 ? 'body_text_' + currentPreviewSlide : 'body_text') }" class="text-sm">&#x1F504;</span>
@@ -1581,7 +1581,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <textarea
                 v-model="slides[currentPreviewSlide].body_text"
                 rows="3"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
                 :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
@@ -1597,7 +1597,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('cta_text', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'CTA neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === (currentPreviewSlide > 0 ? 'cta_text_' + currentPreviewSlide : 'cta_text') }" class="text-sm">&#x1F504;</span>
@@ -1606,7 +1606,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
               <input
                 v-model="slides[currentPreviewSlide].cta_text"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
                 :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               />
               <div class="flex items-center justify-between mt-0.5">
@@ -1624,11 +1624,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div class="flex items-center gap-3">
               <div class="flex gap-1.5 flex-wrap">
                 <button
-                  v-for="preset in ['#1A1A2E', '#4C8BC2', '#FDD000', '#2D6A4F', '#E63946', '#7B2CBF', '#FF6B35', '#264653']"
+                  v-for="preset in ['#1A1A2E', '#3B7AB1', '#FDD000', '#2D6A4F', '#E63946', '#7B2CBF', '#FF6B35', '#264653']"
                   :key="preset"
                   @click="slides[currentPreviewSlide].background_value = preset; slides[currentPreviewSlide].background_type = 'color'"
                   class="w-7 h-7 rounded-lg border-2 transition-all hover:scale-110"
-                  :class="slides[currentPreviewSlide].background_value === preset ? 'border-white ring-2 ring-[#4C8BC2] scale-110' : 'border-gray-300 dark:border-gray-600'"
+                  :class="slides[currentPreviewSlide].background_value === preset ? 'border-white ring-2 ring-[#3B7AB1] scale-110' : 'border-gray-300 dark:border-gray-600'"
                   :style="{ backgroundColor: preset }"
                   :title="preset"
                   data-testid="color-preset"
@@ -1654,7 +1654,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <span>Bild als Hintergrund gesetzt</span>
               <button
                 @click="slides[currentPreviewSlide].background_type = 'color'; slides[currentPreviewSlide].background_value = '#1A1A2E'"
-                class="ml-auto text-xs text-[#4C8BC2] hover:underline"
+                class="ml-auto text-xs text-[#3B7AB1] hover:underline"
               >Farbe verwenden</button>
             </div>
           </div>
@@ -1667,7 +1667,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('caption_instagram')"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'Instagram Caption neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === 'caption_instagram' }" class="text-sm">&#x1F504;</span>
@@ -1675,7 +1675,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 </button>
               </div>
               <textarea v-model="captionInstagram" rows="3"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
                 :class="(captionInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (captionInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
@@ -1691,7 +1691,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('hashtags_instagram')"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'Instagram Hashtags neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === 'hashtags_instagram' }" class="text-sm">&#x1F504;</span>
@@ -1699,7 +1699,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 </button>
               </div>
               <textarea v-model="hashtagsInstagram" rows="2"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
                 :class="(hashtagsInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : (hashtagsInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
@@ -1714,7 +1714,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="regenerateField('hashtags_tiktok')"
                   :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#4C8BC2]/10 text-[#4C8BC2] hover:bg-[#4C8BC2]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   :title="'TikTok Hashtags neu generieren'"
                 >
                   <span :class="{ 'animate-spin': regeneratingField === 'hashtags_tiktok' }" class="text-sm">&#x1F504;</span>
@@ -1722,7 +1722,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 </button>
               </div>
               <textarea v-model="hashtagsTiktok" rows="2"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
                 :class="(hashtagsTiktok?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : (hashtagsTiktok?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
@@ -1746,7 +1746,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 @click="previewPlatform = p.id"
                 class="px-1.5 py-0.5 rounded text-xs transition-all"
                 :class="effectivePreviewPlatform === p.id
-                  ? 'bg-white dark:bg-gray-700 text-[#4C8BC2] shadow-sm font-medium'
+                  ? 'bg-white dark:bg-gray-700 text-[#3B7AB1] shadow-sm font-medium'
                   : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'"
                 :data-testid="'mini-preview-toggle-' + p.id"
                 :title="p.label + ' (' + p.format + ')'"
@@ -1771,7 +1771,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           >
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between">
               <div class="flex items-center gap-1.5">
-                <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+                <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
               </div>
               <div class="flex-1 flex flex-col justify-center py-3">
                 <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
@@ -1848,7 +1848,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </button>
 
             <!-- AI Error -->
-            <div v-if="aiImageError" class="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
+            <div v-if="aiImageError" class="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300" role="alert">
               {{ aiImageError }}
             </div>
 
@@ -1872,10 +1872,10 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </div>
 
           <!-- Upload -->
-          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-[#4C8BC2] transition-colors">
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-[#3B7AB1] transition-colors">
             <div class="text-4xl mb-3">📷</div>
             <p class="text-gray-600 dark:text-gray-400 mb-3">Hintergrundbild hochladen</p>
-            <label class="inline-block px-6 py-2.5 bg-[#4C8BC2] text-white rounded-lg cursor-pointer hover:bg-[#3a7ab3] transition-colors font-medium">
+            <label class="inline-block px-6 py-2.5 bg-[#3B7AB1] text-white rounded-lg cursor-pointer hover:bg-[#2E6A9E] transition-colors font-medium">
               <span v-if="uploadingImage" class="flex items-center gap-2">
                 <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                 Hochladen...
@@ -1894,7 +1894,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 v-for="asset in assets"
                 :key="asset.id"
                 @click="selectAssetAsBackground(asset)"
-                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] transition-all relative group"
+                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#3B7AB1] transition-all relative group"
               >
                 <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
                 <div v-if="asset.source === 'ai_generated'" class="absolute top-1 right-1 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">KI</div>
@@ -1925,7 +1925,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           >
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between bg-black/20">
               <div class="flex items-center gap-1.5">
-                <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+                <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
               </div>
               <div class="flex-1 flex flex-col justify-center py-3">
                 <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].headline }}</h3>
@@ -1987,7 +1987,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="[
                 'flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium',
                 exportQuality === '1080'
-                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/10 text-[#4C8BC2]'
+                  ? 'border-[#3B7AB1] bg-[#3B7AB1]/10 text-[#3B7AB1]'
                   : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
               ]"
             >
@@ -2000,7 +2000,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="[
                 'flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium',
                 exportQuality === '2160'
-                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/10 text-[#4C8BC2]'
+                  ? 'border-[#3B7AB1] bg-[#3B7AB1]/10 text-[#3B7AB1]'
                   : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
               ]"
             >
@@ -2017,7 +2017,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             @click="exportAllPlatforms"
             :disabled="exporting"
             data-testid="export-all-platforms-btn"
-            class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+            class="flex-1 px-6 py-3 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span v-if="exporting" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
             {{ exporting ? 'Exportiere...' : `Alle ${selectedPlatforms.length} Plattformen exportieren` }}
@@ -2027,7 +2027,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             v-else
             @click="saveAndExport"
             :disabled="exporting"
-            class="flex-1 px-6 py-3 bg-[#4C8BC2] hover:bg-[#3a7ab3] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+            class="flex-1 px-6 py-3 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span v-if="exporting" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
             {{ exporting ? 'Speichern...' : 'Post speichern & exportieren' }}
@@ -2111,7 +2111,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         @click="nextStep"
         class="px-6 py-3 rounded-lg font-medium transition-colors"
         :class="canProceed
-          ? 'bg-[#4C8BC2] hover:bg-[#3a7ab3] text-white'
+          ? 'bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white'
           : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'"
       >
         Weiter &#8594;
@@ -2189,7 +2189,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 <style scoped>
 .slide-ghost {
   opacity: 0.4;
-  background: #4C8BC2 !important;
+  background: #3B7AB1 !important;
   border-radius: 0.5rem;
 }
 </style>

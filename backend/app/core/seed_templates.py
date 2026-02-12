@@ -11,7 +11,7 @@ from app.models.template import Template
 logger = logging.getLogger(__name__)
 
 # TREFF Brand colors
-TREFF_BLUE = "#4C8BC2"
+TREFF_BLUE = "#3B7AB1"
 TREFF_YELLOW = "#FDD000"
 TREFF_DARK = "#1A1A2E"
 TREFF_LIGHT = "#F5F5F5"

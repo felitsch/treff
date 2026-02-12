@@ -397,7 +397,7 @@ UNTERNEHMENSPROFIL:
 - TREFF Sprachreisen, gegruendet 1984 in Eningen u.A. / Pfullingen, Deutschland
 - Organisiert Highschool-Aufenthalte fuer deutsche Schueler in: USA, Kanada, Australien, Neuseeland, Irland
 - Ca. 200 Teilnehmer pro Jahr
-- Primaerfarbe: #4C8BC2 (Blau - Vertrauen, Bildung)
+- Primaerfarbe: #3B7AB1 (Blau - Vertrauen, Bildung)
 - Sekundaerfarbe: #FDD000 (Gelb - Energie, Abenteuer)
 
 PROGRAMM-PREISE:
