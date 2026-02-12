@@ -1,9 +1,12 @@
 """Calendar routes."""
 
+import csv
+import io
 from typing import Optional
 from datetime import datetime, date
 from calendar import monthrange
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, extract, func
 
@@ -403,3 +406,80 @@ async def get_calendar_queue(
         "posts": [post_to_calendar_dict(post) for post in posts],
         "count": len(posts),
     }
+
+
+@router.get("/export-csv")
+async def export_calendar_csv(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    platform: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export all scheduled posts for a given month as a CSV file.
+    Columns: date, time, title, category, platform, status, country.
+    Returns a downloadable CSV file."""
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    last_day_num = monthrange(year, month)[1]
+    first_dt = datetime(year, month, 1, 0, 0, 0)
+    last_dt = datetime(year, month, last_day_num, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = (
+        select(Post)
+        .where(and_(*conditions))
+        .order_by(Post.scheduled_date.asc(), Post.scheduled_time.asc())
+    )
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    # Build CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Header row
+    writer.writerow(["date", "time", "title", "category", "platform", "status", "country"])
+
+    # Data rows
+    for post in posts:
+        writer.writerow([
+            post.scheduled_date.strftime("%Y-%m-%d") if post.scheduled_date else "",
+            post.scheduled_time or "",
+            post.title or "",
+            post.category or "",
+            post.platform or "",
+            post.status or "",
+            post.country or "",
+        ])
+
+    output.seek(0)
+
+    # Month names for filename
+    month_names_en = [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december",
+    ]
+    filename = f"TREFF_calendar_{month_names_en[month - 1]}_{year}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )

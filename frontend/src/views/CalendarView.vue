@@ -622,6 +622,42 @@ function formatDateForDisplay(dateStr) {
   return `${parts[2]}.${parts[1]}.${parts[0]}`
 }
 
+// Export calendar as CSV
+async function exportCalendarCSV() {
+  try {
+    let url = `/api/calendar/export-csv?month=${currentMonth.value}&year=${currentYear.value}`
+    if (platformFilter.value) {
+      url += `&platform=${platformFilter.value}`
+    }
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+    const blob = await res.blob()
+    // Extract filename from Content-Disposition header or use default
+    const disposition = res.headers.get('Content-Disposition')
+    let filename = `TREFF_calendar_${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}.csv`
+    if (disposition) {
+      const match = disposition.match(/filename="?([^"]+)"?/)
+      if (match) filename = match[1]
+    }
+
+    // Trigger download
+    const downloadUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = downloadUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(downloadUrl)
+  } catch (err) {
+    console.error('CSV export error:', err)
+    error.value = 'CSV-Export fehlgeschlagen.'
+  }
+}
+
 // Prev/Next navigation that respects view mode
 function prevNav() {
   if (viewMode.value === 'month') {
@@ -771,6 +807,19 @@ onMounted(() => {
           <span v-if="showGaps && gapCount > 0" class="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ gapCount }}
           </span>
+        </button>
+
+        <!-- Export Calendar as CSV button -->
+        <button
+          @click="exportCalendarCSV"
+          class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
+          title="Kalender als CSV exportieren"
+          aria-label="Kalender als CSV exportieren"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          CSV Export
         </button>
 
         <!-- Prev / Label / Next (hide in queue mode) -->
