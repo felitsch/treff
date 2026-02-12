@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #94: Empty required fields show validation errors on forms
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added per-field inline validation errors to the template creation form (TemplatesView.vue)
+- Registration form already had per-field validation from feature #93 (another agent)
+- Template creation form now shows red borders and error messages for:
+  - Template-Name: "Template-Name ist erforderlich"
+  - Kategorie: "Kategorie ist erforderlich"
+  - HTML-Inhalt: "HTML-Inhalt ist erforderlich"
+  - CSS-Styling: "CSS-Styling ist erforderlich"
+- Submit button is always clickable (no longer disabled when fields empty) to allow triggering validation
+- Added `createSubmitted` ref and `createFieldErrors` ref to track validation state
+- Added `validateCreateForm()` function called on submit
+- Added `data-testid` attributes for all validated fields
+
+### Files modified:
+- frontend/src/views/TemplatesView.vue - Added per-field validation errors with red borders and error messages
+
+### Verification steps completed:
+1. Open registration form - PASS (page loads at /register)
+2. Submit with all fields empty - PASS (clicked Registrieren with empty fields)
+3. Verify each required field shows an error message - PASS:
+   - "E-Mail-Adresse ist erforderlich" with red border
+   - "Passwort ist erforderlich" with red border
+4. Open template creation form - PASS (clicked "Neues Template erstellen" on /templates)
+5. Submit with empty required fields - PASS (cleared fields, clicked "Template erstellen")
+6. Verify validation errors appear - PASS:
+   - "Template-Name ist erforderlich" with red border
+   - "Kategorie ist erforderlich" with red border
+   - "HTML-Inhalt ist erforderlich" with red border
+   - "CSS-Styling ist erforderlich" with red border
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] All required fields show validation errors on empty submit
+- [x] Screenshots captured:
+  - feature94-step1-registration-empty-submit.png
+  - feature94-step2-template-empty-submit.png
+  - feature94-step3-template-errors-scrolled.png
+
+### Current state:
+- Feature #94 marked as PASSING
+- 99/170 features passing (58.2%)
+
 ## Session - Feature #95: Post creation requires category selection
 **Date:** 2026-02-12
 **Status:** PASSING
