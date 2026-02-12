@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
@@ -64,7 +64,16 @@ async def list_posts(
     if country:
         query = query.where(Post.country == country)
     if search:
-        query = query.where(Post.title.ilike(f"%{search}%"))
+        search_pattern = f"%{search}%"
+        query = query.where(
+            or_(
+                Post.title.ilike(search_pattern),
+                Post.slide_data.ilike(search_pattern),
+                Post.caption_instagram.ilike(search_pattern),
+                Post.caption_tiktok.ilike(search_pattern),
+                Post.cta_text.ilike(search_pattern),
+            )
+        )
 
     query = query.order_by(Post.created_at.desc())
     result = await db.execute(query)

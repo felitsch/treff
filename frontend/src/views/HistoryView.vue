@@ -134,7 +134,10 @@ const filteredPosts = computed(() => {
     result = result.filter(p =>
       (p.title && p.title.toLowerCase().includes(q)) ||
       (p.category && p.category.toLowerCase().includes(q)) ||
-      (p.caption_instagram && p.caption_instagram.toLowerCase().includes(q))
+      (p.caption_instagram && p.caption_instagram.toLowerCase().includes(q)) ||
+      (p.caption_tiktok && p.caption_tiktok.toLowerCase().includes(q)) ||
+      (p.slide_data && p.slide_data.toLowerCase().includes(q)) ||
+      (p.cta_text && p.cta_text.toLowerCase().includes(q))
     )
   }
 
