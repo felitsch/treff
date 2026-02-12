@@ -1,5 +1,38 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #50: Platform preview toggle switches between IG Feed Story TikTok
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added platform preview toggle UI to Step 6 (Live Preview) and Step 7 (Edit) in CreatePostView.vue
+- Toggle allows switching between Instagram Feed (1:1 square), Instagram Story (9:16 vertical), and TikTok (9:16 vertical) preview formats
+- Added `previewPlatform` state to createPost Pinia store for independent preview format control
+- Added `effectivePreviewPlatform` computed property that falls back to selectedPlatform when toggle hasn't been used
+- Info bar shows "(Vorschau)" indicator when previewing a format different from the actual selected platform
+
+### Files modified:
+- frontend/src/stores/createPost.js - Added previewPlatform ref, reset logic, and export
+- frontend/src/views/CreatePostView.vue - Added toggle UI in Step 6 and Step 7, updated aspect ratio bindings to use effectivePreviewPlatform
+
+### Verification steps completed:
+1. Open content editor for a multi-platform post - PASS (created post with Laender-Spotlight category, 5 slides)
+2. Click Instagram Feed preview - PASS (toggle button shows active state, preview shows 1:1 square format)
+3. Verify preview shows 1:1 square format - PASS (aspect-square class applied, max-w-[400px])
+4. Click Instagram Story preview - PASS (toggle switches, info shows "Instagram Story (Vorschau)")
+5. Verify preview switches to 9:16 vertical - PASS (aspect-[9/16] class applied, max-w-[320px])
+6. Click TikTok preview - PASS (toggle switches, info shows "TikTok (Vorschau)")
+7. Verify preview shows TikTok format - PASS (9:16 vertical format, same as Story)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Screenshots captured: feature50-step1-ig-feed-with-toggle.png, feature50-step2-ig-story-vertical.png, feature50-step3-tiktok-format.png, feature50-step4-back-to-feed-square.png
+
+### Current state:
+- Feature #50 marked as PASSING
+- 64/163 features passing (39.3%)
+
 ## Session - Feature #49: Live preview updates in real-time as user types
 **Date:** 2026-02-12
 **Status:** PASSING
