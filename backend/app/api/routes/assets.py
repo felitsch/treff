@@ -139,7 +139,7 @@ async def search_stock(
     user_id: int = Depends(get_current_user_id),
 ):
     """Search stock photos."""
-    # TODO: Implement Unsplash/Pexels API
+    # TODO: Integrate Unsplash/Pexels stock photo service
     return {"results": [], "query": query, "source": source}
 
 
