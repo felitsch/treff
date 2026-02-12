@@ -1,5 +1,67 @@
 # TREFF Post-Generator - Development Progress
 
+## Session 18 - Feature #18: User can create a custom template
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added "Neues Template erstellen" button to Templates page header
+- Built full template creation modal with form fields:
+  - Template name (required)
+  - Category dropdown (9 categories, required)
+  - Platform format dropdown (4 formats, required)
+  - Slide count (number input, default 1)
+  - HTML content (textarea with default template)
+  - CSS content (textarea with default styling)
+  - Placeholder fields (JSON input)
+- Added TemplateCreate Pydantic schema for backend validation
+- Fixed POST /api/templates endpoint:
+  - Replaced raw dict with Pydantic TemplateCreate model
+  - Added explicit db.commit() before return to prevent MissingGreenlet rollback bug
+  - Forces is_default=False for user-created templates
+  - Provides default TREFF brand colors and fonts
+- Fixed PUT and DELETE endpoints with explicit commit (same rollback prevention)
+- Custom templates display "Eigenes" badge instead of "Standard" on thumbnail and card
+- Form validation: button disabled until name and category are filled
+
+### Verification steps completed:
+1. Navigate to Templates page - PASS (21 templates + create button visible)
+2. Click Create New Template button - PASS (modal opens with form fields)
+3. Enter template name: TEST_CUSTOM_TEMPLATE - PASS
+4. Select category (Erfahrungsberichte) and platform format (4:5 Portrait) - PASS
+5. Enter HTML and CSS content (pre-filled defaults) - PASS
+6. Save template - PASS (POST /api/templates => 201 Created)
+7. Verify template appears in template list - PASS (22 von 22 Templates, "Eigenes" badge)
+8. Verify template is stored in database (not default) - PASS (is_default=0 in SQLite)
+
+### Persistence test:
+- Created TEST_CUSTOM_TEMPLATE via UI
+- Stopped server (kill -9)
+- Restarted server (init.sh)
+- Logged in as new user
+- Template list shows 22 templates including TEST_CUSTOM_TEMPLATE - PASS
+- API /api/templates/22 returns full template data with is_default=false - PASS
+
+### Mock data grep results: All checks clean (zero matches in frontend/src and backend/app)
+### Console errors: 0 errors
+### Network: POST /api/templates => 201, GET /api/templates => 200, no 500s
+
+### Files modified:
+- backend/app/api/routes/templates.py - Added TemplateCreate Pydantic schema, explicit commits
+- frontend/src/views/TemplatesView.vue - Added create button, modal form, createTemplate function
+
+### Note on dual database files:
+- Project has two treff.db files: one at project root, one in backend/
+- The server started via init.sh uses the root treff.db
+- Both files contain the custom template after respective creation sessions
+
+### Current state:
+- Features #1-11, #13, #15, #18, #27, #55, #56, #84 passing
+- 18/163 features complete (11.0%)
+
+### Next steps:
+- Continue with remaining workflow and template features
+
 ## Session 16 - Feature #56: Asset library grid shows uploaded images with thumbnails
 **Date:** 2026-02-12
 **Status:** PASSING
