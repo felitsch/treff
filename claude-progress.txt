@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #66: Calendar shows posting frequency gaps
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented gap detection highlighting on the calendar monthly view
+- Added frontend gap detection fetching from existing /api/calendar/gaps API
+- Orange background and "Luecke" badge on days without scheduled posts
+- Toggle button "Luecken" in toolbar to show/hide gap indicators with count
+- Legend section explaining gap indicators with count of gap days
+- Backend calendar.py already had /api/calendar/gaps endpoint
+
+### Files modified:
+- frontend/src/views/CalendarView.vue - Added gapDates ref, showGaps toggle, fetchGaps(), isGapDate() helper, gapCount computed, gap highlighting in calendar cells, gap toggle button, legend section
+- backend/app/api/routes/calendar.py - Committed previously uncommitted platform filter and settings goals improvements
+
+### Verification steps completed:
+1. Schedule posts with 3-day gaps between them - PASS
+   - Created 4 test posts: Feb 5, Feb 8, Feb 11, Feb 14 (3-day gaps)
+   - All posts created via API with status "scheduled"
+2. Navigate to Calendar - PASS
+   - Calendar loads showing "4 Posts in Februar 2026"
+3. Verify days without posts are highlighted or marked - PASS
+   - 24 gap days in February highlighted with orange background
+   - Each gap day shows "Luecke" badge in orange
+   - Days with posts (5, 8, 11, 14) do NOT have gap indicators
+4. Verify gap indicator is clearly visible - PASS
+   - Orange "Luecke" badge clearly visible on each gap day
+   - Toggle button shows "Luecken 24" with warning icon and orange styling
+   - Legend section shows "Posting-Luecken: Tage ohne geplante Posts - 24 Tage"
+   - Toggle works: clicking hides/shows gap indicators
+
+### Additional verification:
+- [x] Server restart persistence: all 4 scheduled posts and gap data persist after restart
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Gap toggle works: hides/shows indicators, button style changes
+- [x] Gap indicators only shown on current month days (not prev/next month overflow)
+- [x] Screenshots: feature66-step1-calendar-with-gaps.png, feature66-step2-gaps-hidden.png, feature66-step4-persistence-after-restart.png
+
+### Current state:
+- Feature #66 marked as PASSING
+- 74/163 features passing (45.4%)
+
 ## Session - Feature #64: Calendar color-codes posts by category
 **Date:** 2026-02-12
 **Status:** PASSING

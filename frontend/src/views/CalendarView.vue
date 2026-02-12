@@ -721,6 +721,44 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Weekly Goal Progress Indicator -->
+    <div class="mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🎯</span>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Woechentliches Posting-Ziel</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="text-sm font-bold"
+            :class="weeklyGoalMet ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'"
+          >
+            {{ goalStats.posts_this_week }}/{{ goalStats.weekly_goal }}
+          </span>
+          <span v-if="weeklyGoalMet" class="text-green-500 text-lg">✅</span>
+        </div>
+      </div>
+      <!-- Progress bar -->
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+        <div
+          class="h-3 rounded-full transition-all duration-500 ease-out"
+          :class="weeklyGoalMet ? 'bg-green-500' : 'bg-blue-500'"
+          :style="{ width: weeklyGoalPercent + '%' }"
+        ></div>
+      </div>
+      <div class="flex items-center justify-between mt-1.5">
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          {{ weeklyGoalPercent }}% erreicht
+        </span>
+        <span v-if="!weeklyGoalMet && goalStats.weekly_goal > goalStats.posts_this_week" class="text-xs text-gray-500 dark:text-gray-400">
+          Noch {{ goalStats.weekly_goal - goalStats.posts_this_week }} {{ (goalStats.weekly_goal - goalStats.posts_this_week) === 1 ? 'Post' : 'Posts' }} diese Woche
+        </span>
+        <span v-else-if="weeklyGoalMet" class="text-xs text-green-600 dark:text-green-400 font-medium">
+          Ziel erreicht! 🎉
+        </span>
+      </div>
+    </div>
+
     <!-- Error state -->
     <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
       {{ error }}
