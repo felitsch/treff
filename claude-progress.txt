@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #26: Back button works correctly after form submission
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified back button behavior after form submission in the Create Post wizard
+- Test flow: Dashboard -> Create Post -> complete wizard (export complete) -> back button -> Dashboard
+- Confirmed back button navigates to previous page (Dashboard), not re-submitting the form
+- Confirmed forward button shows a fresh Create Post form (Step 1), not the completed state
+- Confirmed no duplicate posts created by back/forward browser navigation
+- Created 2 test posts to verify exact count before and after back button press
+- Also committed breadcrumb navigation addition to CreatePostView.vue from a previous session
+
+### Verification steps completed:
+1. Navigate to Create Post and complete a post creation - PASS (created post, set export complete state)
+2. Click browser back button - PASS (navigated to /dashboard, not re-submit)
+3. Verify user goes to previous page (not re-submit) - PASS (dashboard fully rendered with post count)
+4. Verify no duplicate post is created - PASS (exactly 2 posts before and after back button)
+
+### Technical notes:
+- Vue SPA uses client-side routing (createWebHistory), so form submissions are XHR/fetch calls
+- Browser back button navigates to previous route in history, component state is destroyed
+- Forward navigation recreates CreatePostView with fresh default state (Step 1)
+- No traditional HTML form POST means no browser "re-submit" dialog risk
+
+### Additional verification:
+- Zero JavaScript console errors
+- All 7 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Test data cleaned up after verification (both test posts deleted)
+- Screenshots: feature26-step1-export-complete.png, feature26-step2-back-to-dashboard.png, feature26-step3-forward-fresh-form.png
+
+### Current state:
+- Feature #26 marked as PASSING
+- 46/163 features passing
+
 ## Session - Feature #23: Templates render at correct social media dimensions
 **Date:** 2026-02-12
 **Status:** PASSING
