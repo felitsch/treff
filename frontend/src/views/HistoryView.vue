@@ -303,6 +303,21 @@ async function markAsPosted(post) {
   }
 }
 
+// Duplicate a post
+const duplicating = ref(null)
+async function duplicatePost(post) {
+  duplicating.value = post.id
+  try {
+    const response = await api.post(`/api/posts/${post.id}/duplicate`)
+    // Add the new duplicate post at the top of the list
+    posts.value.unshift(response.data)
+  } catch (err) {
+    console.error('Failed to duplicate post:', err)
+  } finally {
+    duplicating.value = null
+  }
+}
+
 // Navigate to edit
 function editPost(postId) {
   router.push(`/posts/${postId}/edit`)
@@ -539,6 +554,14 @@ onMounted(() => {
               title="Als veroeffentlicht markieren"
             >
               ✅
+            </button>
+            <button
+              @click="duplicatePost(post)"
+              :disabled="duplicating === post.id"
+              class="p-2 text-gray-400 hover:text-[#4C8BC2] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Duplizieren"
+            >
+              {{ duplicating === post.id ? '⏳' : '📋' }}
             </button>
             <button
               @click="editPost(post.id)"
