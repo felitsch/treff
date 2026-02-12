@@ -1,5 +1,68 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #138: Concurrent post edits from two sessions handled safely
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that concurrent post edits from two browser tabs are handled safely
+- The application uses a "last write wins" strategy which is correct and safe:
+  - SQLite serializes writes via its internal write lock
+  - SQLAlchemy ORM uses parameterized queries preventing data corruption
+  - The `updated_at` column auto-updates on every save via `onupdate` trigger
+  - Each PUT request fetches the latest state from DB, applies changes, and commits
+
+### No code changes needed:
+- Backend: PUT /api/posts/{id} already fetches post from DB, updates fields, and commits atomically
+- Model: Post.updated_at has onupdate=lambda that auto-timestamps each save
+- Frontend: EditPostView.vue savePost() sends PUT with current form state
+- SQLite: serializes concurrent writes preventing corruption
+
+### Verification steps completed:
+1. Open same post in two browser tabs - PASS
+   - Tab 1: /posts/154/edit loaded with headline "Original Title"
+   - Tab 2: /posts/154/edit loaded with headline "Original Title" (fetched from DB)
+2. Edit title in tab 1 to "Edit From Tab 1" - PASS
+   - Headline field updated, live preview shows "Edit From Tab 1"
+3. Edit title in tab 2 to "Edit From Tab 2" - PASS
+   - Headline field updated, live preview shows "Edit From Tab 2"
+4. Save in tab 1, then save in tab 2 - PASS
+   - Tab 1: Clicked Speichern, "Post gespeichert!" success message
+   - Tab 2: Clicked Speichern, "Post gespeichert!" success message
+   - Both saves completed without errors
+5. Verify last save wins - PASS
+   - API GET /api/posts/154 returns title="Edit From Tab 2"
+   - slide_data headline = "Edit From Tab 2"
+   - Last write (Tab 2) correctly overwrote Tab 1's save
+6. Verify no data corruption in database - PASS
+   - All fields intact: category, platform, caption, status
+   - updated_at timestamp reflects the latest save
+   - No partial writes or mixed data between the two edits
+
+### Additional API-level concurrency test:
+- Performed sequential PUT requests via curl simulating Tab 1 then Tab 2
+- Confirmed last write wins: title = "Edit From Tab 2"
+- Verified updated_at incremented with each save
+- GET /api/posts/154 confirmed clean final state
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Last write wins strategy verified end-to-end
+- [x] No data corruption after concurrent saves
+- [x] Screenshots captured:
+  - feature138-step1-tab1-original.png (Tab 1 with "Original Title")
+  - feature138-step2-tab1-edited.png (Tab 1 with "Edit From Tab 1")
+  - feature138-step3-tab2-edited.png (Tab 2 with "Edit From Tab 2")
+  - feature138-step4-tab1-saved.png (Tab 1 saved successfully)
+  - feature138-step5-tab2-saved.png (Tab 2 saved successfully, last write wins)
+
+### Current state:
+- Feature #138 marked as PASSING
+- 141/170 features passing (82.9%)
+
 ## Session - Feature #137: Error messages announced to screen readers
 **Date:** 2026-02-12
 **Status:** PASSING
