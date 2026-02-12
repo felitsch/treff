@@ -68,6 +68,11 @@ const routes = [
         name: 'EditPost',
         component: () => import('@/views/EditPostView.vue'),
       },
+      {
+        path: 'thumbnail-generator',
+        name: 'ThumbnailGenerator',
+        component: () => import('@/views/ThumbnailGeneratorView.vue'),
+      },
     ],
   },
   {

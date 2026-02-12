@@ -17,6 +17,7 @@ const navItems = [
   { name: 'Assets', path: '/assets', icon: '🖼️' },
   { name: 'Calendar', path: '/calendar', icon: '📅' },
   { name: 'History', path: '/history', icon: '📋' },
+  { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
   { name: 'Analytics', path: '/analytics', icon: '📈' },
   { name: 'Settings', path: '/settings', icon: '⚙️' },
 ]
