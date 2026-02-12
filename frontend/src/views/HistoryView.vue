@@ -162,8 +162,8 @@ function formatDateShort(dateStr) {
 const filteredPosts = computed(() => {
   let result = posts.value
 
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
+  if (searchQuery.value && searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
     result = result.filter(p =>
       (p.title && p.title.toLowerCase().includes(q)) ||
       (p.category && p.category.toLowerCase().includes(q)) ||
@@ -210,7 +210,7 @@ const filteredPosts = computed(() => {
 // Active filters count
 const activeFilters = computed(() => {
   let count = 0
-  if (searchQuery.value) count++
+  if (searchQuery.value && searchQuery.value.trim()) count++
   if (filterCategory.value) count++
   if (filterPlatform.value) count++
   if (filterStatus.value) count++
@@ -237,7 +237,7 @@ async function fetchPosts() {
     if (filterCategory.value) params.category = filterCategory.value
     if (filterPlatform.value) params.platform = filterPlatform.value
     if (filterStatus.value) params.status = filterStatus.value
-    if (searchQuery.value) params.search = searchQuery.value
+    if (searchQuery.value && searchQuery.value.trim()) params.search = searchQuery.value.trim()
     if (filterDateFrom.value) params.date_from = filterDateFrom.value
     if (filterDateTo.value) params.date_to = filterDateTo.value
 
@@ -558,7 +558,7 @@ onMounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="filteredPosts.length === 0 && !searchQuery && !filterCategory && !filterPlatform && !filterStatus" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+    <div v-else-if="filteredPosts.length === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
       <div class="text-5xl mb-4">📝</div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Noch keine Posts erstellt</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-6">Erstelle deinen ersten Social-Media-Post fuer TREFF!</p>

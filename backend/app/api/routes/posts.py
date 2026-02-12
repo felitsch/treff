@@ -65,8 +65,8 @@ async def list_posts(
         query = query.where(Post.status == status)
     if country:
         query = query.where(Post.country == country)
-    if search:
-        search_pattern = f"%{search}%"
+    if search and search.strip():
+        search_pattern = f"%{search.strip()}%"
         query = query.where(
             or_(
                 Post.title.ilike(search_pattern),
