@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #70: In-app reminder shown when post is due for publishing
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented complete in-app reminder notification system for posts due for publishing
+- Backend: Added GET /api/calendar/reminders endpoint that finds posts with status "scheduled" whose scheduled date/time has passed
+- Backend: Added PUT /api/calendar/reminders/{post_id}/acknowledge endpoint that changes post status to "reminded"
+- Frontend: Created useReminders.js composable with 60-second polling interval
+- Frontend: Integrated reminder polling into AppLayout.vue so it runs on all authenticated pages
+- Reminder notifications show as info toasts with post title, platform, date, and time (15s auto-dismiss)
+- Duplicate reminders prevented via in-memory acknowledgedIds Set
+
+### Files created:
+- frontend/src/composables/useReminders.js - Reminder polling composable
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added /reminders and /reminders/{id}/acknowledge endpoints
+- frontend/src/components/layout/AppLayout.vue - Integrated reminder polling on mount/unmount
+
+### Verification steps completed:
+1. Schedule a post for current time - PASS
+   - Created post #87 "REMINDER_TEST_70_Due_Now" scheduled for 2026-02-12 18:19
+   - GET /api/calendar/reminders returned it with count: 1
+2. Wait for or trigger reminder check - PASS
+   - Polling triggered on AppLayout mount (startPolling -> checkReminders)
+   - Reminder appeared within seconds of dashboard load
+3. Verify in-app notification appears - PASS
+   - Toast notification appeared: "Post faellig: REMINDER_TEST_70_Due_Now (IG Feed) war fuer 12.02.2026 um 18:19 Uhr geplant."
+   - Screenshot: feature70-step1-reminder-notification-visible.png
+4. Verify notification references the correct post - PASS
+   - Shows correct title, platform (IG Feed), date, and time
+   - Also tested overdue post (scheduled 2h ago): "OVERDUE_TEST_70_Past_Time" (TikTok)
+   - Screenshot: feature70-step2-overdue-reminder-notification.png
+
+### Additional verification:
+- Acknowledge endpoint works: POST status changes from "scheduled" to "reminded"
+- After acknowledgement, reminders count drops to 0 (reminder won't show again)
+- Unauthenticated access returns 403 Forbidden
+- Server restart persistence verified: reminder still appears after backend restart
+  - Screenshot: feature70-step3-persistence-after-restart.png
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Test data cleaned up (posts 87 and 89 deleted)
+
+### Current state:
+- Feature #70 marked as PASSING
+- 80/170 features passing (47.1%)
+
 ## Session - Feature #69: Queue view shows upcoming scheduled posts chronologically
 **Date:** 2026-02-12
 **Status:** PASSING
