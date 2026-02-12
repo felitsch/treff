@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session 14 - Feature #84: Settings page displays account settings
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Built complete SettingsView.vue replacing placeholder with full settings page
+- Implemented 4 required sections:
+  1. **Account section**: Shows email and display name from auth store (read-only)
+  2. **Brand settings**: 3 color pickers (primary #4C8BC2, secondary #FDD000, accent #FFFFFF) with live preview
+  3. **API key configuration**: Fields for Google Gemini, OpenAI (optional), Unsplash (optional) keys
+  4. **Posting goals**: Posts per week/month, preferred posting time, preferred platform
+- Fixed backend settings.py to explicitly commit before re-querying updated settings
+- All settings persist to real SQLite database via key-value Setting model
+- Save button with loading spinner and success/error feedback messages
+- Loading skeleton animation while data loads
+- Dark mode fully supported
+
+### No major issues:
+- Backend settings route already had correct dict serialization (no MissingGreenlet risk)
+- Added explicit commit before re-query for safety (same pattern fix as posts)
+
+### Verification steps completed:
+1. Navigate to Settings page - PASS (URL /settings, renders all sections)
+2. Account section shows email and display name - PASS (settings_test84@treff.de, Settings Tester)
+3. Brand settings section shows color pickers - PASS (3 color pickers with hex inputs + preview)
+4. API key configuration section exists - PASS (Gemini, OpenAI, Unsplash fields)
+5. Posting goals section exists - PASS (posts/week, posts/month, time, platform)
+
+### Mock data grep results: All 6 checks clean (zero matches)
+### Console errors: Zero
+### Network errors: Zero
+
+### Files modified:
+- frontend/src/views/SettingsView.vue - Complete rewrite with 4 sections
+- backend/app/api/routes/settings.py - Added explicit commit
+
+### Current state:
+- Features #1-11, #13, #27, #84 passing
+- 14/163 features complete (8.6%)
+- Backend running on port 8000
+- Frontend running on port 5173
+
+### Next steps:
+- Continue with remaining Navigation Integrity and feature implementation
+
 ## Session 1 - Feature #1: Database connection established
 **Date:** 2026-02-12
 **Status:** PASSING
