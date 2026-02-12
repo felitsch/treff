@@ -176,9 +176,94 @@ async def get_frequency(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get posting frequency over time."""
-    # TODO: Implement time-based aggregation
-    return {"period": period, "data": []}
+    """Get posting frequency over time.
+
+    Args:
+        period: Time period for aggregation.
+            - "week": Last 7 days, grouped by day
+            - "month": Last 30 days, grouped by day
+            - "quarter": Last 90 days, grouped by week
+            - "year": Last 365 days, grouped by month
+    """
+    now = datetime.now(timezone.utc)
+
+    # Determine date range and grouping
+    if period == "week":
+        start_date = now - timedelta(days=6)
+        days_count = 7
+    elif period == "month":
+        start_date = now - timedelta(days=29)
+        days_count = 30
+    elif period == "quarter":
+        start_date = now - timedelta(days=89)
+        days_count = 90
+    elif period == "year":
+        start_date = now - timedelta(days=364)
+        days_count = 365
+    else:
+        start_date = now - timedelta(days=6)
+        days_count = 7
+
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Query posts in the date range
+    result = await db.execute(
+        select(Post.created_at).where(
+            Post.user_id == user_id,
+            Post.created_at >= start_date,
+        )
+    )
+    post_dates = [row[0] for row in result.all()]
+
+    # Build data points
+    data = []
+
+    if period in ("week", "month"):
+        # Group by day
+        for i in range(days_count):
+            day = (start_date + timedelta(days=i)).date()
+            count = sum(1 for d in post_dates if d.date() == day)
+            data.append({
+                "label": day.strftime("%d.%m."),
+                "date": day.isoformat(),
+                "count": count,
+            })
+    elif period == "quarter":
+        # Group by week (13 weeks)
+        for week_num in range(13):
+            week_start = start_date + timedelta(weeks=week_num)
+            week_end = week_start + timedelta(days=6)
+            count = sum(
+                1 for d in post_dates
+                if week_start.date() <= d.date() <= week_end.date()
+            )
+            data.append({
+                "label": f"KW {week_start.strftime('%d.%m.')}",
+                "date": week_start.date().isoformat(),
+                "count": count,
+            })
+    elif period == "year":
+        # Group by month (12 months)
+        for month_offset in range(12):
+            month_start_date = now - timedelta(days=364) + timedelta(days=month_offset * 30)
+            # Use actual month boundaries
+            m = (now.month - 11 + month_offset) % 12
+            if m == 0:
+                m = 12
+            y = now.year if (now.month - 11 + month_offset) > 0 else now.year - 1
+            month_names = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                           "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+            count = sum(
+                1 for d in post_dates
+                if d.month == m and d.year == y
+            )
+            data.append({
+                "label": month_names[m - 1],
+                "date": f"{y}-{m:02d}-01",
+                "count": count,
+            })
+
+    return {"period": period, "data": data}
 
 
 @router.get("/categories")

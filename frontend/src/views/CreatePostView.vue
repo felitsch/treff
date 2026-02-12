@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import draggable from 'vuedraggable'
 import JSZip from 'jszip'
@@ -10,6 +10,7 @@ import { useCreatePostStore } from '@/stores/createPost'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
 const store = useCreatePostStore()
 
@@ -924,9 +925,24 @@ watch(currentStep, (newStep, oldStep) => {
   }
 })
 
-// On mount: reload data if returning to an in-progress workflow
+// On mount: reload data if returning to an in-progress workflow,
+// or pre-fill from accepted suggestion query params
 onMounted(() => {
-  if (store.hasWorkflowState()) {
+  // Check if navigated from an accepted suggestion (query params from dashboard)
+  const suggestionCategory = route.query.category
+  const suggestionCountry = route.query.country
+  if (suggestionCategory) {
+    // Reset any existing workflow state and pre-fill from suggestion
+    store.resetWorkflow()
+    selectedCategory.value = suggestionCategory
+    if (suggestionCountry) {
+      country.value = suggestionCountry
+    }
+    // Auto-advance: load templates for the selected category
+    loadTemplates()
+    // Clear query params from URL to avoid re-applying on refresh
+    router.replace({ path: '/create-post' })
+  } else if (store.hasWorkflowState()) {
     // Reload templates if we're on or past the template step
     if (currentStep.value >= 2 && selectedCategory.value) {
       loadTemplates()
