@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #161: Image upload rejects non-image files
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed the `onDrop` handler in AssetsView.vue to show proper error messages for non-image files
+- Previously, dropping a non-image file (e.g., .txt, .exe) on the upload zone was silently ignored
+- Now all dropped files go through `uploadFile()` which has proper MIME type validation
+- Frontend validates: image/jpeg, image/png, image/webp only
+- Backend also validates as second layer of defense (same allowed types, returns 400)
+- Error message shown in red alert box: "Dateityp X nicht erlaubt. Erlaubt: JPG, PNG, WebP"
+
+### Files modified:
+- frontend/src/views/AssetsView.vue - Fixed onDrop() to pass all files to uploadFile() instead of silently filtering
+
+### Verification steps completed:
+1. Try uploading a .txt file to asset library - PASS
+   - Selected test_upload.txt via file chooser
+   - Error shown: "Dateityp text/plain nicht erlaubt. Erlaubt: JPG, PNG, WebP"
+   - No asset created, counter stays at "0 Assets"
+   - Screenshot: feature161-step1-txt-rejected.png
+2. Verify rejection with error message about file type - PASS
+   - Clear red alert box with warning icon, file type info, and dismissible X button
+3. Try uploading a .exe file - PASS
+   - Selected test_upload.exe via file chooser
+   - Error shown: "Dateityp application/octet-stream nicht erlaubt. Erlaubt: JPG, PNG, WebP"
+   - Screenshot: feature161-step2-exe-rejected.png
+4. Verify rejection - PASS
+   - Same clear error UI, no asset created
+5. Upload a valid .jpg file - PASS
+   - Selected test_upload.jpg (100x100px blue square)
+   - Asset accepted, counter updated to "1 Asset"
+   - Asset appears in library grid with filename, size (825 B), type (JPEG), dimensions (100x100px)
+   - Screenshot: feature161-step3-jpg-accepted.png
+6. Verify acceptance - PASS
+   - Asset visible in grid with crop and delete buttons
+
+### Verification checklist:
+- [x] Zero application JavaScript console errors (only Vite HMR WebSocket reconnect - dev tool, not app code)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Test files cleaned up after verification
+
+### Current state:
+- Feature #161 marked as PASSING
+- 162/170 features passing (95.3%)
+
 ## Session - Feature #158: Stock photo search integration works with Unsplash
 **Date:** 2026-02-13
 **Status:** PASSING
