@@ -6198,3 +6198,49 @@
 ### Current state:
 - Feature #140 marked as PASSING
 - 142/170 features passing (83.5%)
+
+## Session - Feature #142: Pagination during data updates remains stable
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented server-side pagination for the History page (backend + frontend)
+- Backend: Added page and limit query params to GET /api/posts
+  - Returns paginated response with items, total, page, limit, total_pages
+  - Backward compatible: omitting page/limit returns flat array as before
+  - Clamping: if requested page exceeds total_pages, returns last valid page
+  - Uses SQLAlchemy func.count() for efficient total count
+- Frontend: Added pagination UI to HistoryView.vue
+  - Page number buttons with active state highlighting
+  - Prev/Next navigation with disabled states
+  - Smart page number display (ellipsis for many pages)
+  - Status text: X Posts gefunden (Seite Y von Z)
+  - After delete: re-fetches current page, falls back to prev page if empty
+  - After duplicate: jumps to page 1 to show new post
+  - Filters reset page to 1 automatically
+  - Server-side filtering replaces client-side computed filtering
+
+### Verification steps completed:
+1. Created 15 posts for pagination test (10 per page = 2 pages) - PASS
+2. Navigated to page 2 of History - PASS (shows 5 posts: Post_05 to Post_01)
+3. Deleted a post from page 1 via API - PASS (Post_14 deleted)
+4. Navigated between pages - PASS (13 Posts, 10 on page 1, 3 on page 2)
+5. No duplicate or missing items across pages - PASS (all IDs unique, counts correct)
+6. Deleted post from page 2 via UI (Post_03) - PASS (12 Posts, page 2 shows 2 items)
+7. Deleted last item on page 2 (Post_01) - PASS (falls back to page 1, shows 10 posts)
+8. Edge case: single-page display hides pagination controls - PASS
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (only harmless CSS mockup comments in TemplatesView)
+- Backend data stored in SQLite (real database persistence)
+- Test data cleaned up after verification
+- Screenshots captured: feature142-step1 through feature142-step6
+
+### Files modified:
+- backend/app/api/routes/posts.py - Added page/limit params, total count, paginated response
+- frontend/src/views/HistoryView.vue - Added pagination UI, server-side pagination logic
+
+### Current state:
+- Feature #142 marked as PASSING
+- 145/170 features passing (85.3%)
