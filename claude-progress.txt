@@ -1,5 +1,59 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #125: Date picker does not allow past dates for scheduling
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented comprehensive past date prevention for the scheduling date picker
+- Changes span both frontend (CalendarView.vue) and backend (posts.py)
+
+### Frontend changes (CalendarView.vue):
+- Added `getTodayStr()` helper returning today's date as YYYY-MM-DD
+- Added `isPastDate(dateStr)` helper comparing date strings
+- `onDragOver()`: Returns `dropEffect = 'none'` for past dates (prevents drop)
+- `onDrop()`: Returns early for past dates (no dialog opens)
+- Calendar cells: Show `opacity-50 cursor-not-allowed` for past dates when dragging
+- Drag highlight: Only shows blue highlight for non-past dates
+- Scheduling dialog: Changed read-only date display to editable `<input type="date">` with `min` attribute set to today
+- Red error message "Vergangene Daten koennen nicht ausgewaehlt werden." shown when past date typed in dialog
+- "Post planen" button disabled (gray, cursor-not-allowed) when past date selected
+- `confirmSchedule()`: Extra guard preventing past date submission
+
+### Backend changes (posts.py):
+- Added past date validation in `PUT /api/posts/{post_id}/schedule` endpoint
+- `parsed_date.date() < date.today()` check returns 400 with German error message
+- Today and future dates are allowed; only strictly past dates are rejected
+
+### Verification steps completed:
+1. Open scheduling date picker - PASS (drag post to future date opens dialog with date input)
+2. Verify past dates are disabled/grayed out - PASS (calendar cells opacity-50 when dragging, date input has min attr, error on past date)
+3. Try selecting yesterday's date - PASS (typed 2026-02-11 in dialog, red error shown, button disabled)
+4. Verify selection is prevented - PASS (drag to Feb 11 doesn't open dialog; dialog prevents submit for past dates; backend rejects with 400)
+5. Select tomorrow's date - PASS (set date to 2026-02-13, error disappears, button enabled)
+6. Verify selection succeeds - PASS (post scheduled on Feb 13 at 10:00, appears in calendar)
+
+### Backend API tests (curl):
+- Schedule for 2026-02-11 (yesterday) → 400 "Vergangene Daten koennen nicht ausgewaehlt werden..."
+- Schedule for 2026-02-12 (today) → 200 success
+- Schedule for 2026-02-13 (tomorrow) → 200 success
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Screenshots captured:
+  - feature125-step1-calendar-with-unscheduled-post.png (calendar with post in sidebar)
+  - feature125-step2-drag-to-past-date-prevented.png (drag to past date blocked)
+  - feature125-step3-dialog-opens-for-future-date.png (dialog with date picker for Feb 13)
+  - feature125-step4-past-date-validation-error.png (red error + disabled button for past date)
+  - feature125-step5-future-date-scheduled-success.png (post scheduled on Feb 13)
+
+### Current state:
+- Feature #125 marked as PASSING
+- 128/170 features passing (75.3%)
+
 ## Session - Feature #126: Posts sorted by date display in correct chronological order
 **Date:** 2026-02-12
 **Status:** PASSING
