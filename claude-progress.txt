@@ -1,5 +1,37 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #98: API handles malformed JSON gracefully
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added custom RequestValidationError exception handler in backend/app/main.py
+- Malformed JSON bodies now return 400 Bad Request (instead of FastAPI default 422) with meaningful message
+- Field validation errors return 422 with structured per-field error details (field name, message, type)
+- Normal valid requests (login, register, etc.) still work correctly
+
+### Files modified:
+- backend/app/main.py - Added imports (Request, RequestValidationError, JSONResponse) and custom exception handler
+
+### Verification steps completed:
+1. POST /api/posts with invalid JSON body - PASS (returns 400 with "Bad Request: The request body contains malformed JSON. Please send a valid JSON object.")
+2. Verify 400 Bad Request response - PASS (status code is 400, not 422)
+3. Verify meaningful error message returned - PASS (detail field explains the issue clearly)
+4. POST /api/auth/login with missing fields - PASS (returns 422 with field-specific errors: "email: Field required", "password: Field required")
+5. Verify appropriate validation error - PASS (each missing field listed with name and error type)
+
+### Additional verification:
+- Tested from browser via fetch() calls (same-origin on backend port) - all 3 scenarios pass
+- Login flow still works end-to-end (registered test98@treff.de, logged in, saw dashboard)
+- Zero JavaScript console errors
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Edge cases verified: single missing field, invalid email format, short password - all return appropriate errors
+- Screenshots: feature98-api-error-handling-results.png, feature98-login-works-after-changes.png
+
+### Current state:
+- Feature #98 marked as PASSING
+- 102/170 features passing (60.0%)
+
 ## Session - Feature #97: API returns 404 for non-existent resource IDs
 **Date:** 2026-02-12
 **Status:** PASSING
