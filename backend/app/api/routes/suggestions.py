@@ -11,6 +11,23 @@ from app.models.content_suggestion import ContentSuggestion
 router = APIRouter()
 
 
+def suggestion_to_dict(s: ContentSuggestion) -> dict:
+    """Convert ContentSuggestion model to dict to avoid MissingGreenlet."""
+    return {
+        "id": s.id,
+        "suggestion_type": s.suggestion_type,
+        "title": s.title,
+        "description": s.description,
+        "suggested_category": s.suggested_category,
+        "suggested_country": s.suggested_country,
+        "suggested_date": s.suggested_date.isoformat() if s.suggested_date else None,
+        "reason": s.reason,
+        "status": s.status,
+        "accepted_post_id": s.accepted_post_id,
+        "created_at": s.created_at.isoformat() if s.created_at else None,
+    }
+
+
 @router.get("")
 async def list_suggestions(
     user_id: int = Depends(get_current_user_id),
@@ -22,7 +39,8 @@ async def list_suggestions(
         .where(ContentSuggestion.status == "pending")
         .order_by(ContentSuggestion.created_at.desc())
     )
-    return result.scalars().all()
+    suggestions = result.scalars().all()
+    return [suggestion_to_dict(s) for s in suggestions]
 
 
 @router.post("/generate")
@@ -50,8 +68,8 @@ async def accept_suggestion(
         raise HTTPException(status_code=404, detail="Suggestion not found")
 
     suggestion.status = "accepted"
-    await db.flush()
-    return suggestion
+    await db.commit()
+    return suggestion_to_dict(suggestion)
 
 
 @router.put("/{suggestion_id}/dismiss")
@@ -69,5 +87,5 @@ async def dismiss_suggestion(
         raise HTTPException(status_code=404, detail="Suggestion not found")
 
     suggestion.status = "dismissed"
-    await db.flush()
-    return suggestion
+    await db.commit()
+    return suggestion_to_dict(suggestion)

@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import engine, Base, async_session
 from app.core.seed_templates import seed_default_templates
+from app.core.seed_suggestions import seed_default_suggestions
 from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default templates")
         except Exception as e:
             logger.error(f"Failed to seed templates: {e}")
+
+    # Seed default content suggestions if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_default_suggestions(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default content suggestions")
+        except Exception as e:
+            logger.error(f"Failed to seed suggestions: {e}")
 
     yield
 

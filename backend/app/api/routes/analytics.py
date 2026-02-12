@@ -10,6 +10,7 @@ from app.core.security import get_current_user_id
 from app.models.post import Post
 from app.models.asset import Asset
 from app.models.calendar_entry import CalendarEntry
+from app.models.content_suggestion import ContentSuggestion
 
 router = APIRouter()
 
@@ -132,6 +133,30 @@ async def get_dashboard_data(
         for e in calendar_entries_raw
     ]
 
+    # Content suggestions (pending, latest 5)
+    suggestions_result = await db.execute(
+        select(ContentSuggestion)
+        .where(ContentSuggestion.status == "pending")
+        .order_by(ContentSuggestion.created_at.desc())
+        .limit(5)
+    )
+    suggestions_raw = suggestions_result.scalars().all()
+    suggestions = [
+        {
+            "id": s.id,
+            "suggestion_type": s.suggestion_type,
+            "title": s.title,
+            "description": s.description,
+            "suggested_category": s.suggested_category,
+            "suggested_country": s.suggested_country,
+            "suggested_date": s.suggested_date.isoformat() if s.suggested_date else None,
+            "reason": s.reason,
+            "status": s.status,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+        }
+        for s in suggestions_raw
+    ]
+
     return {
         "stats": {
             "posts_this_week": posts_this_week,
@@ -141,6 +166,7 @@ async def get_dashboard_data(
         },
         "recent_posts": recent_posts,
         "calendar_entries": calendar_entries,
+        "suggestions": suggestions,
     }
 
 
