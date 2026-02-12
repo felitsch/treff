@@ -1,5 +1,41 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #96: API returns 401 for requests without valid JWT
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed HTTPBearer security to return 401 (Unauthorized) instead of 403 (Forbidden) for missing/invalid JWT tokens
+- Changed `HTTPBearer()` to `HTTPBearer(auto_error=False)` so missing credentials are handled manually
+- Added explicit `None` check in `get_current_user_id()` to raise 401 when no Authorization header is provided
+
+### Code changes:
+- `backend/app/core/security.py`:
+  - Line 13: `HTTPBearer()` -> `HTTPBearer(auto_error=False)`
+  - Line 51: Made credentials parameter `Optional[HTTPAuthorizationCredentials]`
+  - Lines 59-60: Added `if credentials is None: raise credentials_exception`
+
+### Verification steps completed:
+1. GET /api/posts without Authorization header - PASS (401 "Could not validate credentials")
+2. GET /api/posts with expired token - PASS (401 "Could not validate credentials")
+3. GET /api/posts with valid token - PASS (200 with empty array [])
+4. Additional tests:
+   - Garbage/invalid token string -> 401
+   - Refresh token used as access token -> 401
+   - Other endpoints (templates, analytics, settings, calendar) all return 401 without auth
+5. Browser UI verification:
+   - Navigating to /dashboard without login redirects to /login page
+   - After login, dashboard loads successfully with "Feature96 Test" user
+6. Server restart persistence:
+   - Restarted backend server
+   - All 401/200 behavior confirmed after restart
+7. Zero JavaScript console errors (0 errors, 0 warnings)
+8. Mock data grep checks: zero matches in security.py
+
+### Current state:
+- Feature #96 marked as PASSING
+- 100/170 features passing (58.8%)
+
 ## Session - Feature #94: Empty required fields show validation errors on forms
 **Date:** 2026-02-12
 **Status:** PASSING
