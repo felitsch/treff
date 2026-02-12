@@ -51,10 +51,12 @@ async def list_posts(
     search: Optional[str] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
+    sort_by: Optional[str] = Query(default="created_at", pattern="^(created_at|updated_at|title|scheduled_date)$"),
+    sort_direction: Optional[str] = Query(default="desc", pattern="^(asc|desc)$"),
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List posts with optional filters."""
+    """List posts with optional filters and sorting."""
     query = select(Post).where(Post.user_id == user_id)
 
     if category:
@@ -90,7 +92,19 @@ async def list_posts(
         except (ValueError, TypeError):
             pass
 
-    query = query.order_by(Post.created_at.desc())
+    # Dynamic sorting
+    sort_field_map = {
+        "created_at": Post.created_at,
+        "updated_at": Post.updated_at,
+        "title": Post.title,
+        "scheduled_date": Post.scheduled_date,
+    }
+    sort_column = sort_field_map.get(sort_by, Post.created_at)
+    if sort_direction == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     result = await db.execute(query)
     posts = result.scalars().all()
     return [post_to_dict(p) for p in posts]
@@ -262,6 +276,14 @@ async def schedule_post(
         parsed_date = datetime.strptime(scheduled_date_str, "%Y-%m-%d")
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+    # Reject past dates - scheduling must be today or in the future
+    today = date.today()
+    if parsed_date.date() < today:
+        raise HTTPException(
+            status_code=400,
+            detail="Vergangene Daten koennen nicht ausgewaehlt werden. Bitte waehlen Sie ein Datum ab heute."
+        )
 
     # Validate time format
     try:

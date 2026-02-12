@@ -17,6 +17,27 @@ const filterStatus = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
 
+// Sorting
+const sortBy = ref('created_at')
+const sortDirection = ref('desc')
+
+const sortOptions = [
+  { id: 'created_at', label: 'Erstelldatum' },
+  { id: 'updated_at', label: 'Aktualisiert' },
+  { id: 'title', label: 'Titel' },
+  { id: 'scheduled_date', label: 'Geplantes Datum' },
+]
+
+function toggleSortDirection() {
+  sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
+  fetchPosts()
+}
+
+function changeSortBy(value) {
+  sortBy.value = value
+  fetchPosts()
+}
+
 // Quick date range presets
 const dateRangePresets = [
   { label: 'Letzte 7 Tage', days: 7 },
@@ -240,6 +261,8 @@ async function fetchPosts() {
     if (searchQuery.value && searchQuery.value.trim()) params.search = searchQuery.value.trim()
     if (filterDateFrom.value) params.date_from = filterDateFrom.value
     if (filterDateTo.value) params.date_to = filterDateTo.value
+    params.sort_by = sortBy.value
+    params.sort_direction = sortDirection.value
 
     const response = await api.get('/api/posts', { params })
     posts.value = response.data
@@ -468,6 +491,26 @@ onMounted(() => {
             {{ s.label }}
           </option>
         </select>
+
+        <!-- Sort controls -->
+        <div class="flex items-center gap-1.5">
+          <select
+            v-model="sortBy"
+            @change="changeSortBy($event.target.value)"
+            class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2]"
+          >
+            <option v-for="opt in sortOptions" :key="opt.id" :value="opt.id">
+              {{ opt.label }}
+            </option>
+          </select>
+          <button
+            @click="toggleSortDirection"
+            class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#4C8BC2] hover:text-[#4C8BC2] transition-colors text-sm"
+            :title="sortDirection === 'desc' ? 'Absteigend (neueste zuerst)' : 'Aufsteigend (aelteste zuerst)'"
+          >
+            {{ sortDirection === 'desc' ? '↓' : '↑' }}
+          </button>
+        </div>
 
         <!-- Clear filters -->
         <button
