@@ -37,6 +37,7 @@ const {
   hashtagsTiktok,
   ctaText,
   currentPreviewSlide,
+  previewPlatform,
   uploadingImage,
   assets,
   aiImagePrompt,
@@ -134,6 +135,15 @@ const stepLabels = [
 const selectedCategoryObj = computed(() => categories.find(c => c.id === selectedCategory.value))
 const selectedPlatformObj = computed(() => platforms.find(p => p.id === selectedPlatform.value))
 const selectedCountryObj = computed(() => countries.find(c => c.id === country.value))
+
+// Effective preview platform: uses the toggle value if set, otherwise falls back to selectedPlatform
+const effectivePreviewPlatform = computed(() => previewPlatform.value || selectedPlatform.value)
+const effectivePreviewPlatformObj = computed(() => platforms.find(p => p.id === effectivePreviewPlatform.value))
+
+// Initialize previewPlatform when platform changes
+watch(selectedPlatform, (val) => {
+  if (!previewPlatform.value) previewPlatform.value = val
+})
 
 // ── Methods ──────────────────────────────────────────────────────────
 
@@ -1074,12 +1084,30 @@ onUnmounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Preview -->
         <div class="flex flex-col items-center">
+          <!-- Platform preview toggle -->
+          <div class="flex items-center gap-1 mb-4 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl" data-testid="platform-preview-toggle">
+            <button
+              v-for="p in platforms"
+              :key="p.id"
+              @click="previewPlatform = p.id"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+              :class="effectivePreviewPlatform === p.id
+                ? 'bg-white dark:bg-gray-700 text-[#4C8BC2] shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              :data-testid="'preview-toggle-' + p.id"
+            >
+              <span>{{ p.icon }}</span>
+              <span class="hidden sm:inline">{{ p.label }}</span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">({{ p.format }})</span>
+            </button>
+          </div>
+
           <div
             id="post-preview-container"
             class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]"
             :class="{
-              'aspect-square w-full max-w-[400px]': selectedPlatform === 'instagram_feed',
-              'aspect-[9/16] w-full max-w-[320px]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
+              'aspect-square w-full max-w-[400px]': effectivePreviewPlatform === 'instagram_feed',
+              'aspect-[9/16] w-full max-w-[320px]': effectivePreviewPlatform === 'instagram_story' || effectivePreviewPlatform === 'tiktok',
             }"
           >
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-6 flex flex-col justify-between">
@@ -1170,8 +1198,9 @@ onUnmounted(() => {
             <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📢 Call-to-Action</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ ctaText }}</p>
           </div>
-          <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400">
-            {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}
+          <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400" data-testid="preview-platform-info">
+            {{ effectivePreviewPlatformObj?.icon }} {{ effectivePreviewPlatformObj?.label }}
+            <span v-if="effectivePreviewPlatform !== selectedPlatform" class="text-[#4C8BC2] font-medium">(Vorschau)</span>
             &middot; {{ selectedCategoryObj?.label }}
             <span v-if="selectedCountryObj"> &middot; {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</span>
           </div>
@@ -1500,12 +1529,30 @@ onUnmounted(() => {
 
         <!-- Mini live preview (sticky) -->
         <div class="lg:sticky lg:top-4 self-start">
-          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Live-Vorschau</div>
+          <!-- Platform preview toggle (mini version for step 7) -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Live-Vorschau</div>
+            <div class="flex items-center gap-0.5 p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg" data-testid="mini-platform-preview-toggle">
+              <button
+                v-for="p in platforms"
+                :key="p.id"
+                @click="previewPlatform = p.id"
+                class="px-1.5 py-0.5 rounded text-xs transition-all"
+                :class="effectivePreviewPlatform === p.id
+                  ? 'bg-white dark:bg-gray-700 text-[#4C8BC2] shadow-sm font-medium'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'"
+                :data-testid="'mini-preview-toggle-' + p.id"
+                :title="p.label + ' (' + p.format + ')'"
+              >
+                {{ p.icon }}
+              </button>
+            </div>
+          </div>
           <div
             class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
             :class="{
-              'aspect-square': selectedPlatform === 'instagram_feed',
-              'aspect-[9/16]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
+              'aspect-square': effectivePreviewPlatform === 'instagram_feed',
+              'aspect-[9/16]': effectivePreviewPlatform === 'instagram_story' || effectivePreviewPlatform === 'tiktok',
             }"
             :style="{
               maxWidth: '320px',

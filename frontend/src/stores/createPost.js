@@ -38,6 +38,9 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const ctaText = ref('')
   const currentPreviewSlide = ref(0)
 
+  // Step 6: Platform preview toggle (allows switching preview format independently)
+  const previewPlatform = ref('')
+
   // Step 8: Background Image
   const uploadingImage = ref(false)
   const assets = ref([])
@@ -82,6 +85,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     savedPost.value = null
     exportComplete.value = false
     currentPreviewSlide.value = 0
+    previewPlatform.value = ''
     exportQuality.value = '1080'
     loading.value = false
     generatingText.value = false
@@ -135,6 +139,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     hashtagsTiktok,
     ctaText,
     currentPreviewSlide,
+    previewPlatform,
     // Step 8
     uploadingImage,
     assets,
