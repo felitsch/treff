@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #149: Search responds within 500ms
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified search performance on History page with 120+ seeded posts
+- Added 200ms debounce to search input to prevent excessive API calls during typing
+- Added database indexes on posts table (ix_posts_user_id, ix_posts_user_id_created_at) for faster queries
+- Measured search performance end-to-end via Playwright MutationObserver instrumentation
+
+### Performance results (from input to results displayed):
+- "Gastfamilie" (5 results): 274ms
+- "PERF_TEST" (120 results): 223ms
+- "Highschool" (5 results): 220ms
+- "usa" (24 results): 220ms
+- "xyz_nonexistent" (0 results): 226ms
+- All well under 500ms target
+
+### API-only response times (3-run average):
+- All queries: 2-10ms average, 24ms max
+- With database indexes, queries are extremely fast even with 120+ posts
+
+### Files modified:
+- backend/app/models/post.py - Added Index imports, __table_args__ with user_id indexes
+- frontend/src/views/HistoryView.vue - Added 200ms debounced search, onUnmounted cleanup
+
+### Verification steps completed:
+1. Seed database with 100+ posts - PASS (120 posts created via API)
+2. Type search query in History page - PASS (typed "Gastfamilie", "UNIQUE_NEEDLE_149", etc.)
+3. Measure time from input to results displayed - PASS (274ms max, measured via MutationObserver)
+4. Verify results appear within 500ms - PASS (all searches under 300ms)
+5. Verify no UI jank during search - PASS (zero console errors, smooth transitions, debounce prevents excessive requests)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in backend logs (all search requests returned 200 OK)
+- [x] Screenshots captured:
+  - feature149-step1-search-results.png (empty results for nonexistent search)
+  - feature149-step2-search-gastfamilie.png (5 results for "Gastfamilie")
+
+### Current state:
+- Feature #149 marked as PASSING
+- 151/170 features passing (88.8%)
+
 ## Session - Feature #147: Export history records each export with metadata
 **Date:** 2026-02-13
 **Status:** PASSING
