@@ -1,5 +1,43 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #73: Accept suggestion starts post creation workflow
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented the accept suggestion → create post pre-fill workflow
+- CreatePostView now reads `category` and `country` query params from URL (passed by dashboard)
+- When accepting a suggestion, the workflow resets and pre-fills the selected category and country
+- Query params are cleared from URL after applying to prevent re-application on page refresh
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added `useRoute` import, reads suggestion query params in onMounted, pre-fills category and country from accepted suggestion data
+- backend/app/api/routes/analytics.py - (from prior session) Implemented posting frequency endpoint
+
+### Verification steps completed:
+1. View a content suggestion on dashboard - PASS (3 suggestions visible: FAQ, Kanada-Spotlight, USA Fristen)
+2. Click Accept on the suggestion - PASS (clicked "Annehmen" on Kanada-Spotlight suggestion)
+3. Verify Create Post workflow opens - PASS (navigated to /create-post, step 1 visible)
+4. Verify workflow is pre-filled with suggestion data (category, country) - PASS:
+   - Category "Laender-Spotlight" pre-selected with blue highlight on step 1
+   - Country "Kanada" pre-selected with blue highlight on step 4
+   - Store state confirmed: {country: "canada", selectedCategory: "laender_spotlight"}
+5. Verify suggestion status changes to accepted - PASS:
+   - Dashboard shows "1 offen" (down from "3 offen") after accepting Kanada suggestion
+   - GET /api/suggestions returns empty array (all accepted/dismissed)
+   - Second test: accepted USA suggestion, "Fristen & CTA" pre-selected, "USA" country pre-selected
+
+### Additional verification:
+- Second acceptance test: USA "Bewerbungsfristen-Reminder" suggestion accepted, pre-filled correctly with Fristen & CTA category and USA country
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: after full restart, accepted suggestions remain accepted (dashboard shows empty state "Keine Vorschlaege vorhanden")
+- Screenshots: feature73-step1-dashboard-suggestions.png, feature73-step2-create-post-prefilled.png, feature73-step3-country-prefilled.png, feature73-step5-usa-fristen-prefilled.png, feature73-step6-usa-country-prefilled.png, feature73-step7-persistence-after-restart.png
+
+### Current state:
+- Feature #73 marked as PASSING
+- 83/170 features passing (48.8%)
+
 ## Session - Feature #71: Post can be rescheduled by changing date and time
 **Date:** 2026-02-12
 **Status:** PASSING
