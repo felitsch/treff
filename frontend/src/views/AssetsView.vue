@@ -12,7 +12,43 @@ const uploadError = ref(null)
 const isDragOver = ref(false)
 const searchQuery = ref('')
 const selectedFilter = ref('all')
+const selectedCategory = ref('all')
+const selectedCountry = ref('all')
 const showDeleteConfirm = ref(null)
+
+// Upload metadata
+const uploadCategory = ref('')
+const uploadCountry = ref('')
+const uploadTags = ref('')
+
+// Category and Country options
+const categoryOptions = [
+  { value: 'logo', label: 'Logo' },
+  { value: 'background', label: 'Hintergrund' },
+  { value: 'photo', label: 'Foto' },
+  { value: 'icon', label: 'Icon' },
+  { value: 'country', label: 'Laenderbild' },
+]
+
+const countryOptions = [
+  { value: 'usa', label: 'USA' },
+  { value: 'kanada', label: 'Kanada' },
+  { value: 'australien', label: 'Australien' },
+  { value: 'neuseeland', label: 'Neuseeland' },
+  { value: 'irland', label: 'Irland' },
+]
+
+// Category label helper
+function categoryLabel(value) {
+  const opt = categoryOptions.find(o => o.value === value)
+  return opt ? opt.label : value
+}
+
+// Country label helper
+function countryLabel(value) {
+  const opt = countryOptions.find(o => o.value === value)
+  return opt ? opt.label : value
+}
 
 // Computed
 const filteredAssets = computed(() => {
@@ -20,18 +56,30 @@ const filteredAssets = computed(() => {
   if (selectedFilter.value !== 'all') {
     filtered = filtered.filter(a => a.file_type === `image/${selectedFilter.value}`)
   }
+  if (selectedCategory.value !== 'all') {
+    filtered = filtered.filter(a => a.category === selectedCategory.value)
+  }
+  if (selectedCountry.value !== 'all') {
+    filtered = filtered.filter(a => a.country === selectedCountry.value)
+  }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
     filtered = filtered.filter(a =>
       (a.original_filename || a.filename || '').toLowerCase().includes(q) ||
       (a.tags || '').toLowerCase().includes(q) ||
-      (a.category || '').toLowerCase().includes(q)
+      (a.category || '').toLowerCase().includes(q) ||
+      (a.country || '').toLowerCase().includes(q)
     )
   }
   return filtered
 })
 
-// Fetch assets
+// Check if any filters are active
+const hasActiveFilters = computed(() => {
+  return selectedFilter.value !== 'all' || selectedCategory.value !== 'all' || selectedCountry.value !== 'all' || searchQuery.value.trim() !== ''
+})
+
+// Fetch all assets (filtering is done client-side via filteredAssets computed)
 async function fetchAssets() {
   loading.value = true
   error.value = null
@@ -66,6 +114,15 @@ async function uploadFile(file) {
 
   const formData = new FormData()
   formData.append('file', file)
+  if (uploadCategory.value) {
+    formData.append('category', uploadCategory.value)
+  }
+  if (uploadCountry.value) {
+    formData.append('country', uploadCountry.value)
+  }
+  if (uploadTags.value.trim()) {
+    formData.append('tags', uploadTags.value.trim())
+  }
 
   try {
     const response = await api.post('/api/assets/upload', formData, {
@@ -82,6 +139,11 @@ async function uploadFile(file) {
     // Add the new asset to the top of the list
     assets.value.unshift(response.data)
     uploadProgress.value = 100
+
+    // Reset upload metadata after successful upload
+    uploadCategory.value = ''
+    uploadCountry.value = ''
+    uploadTags.value = ''
   } catch (err) {
     uploadError.value = err.response?.data?.detail || 'Upload fehlgeschlagen'
   } finally {
@@ -144,13 +206,21 @@ async function deleteAsset(assetId) {
     assets.value = assets.value.filter(a => a.id !== assetId)
     showDeleteConfirm.value = null
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Löschen fehlgeschlagen'
+    error.value = err.response?.data?.detail || 'Loeschen fehlgeschlagen'
   }
+}
+
+// Clear all filters
+function clearFilters() {
+  selectedFilter.value = 'all'
+  selectedCategory.value = 'all'
+  selectedCountry.value = 'all'
+  searchQuery.value = ''
 }
 
 // Format file size
 function formatSize(bytes) {
-  if (!bytes) return '—'
+  if (!bytes) return '\u2014'
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
@@ -158,14 +228,14 @@ function formatSize(bytes) {
 
 // Format date
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '\u2014'
   const d = new Date(dateStr)
   return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 // Get file type label
 function fileTypeLabel(type) {
-  if (!type) return '—'
+  if (!type) return '\u2014'
   return type.replace('image/', '').toUpperCase()
 }
 
@@ -245,20 +315,56 @@ onMounted(fetchAssets)
           </span>
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          JPG, PNG oder WebP · max. 20 MB
+          JPG, PNG oder WebP &middot; max. 20 MB
         </p>
       </div>
     </div>
 
+    <!-- Upload Metadata (Category & Country selection for uploads) -->
+    <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3" data-testid="upload-metadata">
+      <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 shrink-0">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        <span class="font-medium">Upload-Tags:</span>
+      </div>
+      <select
+        v-model="uploadCategory"
+        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        data-testid="upload-category-select"
+        @click.stop
+      >
+        <option value="">Kategorie (optional)</option>
+        <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+      <select
+        v-model="uploadCountry"
+        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        data-testid="upload-country-select"
+        @click.stop
+      >
+        <option value="">Land (optional)</option>
+        <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+      <input
+        v-model="uploadTags"
+        type="text"
+        placeholder="Tags (z.B. kanada, landschaft)"
+        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 flex-1 min-w-[180px]"
+        data-testid="upload-tags-input"
+        @click.stop
+      />
+    </div>
+
     <!-- Upload error -->
     <div v-if="uploadError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2" role="alert">
-      <span class="text-red-500">⚠️</span>
+      <span class="text-red-500">&#9888;&#65039;</span>
       <p class="text-sm text-red-700 dark:text-red-400">{{ uploadError }}</p>
-      <button @click="uploadError = null" class="ml-auto text-red-500 hover:text-red-700">✕</button>
+      <button @click="uploadError = null" class="ml-auto text-red-500 hover:text-red-700">&#10005;</button>
     </div>
 
     <!-- Filters and Search -->
-    <div class="flex flex-col sm:flex-row gap-3">
+    <div class="flex flex-col sm:flex-row gap-3" data-testid="filter-bar">
       <div class="relative flex-1">
         <input
           v-model="searchQuery"
@@ -271,14 +377,61 @@ onMounted(fetchAssets)
         </svg>
       </div>
       <select
+        v-model="selectedCategory"
+        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        data-testid="filter-category"
+      >
+        <option value="all">Alle Kategorien</option>
+        <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+      <select
+        v-model="selectedCountry"
+        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        data-testid="filter-country"
+      >
+        <option value="all">Alle Laender</option>
+        <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+      <select
         v-model="selectedFilter"
         class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        data-testid="filter-type"
       >
         <option value="all">Alle Typen</option>
         <option value="jpeg">JPG</option>
         <option value="png">PNG</option>
         <option value="webp">WebP</option>
       </select>
+      <button
+        v-if="hasActiveFilters"
+        @click="clearFilters"
+        class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        data-testid="clear-filters-btn"
+      >
+        Filter zuruecksetzen
+      </button>
+    </div>
+
+    <!-- Active filters indicator -->
+    <div v-if="hasActiveFilters" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" data-testid="active-filters-indicator">
+      <span>Aktive Filter:</span>
+      <span v-if="selectedCategory !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
+        {{ categoryLabel(selectedCategory) }}
+        <button @click="selectedCategory = 'all'" class="hover:text-blue-900 dark:hover:text-blue-100">&times;</button>
+      </span>
+      <span v-if="selectedCountry !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
+        {{ countryLabel(selectedCountry) }}
+        <button @click="selectedCountry = 'all'" class="hover:text-green-900 dark:hover:text-green-100">&times;</button>
+      </span>
+      <span v-if="selectedFilter !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
+        {{ selectedFilter.toUpperCase() }}
+        <button @click="selectedFilter = 'all'" class="hover:text-purple-900 dark:hover:text-purple-100">&times;</button>
+      </span>
+      <span v-if="searchQuery.trim()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
+        "{{ searchQuery }}"
+        <button @click="searchQuery = ''" class="hover:text-yellow-900 dark:hover:text-yellow-100">&times;</button>
+      </span>
+      <span class="text-gray-400 dark:text-gray-500">&middot; {{ filteredAssets.length }} Ergebnis{{ filteredAssets.length !== 1 ? 'se' : '' }}</span>
     </div>
 
     <!-- Loading state -->
@@ -296,13 +449,21 @@ onMounted(fetchAssets)
 
     <!-- Empty state -->
     <div v-else-if="filteredAssets.length === 0 && !loading" class="text-center py-12">
-      <div class="text-4xl mb-3">🖼️</div>
+      <div class="text-4xl mb-3">&#128444;&#65039;</div>
       <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
         {{ assets.length === 0 ? 'Noch keine Assets' : 'Keine Treffer' }}
       </h3>
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        {{ assets.length === 0 ? 'Lade dein erstes Bild hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff.' }}
+        {{ assets.length === 0 ? 'Lade dein erstes Bild hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
       </p>
+      <button
+        v-if="hasActiveFilters"
+        @click="clearFilters"
+        class="mt-3 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-700"
+        data-testid="empty-clear-filters-btn"
+      >
+        Filter zuruecksetzen
+      </button>
     </div>
 
     <!-- Asset Grid -->
@@ -337,8 +498,33 @@ onMounted(fetchAssets)
               {{ fileTypeLabel(asset.file_type) }}
             </span>
           </div>
+          <!-- Category, Country, and Tags badges -->
+          <div v-if="asset.category || asset.country || asset.tags" class="flex flex-wrap gap-1 mt-1.5">
+            <span
+              v-if="asset.category"
+              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+              :data-testid="`asset-${asset.id}-category`"
+            >
+              {{ categoryLabel(asset.category) }}
+            </span>
+            <span
+              v-if="asset.country"
+              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+              :data-testid="`asset-${asset.id}-country`"
+            >
+              {{ countryLabel(asset.country) }}
+            </span>
+            <span
+              v-for="tag in (asset.tags || '').split(',').map(t => t.trim()).filter(t => t)"
+              :key="tag"
+              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+              :data-testid="`asset-${asset.id}-tag-${tag}`"
+            >
+              {{ tag }}
+            </span>
+          </div>
           <p v-if="asset.width && asset.height" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            {{ asset.width }}×{{ asset.height }}px
+            {{ asset.width }}&times;{{ asset.height }}px
           </p>
         </div>
 
@@ -349,13 +535,13 @@ onMounted(fetchAssets)
             @click.stop="deleteAsset(asset.id)"
             class="pointer-events-auto px-2 py-1 text-xs bg-red-500 text-white rounded shadow hover:bg-red-600 transition-colors"
           >
-            Löschen?
+            Loeschen?
           </button>
           <button
             v-else
             @click.stop="showDeleteConfirm = asset.id"
             class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-red-50 dark:hover:bg-red-900/30"
-            title="Asset löschen"
+            title="Asset loeschen"
           >
             <svg class="h-3.5 w-3.5 text-gray-500 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
