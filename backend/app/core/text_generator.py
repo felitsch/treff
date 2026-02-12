@@ -2,15 +2,18 @@
 TREFF Sprachreisen - Text Content Generator
 
 Generates structured German text content for social media posts based on
-category, country, topic, and tone. This is a rule-based content engine
-that produces real, brand-appropriate German text.
+category, country, topic, and tone.
 
-When a Gemini API key is configured, this module will be replaced by AI generation.
-For now, it generates category-specific content using curated content templates.
+Uses Gemini 2.5 Flash for AI-powered text generation when an API key is available.
+Falls back to rule-based content templates when no API key is configured or API errors occur.
 """
 
+import json
+import logging
 import random
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Country-specific facts and content
 COUNTRY_DATA = {
@@ -354,6 +357,240 @@ ALUMNI_NAMES = [
     "Jonas", "Lukas", "Finn", "Maximilian", "Leon",
 ]
 
+# Category display names for Gemini prompts
+CATEGORY_DISPLAY_NAMES = {
+    "laender_spotlight": "Laender-Spotlight",
+    "erfahrungsberichte": "Erfahrungsberichte",
+    "infografiken": "Infografiken",
+    "fristen_cta": "Fristen & Call-to-Action",
+    "tipps_tricks": "Tipps & Tricks",
+    "faq": "FAQ (Haeufig gestellte Fragen)",
+    "foto_posts": "Foto-Posts",
+    "reel_tiktok_thumbnails": "Reel/TikTok Thumbnails",
+    "story_posts": "Story-Posts",
+}
+
+
+def _build_gemini_system_prompt(tone: str) -> str:
+    """Build the system prompt for Gemini with TREFF brand guidelines."""
+    tone_instruction = ""
+    if tone == "serioess":
+        tone_instruction = (
+            "Schreibe in einem serioesen, vertrauenswuerdigen Ton. "
+            "Die Zielgruppe sind hier primaer die Eltern der Schueler. "
+            "Verwende Sie-Anrede wo passend. Betone Sicherheit, Erfahrung seit 1984, "
+            "und professionelle Betreuung. Kein Slang, keine uebertriebenen Emojis. "
+            "Maximal 2-3 dezente Emojis pro Caption."
+        )
+    else:
+        tone_instruction = (
+            "Schreibe in einem jugendlichen, aber nicht albernen Ton. "
+            "Die Zielgruppe sind Teenager (14-18 Jahre), aber Eltern lesen mit. "
+            "Verwende Du-Anrede. Sei begeisternd und motivierend, aber nicht unserioes. "
+            "Verwende passende Emojis (3-5 pro Caption), z.B. Landesflaggen, "
+            "Sterne, Herzen, Flugzeuge. Kein Slang wie 'digga' oder 'bruh'."
+        )
+
+    return f"""Du bist der Social-Media-Content-Ersteller fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland.
+
+UNTERNEHMENSPROFIL:
+- TREFF Sprachreisen, gegruendet 1984 in Eningen u.A. / Pfullingen, Deutschland
+- Organisiert Highschool-Aufenthalte fuer deutsche Schueler in: USA, Kanada, Australien, Neuseeland, Irland
+- Ca. 200 Teilnehmer pro Jahr
+- Primaerfarbe: #4C8BC2 (Blau - Vertrauen, Bildung)
+- Sekundaerfarbe: #FDD000 (Gelb - Energie, Abenteuer)
+
+PROGRAMM-PREISE:
+- USA Classic: ab 13.800 EUR
+- USA Select: ab 22.000 EUR
+- Kanada: ab 15.200 EUR
+- Australien: ab 18.900 EUR
+- Neuseeland: ab 19.500 EUR
+- Irland: ab 14.500 EUR
+
+LAENDERSPEZIFISCHE HIGHLIGHTS:
+- USA: Typisches High School Leben, Cheerleader, Football, Homecoming, Prom, riesige Wahlfaecherangebote
+- Kanada: Bilingual (Englisch/Franzoesisch), Rocky Mountains, exzellentes Schulsystem, multikulturell
+- Australien: Surfen, einzigartige Tierwelt, relaxte Lebensart, innovative Schulen, Great Barrier Reef
+- Neuseeland: Spektakulaere Natur, Maori-Kultur, kleine Klassen, Abenteuer-Aktivitaeten, sehr sicher
+- Irland: Gruene Landschaften, kurzer Flug aus Deutschland, warmherzige Gastfamilien, europaeisch
+
+TONALITAET:
+{tone_instruction}
+
+WICHTIGE REGELN:
+- Schreibe IMMER auf Deutsch
+- Erwaehne TREFF Sprachreisen oder TREFF in Captions
+- Verwende relevante Landesflaggen-Emojis (z.B. die Flagge des jeweiligen Landes)
+- Instagram-Hashtags: 10-12 relevante Hashtags, Mix aus deutsch und englisch
+- TikTok-Hashtags: 6-8 kuerzere Hashtags inkl. #fyp #foryou
+- Captions sollen zum Engagement anregen (Fragen stellen, zum Kommentieren auffordern)
+- Jede Slide-Headline soll kurz und praegnant sein (max 60 Zeichen)
+- Body-Texte sollen informativ aber nicht zu lang sein (max 200 Zeichen pro Slide)
+- Die letzte Slide sollte immer einen Call-to-Action enthalten
+- Bullet Points (falls vorhanden) sollen konkrete Fakten oder Tipps enthalten"""
+
+
+def _build_gemini_content_prompt(
+    category: str,
+    country: Optional[str],
+    topic: Optional[str],
+    key_points: Optional[str],
+    platform: str,
+    slide_count: int,
+) -> str:
+    """Build the content generation prompt for Gemini."""
+    country_name = COUNTRY_DATA.get(country, {}).get("name", country or "ein Land")
+    category_name = CATEGORY_DISPLAY_NAMES.get(category, category)
+
+    prompt = f"""Erstelle einen Social-Media-Post fuer die Kategorie "{category_name}".
+
+DETAILS:
+- Land: {country_name}
+- Plattform: {platform}
+- Anzahl Slides: {slide_count}"""
+
+    if topic:
+        prompt += f"\n- Thema: {topic}"
+    if key_points:
+        prompt += f"\n- Wichtige Punkte: {key_points}"
+
+    prompt += f"""
+
+ANFORDERUNGEN:
+- Erstelle genau {slide_count} Slides
+- Slide 0 ist das Cover (Hauptheadline + Subheadline + Intro-Text)
+- Die letzte Slide (Slide {slide_count - 1}) soll einen starken CTA enthalten
+- Mittlere Slides sollen Details, Fakten oder Tipps zum Thema enthalten
+- Erstelle separate Instagram- und TikTok-Captions
+- Erstelle separate Instagram- und TikTok-Hashtags
+- Alle Texte auf Deutsch
+
+Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaerungen):
+{{
+  "slides": [
+    {{
+      "slide_index": 0,
+      "headline": "Kurze praegnante Headline",
+      "subheadline": "Ergaenzende Subheadline",
+      "body_text": "Informative Beschreibung, max 200 Zeichen",
+      "bullet_points": [],
+      "cta_text": ""
+    }}
+  ],
+  "caption_instagram": "Instagram Caption mit Emojis und CTA",
+  "caption_tiktok": "Kurze TikTok Caption mit Hook",
+  "hashtags_instagram": "#Hashtag1 #Hashtag2 ... (10-12 Hashtags)",
+  "hashtags_tiktok": "#hashtag1 #hashtag2 ... (6-8 Hashtags inkl. #fyp)",
+  "cta_text": "Call-to-Action Text",
+  "headline": "Hauptheadline des Posts"
+}}"""
+
+    return prompt
+
+
+def generate_text_with_gemini(
+    api_key: str,
+    category: str,
+    country: Optional[str] = None,
+    topic: Optional[str] = None,
+    key_points: Optional[str] = None,
+    tone: str = "jugendlich",
+    platform: str = "instagram_feed",
+    slide_count: int = 1,
+) -> Optional[dict]:
+    """
+    Generate text content using Gemini 2.5 Flash.
+
+    Returns structured dict matching the same format as generate_text_content(),
+    or None if generation fails.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        system_prompt = _build_gemini_system_prompt(tone)
+        content_prompt = _build_gemini_content_prompt(
+            category=category,
+            country=country,
+            topic=topic,
+            key_points=key_points,
+            platform=platform,
+            slide_count=slide_count,
+        )
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.8,
+                max_output_tokens=4096,
+            ),
+        )
+
+        # Parse the JSON response
+        response_text = response.text.strip()
+
+        # Handle potential markdown code fences
+        if response_text.startswith("```"):
+            # Remove ```json or ``` prefix and trailing ```
+            lines = response_text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+
+        result = json.loads(response_text)
+
+        # Validate the response structure
+        if not isinstance(result, dict):
+            logger.warning("Gemini response is not a dict")
+            return None
+
+        required_keys = ["slides", "caption_instagram", "caption_tiktok", "hashtags_instagram", "hashtags_tiktok"]
+        for key in required_keys:
+            if key not in result:
+                logger.warning("Gemini response missing key: %s", key)
+                return None
+
+        if not isinstance(result["slides"], list) or len(result["slides"]) == 0:
+            logger.warning("Gemini response has invalid slides")
+            return None
+
+        # Ensure all slides have required fields
+        for i, slide in enumerate(result["slides"]):
+            slide.setdefault("slide_index", i)
+            slide.setdefault("headline", "")
+            slide.setdefault("subheadline", "")
+            slide.setdefault("body_text", "")
+            slide.setdefault("bullet_points", [])
+            slide.setdefault("cta_text", "")
+
+        # Ensure top-level fields
+        result.setdefault("cta_text", result["slides"][-1].get("cta_text", ""))
+        result.setdefault("headline", result["slides"][0].get("headline", ""))
+
+        # Add source indicator
+        result["source"] = "gemini"
+
+        logger.info("Gemini text generation succeeded for category=%s, country=%s, tone=%s", category, country, tone)
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.warning("Failed to parse Gemini JSON response: %s", e)
+        return None
+    except ImportError:
+        logger.warning("google-genai package not installed")
+        return None
+    except Exception as e:
+        logger.warning("Gemini text generation failed: %s", e)
+        return None
+
 
 def generate_text_content(
     category: str,
@@ -363,9 +600,13 @@ def generate_text_content(
     tone: str = "jugendlich",
     platform: str = "instagram_feed",
     slide_count: int = 1,
+    api_key: Optional[str] = None,
 ) -> dict:
     """
     Generate structured text content for a social media post.
+
+    If an api_key is provided, attempts Gemini 2.5 Flash generation first.
+    Falls back to rule-based templates if no API key or if Gemini fails.
 
     Returns dict with:
     - slides: list of slide content objects
@@ -374,7 +615,26 @@ def generate_text_content(
     - hashtags_instagram: Instagram hashtags
     - hashtags_tiktok: TikTok hashtags
     - cta_text: Call-to-action text
+    - source: "gemini" or "rule_based"
     """
+    # Try Gemini first if API key is available
+    if api_key:
+        logger.info("Attempting Gemini text generation (category=%s, country=%s, tone=%s)", category, country, tone)
+        gemini_result = generate_text_with_gemini(
+            api_key=api_key,
+            category=category,
+            country=country,
+            topic=topic,
+            key_points=key_points,
+            tone=tone,
+            platform=platform,
+            slide_count=slide_count,
+        )
+        if gemini_result:
+            return gemini_result
+        logger.info("Gemini failed, falling back to rule-based generation")
+
+    # Rule-based fallback
     # Default to a random country if none specified
     if not country or country not in COUNTRY_DATA:
         country = random.choice(list(COUNTRY_DATA.keys()))
@@ -462,6 +722,7 @@ def generate_text_content(
         "hashtags_tiktok": hashtags_tt,
         "cta_text": cta_text,
         "headline": headline,
+        "source": "rule_based",
     }
 
 
@@ -535,6 +796,89 @@ def _generate_tiktok_caption(headline: str, country_data: dict, category: str) -
     return random.choice(hooks)
 
 
+def _regenerate_field_with_gemini(
+    api_key: str,
+    field: str,
+    category: str,
+    country: Optional[str] = None,
+    topic: Optional[str] = None,
+    tone: str = "jugendlich",
+    slide_index: int = 0,
+    current_headline: Optional[str] = None,
+    current_body: Optional[str] = None,
+) -> Optional[dict]:
+    """Regenerate a single field using Gemini 2.5 Flash."""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = COUNTRY_DATA.get(country, {}).get("name", country or "ein Land")
+        category_name = CATEGORY_DISPLAY_NAMES.get(category, category)
+
+        system_prompt = _build_gemini_system_prompt(tone)
+
+        field_descriptions = {
+            "headline": f"eine neue Slide-Headline (max 60 Zeichen) fuer Slide {slide_index}",
+            "subheadline": "eine neue Subheadline (max 80 Zeichen)",
+            "body_text": f"einen neuen Body-Text (max 200 Zeichen) fuer Slide {slide_index}",
+            "cta_text": "einen neuen Call-to-Action Text (max 40 Zeichen)",
+            "caption_instagram": "eine neue Instagram-Caption mit Emojis (150-300 Zeichen)",
+            "caption_tiktok": "eine neue TikTok-Caption mit Hook (max 150 Zeichen)",
+            "hashtags_instagram": "10-12 neue Instagram-Hashtags (Mix aus deutsch/englisch)",
+            "hashtags_tiktok": "6-8 neue TikTok-Hashtags (inkl. #fyp #foryou)",
+        }
+
+        field_desc = field_descriptions.get(field, f"ein neues '{field}' Feld")
+
+        context_parts = []
+        if current_headline:
+            context_parts.append(f"Aktuelle Headline: {current_headline}")
+        if current_body:
+            context_parts.append(f"Aktueller Body: {current_body[:200]}")
+        if topic:
+            context_parts.append(f"Thema: {topic}")
+
+        context_str = "\n".join(context_parts) if context_parts else "Kein zusaetzlicher Kontext"
+
+        content_prompt = f"""Generiere {field_desc} fuer einen TREFF Sprachreisen Post.
+
+Kategorie: {category_name}
+Land: {country_name}
+{context_str}
+
+Antworte NUR mit dem generierten Text, ohne Anfuehrungszeichen, ohne Erklaerungen, ohne JSON.
+Nur der reine Text."""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0.9,
+                max_output_tokens=512,
+            ),
+        )
+
+        value = response.text.strip()
+        # Remove quotes if Gemini wrapped the response
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+        if value.startswith("'") and value.endswith("'"):
+            value = value[1:-1]
+
+        if not value:
+            return None
+
+        logger.info("Gemini field regeneration succeeded for field=%s", field)
+        return {"field": field, "value": value, "source": "gemini"}
+
+    except Exception as e:
+        logger.warning("Gemini field regeneration failed: %s", e)
+        return None
+
+
 def regenerate_single_field(
     field: str,
     category: str,
@@ -547,9 +891,12 @@ def regenerate_single_field(
     slide_count: int = 1,
     current_headline: Optional[str] = None,
     current_body: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> dict:
     """
     Regenerate a single text field without changing others.
+
+    If api_key is provided, tries Gemini 2.5 Flash first, then falls back to rule-based.
 
     Supported fields:
     - headline: Regenerate just the headline for the given slide
@@ -564,7 +911,25 @@ def regenerate_single_field(
     Returns dict with:
     - field: name of the regenerated field
     - value: new value for that field
+    - source: "gemini" or "rule_based"
     """
+    # Try Gemini first if API key is available
+    if api_key:
+        gemini_result = _regenerate_field_with_gemini(
+            api_key=api_key,
+            field=field,
+            category=category,
+            country=country,
+            topic=topic,
+            tone=tone,
+            slide_index=slide_index,
+            current_headline=current_headline,
+            current_body=current_body,
+        )
+        if gemini_result:
+            return gemini_result
+
+    # Rule-based fallback
     if not country or country not in COUNTRY_DATA:
         country = random.choice(list(COUNTRY_DATA.keys()))
 
@@ -634,4 +999,4 @@ def regenerate_single_field(
     else:
         raise ValueError(f"Unknown field: {field}. Supported: headline, subheadline, body_text, cta_text, caption_instagram, caption_tiktok, hashtags_instagram, hashtags_tiktok")
 
-    return {"field": field, "value": value}
+    return {"field": field, "value": value, "source": "rule_based"}

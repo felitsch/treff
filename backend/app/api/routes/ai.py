@@ -69,32 +69,121 @@ async def _get_gemini_api_key(user_id: int, db: AsyncSession) -> str | None:
     return None
 
 
-async def _generate_with_gemini(prompt: str, api_key: str, width: int = 1024, height: int = 1024) -> bytes | None:
-    """Try to generate an image using the Gemini API. Returns PNG bytes or None."""
+async def _generate_with_gemini(
+    prompt: str,
+    api_key: str,
+    width: int = 1024,
+    height: int = 1024,
+    aspect_ratio: str | None = None,
+    image_size: str | None = None,
+) -> bytes | None:
+    """Try to generate an image using Nano Banana Pro (gemini-3-pro-image-preview).
+
+    Supports aspect_ratio (e.g. '1:1', '9:16', '16:9') and
+    image_size ('1K', '2K', '4K') for high-quality output.
+    Falls back to gemini-2.0-flash-exp if gemini-3-pro-image-preview fails.
+    Returns PNG bytes or None.
+    """
+    # Valid aspect ratios for Nano Banana Pro
+    VALID_ASPECT_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"}
+    # Valid image sizes
+    VALID_IMAGE_SIZES = {"1K", "2K", "4K"}
+
+    # Default aspect ratio based on dimensions if not provided
+    if not aspect_ratio:
+        if width == height:
+            aspect_ratio = "1:1"
+        elif width > height:
+            aspect_ratio = "16:9"
+        else:
+            aspect_ratio = "9:16"
+
+    # Validate aspect_ratio
+    if aspect_ratio not in VALID_ASPECT_RATIOS:
+        aspect_ratio = "1:1"
+
+    # Default image size
+    if not image_size:
+        image_size = "2K"
+
+    # Validate image_size (must be uppercase K)
+    image_size = image_size.upper().replace("k", "K") if image_size else "2K"
+    if image_size not in VALID_IMAGE_SIZES:
+        image_size = "2K"
+
     try:
         from google import genai
         from google.genai import types
 
         client = genai.Client(api_key=api_key)
 
-        # Use Gemini 2.0 Flash for image generation (supports image output)
+        # Try Nano Banana Pro (gemini-3-pro-image-preview) first — higher quality,
+        # better text rendering, thinking mode, up to 4K resolution
+        image_config = types.ImageConfig(
+            aspectRatio=aspect_ratio,
+            imageSize=image_size,
+        )
+
+        logger.info(
+            f"Trying Nano Banana Pro (gemini-3-pro-image-preview) with "
+            f"aspect_ratio={aspect_ratio}, image_size={image_size}"
+        )
+
+        response = client.models.generate_content(
+            model="gemini-3-pro-image-preview",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                responseModalities=["TEXT", "IMAGE"],
+                imageConfig=image_config,
+            ),
+        )
+
+        # Extract image using part.as_image() (new SDK method)
+        if response.candidates:
+            for part in response.candidates[0].content.parts:
+                image = part.as_image()
+                if image is not None and image.image_bytes:
+                    logger.info("Nano Banana Pro image generation succeeded")
+                    return image.image_bytes
+
+        logger.warning("Nano Banana Pro returned no image, trying fallback model")
+
+    except Exception as e:
+        logger.warning(f"Nano Banana Pro (gemini-3-pro-image-preview) failed: {e}")
+
+    # Fallback: try gemini-2.0-flash-exp (older model)
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        logger.info("Falling back to gemini-2.0-flash-exp for image generation")
         response = client.models.generate_content(
             model="gemini-2.0-flash-exp",
             contents=prompt,
             config=types.GenerateContentConfig(
-                response_modalities=["IMAGE", "TEXT"],
+                responseModalities=["IMAGE", "TEXT"],
             ),
         )
 
-        # Extract image from response
+        # Extract image — try new as_image() first, then inline_data fallback
         if response.candidates:
             for part in response.candidates[0].content.parts:
-                if part.inline_data and part.inline_data.mime_type.startswith("image/"):
-                    return part.inline_data.data
+                # Try new API (as_image returns types.Image with .image_bytes)
+                image = part.as_image()
+                if image is not None and image.image_bytes:
+                    logger.info("gemini-2.0-flash-exp image generation succeeded (as_image)")
+                    return image.image_bytes
+                # Try legacy inline_data
+                if hasattr(part, 'inline_data') and part.inline_data and hasattr(part.inline_data, 'mime_type'):
+                    if part.inline_data.mime_type.startswith("image/"):
+                        logger.info("gemini-2.0-flash-exp image generation succeeded (inline_data)")
+                        return part.inline_data.data
 
         return None
     except Exception as e:
-        logger.warning(f"Gemini image generation failed: {e}")
+        logger.warning(f"Gemini fallback image generation also failed: {e}")
         return None
 
 
@@ -276,8 +365,11 @@ def _generate_placeholder_image(prompt: str, width: int = 1024, height: int = 10
 async def generate_text(
     request: dict,
     user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
     """Generate slide texts, captions, hashtags, CTA.
+
+    Uses Gemini 2.5 Flash when an API key is available, with rule-based fallback.
 
     Expects:
     - category (str): Post category (e.g., laender_spotlight)
@@ -289,6 +381,7 @@ async def generate_text(
     - slide_count (int, optional): Number of slides (default: 1)
 
     Returns structured content for all slides, captions, and hashtags.
+    Includes 'source' field: "gemini" or "rule_based".
     """
     try:
         category = request.get("category", "laender_spotlight")
@@ -304,6 +397,9 @@ async def generate_text(
         if slide_count > 10:
             slide_count = 10
 
+        # Get Gemini API key for AI-powered text generation
+        api_key = await _get_gemini_api_key(user_id, db)
+
         result = generate_text_content(
             category=category,
             country=country,
@@ -312,6 +408,7 @@ async def generate_text(
             tone=tone,
             platform=platform,
             slide_count=slide_count,
+            api_key=api_key,
         )
 
         return result
@@ -323,8 +420,11 @@ async def generate_text(
 async def regenerate_field(
     request: dict,
     user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
     """Regenerate a single text field without changing other content.
+
+    Uses Gemini 2.5 Flash when an API key is available, with rule-based fallback.
 
     Expects:
     - field (str): Which field to regenerate (headline, subheadline, body_text,
@@ -360,6 +460,9 @@ async def regenerate_field(
                 detail=f"Invalid field '{field}'. Must be one of: {', '.join(valid_fields)}"
             )
 
+        # Get Gemini API key for AI-powered field regeneration
+        api_key = await _get_gemini_api_key(user_id, db)
+
         result = regenerate_single_field(
             field=field,
             category=request.get("category", "laender_spotlight"),
@@ -372,6 +475,7 @@ async def regenerate_field(
             slide_count=request.get("slide_count", 1),
             current_headline=request.get("current_headline"),
             current_body=request.get("current_body"),
+            api_key=api_key,
         )
 
         return result
@@ -387,12 +491,16 @@ async def generate_image(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generate image via AI (Gemini API or local fallback).
+    """Generate image via AI (Nano Banana Pro / Gemini API or local fallback).
 
     Expects:
     - prompt (str): Image description / prompt
     - width (int, optional): Image width in pixels (default: 1024)
     - height (int, optional): Image height in pixels (default: 1024)
+    - aspect_ratio (str, optional): Aspect ratio for Nano Banana Pro
+      (e.g. '1:1', '9:16', '16:9', '3:4', '4:3'). Default: auto from width/height.
+    - image_size (str, optional): Output resolution for Nano Banana Pro
+      ('1K', '2K', '4K'). Default: '2K'.
     - category (str, optional): Asset category for library
     - country (str, optional): Country tag for the image
 
@@ -411,17 +519,23 @@ async def generate_image(
 
     req_width = min(max(request.get("width", 1024), 256), 4096)
     req_height = min(max(request.get("height", 1024), 256), 4096)
+    aspect_ratio = request.get("aspect_ratio")  # e.g. "1:1", "9:16", "16:9"
+    image_size = request.get("image_size")  # e.g. "1K", "2K", "4K"
     category = request.get("category", "ai_generated")
     country = request.get("country")
 
     image_bytes = None
     source = "local_generated"
 
-    # Try Gemini API first
+    # Try Gemini API first (Nano Banana Pro with fallback to Flash)
     api_key = await _get_gemini_api_key(user_id, db)
     if api_key:
         logger.info(f"Attempting Gemini image generation for prompt: {prompt[:50]}...")
-        image_bytes = await _generate_with_gemini(prompt, api_key, req_width, req_height)
+        image_bytes = await _generate_with_gemini(
+            prompt, api_key, req_width, req_height,
+            aspect_ratio=aspect_ratio,
+            image_size=image_size,
+        )
         if image_bytes:
             source = "gemini"
             logger.info("Gemini image generation succeeded")
