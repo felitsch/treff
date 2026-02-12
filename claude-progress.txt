@@ -1,5 +1,57 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #127: Created-at timestamps are accurate on posts
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that created_at timestamps on posts are accurate to within milliseconds of actual creation time
+- No code changes needed - existing implementation already correctly sets timestamps
+
+### How timestamps work:
+- Backend Post model: `created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))`
+- Timestamp is set at Python level when the Post object is instantiated during the API request
+- API response serializes it as ISO 8601 via `.isoformat()`
+- Frontend does NOT send created_at (correct - server assigns it)
+- Database stores precise UTC timestamps with microsecond precision
+
+### Verification steps completed:
+1. Note current time - PASS
+   - Recorded UTC time before post creation: 2026-02-12T19:48:38.277111+00:00
+2. Create a new post - PASS
+   - Created post #151 (TIMESTAMP_UI_VERIFY_127) via API
+3. Check created_at timestamp in API response - PASS
+   - API returned: created_at = "2026-02-12T19:48:38.295302"
+   - Database confirmed same value via direct SQLite query
+4. Verify timestamp is within 1 minute of actual creation time - PASS
+   - Difference: 0.018 seconds (18 milliseconds!) - well within 1-minute requirement
+   - Second test (post #150): 0.110 seconds - also well within requirement
+
+### Additional verification:
+- Verified posts appear in History view with correct date (12.02.2026)
+- Confirmed database stores precise UTC timestamps with microsecond precision
+- Confirmed updated_at is also set accurately at creation time (within microseconds of created_at)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings on History page)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Database stores accurate UTC timestamps
+- [x] Test data cleaned up (both test posts deleted)
+- [x] Screenshots captured:
+  - feature127-step1-history-posts-with-dates.png (History page showing posts with correct dates)
+
+### No code changes needed:
+- Post model already uses `datetime.now(timezone.utc)` for created_at default
+- API serialization already converts to ISO 8601
+- History view already displays dates correctly
+- Database already stores precise timestamps
+
+### Current state:
+- Feature #127 marked as PASSING
+- 129/170 features passing (75.9%)
+
 ## Session - Feature #125: Date picker does not allow past dates for scheduling
 **Date:** 2026-02-12
 **Status:** PASSING
