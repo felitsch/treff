@@ -40,6 +40,17 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class UserUpdateRequest(BaseModel):
+    display_name: Optional[str] = None
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, v):
+        if v is not None and len(v.strip()) == 0:
+            raise ValueError("Display name cannot be empty")
+        return v.strip() if v else v
+
+
 class UserResponse(BaseModel):
     id: int
     email: str

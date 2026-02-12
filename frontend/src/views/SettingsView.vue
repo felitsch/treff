@@ -70,6 +70,16 @@ async function saveSettings() {
   saveSuccess.value = false
   error.value = null
   try {
+    // Save display name via profile endpoint
+    if (accountDisplayName.value !== (auth.user?.display_name || '')) {
+      const profileRes = await api.put('/api/auth/profile', {
+        display_name: accountDisplayName.value,
+      })
+      // Update auth store with new user data
+      auth.user = { ...auth.user, display_name: profileRes.data.display_name }
+    }
+
+    // Save other settings
     await api.put('/api/settings', {
       brand_primary_color: brandPrimaryColor.value,
       brand_secondary_color: brandSecondaryColor.value,
@@ -173,16 +183,17 @@ onMounted(() => {
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">E-Mail kann nicht geaendert werden.</p>
           </div>
 
-          <!-- Display Name (read-only) -->
+          <!-- Display Name (editable) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anzeigename</label>
             <input
               type="text"
-              :value="accountDisplayName"
-              readonly
-              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed"
+              v-model="accountDisplayName"
+              placeholder="Dein Anzeigename"
+              class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="account-display-name"
             />
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Wird in der App als dein Name angezeigt.</p>
           </div>
         </div>
       </div>

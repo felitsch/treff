@@ -19,6 +19,7 @@ from app.schemas.auth import (
     TokenResponse,
     RefreshTokenRequest,
     UserResponse,
+    UserUpdateRequest,
 )
 
 router = APIRouter()
@@ -127,6 +128,33 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        display_name=user.display_name,
+        created_at=user.created_at,
+    )
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    request: UserUpdateRequest,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current user's profile (display name)."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if request.display_name is not None:
+        user.display_name = request.display_name
+
+    await db.flush()
+    await db.commit()
+    await db.refresh(user)
 
     return UserResponse(
         id=user.id,
