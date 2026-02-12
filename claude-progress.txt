@@ -1,5 +1,59 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #118: Page refresh preserves current page and data
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed auth state not fully persisting across page refreshes
+- Before fix: tokens were stored in localStorage but user data (display_name) was lost on refresh
+- After fix: initializeAuth() in auth store fetches user data via /api/auth/me when tokens exist
+
+### Code changes:
+1. **frontend/src/stores/auth.js**:
+   - Added `initialized` ref to prevent duplicate initialization calls
+   - Added `initializeAuth()` async function that checks for existing tokens and fetches user data
+   - Exported both new properties from the store
+2. **frontend/src/router/index.js**:
+   - Made `beforeEach` guard async to await auth initialization
+   - Added `await auth.initializeAuth()` call before route checks
+
+### Verification steps completed:
+1. Login and navigate to Templates page - PASS
+   - Registered as refresh118@treff.de, navigated to /templates
+   - 22 templates displayed, user name "Refresh Test 118" in header
+2. Press F5 / Refresh browser - PASS
+   - Navigated to same URL (equivalent to browser refresh)
+   - Page loads without redirect to login
+3. Verify user is still authenticated - PASS
+   - User name "Refresh Test 118" displayed in header after refresh
+   - Full app layout rendered (sidebar, navigation, content area)
+4. Verify Templates page is displayed - PASS
+   - URL remains /templates after refresh
+   - Templates heading, filter dropdowns, and "+ Neues Template erstellen" button visible
+5. Verify data is loaded correctly - PASS
+   - "22 von 22 Templates" count shown
+   - All 9 categories displayed with correct template counts
+   - Template cards with names, formats, and dimensions fully rendered
+6. Additional: Analytics page refresh test - PASS
+   - Navigated directly to /analytics via URL
+   - Page loads with user name, full analytics dashboard rendered
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication preserved across page refresh
+- [x] User data (display_name) fetched and displayed after refresh
+- [x] Screenshots captured:
+  - feature118-step1-templates-before-refresh.png
+  - feature118-step2-templates-after-refresh.png (before fix - no user name)
+  - feature118-step3-after-refresh-with-user.png (after fix - user name shown)
+
+### Current state:
+- Feature #118 marked as PASSING
+- 120/170 features passing (70.6%)
+
 ## Session - Feature #115: Search with only whitespace returns all results
 **Date:** 2026-02-12
 **Status:** PASSING
