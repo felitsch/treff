@@ -1,5 +1,69 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #147: Export history records each export with metadata
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete export history tracking system end-to-end
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: ExportHistory model with post_id, platform, format, file_path, resolution, slide_count, exported_at
+  - Backend: POST /api/export/render creates ExportHistory record for single exports
+  - Backend: POST /api/export/render-carousel creates ExportHistory record for carousel exports
+  - Backend: POST /api/export/batch creates ExportHistory records for batch exports
+  - Backend: GET /api/export/history returns all export records (with optional post_id filter)
+  - Frontend: Batch export from HistoryView calls /api/export/batch and triggers download
+
+### Verification steps completed:
+1. Export a post as PNG - PASS
+   - Created test post #277 "EXPORT_HISTORY_TEST_147" via API
+   - Called POST /api/export/render with post_id=277, platform=instagram_feed, format=png
+   - Export record ID 13 created with all metadata fields
+2. Navigate to view export history - PASS
+   - Called GET /api/export/history?post_id=277
+   - Returns array with export record including all required fields
+3. Verify export record created with: post_id, platform, format, timestamp - PASS
+   - post_id: 277 (PASS), platform: instagram_feed (PASS), format: png (PASS), exported_at: 2026-02-12T23:09:25 (PASS)
+   - Also includes resolution: 1080, slide_count: 1, file_path
+4. Export same post again - PASS
+   - Called POST /api/export/render again for same post_id=277
+   - Export record ID 14 created with distinct ID and new timestamp
+5. Verify second export record created - PASS
+   - GET /api/export/history?post_id=277 returns 2 records (IDs 13 and 14)
+   - Both have distinct IDs, both have all required metadata
+   - Records ordered by exported_at DESC (newest first)
+
+### Additional UI verification:
+- Batch export from History page: selected post, clicked "Batch-Export (1)" -> success toast "1 Posts erfolgreich exportiert!"
+- ZIP file downloaded: TREFF_batch_export_1_posts_2026-02-12.zip
+- Third export record (ID 15) created via batch endpoint
+- Total: 3 export records for same post, all with correct metadata
+
+### Server restart persistence test:
+- Created export #1 via API, restarted server, verified export record survived restart
+- Data persists in SQLite (real database, not in-memory)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (401 on unauthenticated access)
+- [x] Data persists across server restart
+- [x] Screenshots captured:
+  - feature147-step1-history-exported-status.png (History page showing "Exportiert" status)
+  - feature147-step2-batch-export-selected.png (Batch export with post selected)
+  - feature147-step3-batch-export-success-toast.png (Success toast after batch export)
+  - feature147-step4-history-page-final.png (Final state of History page)
+
+### No code changes needed:
+- ExportHistory model already exists with all required fields
+- Export API endpoints already create records with metadata
+- Export history API endpoint already returns records filtered by post_id
+- Frontend batch export already calls backend and creates records
+
+### Current state:
+- Feature #147 marked as PASSING
+
 ## Session - Feature #148: Page loads in under 3 seconds with 100 posts
 **Date:** 2026-02-13
 **Status:** PASSING
