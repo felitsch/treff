@@ -461,3 +461,40 @@
 
 ### Next steps:
 - Continue with remaining authentication features (#12, etc.)
+
+## Session 13 - Feature #27: 404 page shows for invalid routes
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Navigated to /nonexistent-page as authenticated user
+- Verified 404 page displays correctly with:
+  - "404" heading in TREFF blue
+  - "Seite nicht gefunden" subtitle
+  - "Die angeforderte Seite existiert nicht." description
+  - "Zurueck zum Dashboard" link/button
+- Fixed bug: original button used `router.push('/dashboard')` which caused dynamic import
+  errors when navigating from the catch-all 404 route. Module imports for AppLayout.vue
+  and DashboardView.vue failed with MIME type errors due to Vite SPA module resolution.
+- Fix: replaced `<button @click="router.push(...)">` with `<router-link to="/dashboard">`
+  which is the proper Vue Router pattern and handles navigation reliably.
+- Verified clicking "Zurueck zum Dashboard" navigates to /dashboard with full dashboard rendered
+- Zero JavaScript console errors after fix
+- All mock data grep checks passed (zero matches in frontend/src and backend/app)
+- Screenshots captured: feature27-404-page-verified.png, feature27-dashboard-after-404.png
+
+### Files modified:
+- frontend/src/views/NotFoundView.vue - replaced button with router-link
+
+### Verification steps completed:
+1. Navigate to /nonexistent-page - PASS (404 page displayed)
+2. Verify 404 or not-found page is displayed - PASS (heading, text, styled correctly)
+3. Verify link to go back to dashboard exists - PASS (router-link to /dashboard)
+4. Click the link and verify navigation to dashboard - PASS (URL = /dashboard, full dashboard loads)
+
+### Current state:
+- Features #1-11, #13, #27 passing
+- 12/163 features complete (7.4%)
+
+### Next steps:
+- Continue with remaining navigation and feature implementation
