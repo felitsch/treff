@@ -2,11 +2,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
+import OnboardingTour from '@/components/common/OnboardingTour.vue'
 
 const router = useRouter()
 
 const loading = ref(true)
 const error = ref(null)
+const showOnboardingTour = ref(false)
 
 // Dashboard data
 const stats = ref({
@@ -214,8 +216,43 @@ async function fetchDashboardData() {
   }
 }
 
+async function checkOnboardingStatus() {
+  try {
+    const res = await api.get('/api/settings')
+    const settings = res.data
+    if (!settings.onboarding_completed || settings.onboarding_completed === 'false') {
+      // First time user - show tour after a short delay for DOM to settle
+      setTimeout(() => {
+        showOnboardingTour.value = true
+      }, 500)
+    }
+  } catch (err) {
+    // If settings fail, don't show tour (safe default)
+    console.error('Failed to check onboarding status:', err)
+  }
+}
+
+async function handleTourComplete() {
+  showOnboardingTour.value = false
+  try {
+    await api.put('/api/settings', { onboarding_completed: 'true' })
+  } catch (err) {
+    console.error('Failed to save onboarding status:', err)
+  }
+}
+
+async function handleTourSkip() {
+  showOnboardingTour.value = false
+  try {
+    await api.put('/api/settings', { onboarding_completed: 'true' })
+  } catch (err) {
+    console.error('Failed to save onboarding status:', err)
+  }
+}
+
 onMounted(() => {
   fetchDashboardData()
+  checkOnboardingStatus()
 })
 </script>
 
@@ -259,7 +296,7 @@ onMounted(() => {
     <!-- Dashboard Content -->
     <div v-else class="space-y-6">
       <!-- Quick Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="dashboard-stats">
         <!-- Posts this week -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
@@ -301,7 +338,7 @@ onMounted(() => {
       </div>
 
       <!-- Quick Action Buttons -->
-      <div class="flex flex-wrap gap-3">
+      <div class="flex flex-wrap gap-3" data-tour="quick-actions">
         <button
           @click="router.push('/create-post')"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-treff-blue text-white font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
@@ -548,5 +585,12 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Onboarding Tour for first-time users -->
+    <OnboardingTour
+      :show="showOnboardingTour"
+      @complete="handleTourComplete"
+      @skip="handleTourSkip"
+    />
   </div>
 </template>

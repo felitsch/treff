@@ -16,6 +16,9 @@ const savedPost = ref(null)
 const error = ref('')
 const successMsg = ref('')
 
+// Export format: '9:16' for Reels/TikTok, '1:1' for Feed preview
+const exportFormat = ref('9:16')
+
 // Predefined TREFF brand color schemes
 const colorPresets = [
   { name: 'Dunkel', bg: '#1A1A2E', text: '#FFFFFF' },
@@ -38,19 +41,24 @@ const fontSizeOptions = [
   { id: 'xlarge', label: 'XL', px: 80 },
 ]
 
-// Preview dimensions (9:16 ratio displayed at a smaller scale)
-const previewWidth = 270 // displayed width in px
-const previewHeight = 480 // displayed height in px (9:16 of 270)
+// Export format options
+const formatOptions = [
+  { id: '9:16', label: '9:16', desc: 'Reels & TikTok', width: 1080, height: 1920, previewW: 270, previewH: 480 },
+  { id: '1:1', label: '1:1', desc: 'Feed Vorschau', width: 1080, height: 1080, previewW: 340, previewH: 340 },
+]
 
-// Export dimensions (actual output)
-const exportWidth = 1080
-const exportHeight = 1920
+// Dynamic dimensions based on selected format
+const currentFormat = computed(() => formatOptions.find(f => f.id === exportFormat.value) || formatOptions[0])
+const previewWidth = computed(() => currentFormat.value.previewW)
+const previewHeight = computed(() => currentFormat.value.previewH)
+const exportWidth = computed(() => currentFormat.value.width)
+const exportHeight = computed(() => currentFormat.value.height)
 
 // ── Computed ──────────────────────────────────────────────────────
 const previewStyle = computed(() => {
   const base = {
-    width: previewWidth + 'px',
-    height: previewHeight + 'px',
+    width: previewWidth.value + 'px',
+    height: previewHeight.value + 'px',
   }
   if (backgroundType.value === 'image' && backgroundImageUrl.value) {
     return {
@@ -74,8 +82,8 @@ const textColor = computed(() => {
 
 const hookFontSize = computed(() => {
   const opt = fontSizeOptions.find(f => f.id === fontSize.value)
-  // Scale down for preview (preview is 1/4 of export)
-  const scale = previewWidth / exportWidth
+  // Scale down for preview (preview is fraction of export)
+  const scale = previewWidth.value / exportWidth.value
   return Math.round((opt?.px || 64) * scale) + 'px'
 })
 
@@ -138,16 +146,17 @@ async function uploadImage(event) {
 }
 
 function downloadAsPng() {
+  const w = exportWidth.value
+  const h = exportHeight.value
   const canvas = document.createElement('canvas')
-  canvas.width = exportWidth
-  canvas.height = exportHeight
+  canvas.width = w
+  canvas.height = h
   const ctx = canvas.getContext('2d')
 
   // Helper functions
   function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = text.split(' ')
     let line = ''
-    let currentY = y
     const lines = []
     for (const word of words) {
       const testLine = line + word + ' '
@@ -188,31 +197,26 @@ function downloadAsPng() {
   // Draw background
   const bg = selectedPreset.value.bg
   if (backgroundType.value === 'image' && backgroundImageUrl.value) {
-    // For image backgrounds, we draw the image first then overlay
-    // Since canvas can't easily load cross-origin images synchronously,
-    // we'll draw a solid dark background + overlay text
     ctx.fillStyle = '#1A1A2E'
-    ctx.fillRect(0, 0, exportWidth, exportHeight)
+    ctx.fillRect(0, 0, w, h)
   } else if (bg.startsWith('linear-gradient')) {
-    // Parse gradient
-    const gradient = ctx.createLinearGradient(0, 0, exportWidth, exportHeight)
-    // Extract colors from gradient string
+    const gradient = ctx.createLinearGradient(0, 0, w, h)
     const colorMatch = bg.match(/#[A-Fa-f0-9]{6}/g)
     if (colorMatch && colorMatch.length >= 2) {
       gradient.addColorStop(0, colorMatch[0])
       gradient.addColorStop(1, colorMatch[1])
     }
     ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, exportWidth, exportHeight)
+    ctx.fillRect(0, 0, w, h)
   } else {
     ctx.fillStyle = bg
-    ctx.fillRect(0, 0, exportWidth, exportHeight)
+    ctx.fillRect(0, 0, w, h)
   }
 
   // Dark overlay for readability
   if (backgroundType.value === 'image') {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'
-    ctx.fillRect(0, 0, exportWidth, exportHeight)
+    ctx.fillRect(0, 0, w, h)
   }
 
   // Determine text color
@@ -238,36 +242,36 @@ function downloadAsPng() {
   ctx.fillStyle = txtColor
   ctx.font = `900 ${hookPx}px Inter, Arial, sans-serif`
   ctx.textAlign = 'center'
-  // Add text shadow for readability
   ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
   ctx.shadowBlur = 20
   ctx.shadowOffsetX = 0
   ctx.shadowOffsetY = 4
-  wrapText(ctx, hookText.value.trim(), exportWidth / 2, exportHeight / 2, exportWidth - 160, hookPx * 1.2)
+  wrapText(ctx, hookText.value.trim(), w / 2, h / 2, w - 160, hookPx * 1.2)
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
 
   // CTA at bottom
-  const ctaY = exportHeight - 200
+  const ctaY = h - 150
   ctx.fillStyle = '#FDD000'
-  roundRect(ctx, exportWidth / 2 - 180, ctaY, 360, 72, 36)
+  roundRect(ctx, w / 2 - 180, ctaY, 360, 72, 36)
   ctx.fill()
   ctx.fillStyle = '#1A1A2E'
   ctx.font = 'bold 28px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('Jetzt ansehen', exportWidth / 2, ctaY + 46)
+  ctx.fillText('Jetzt ansehen', w / 2, ctaY + 46)
 
   // TREFF bottom branding
   ctx.fillStyle = txtColor === '#FFFFFF' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)'
   ctx.font = '22px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('TREFF Sprachreisen | treff-sprachreisen.de', exportWidth / 2, exportHeight - 60)
+  ctx.fillText('TREFF Sprachreisen | treff-sprachreisen.de', w / 2, h - 40)
 
   // Download
   const link = document.createElement('a')
   const date = new Date().toISOString().split('T')[0]
   const safeHook = hookText.value.trim().substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_')
-  link.download = `TREFF_thumbnail_9x16_${date}_${safeHook}.png`
+  const formatTag = exportFormat.value === '1:1' ? '1x1' : '9x16'
+  link.download = `TREFF_thumbnail_${formatTag}_${date}_${safeHook}.png`
   link.href = canvas.toDataURL('image/png')
   link.click()
 
@@ -277,17 +281,19 @@ function downloadAsPng() {
 // For image backgrounds, we need to load the image into canvas
 function downloadAsPngWithImage() {
   if (backgroundType.value === 'image' && backgroundImageUrl.value) {
+    const w = exportWidth.value
+    const h = exportHeight.value
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      canvas.width = exportWidth
-      canvas.height = exportHeight
+      canvas.width = w
+      canvas.height = h
       const ctx = canvas.getContext('2d')
 
-      // Draw background image covering 9:16
+      // Draw background image covering the canvas ratio
       const imgRatio = img.width / img.height
-      const canvasRatio = exportWidth / exportHeight
+      const canvasRatio = w / h
       let sx = 0, sy = 0, sw = img.width, sh = img.height
       if (imgRatio > canvasRatio) {
         sw = img.height * canvasRatio
@@ -296,11 +302,11 @@ function downloadAsPngWithImage() {
         sh = img.width / canvasRatio
         sy = (img.height - sh) / 2
       }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, exportWidth, exportHeight)
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h)
 
       // Dark overlay
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'
-      ctx.fillRect(0, 0, exportWidth, exportHeight)
+      ctx.fillRect(0, 0, w, h)
 
       // Draw text elements same as color version
       drawTextElements(ctx)
@@ -309,7 +315,8 @@ function downloadAsPngWithImage() {
       const link = document.createElement('a')
       const date = new Date().toISOString().split('T')[0]
       const safeHook = hookText.value.trim().substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_')
-      link.download = `TREFF_thumbnail_9x16_${date}_${safeHook}.png`
+      const formatTag = exportFormat.value === '1:1' ? '1x1' : '9x16'
+      link.download = `TREFF_thumbnail_${formatTag}_${date}_${safeHook}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     }
@@ -324,6 +331,9 @@ function downloadAsPngWithImage() {
 }
 
 function drawTextElements(ctx) {
+  const w = exportWidth.value
+  const h = exportHeight.value
+
   function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = text.split(' ')
     let line = ''
@@ -346,15 +356,15 @@ function drawTextElements(ctx) {
     }
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
+  function roundRect(ctx, x, y, rw, rh, r) {
     ctx.beginPath()
     ctx.moveTo(x + r, y)
-    ctx.lineTo(x + w - r, y)
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-    ctx.lineTo(x + w, y + h - r)
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-    ctx.lineTo(x + r, y + h)
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+    ctx.lineTo(x + rw - r, y)
+    ctx.quadraticCurveTo(x + rw, y, x + rw, y + r)
+    ctx.lineTo(x + rw, y + rh - r)
+    ctx.quadraticCurveTo(x + rw, y + rh, x + rw - r, y + rh)
+    ctx.lineTo(x + r, y + rh)
+    ctx.quadraticCurveTo(x, y + rh, x, y + rh - r)
     ctx.lineTo(x, y + r)
     ctx.quadraticCurveTo(x, y, x + r, y)
     ctx.closePath()
@@ -386,25 +396,25 @@ function drawTextElements(ctx) {
   ctx.shadowBlur = 20
   ctx.shadowOffsetX = 0
   ctx.shadowOffsetY = 4
-  wrapText(ctx, hookText.value.trim(), exportWidth / 2, exportHeight / 2, exportWidth - 160, hookPx * 1.2)
+  wrapText(ctx, hookText.value.trim(), w / 2, h / 2, w - 160, hookPx * 1.2)
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
 
   // CTA
-  const ctaY = exportHeight - 200
+  const ctaY = h - 150
   ctx.fillStyle = '#FDD000'
-  roundRect(ctx, exportWidth / 2 - 180, ctaY, 360, 72, 36)
+  roundRect(ctx, w / 2 - 180, ctaY, 360, 72, 36)
   ctx.fill()
   ctx.fillStyle = '#1A1A2E'
   ctx.font = 'bold 28px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('Jetzt ansehen', exportWidth / 2, ctaY + 46)
+  ctx.fillText('Jetzt ansehen', w / 2, ctaY + 46)
 
   // Bottom branding
   ctx.fillStyle = 'rgba(255,255,255,0.6)'
   ctx.font = '22px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('TREFF Sprachreisen | treff-sprachreisen.de', exportWidth / 2, exportHeight - 60)
+  ctx.fillText('TREFF Sprachreisen | treff-sprachreisen.de', w / 2, h - 40)
 }
 
 async function saveAndExport() {
@@ -425,7 +435,7 @@ async function saveAndExport() {
     const postData = {
       category: 'reel_tiktok_thumbnails',
       country: null,
-      platform: 'tiktok',
+      platform: exportFormat.value === '1:1' ? 'instagram_feed' : 'tiktok',
       template_id: null,
       title: hookText.value.trim().substring(0, 100),
       status: 'draft',
@@ -444,7 +454,7 @@ async function saveAndExport() {
     // Record export
     await api.post('/api/export/render', {
       post_id: response.data.id,
-      platform: 'tiktok',
+      platform: exportFormat.value === '1:1' ? 'instagram_feed' : 'tiktok',
       resolution: '1080',
       slide_count: 1,
     })
@@ -469,6 +479,7 @@ function reset() {
   selectedAsset.value = null
   selectedPreset.value = colorPresets[0]
   fontSize.value = 'large'
+  exportFormat.value = '9:16'
   exporting.value = false
   exportComplete.value = false
   savedPost.value = null
@@ -486,7 +497,7 @@ loadAssets()
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thumbnail Generator</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Erstelle Video-Thumbnails im 9:16 Format fuer Reels & TikTok</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Erstelle Video-Thumbnails im 9:16 oder 1:1 Format</p>
       </div>
       <button
         @click="reset"
@@ -632,10 +643,45 @@ loadAssets()
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export</h2>
 
+          <!-- Export Format Selector -->
+          <div class="mb-4">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Exportformat</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                v-for="fmt in formatOptions"
+                :key="fmt.id"
+                @click="exportFormat = fmt.id"
+                class="relative p-3 rounded-lg border-2 transition-all text-left"
+                :class="exportFormat === fmt.id
+                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/5 dark:bg-[#4C8BC2]/10'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex-shrink-0 rounded border border-gray-300 dark:border-gray-500 bg-gray-200 dark:bg-gray-600"
+                    :style="{
+                      width: fmt.id === '9:16' ? '20px' : '28px',
+                      height: fmt.id === '9:16' ? '36px' : '28px',
+                    }"
+                  ></div>
+                  <div>
+                    <span class="font-bold text-gray-900 dark:text-white text-sm">{{ fmt.label }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">({{ fmt.width }}&times;{{ fmt.height }})</span>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ fmt.desc }}</p>
+                  </div>
+                </div>
+                <span
+                  v-if="exportFormat === fmt.id"
+                  class="absolute top-2 right-2 text-[#4C8BC2] text-sm font-bold"
+                >&#10003;</span>
+              </button>
+            </div>
+          </div>
+
           <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-600 dark:text-gray-400">
             <span class="text-lg">&#9432;</span>
             <div>
-              <strong>Format:</strong> PNG &middot; <strong>Aufloesung:</strong> 1080 &times; 1920 px &middot; <strong>Seitenverhaeltnis:</strong> 9:16
+              <strong>Format:</strong> PNG &middot; <strong>Aufloesung:</strong> {{ exportWidth }} &times; {{ exportHeight }} px &middot; <strong>Seitenverhaeltnis:</strong> {{ exportFormat }}
             </div>
           </div>
 
@@ -682,7 +728,7 @@ loadAssets()
 
       <!-- Right Column: Live Preview -->
       <div class="lg:sticky lg:top-4 self-start">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Live-Vorschau (9:16)</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Live-Vorschau ({{ exportFormat }})</h2>
 
         <div
           id="thumbnail-preview"
@@ -741,7 +787,7 @@ loadAssets()
         <!-- Dimensions info -->
         <div class="mt-3 text-center">
           <span class="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
-            <span>&#128247;</span> 1080 &times; 1920 px &middot; 9:16
+            <span>&#128247;</span> {{ exportWidth }} &times; {{ exportHeight }} px &middot; {{ exportFormat }}
           </span>
         </div>
       </div>

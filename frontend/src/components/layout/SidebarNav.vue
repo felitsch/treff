@@ -39,7 +39,7 @@ const isActive = (path) => route.path.startsWith(path)
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto py-4" role="navigation" aria-label="Hauptnavigation">
+    <nav class="flex-1 overflow-y-auto py-4" role="navigation" aria-label="Hauptnavigation" data-tour="sidebar">
       <ul class="space-y-1 px-2">
         <li v-for="item in navItems" :key="item.path">
           <router-link
@@ -51,6 +51,7 @@ const isActive = (path) => route.path.startsWith(path)
                 : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
             ]"
             :aria-label="item.name"
+            :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
           >
             <span class="text-lg" :class="collapsed ? '' : 'mr-3'">{{ item.icon }}</span>
             <span v-if="!collapsed">{{ item.name }}</span>
