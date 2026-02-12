@@ -1,5 +1,6 @@
 """Analytics routes."""
 
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -7,6 +8,8 @@ from sqlalchemy import select, func
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.post import Post
+from app.models.asset import Asset
+from app.models.calendar_entry import CalendarEntry
 
 router = APIRouter()
 
@@ -17,15 +20,127 @@ async def get_overview(
     db: AsyncSession = Depends(get_db),
 ):
     """Get analytics overview: total posts, this week, this month."""
+    now = datetime.now(timezone.utc)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
     total_result = await db.execute(
         select(func.count(Post.id)).where(Post.user_id == user_id)
     )
     total = total_result.scalar() or 0
 
+    week_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.created_at >= week_start,
+        )
+    )
+    posts_this_week = week_result.scalar() or 0
+
+    month_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.created_at >= month_start,
+        )
+    )
+    posts_this_month = month_result.scalar() or 0
+
     return {
         "total_posts": total,
-        "posts_this_week": 0,  # TODO: Calculate
-        "posts_this_month": 0,  # TODO: Calculate
+        "posts_this_week": posts_this_week,
+        "posts_this_month": posts_this_month,
+    }
+
+
+@router.get("/dashboard")
+async def get_dashboard_data(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all dashboard data in a single API call."""
+    now = datetime.now(timezone.utc)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Quick stats
+    total_result = await db.execute(
+        select(func.count(Post.id)).where(Post.user_id == user_id)
+    )
+    total_posts = total_result.scalar() or 0
+
+    week_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.created_at >= week_start,
+        )
+    )
+    posts_this_week = week_result.scalar() or 0
+
+    scheduled_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.status == "scheduled",
+        )
+    )
+    scheduled_posts = scheduled_result.scalar() or 0
+
+    asset_result = await db.execute(
+        select(func.count(Asset.id)).where(Asset.user_id == user_id)
+    )
+    total_assets = asset_result.scalar() or 0
+
+    # Recent posts (last 5)
+    recent_result = await db.execute(
+        select(Post)
+        .where(Post.user_id == user_id)
+        .order_by(Post.created_at.desc())
+        .limit(5)
+    )
+    recent_posts_raw = recent_result.scalars().all()
+    recent_posts = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "category": p.category,
+            "platform": p.platform,
+            "status": p.status,
+            "country": p.country,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        }
+        for p in recent_posts_raw
+    ]
+
+    # Mini calendar: scheduled posts for the next 7 days
+    today = now.date()
+    next_week = today + timedelta(days=7)
+    calendar_result = await db.execute(
+        select(CalendarEntry).where(
+            CalendarEntry.scheduled_date >= today,
+            CalendarEntry.scheduled_date <= next_week,
+        )
+    )
+    calendar_entries_raw = calendar_result.scalars().all()
+    calendar_entries = [
+        {
+            "id": e.id,
+            "post_id": e.post_id,
+            "scheduled_date": e.scheduled_date.isoformat() if e.scheduled_date else None,
+            "scheduled_time": e.scheduled_time,
+            "notes": e.notes,
+        }
+        for e in calendar_entries_raw
+    ]
+
+    return {
+        "stats": {
+            "posts_this_week": posts_this_week,
+            "scheduled_posts": scheduled_posts,
+            "total_assets": total_assets,
+            "total_posts": total_posts,
+        },
+        "recent_posts": recent_posts,
+        "calendar_entries": calendar_entries,
     }
 
 
@@ -103,10 +218,30 @@ async def get_goals(
     db: AsyncSession = Depends(get_db),
 ):
     """Get weekly/monthly targets vs actual."""
-    # TODO: Read goals from settings
+    now = datetime.now(timezone.utc)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    week_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.created_at >= week_start,
+        )
+    )
+    weekly_actual = week_result.scalar() or 0
+
+    month_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.created_at >= month_start,
+        )
+    )
+    monthly_actual = month_result.scalar() or 0
+
     return {
         "weekly_target": 4,
-        "weekly_actual": 0,
+        "weekly_actual": weekly_actual,
         "monthly_target": 16,
-        "monthly_actual": 0,
+        "monthly_actual": monthly_actual,
     }
