@@ -16,7 +16,7 @@ const accountEmail = ref('')
 const accountDisplayName = ref('')
 
 // Brand settings
-const brandPrimaryColor = ref('#4C8BC2')
+const brandPrimaryColor = ref('#3B7AB1')
 const brandSecondaryColor = ref('#FDD000')
 const brandAccentColor = ref('#FFFFFF')
 
@@ -129,7 +129,7 @@ onMounted(() => {
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error && !saving" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center mb-6">
+    <div v-else-if="error && !saving" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center mb-6" role="alert">
       <p class="text-red-600 dark:text-red-400">{{ error }}</p>
       <button
         @click="fetchSettings"
@@ -154,6 +154,7 @@ onMounted(() => {
       <div
         v-if="error && saving === false && !loading"
         class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3"
+        role="alert"
       >
         <span class="text-red-600 dark:text-red-400 text-lg">&#10007;</span>
         <p class="text-red-700 dark:text-red-300 font-medium">{{ error }}</p>
@@ -177,6 +178,7 @@ onMounted(() => {
               type="email"
               :value="accountEmail"
               readonly
+              aria-label="E-Mail Adresse"
               class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed"
               data-testid="account-email"
             />
@@ -190,6 +192,7 @@ onMounted(() => {
               type="text"
               v-model="accountDisplayName"
               placeholder="Dein Anzeigename"
+              aria-label="Anzeigename"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="account-display-name"
             />
@@ -216,14 +219,16 @@ onMounted(() => {
               <input
                 type="color"
                 v-model="brandPrimaryColor"
+                aria-label="Primaerfarbe Farbwahl"
                 class="w-12 h-10 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer p-0.5"
                 data-testid="brand-primary-color"
               />
               <input
                 type="text"
                 v-model="brandPrimaryColor"
+                aria-label="Primaerfarbe Hex-Wert"
                 class="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm"
-                placeholder="#4C8BC2"
+                placeholder="#3B7AB1"
               />
             </div>
           </div>
@@ -235,12 +240,14 @@ onMounted(() => {
               <input
                 type="color"
                 v-model="brandSecondaryColor"
+                aria-label="Sekundaerfarbe Farbwahl"
                 class="w-12 h-10 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer p-0.5"
                 data-testid="brand-secondary-color"
               />
               <input
                 type="text"
                 v-model="brandSecondaryColor"
+                aria-label="Sekundaerfarbe Hex-Wert"
                 class="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm"
                 placeholder="#FDD000"
               />
@@ -254,12 +261,14 @@ onMounted(() => {
               <input
                 type="color"
                 v-model="brandAccentColor"
+                aria-label="Akzentfarbe Farbwahl"
                 class="w-12 h-10 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer p-0.5"
                 data-testid="brand-accent-color"
               />
               <input
                 type="text"
                 v-model="brandAccentColor"
+                aria-label="Akzentfarbe Hex-Wert"
                 class="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm"
                 placeholder="#FFFFFF"
               />
@@ -308,6 +317,7 @@ onMounted(() => {
               type="password"
               v-model="geminiApiKey"
               placeholder="AIza..."
+              aria-label="Google Gemini API-Schluessel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="gemini-api-key"
             />
@@ -321,6 +331,7 @@ onMounted(() => {
               type="password"
               v-model="openaiApiKey"
               placeholder="sk-..."
+              aria-label="OpenAI API-Schluessel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="openai-api-key"
             />
@@ -334,6 +345,7 @@ onMounted(() => {
               type="password"
               v-model="unsplashApiKey"
               placeholder="Client-ID..."
+              aria-label="Unsplash API-Schluessel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="unsplash-api-key"
             />
@@ -358,6 +370,7 @@ onMounted(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts pro Woche</label>
             <select
               v-model="postsPerWeek"
+              aria-label="Posts pro Woche"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="posts-per-week"
             >
@@ -375,6 +388,7 @@ onMounted(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts pro Monat</label>
             <select
               v-model="postsPerMonth"
+              aria-label="Posts pro Monat"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="posts-per-month"
             >
@@ -392,6 +406,7 @@ onMounted(() => {
             <input
               type="time"
               v-model="preferredPostingTime"
+              aria-label="Bevorzugte Posting-Zeit"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="preferred-posting-time"
             />
@@ -402,6 +417,7 @@ onMounted(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bevorzugte Plattform</label>
             <select
               v-model="preferredPlatform"
+              aria-label="Bevorzugte Plattform"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="preferred-platform"
             >

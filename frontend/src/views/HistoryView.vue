@@ -432,7 +432,7 @@ onMounted(() => {
       </div>
       <button
         @click="createPost"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-[#4C8BC2] text-white rounded-lg hover:bg-[#3a7ab1] transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
       >
         <span>+</span>
         <span>Neuer Post</span>
@@ -450,7 +450,8 @@ onMounted(() => {
               v-model="searchQuery"
               type="text"
               placeholder="Posts durchsuchen..."
-              class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              aria-label="Posts durchsuchen"
+              class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               @input="fetchPosts"
             />
           </div>
@@ -460,7 +461,8 @@ onMounted(() => {
         <select
           v-model="filterCategory"
           @change="fetchPosts"
-          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2]"
+          aria-label="Kategorie filtern"
+          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
         >
           <option value="">Alle Kategorien</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -472,7 +474,8 @@ onMounted(() => {
         <select
           v-model="filterPlatform"
           @change="fetchPosts"
-          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2]"
+          aria-label="Plattform filtern"
+          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
         >
           <option value="">Alle Plattformen</option>
           <option v-for="plat in platforms" :key="plat.id" :value="plat.id">
@@ -484,7 +487,8 @@ onMounted(() => {
         <select
           v-model="filterStatus"
           @change="fetchPosts"
-          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2]"
+          aria-label="Status filtern"
+          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
         >
           <option value="">Alle Status</option>
           <option v-for="s in statuses" :key="s.id" :value="s.id">
@@ -497,7 +501,8 @@ onMounted(() => {
           <select
             v-model="sortBy"
             @change="changeSortBy($event.target.value)"
-            class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2]"
+            aria-label="Sortierung"
+            class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
           >
             <option v-for="opt in sortOptions" :key="opt.id" :value="opt.id">
               {{ opt.label }}
@@ -505,8 +510,9 @@ onMounted(() => {
           </select>
           <button
             @click="toggleSortDirection"
-            class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#4C8BC2] hover:text-[#4C8BC2] transition-colors text-sm"
+            class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#3B7AB1] hover:text-[#3B7AB1] transition-colors text-sm"
             :title="sortDirection === 'desc' ? 'Absteigend (neueste zuerst)' : 'Aufsteigend (aelteste zuerst)'"
+            :aria-label="sortDirection === 'desc' ? 'Absteigend sortieren' : 'Aufsteigend sortieren'"
           >
             {{ sortDirection === 'desc' ? '↓' : '↑' }}
           </button>
@@ -516,7 +522,7 @@ onMounted(() => {
         <button
           v-if="activeFilters > 0"
           @click="clearFilters(); fetchPosts()"
-          class="text-sm text-[#4C8BC2] hover:text-[#3a7ab1] transition-colors"
+          class="text-sm text-[#3B7AB1] hover:text-[#2E6A9E] transition-colors"
         >
           Filter zuruecksetzen ({{ activeFilters }})
         </button>
@@ -534,8 +540,8 @@ onMounted(() => {
             @click="applyDatePreset(preset.days)"
             class="px-2.5 py-1 text-xs rounded-md border transition-colors"
             :class="isPresetActive(preset.days)
-              ? 'bg-[#4C8BC2] text-white border-[#4C8BC2]'
-              : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-[#4C8BC2] hover:text-[#4C8BC2]'"
+              ? 'bg-[#3B7AB1] text-white border-[#3B7AB1]'
+              : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-[#3B7AB1] hover:text-[#3B7AB1]'"
           >
             {{ preset.label }}
           </button>
@@ -550,7 +556,7 @@ onMounted(() => {
             v-model="filterDateFrom"
             type="date"
             @change="fetchPosts"
-            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
           />
         </div>
         <div class="flex items-center gap-2">
@@ -559,7 +565,7 @@ onMounted(() => {
             v-model="filterDateTo"
             type="date"
             @change="fetchPosts"
-            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+            class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
           />
         </div>
 
@@ -569,6 +575,7 @@ onMounted(() => {
           @click="clearDateFilter"
           class="text-xs text-gray-400 hover:text-red-500 transition-colors"
           title="Zeitraum-Filter entfernen"
+          aria-label="Zeitraum-Filter entfernen"
         >
           ✕
         </button>
@@ -590,7 +597,7 @@ onMounted(() => {
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
       <p class="text-red-600 dark:text-red-400 mb-3">{{ error }}</p>
       <button
         @click="fetchPosts"
@@ -607,7 +614,7 @@ onMounted(() => {
       <p class="text-gray-500 dark:text-gray-400 mb-6">Erstelle deinen ersten Social-Media-Post fuer TREFF!</p>
       <button
         @click="createPost"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-[#4C8BC2] text-white rounded-lg hover:bg-[#3a7ab1] transition-colors"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
       >
         <span>+</span>
         <span>Ersten Post erstellen</span>
@@ -621,7 +628,7 @@ onMounted(() => {
       <p class="text-gray-500 dark:text-gray-400 mb-4">Keine Posts passen zu deinen Filtern.</p>
       <button
         @click="clearFilters(); fetchPosts()"
-        class="text-[#4C8BC2] hover:text-[#3a7ab1] text-sm"
+        class="text-[#3B7AB1] hover:text-[#2E6A9E] text-sm"
       >
         Filter zuruecksetzen
       </button>
@@ -703,6 +710,7 @@ onMounted(() => {
               @click="openScheduleDialog(post)"
               class="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
               :title="post.status === 'scheduled' || post.status === 'reminded' ? 'Umplanen' : 'Planen'"
+              :aria-label="post.status === 'scheduled' || post.status === 'reminded' ? 'Umplanen' : 'Planen'"
             >
               {{ post.status === 'scheduled' || post.status === 'reminded' ? '🔄' : '📅' }}
             </button>
@@ -711,21 +719,24 @@ onMounted(() => {
               @click="markAsPosted(post)"
               class="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
               title="Als veroeffentlicht markieren"
+              aria-label="Als veroeffentlicht markieren"
             >
               ✅
             </button>
             <button
               @click="duplicatePost(post)"
               :disabled="duplicating === post.id"
-              class="p-2 text-gray-400 hover:text-[#4C8BC2] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="p-2 text-gray-400 hover:text-[#3B7AB1] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Duplizieren"
+              aria-label="Duplizieren"
             >
               {{ duplicating === post.id ? '⏳' : '📋' }}
             </button>
             <button
               @click="editPost(post.id)"
-              class="p-2 text-gray-400 hover:text-[#4C8BC2] hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              class="p-2 text-gray-400 hover:text-[#3B7AB1] hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Bearbeiten"
+              aria-label="Bearbeiten"
             >
               ✏️
             </button>
@@ -733,6 +744,7 @@ onMounted(() => {
               @click="confirmDeletePost(post)"
               class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               title="Loeschen"
+              aria-label="Loeschen"
             >
               🗑️
             </button>
@@ -797,7 +809,7 @@ onMounted(() => {
             </div>
 
             <!-- Error message -->
-            <div v-if="scheduleError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+            <div v-if="scheduleError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400" role="alert">
               {{ scheduleError }}
             </div>
 
@@ -809,7 +821,7 @@ onMounted(() => {
               <input
                 v-model="scheduleDate"
                 type="date"
-                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               />
             </div>
 
@@ -821,7 +833,7 @@ onMounted(() => {
               <input
                 v-model="scheduleTime"
                 type="time"
-                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               />
             </div>
 
@@ -836,7 +848,7 @@ onMounted(() => {
               <button
                 @click="executeSchedule"
                 :disabled="scheduling || !scheduleDate || !scheduleTime"
-                class="px-4 py-2 bg-[#4C8BC2] text-white rounded-lg hover:bg-[#3a7ab1] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ scheduling ? 'Wird geplant...' : (postToSchedule?.status === 'scheduled' || postToSchedule?.status === 'reminded' ? 'Umplanen' : 'Post planen') }}
               </button>

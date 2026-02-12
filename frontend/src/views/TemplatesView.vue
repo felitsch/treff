@@ -32,7 +32,7 @@ const newTemplate = ref({
   platform_format: 'feed_square',
   slide_count: 1,
   html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
-  css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #4C8BC2 100%);\n  min-height: 100%;\n}',
+  css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #3B7AB1 100%);\n  min-height: 100%;\n}',
   placeholder_fields: '["title", "content"]',
 })
 
@@ -50,7 +50,7 @@ const editorTemplateName = ref('')
 
 // Customization state - these drive the live preview
 const editorCustom = ref({
-  primaryColor: '#4C8BC2',
+  primaryColor: '#3B7AB1',
   secondaryColor: '#FDD000',
   accentColor: '#FFFFFF',
   backgroundColor: '#1A1A2E',
@@ -177,7 +177,7 @@ function openEditor(template, editMode = false) {
   } catch { /* use defaults */ }
 
   editorCustom.value = {
-    primaryColor: colors.primary || '#4C8BC2',
+    primaryColor: colors.primary || '#3B7AB1',
     secondaryColor: colors.secondary || '#FDD000',
     accentColor: colors.accent || '#FFFFFF',
     backgroundColor: colors.background || '#1A1A2E',
@@ -258,7 +258,7 @@ function closeEditor() {
 function resetToDefaults() {
   editorCustom.value = {
     ...editorCustom.value,
-    primaryColor: '#4C8BC2',
+    primaryColor: '#3B7AB1',
     secondaryColor: '#FDD000',
     accentColor: '#FFFFFF',
     backgroundColor: '#1A1A2E',
@@ -402,7 +402,7 @@ function parseColors(colorsStr) {
   try {
     return JSON.parse(colorsStr)
   } catch {
-    return { primary: '#4C8BC2', secondary: '#FDD000', accent: '#FFFFFF', background: '#1A1A2E' }
+    return { primary: '#3B7AB1', secondary: '#FDD000', accent: '#FFFFFF', background: '#1A1A2E' }
   }
 }
 
@@ -432,7 +432,7 @@ function openCreateModal() {
     platform_format: 'feed_square',
     slide_count: 1,
     html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
-    css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #4C8BC2 100%);\n  min-height: 100%;\n}',
+    css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #3B7AB1 100%);\n  min-height: 100%;\n}',
     placeholder_fields: '["title", "content"]',
   }
   createError.value = null
@@ -603,7 +603,7 @@ onMounted(() => {
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
       <p class="text-red-600 dark:text-red-400">{{ error }}</p>
       <button
         @click="fetchTemplates"
@@ -623,6 +623,7 @@ onMounted(() => {
             <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Kategorie:</label>
             <select
               v-model="selectedCategory"
+              aria-label="Kategorie filtern"
               class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
             >
               <option value="">Alle Kategorien</option>
@@ -637,6 +638,7 @@ onMounted(() => {
             <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Format:</label>
             <select
               v-model="selectedPlatform"
+              aria-label="Format filtern"
               class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
             >
               <option value="">Alle Formate</option>
@@ -704,6 +706,7 @@ onMounted(() => {
                 @click.stop="openEditor(template, true)"
                 class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-treff-blue hover:text-white text-gray-600 dark:text-gray-300 transition-all"
                 title="Template bearbeiten"
+                aria-label="Template bearbeiten"
                 data-testid="template-edit-btn"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -715,6 +718,7 @@ onMounted(() => {
                 @click.stop="openDeleteModal(template)"
                 class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-red-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all"
                 title="Template loeschen"
+                aria-label="Template loeschen"
                 data-testid="template-delete-btn"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -727,14 +731,14 @@ onMounted(() => {
               <div
                 class="w-full h-48 flex flex-col items-center justify-center p-4 relative overflow-hidden"
                 :style="{
-                  background: `linear-gradient(135deg, ${parseColors(template.default_colors).background || '#1A1A2E'} 0%, ${parseColors(template.default_colors).primary || '#4C8BC2'} 100%)`,
+                  background: `linear-gradient(135deg, ${parseColors(template.default_colors).background || '#1A1A2E'} 0%, ${parseColors(template.default_colors).primary || '#3B7AB1'} 100%)`,
                 }"
               >
                 <!-- Template preview mockup -->
                 <div class="absolute top-3 left-3">
                   <div
                     class="px-2 py-1 rounded text-[10px] font-bold tracking-wide"
-                    :style="{ background: parseColors(template.default_colors).primary || '#4C8BC2', color: '#fff' }"
+                    :style="{ background: parseColors(template.default_colors).primary || '#3B7AB1', color: '#fff' }"
                   >
                     TREFF
                   </div>
@@ -764,7 +768,7 @@ onMounted(() => {
                 <div class="flex flex-col items-start gap-2 w-full px-3 mt-8">
                   <div
                     class="h-4 rounded-sm w-3/4"
-                    :style="{ background: parseColors(template.default_colors).primary || '#4C8BC2' }"
+                    :style="{ background: parseColors(template.default_colors).primary || '#3B7AB1' }"
                   ></div>
                   <div
                     class="h-3 rounded-sm w-1/2 opacity-70"
@@ -862,6 +866,7 @@ onMounted(() => {
             <button
               @click="closeCreateModal"
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
+              aria-label="Dialog schliessen"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -878,7 +883,7 @@ onMounted(() => {
           </div>
 
           <!-- Error Message -->
-          <div v-if="createError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <div v-if="createError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3" role="alert">
             <p class="text-red-600 dark:text-red-400 text-sm">{{ createError }}</p>
           </div>
 
@@ -891,6 +896,7 @@ onMounted(() => {
               v-model="newTemplate.name"
               type="text"
               placeholder="z.B. Mein Custom Template"
+              aria-label="Template-Name"
               :class="[
                 'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 text-sm',
                 createSubmitted && createFieldErrors.name
@@ -913,6 +919,7 @@ onMounted(() => {
               </label>
               <select
                 v-model="newTemplate.category"
+                aria-label="Kategorie"
                 :class="[
                   'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 text-sm',
                   createSubmitted && createFieldErrors.category
@@ -938,6 +945,7 @@ onMounted(() => {
               </label>
               <select
                 v-model="newTemplate.platform_format"
+                aria-label="Plattform-Format"
                 class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
               >
                 <option v-for="(info, key) in platformLabels" :key="key" :value="key">
@@ -1074,6 +1082,7 @@ onMounted(() => {
           <button
             @click="closeEditor"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            aria-label="Editor schliessen"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1090,7 +1099,7 @@ onMounted(() => {
             <div v-if="editorSaveSuccess" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
               <p class="text-green-700 dark:text-green-300 text-sm font-medium">Template erfolgreich gespeichert!</p>
             </div>
-            <div v-if="editorSaveError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+            <div v-if="editorSaveError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3" role="alert">
               <p class="text-red-600 dark:text-red-400 text-sm">{{ editorSaveError }}</p>
             </div>
 
@@ -1106,6 +1115,7 @@ onMounted(() => {
                 v-model="editorTemplateName"
                 type="text"
                 placeholder="Template-Name eingeben..."
+                aria-label="Template-Name"
                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                 data-testid="editor-template-name"
               />
@@ -1125,12 +1135,14 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.primaryColor"
                   type="color"
+                  aria-label="Primaerfarbe Farbwahl"
                   class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
                   data-testid="editor-primary-color"
                 />
                 <input
                   v-model="editorCustom.primaryColor"
                   type="text"
+                  aria-label="Primaerfarbe Hex-Wert"
                   class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
                   data-testid="editor-primary-color-text"
                 />
@@ -1142,12 +1154,14 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.secondaryColor"
                   type="color"
+                  aria-label="Sekundaerfarbe Farbwahl"
                   class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
                   data-testid="editor-secondary-color"
                 />
                 <input
                   v-model="editorCustom.secondaryColor"
                   type="text"
+                  aria-label="Sekundaerfarbe Hex-Wert"
                   class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
                 />
               </div>
@@ -1158,12 +1172,14 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.backgroundColor"
                   type="color"
+                  aria-label="Hintergrundfarbe Farbwahl"
                   class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
                   data-testid="editor-bg-color"
                 />
                 <input
                   v-model="editorCustom.backgroundColor"
                   type="text"
+                  aria-label="Hintergrundfarbe Hex-Wert"
                   class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
                 />
               </div>
@@ -1195,6 +1211,7 @@ onMounted(() => {
                 <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Ueberschrift-Font</label>
                 <select
                   v-model="editorCustom.headingFont"
+                  aria-label="Ueberschrift-Font"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-heading-font"
                   :style="{ fontFamily: editorCustom.headingFont }"
@@ -1210,6 +1227,7 @@ onMounted(() => {
                 <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fliesstext-Font</label>
                 <select
                   v-model="editorCustom.bodyFont"
+                  aria-label="Fliesstext-Font"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-body-font"
                   :style="{ fontFamily: editorCustom.bodyFont }"
@@ -1236,6 +1254,7 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.headlineText"
                   type="text"
+                  aria-label="Ueberschrift"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-headline-text"
                   placeholder="Ueberschrift eingeben..."
@@ -1248,6 +1267,7 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.subheadlineText"
                   type="text"
+                  aria-label="Unterueberschrift"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-subheadline-text"
                   placeholder="Unterueberschrift eingeben..."
@@ -1260,6 +1280,7 @@ onMounted(() => {
                 <textarea
                   v-model="editorCustom.bodyText"
                   rows="3"
+                  aria-label="Fliesstext"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-body-text"
                   placeholder="Text eingeben..."
@@ -1272,6 +1293,7 @@ onMounted(() => {
                 <input
                   v-model="editorCustom.ctaText"
                   type="text"
+                  aria-label="Call-to-Action Text"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-cta-text"
                   placeholder="CTA-Text eingeben..."
@@ -1387,7 +1409,7 @@ onMounted(() => {
           </p>
 
           <!-- Error Message -->
-          <div v-if="deleteError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4 text-left">
+          <div v-if="deleteError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4 text-left" role="alert">
             <p class="text-red-600 dark:text-red-400 text-sm">{{ deleteError }}</p>
           </div>
 

@@ -290,6 +290,7 @@ onMounted(() => {
           <button
             @click="emit('close')"
             class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Dialog schliessen"
             data-testid="crop-modal-close"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

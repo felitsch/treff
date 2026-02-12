@@ -764,6 +764,7 @@ onMounted(() => {
             ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600'
             : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
           title="Posting-Luecken anzeigen/ausblenden"
+          aria-label="Posting-Luecken anzeigen/ausblenden"
         >
           <span v-if="showGaps">&#9888;&#65039;</span><span v-else>&#128065;&#65039;</span>
           Luecken
@@ -778,6 +779,7 @@ onMounted(() => {
             @click="prevNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors"
             :title="viewMode === 'month' ? 'Vorheriger Monat' : 'Vorherige Woche'"
+            :aria-label="viewMode === 'month' ? 'Vorheriger Monat' : 'Vorherige Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -790,6 +792,7 @@ onMounted(() => {
             @click="nextNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors"
             :title="viewMode === 'month' ? 'Naechster Monat' : 'Naechste Woche'"
+            :aria-label="viewMode === 'month' ? 'Naechster Monat' : 'Naechste Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -838,7 +841,7 @@ onMounted(() => {
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
+    <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400" role="alert">
       {{ error }}
     </div>
 
@@ -863,6 +866,7 @@ onMounted(() => {
           @click="sidebarCollapsed = !sidebarCollapsed"
           class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           :title="sidebarCollapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'"
+          :aria-label="sidebarCollapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'"
         >
           <span v-if="!sidebarCollapsed" class="flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1351,7 +1355,7 @@ onMounted(() => {
         </div>
 
         <!-- Error message -->
-        <div v-if="scheduleError" class="mb-4 p-2 bg-red-50 dark:bg-red-900/30 rounded-lg">
+        <div v-if="scheduleError" class="mb-4 p-2 bg-red-50 dark:bg-red-900/30 rounded-lg" role="alert">
           <p class="text-sm text-red-600 dark:text-red-400">{{ scheduleError }}</p>
         </div>
 
