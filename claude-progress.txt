@@ -1183,3 +1183,42 @@
 ### Current state:
 - 21/163 features passing (12.9%)
 - Feature #34 marked as PASSING
+
+## Session - Feature #80: Post history can be filtered by category
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified existing category filter functionality on History page end-to-end via browser
+- Category filter was already fully implemented (both frontend and backend)
+- Created 6 test posts across 3 categories: laender_spotlight (3), erfahrungsberichte (2), tipps_tricks (1)
+- Tested all feature steps through browser automation:
+  1. All 6 posts visible with "Alle Kategorien" selected
+  2. Applied "Laender-Spotlight" filter -> 3 posts shown (correct)
+  3. Applied "Erfahrungsberichte" filter -> 2 posts shown (correct)
+  4. Cleared filter via "Filter zuruecksetzen" button -> all 6 posts returned
+- Fixed .env DATABASE_URL to use default absolute path from config.py instead of relative ./treff.db
+  (relative path caused wrong DB file when server started from different CWD)
+
+### Bug fix:
+- backend/.env: Commented out relative DATABASE_URL so config.py default (absolute path) is used
+  This prevents CWD-dependent database resolution on server restart
+
+### Verification checklist:
+- [x] Created posts in different categories (laender_spotlight, erfahrungsberichte, tipps_tricks)
+- [x] Navigated to History page, all posts visible (6 Posts gefunden)
+- [x] Applied laender_spotlight filter -> only 3 matching posts shown
+- [x] Applied erfahrungsberichte filter -> only 2 matching posts shown
+- [x] Cleared filter -> all 6 posts returned
+- [x] Zero JS console errors
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: all 6 posts persist, login works, filters work after restart
+- [x] API-level filter verification: GET /api/posts?category=laender_spotlight returns 3, erfahrungsberichte returns 2
+- [x] Screenshots captured: feature80-all-posts.png, feature80-laender-filter.png, feature80-erfahrung-filter.png, feature80-filter-cleared.png, feature80-after-restart.png
+
+### Current state:
+- 29/163 features passing (17.8%)
+- Feature #80 marked as PASSING
+
+### Next steps:
+- Continue with remaining Search & Filter and other features
