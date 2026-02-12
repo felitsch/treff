@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #54: Export quality selector switches between 1080px and 2160px
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the export quality selector UI and functionality end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Quality selector UI in CreatePostView.vue Step 9 with two buttons: "Standard (1080px)" and "Hohe Qualitaet (2160px)"
+  - Canvas rendering uses scale factor: scale=1 for 1080px, scale=2 for 2160px
+  - exportQuality state managed in Pinia store (createPost.js)
+  - Backend ExportHistory model records resolution field
+
+### Verification steps completed:
+1. Open export dialog - PASS (navigated to Step 9 "Exportieren & Speichern" in Create Post workflow)
+2. Select standard quality (1080px) - PASS (button selected by default with blue highlight, label "Empfohlen fuer Social Media")
+3. Verify rendered at 1080px - PASS (exported ZIP with 5 slides, all exactly 1080x1080px verified via Pillow)
+4. Select high quality (2160px) - PASS (clicked "Hohe Qualitaet (2160px)" button, blue highlight switched, label "Fuer Druck und hohe Aufloesung")
+5. Verify rendered at 2160px resolution - PASS (exported ZIP with 3 slides, all exactly 2160x2160px verified via Pillow)
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Quality selector uses data-testid attributes (quality-1080, quality-2160)
+- Screenshots captured: feature54-step1-export-quality-selector.png, feature54-step2-2160px-selected.png, feature54-step3-2160px-export-ready.png
+
+### No code changes needed:
+- CreatePostView.vue already had complete quality selector implementation (lines 1876-1907)
+- renderSlideToCanvas() already applied scale factor based on exportQuality (scale=2 for 2160px)
+- Pinia store already managed exportQuality state with default '1080'
+- Backend ExportHistory model already stored resolution field
+
+### Current state:
+- Feature #54 marked as PASSING
+- 65/163 features passing (39.9%)
+
 ## Session - Feature #53: Multi-platform export produces separate files per platform
 **Date:** 2026-02-12
 **Status:** PASSING
