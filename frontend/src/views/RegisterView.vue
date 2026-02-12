@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -11,19 +11,44 @@ const password = ref('')
 const displayName = ref('')
 const error = ref('')
 const loading = ref(false)
+const submitted = ref(false)
+
+// Per-field validation errors
+const fieldErrors = reactive({
+  email: '',
+  password: '',
+})
+
+function validateFields() {
+  let valid = true
+  fieldErrors.email = ''
+  fieldErrors.password = ''
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!email.value || !email.value.trim()) {
+    fieldErrors.email = 'E-Mail-Adresse ist erforderlich'
+    valid = false
+  } else if (!emailRegex.test(email.value.trim())) {
+    fieldErrors.email = 'Bitte gib eine gueltige E-Mail-Adresse ein'
+    valid = false
+  }
+
+  if (!password.value) {
+    fieldErrors.password = 'Passwort ist erforderlich'
+    valid = false
+  } else if (password.value.length < 8) {
+    fieldErrors.password = 'Passwort muss mindestens 8 Zeichen lang sein'
+    valid = false
+  }
+
+  return valid
+}
 
 const handleRegister = async () => {
   error.value = ''
+  submitted.value = true
 
-  // Client-side email validation
-  // Must have content before @, content after @, and a dot in the domain
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!email.value || !emailRegex.test(email.value.trim())) {
-    error.value = 'Bitte gib eine gueltige E-Mail-Adresse ein'
-    return
-  }
-  if (!password.value || password.value.length < 8) {
-    error.value = 'Passwort muss mindestens 8 Zeichen lang sein'
+  if (!validateFields()) {
     return
   }
 
@@ -80,10 +105,18 @@ const handleRegister = async () => {
             v-model="email"
             type="email"
             required
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue/20 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            :class="[
+              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white',
+              submitted && fieldErrors.email
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500'
+                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue/20 dark:border-gray-600'
+            ]"
             placeholder="email@treff.de"
             aria-label="E-Mail Adresse"
           />
+          <p v-if="submitted && fieldErrors.email" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="email-error">
+            {{ fieldErrors.email }}
+          </p>
         </div>
 
         <div>
@@ -96,10 +129,18 @@ const handleRegister = async () => {
             type="password"
             required
             minlength="8"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-treff-blue focus:outline-none focus:ring-2 focus:ring-treff-blue/20 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            :class="[
+              'mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white',
+              submitted && fieldErrors.password
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500'
+                : 'border-gray-300 focus:border-treff-blue focus:ring-treff-blue/20 dark:border-gray-600'
+            ]"
             placeholder="Mindestens 8 Zeichen"
             aria-label="Passwort"
           />
+          <p v-if="submitted && fieldErrors.password" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="password-error">
+            {{ fieldErrors.password }}
+          </p>
         </div>
 
         <div v-if="error" class="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400" role="alert">
