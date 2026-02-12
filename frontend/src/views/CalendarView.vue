@@ -28,6 +28,29 @@ const totalPosts = ref(0)
 // View mode: 'month' or 'week'
 const viewMode = ref('month')
 
+// Platform filter: null = all, or 'instagram_feed', 'instagram_story', 'tiktok'
+const platformFilter = ref(null)
+
+// Gap detection: days without scheduled posts
+const gapDates = ref(new Set())
+const showGaps = ref(true)
+
+// Weekly/monthly goal stats
+const goalStats = ref({
+  posts_this_week: 0,
+  weekly_goal: 3,
+  posts_this_month: 0,
+  monthly_goal: 12,
+})
+
+// Platform filter options
+const platformOptions = [
+  { value: null, label: 'Alle', icon: '📋' },
+  { value: 'instagram_feed', label: 'IG Feed', icon: '📷' },
+  { value: 'instagram_story', label: 'IG Story', icon: '📱' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+]
+
 // Weekly view state
 const weekDate = ref(new Date().toISOString().split('T')[0]) // YYYY-MM-DD for current week
 const weekPostsByDate = ref({})
@@ -286,12 +309,22 @@ function setViewMode(mode) {
   fetchData()
 }
 
+// Set platform filter
+function setPlatformFilter(platform) {
+  platformFilter.value = platform
+  fetchData()
+}
+
 // Fetch calendar data (month)
 async function fetchCalendar() {
   loading.value = true
   error.value = null
   try {
-    const res = await fetch(`/api/calendar?month=${currentMonth.value}&year=${currentYear.value}`, {
+    let url = `/api/calendar?month=${currentMonth.value}&year=${currentYear.value}`
+    if (platformFilter.value) {
+      url += `&platform=${platformFilter.value}`
+    }
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -311,7 +344,11 @@ async function fetchWeek() {
   loading.value = true
   error.value = null
   try {
-    const res = await fetch(`/api/calendar/week?date=${weekDate.value}`, {
+    let url = `/api/calendar/week?date=${weekDate.value}`
+    if (platformFilter.value) {
+      url += `&platform=${platformFilter.value}`
+    }
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -344,14 +381,66 @@ async function fetchUnscheduled() {
   }
 }
 
+// Fetch gap dates for the current month
+async function fetchGaps() {
+  try {
+    const res = await fetch(`/api/calendar/gaps?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    gapDates.value = new Set(data.gaps || [])
+  } catch (err) {
+    console.error('Gaps fetch error:', err)
+  }
+}
+
+// Fetch goal stats
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/calendar/stats', {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    goalStats.value = data
+  } catch (err) {
+    console.error('Stats fetch error:', err)
+  }
+}
+
+// Computed: weekly goal progress percentage (capped at 100)
+const weeklyGoalPercent = computed(() => {
+  if (!goalStats.value.weekly_goal || goalStats.value.weekly_goal <= 0) return 0
+  return Math.min(100, Math.round((goalStats.value.posts_this_week / goalStats.value.weekly_goal) * 100))
+})
+
+// Computed: whether weekly goal is met
+const weeklyGoalMet = computed(() => {
+  return goalStats.value.posts_this_week >= goalStats.value.weekly_goal
+})
+
 // Unified fetch based on current view mode
 function fetchData() {
+  fetchStats()
   if (viewMode.value === 'month') {
     fetchCalendar()
+    fetchGaps()
   } else {
     fetchWeek()
   }
 }
+
+// Check if a date is a gap (no posts scheduled) - only for current month days
+function isGapDate(dateStr, isCurrentMonth) {
+  if (!showGaps.value || !isCurrentMonth) return false
+  return gapDates.value.has(dateStr)
+}
+
+// Computed: number of gap days in current month
+const gapCount = computed(() => {
+  return gapDates.value.size
+})
 
 // Get color classes for a category
 function getCategoryStyle(category) {
@@ -493,18 +582,26 @@ const navLabel = computed(() => {
   return weekLabel.value
 })
 
+// Computed: active platform label for subtitle
+const activePlatformLabel = computed(() => {
+  if (!platformFilter.value) return ''
+  const opt = platformOptions.find(o => o.value === platformFilter.value)
+  return opt ? ` (${opt.icon} ${opt.label})` : ''
+})
+
 // Computed: subtitle text
 const subtitleText = computed(() => {
   if (viewMode.value === 'month') {
-    return `${totalPosts.value} ${totalPosts.value === 1 ? 'Post' : 'Posts'} in ${currentMonthLabel.value}`
+    return `${totalPosts.value} ${totalPosts.value === 1 ? 'Post' : 'Posts'} in ${currentMonthLabel.value}${activePlatformLabel.value}`
   }
-  return `${weekTotalPosts.value} ${weekTotalPosts.value === 1 ? 'Post' : 'Posts'} in dieser Woche`
+  return `${weekTotalPosts.value} ${weekTotalPosts.value === 1 ? 'Post' : 'Posts'} in dieser Woche${activePlatformLabel.value}`
 })
 
 // Watch month/year changes (for month view)
 watch([currentMonth, currentYear], () => {
   if (viewMode.value === 'month') {
     fetchCalendar()
+    fetchGaps()
   }
 })
 
@@ -532,8 +629,24 @@ onMounted(() => {
         </p>
       </div>
 
-      <!-- Controls: view toggle + navigation -->
-      <div class="flex items-center gap-3">
+      <!-- Controls: platform filter + view toggle + navigation -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Platform filter -->
+        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <button
+            v-for="opt in platformOptions"
+            :key="opt.value ?? 'all'"
+            @click="setPlatformFilter(opt.value)"
+            class="px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap"
+            :class="platformFilter === opt.value
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+            :title="'Filtern nach ' + opt.label"
+          >
+            {{ opt.icon }} {{ opt.label }}
+          </button>
+        </div>
+
         <!-- View mode toggle -->
         <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
           <button
@@ -562,6 +675,23 @@ onMounted(() => {
           class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Heute
+        </button>
+
+        <!-- Gap detection toggle (only in month view) -->
+        <button
+          v-if="viewMode === 'month'"
+          @click="showGaps = !showGaps"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="showGaps
+            ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Posting-Luecken anzeigen/ausblenden"
+        >
+          <span v-if="showGaps">&#9888;&#65039;</span><span v-else>&#128065;&#65039;</span>
+          Luecken
+          <span v-if="showGaps && gapCount > 0" class="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
+            {{ gapCount }}
+          </span>
         </button>
 
         <!-- Prev / Label / Next -->
@@ -720,6 +850,7 @@ onMounted(() => {
             dayObj.isToday ? 'ring-2 ring-inset ring-blue-500' : '',
             (idx % 7 === 5 || idx % 7 === 6) ? 'bg-gray-50/30 dark:bg-gray-800/50' : '',
             dragOverDate === dayObj.dateStr ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
+            isGapDate(dayObj.dateStr, dayObj.isCurrentMonth) ? 'bg-orange-50 dark:bg-orange-900/20' : '',
           ]"
           @dragover="onDragOver($event, dayObj.dateStr)"
           @dragleave="onDragLeave($event, dayObj.dateStr)"
@@ -736,13 +867,23 @@ onMounted(() => {
             >
               {{ dayObj.day }}
             </span>
-            <!-- Post count badge -->
-            <span
-              v-if="dayObj.posts.length > 0"
-              class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-            >
-              {{ dayObj.posts.length }}
-            </span>
+            <div class="flex items-center gap-1">
+              <!-- Gap indicator -->
+              <span
+                v-if="isGapDate(dayObj.dateStr, dayObj.isCurrentMonth)"
+                class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"
+                title="Keine Posts geplant - Posting-Luecke"
+              >
+                Luecke
+              </span>
+              <!-- Post count badge -->
+              <span
+                v-if="dayObj.posts.length > 0"
+                class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+              >
+                {{ dayObj.posts.length }}
+              </span>
+            </div>
           </div>
 
           <!-- Post cards -->
@@ -903,15 +1044,29 @@ onMounted(() => {
 
     <!-- Legend -->
     <div class="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Kategorien</h3>
-      <div class="flex flex-wrap gap-3">
-        <div
-          v-for="(meta, catId) in categoryMeta"
-          :key="catId"
-          class="flex items-center gap-1.5"
-        >
-          <span class="w-3 h-3 rounded-full" :class="getCategoryStyle(catId).dot"></span>
-          <span class="text-xs text-gray-600 dark:text-gray-400">{{ meta.icon }} {{ meta.label }}</span>
+      <div class="flex flex-wrap items-start gap-6">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Kategorien</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="(meta, catId) in categoryMeta"
+              :key="catId"
+              class="flex items-center gap-1.5"
+            >
+              <span class="w-3 h-3 rounded-full" :class="getCategoryStyle(catId).dot"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">{{ meta.icon }} {{ meta.label }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="viewMode === 'month'">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Posting-Luecken</h3>
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-5 h-5 rounded bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700"></span>
+            <span class="text-xs text-gray-600 dark:text-gray-400">Tage ohne geplante Posts</span>
+            <span v-if="gapCount > 0" class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400">
+              {{ gapCount }} {{ gapCount === 1 ? 'Tag' : 'Tage' }}
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ from sqlalchemy import select, and_, or_, extract, func
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.post import Post
+from app.models.setting import Setting
 
 router = APIRouter()
 
@@ -33,10 +34,12 @@ def post_to_calendar_dict(post: Post) -> dict:
 async def get_calendar(
     month: Optional[int] = None,
     year: Optional[int] = None,
+    platform: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get posts scheduled for a given month, grouped by date."""
+    """Get posts scheduled for a given month, grouped by date.
+    Optionally filter by platform (instagram_feed, instagram_story, tiktok)."""
     now = datetime.now()
     if not month:
         month = now.month
@@ -52,14 +55,18 @@ async def get_calendar(
     first_dt = datetime(year, month, 1, 0, 0, 0)
     last_dt = datetime(year, month, last_day_num, 23, 59, 59)
 
-    query = select(Post).where(
-        and_(
-            Post.user_id == user_id,
-            Post.scheduled_date.isnot(None),
-            Post.scheduled_date >= first_dt,
-            Post.scheduled_date <= last_dt,
-        )
-    ).order_by(Post.scheduled_date)
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+
+    # Apply platform filter if specified
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = select(Post).where(and_(*conditions)).order_by(Post.scheduled_date)
 
     result = await db.execute(query)
     posts = result.scalars().all()
@@ -83,10 +90,12 @@ async def get_calendar(
 @router.get("/week")
 async def get_calendar_week(
     date_str: Optional[str] = Query(None, alias="date"),
+    platform: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get posts scheduled for a week around the given date."""
+    """Get posts scheduled for a week around the given date.
+    Optionally filter by platform (instagram_feed, instagram_story, tiktok)."""
     from datetime import timedelta
 
     if date_str:
@@ -104,14 +113,18 @@ async def get_calendar_week(
     start_dt = datetime(start_of_week.year, start_of_week.month, start_of_week.day, 0, 0, 0)
     end_dt = datetime(end_of_week.year, end_of_week.month, end_of_week.day, 23, 59, 59)
 
-    query = select(Post).where(
-        and_(
-            Post.user_id == user_id,
-            Post.scheduled_date.isnot(None),
-            Post.scheduled_date >= start_dt,
-            Post.scheduled_date <= end_dt,
-        )
-    ).order_by(Post.scheduled_date)
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= start_dt,
+        Post.scheduled_date <= end_dt,
+    ]
+
+    # Apply platform filter if specified
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = select(Post).where(and_(*conditions)).order_by(Post.scheduled_date)
 
     result = await db.execute(query)
     posts = result.scalars().all()
@@ -238,9 +251,31 @@ async def get_calendar_stats(
     month_result = await db.execute(month_query)
     posts_this_month = month_result.scalar() or 0
 
+    # Fetch user's posting goals from settings
+    settings_result = await db.execute(
+        select(Setting).where(
+            and_(
+                Setting.user_id == user_id,
+                Setting.key.in_(["posts_per_week", "posts_per_month"]),
+            )
+        )
+    )
+    user_settings = {s.key: s.value for s in settings_result.scalars().all()}
+
+    # Use user settings or defaults (3 per week, 12 per month)
+    try:
+        weekly_goal = int(user_settings.get("posts_per_week", "3"))
+    except (ValueError, TypeError):
+        weekly_goal = 3
+
+    try:
+        monthly_goal = int(user_settings.get("posts_per_month", "12"))
+    except (ValueError, TypeError):
+        monthly_goal = 12
+
     return {
         "posts_this_week": posts_this_week,
-        "weekly_goal": 4,
+        "weekly_goal": weekly_goal,
         "posts_this_month": posts_this_month,
-        "monthly_goal": 16,
+        "monthly_goal": monthly_goal,
     }
