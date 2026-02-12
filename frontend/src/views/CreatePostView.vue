@@ -1,23 +1,57 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import draggable from 'vuedraggable'
 import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { useCreatePostStore } from '@/stores/createPost'
 
 const router = useRouter()
 const toast = useToast()
+const store = useCreatePostStore()
 
-// ── Wizard state ──────────────────────────────────────────────────────
-const currentStep = ref(1)
+// ── Extract reactive refs from store (preserves state across navigation) ──
+const {
+  currentStep,
+  loading,
+  error,
+  successMsg,
+  selectedCategory,
+  templates,
+  selectedTemplate,
+  loadingTemplates,
+  selectedPlatform,
+  topic,
+  keyPoints,
+  country,
+  tone,
+  generatingText,
+  generatedContent,
+  slides,
+  captionInstagram,
+  captionTiktok,
+  hashtagsInstagram,
+  hashtagsTiktok,
+  ctaText,
+  currentPreviewSlide,
+  uploadingImage,
+  assets,
+  aiImagePrompt,
+  generatingImage,
+  generatedImageResult,
+  aiImageError,
+  exporting,
+  savedPost,
+  exportComplete,
+  exportQuality,
+  validationMessage,
+} = storeToRefs(store)
+
 const totalSteps = 9
-const loading = ref(false)
-const error = ref('')
-const successMsg = ref('')
 
-// Step 1: Category selection
-const selectedCategory = ref('')
+// Step 1: Category selection (static data - no need for store)
 const categories = [
   { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍', desc: 'Informative Posts ueber Ziellaender' },
   { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬', desc: 'Alumni-Erfahrungen & Testimonials' },
@@ -30,24 +64,14 @@ const categories = [
   { id: 'story_posts', label: 'Story-Posts', icon: '📱', desc: 'Instagram Story Content' },
 ]
 
-// Step 2: Template
-const templates = ref([])
-const selectedTemplate = ref(null)
-const loadingTemplates = ref(false)
-
-// Step 3: Platform
-const selectedPlatform = ref('instagram_feed')
+// Step 3: Platform (static data)
 const platforms = [
   { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷', format: '1:1 / 4:5' },
   { id: 'instagram_story', label: 'Instagram Story', icon: '📱', format: '9:16' },
   { id: 'tiktok', label: 'TikTok', icon: '🎵', format: '9:16' },
 ]
 
-// Step 4: Topic & Content Input
-const topic = ref('')
-const keyPoints = ref('')
-const country = ref('')
-const tone = ref('jugendlich')
+// Step 4: Countries (static data)
 const countries = [
   { id: 'usa', label: 'USA', flag: '🇺🇸' },
   { id: 'canada', label: 'Kanada', flag: '🇨🇦' },
@@ -56,28 +80,7 @@ const countries = [
   { id: 'ireland', label: 'Irland', flag: '🇮🇪' },
 ]
 
-// Step 5: AI Generation
-const generatingText = ref(false)
-const generatedContent = ref(null)
-
-// Step 6: Live Preview + Step 7: Edit
-const slides = ref([])
-const captionInstagram = ref('')
-const captionTiktok = ref('')
-const hashtagsInstagram = ref('')
-const hashtagsTiktok = ref('')
-const ctaText = ref('')
-const currentPreviewSlide = ref(0)
-
-// Step 8: Background Image
-const uploadingImage = ref(false)
-const assets = ref([])
-
-// Step 8: AI Image Generation
-const aiImagePrompt = ref('')
-const generatingImage = ref(false)
-const generatedImageResult = ref(null)
-const aiImageError = ref('')
+// Step 8: Prompt suggestions (static data)
 const promptSuggestions = [
   'American high school hallway with students',
   'Canadian Rocky Mountains landscape at sunset',
@@ -88,15 +91,6 @@ const promptSuggestions = [
   'Group of international students in school cafeteria',
   'Teenagers playing sports on American football field',
 ]
-
-// Step 9: Export
-const exporting = ref(false)
-const savedPost = ref(null)
-const exportComplete = ref(false)
-const exportQuality = ref('1080') // '1080' = standard, '2160' = high
-
-// ── Validation state ────────────────────────────────────────────────
-const validationMessage = ref('')
 
 // ── Computed ──────────────────────────────────────────────────────────
 const canProceed = computed(() => {
@@ -538,28 +532,7 @@ function getDimensions() {
 }
 
 function resetWorkflow() {
-  currentStep.value = 1
-  selectedCategory.value = ''
-  selectedTemplate.value = null
-  selectedPlatform.value = 'instagram_feed'
-  topic.value = ''
-  keyPoints.value = ''
-  country.value = ''
-  tone.value = 'jugendlich'
-  generatedContent.value = null
-  slides.value = []
-  captionInstagram.value = ''
-  captionTiktok.value = ''
-  hashtagsInstagram.value = ''
-  hashtagsTiktok.value = ''
-  ctaText.value = ''
-  error.value = ''
-  successMsg.value = ''
-  validationMessage.value = ''
-  savedPost.value = null
-  exportComplete.value = false
-  currentPreviewSlide.value = 0
-  exportQuality.value = '1080'
+  store.resetWorkflow()
 }
 
 function nextPreviewSlide() {
@@ -600,6 +573,22 @@ function onSlideReorder() {
 watch(slides, () => {
   currentPreviewSlide.value = 0
   ensureDragIds()
+})
+
+// On mount: reload data if returning to an in-progress workflow
+onMounted(() => {
+  if (store.hasWorkflowState()) {
+    // Reload templates if we're on or past the template step
+    if (currentStep.value >= 2 && selectedCategory.value) {
+      loadTemplates()
+    }
+    // Reload assets if we're on the background image step
+    if (currentStep.value >= 8) {
+      loadAssets()
+    }
+    // Re-assign drag IDs to slides if they exist
+    ensureDragIds()
+  }
 })
 </script>
 
