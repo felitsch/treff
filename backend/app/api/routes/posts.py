@@ -1,6 +1,7 @@
 """Post routes."""
 
 from typing import Optional
+from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -120,7 +121,20 @@ async def update_post(
 
     for key, value in post_data.items():
         if hasattr(post, key) and key not in ("id", "user_id", "created_at"):
+            # Parse scheduled_date string to datetime if provided
+            if key == "scheduled_date" and value and isinstance(value, str):
+                try:
+                    value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                except (ValueError, TypeError):
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%d")
+                    except (ValueError, TypeError):
+                        pass
             setattr(post, key, value)
+
+    # Auto-set status to "scheduled" when both scheduled_date and scheduled_time are provided
+    if post.scheduled_date and post.scheduled_time and post.status == "draft":
+        post.status = "scheduled"
 
     await db.flush()
     await db.refresh(post)
@@ -182,6 +196,56 @@ async def duplicate_post(
     await db.flush()
     await db.refresh(new_post)
     response = post_to_dict(new_post)
+    await db.commit()
+    return response
+
+
+@router.put("/{post_id}/schedule")
+async def schedule_post(
+    post_id: int,
+    schedule_data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Schedule a post by assigning a date and time. Auto-sets status to 'scheduled'."""
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    scheduled_date_str = schedule_data.get("scheduled_date")
+    scheduled_time_str = schedule_data.get("scheduled_time")
+
+    if not scheduled_date_str or not scheduled_time_str:
+        raise HTTPException(
+            status_code=400,
+            detail="Both scheduled_date (YYYY-MM-DD) and scheduled_time (HH:MM) are required"
+        )
+
+    # Parse the date
+    try:
+        parsed_date = datetime.strptime(scheduled_date_str, "%Y-%m-%d")
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+    # Validate time format
+    try:
+        parts = scheduled_time_str.split(":")
+        hour, minute = int(parts[0]), int(parts[1])
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise ValueError
+    except (ValueError, IndexError):
+        raise HTTPException(status_code=400, detail="Invalid time format. Use HH:MM (24-hour)")
+
+    post.scheduled_date = parsed_date
+    post.scheduled_time = scheduled_time_str
+    post.status = "scheduled"
+
+    await db.flush()
+    await db.refresh(post)
+    response = post_to_dict(post)
     await db.commit()
     return response
 

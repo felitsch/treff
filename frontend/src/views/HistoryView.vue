@@ -192,6 +192,63 @@ async function fetchPosts() {
   }
 }
 
+// Scheduling dialog state
+const showScheduleDialog = ref(false)
+const postToSchedule = ref(null)
+const scheduling = ref(false)
+const scheduleDate = ref('')
+const scheduleTime = ref('')
+const scheduleError = ref(null)
+
+function openScheduleDialog(post) {
+  postToSchedule.value = post
+  // Pre-fill with existing schedule if any
+  if (post.scheduled_date) {
+    // Extract date part (YYYY-MM-DD) from ISO string
+    scheduleDate.value = post.scheduled_date.substring(0, 10)
+  } else {
+    scheduleDate.value = ''
+  }
+  scheduleTime.value = post.scheduled_time || ''
+  scheduleError.value = null
+  showScheduleDialog.value = true
+}
+
+function cancelSchedule() {
+  showScheduleDialog.value = false
+  postToSchedule.value = null
+  scheduleDate.value = ''
+  scheduleTime.value = ''
+  scheduleError.value = null
+}
+
+async function executeSchedule() {
+  if (!postToSchedule.value || !scheduleDate.value || !scheduleTime.value) {
+    scheduleError.value = 'Bitte Datum und Uhrzeit angeben.'
+    return
+  }
+  scheduling.value = true
+  scheduleError.value = null
+  try {
+    const response = await api.put(`/api/posts/${postToSchedule.value.id}/schedule`, {
+      scheduled_date: scheduleDate.value,
+      scheduled_time: scheduleTime.value,
+    })
+    // Update the post in the local list with the response data
+    const idx = posts.value.findIndex(p => p.id === postToSchedule.value.id)
+    if (idx !== -1) {
+      posts.value[idx] = response.data
+    }
+    showScheduleDialog.value = false
+    postToSchedule.value = null
+  } catch (err) {
+    console.error('Failed to schedule post:', err)
+    scheduleError.value = err.response?.data?.detail || 'Fehler beim Planen des Posts.'
+  } finally {
+    scheduling.value = false
+  }
+}
+
 // Delete confirmation dialog state
 const showDeleteDialog = ref(false)
 const postToDelete = ref(null)
@@ -432,8 +489,27 @@ onMounted(() => {
             </span>
           </div>
 
+          <!-- Scheduled info -->
+          <div v-if="post.scheduled_date && post.scheduled_time" class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 text-right">
+            <div class="flex items-center gap-1">
+              <span>📅</span>
+              <span>{{ formatDateShort(post.scheduled_date) }}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>🕐</span>
+              <span>{{ post.scheduled_time }} Uhr</span>
+            </div>
+          </div>
+
           <!-- Actions -->
           <div class="flex items-center gap-1 flex-shrink-0">
+            <button
+              @click="openScheduleDialog(post)"
+              class="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+              title="Planen"
+            >
+              📅
+            </button>
             <button
               @click="editPost(post.id)"
               class="p-2 text-gray-400 hover:text-[#4C8BC2] hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -481,6 +557,76 @@ onMounted(() => {
                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
               >
                 {{ deleting ? 'Wird geloescht...' : 'Loeschen' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Schedule Dialog -->
+    <Teleport to="body">
+      <div v-if="showScheduleDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cancelSchedule"></div>
+        <!-- Dialog -->
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 z-10">
+          <div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <span class="text-xl">📅</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Post planen</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  "{{ postToSchedule?.title || 'Unbenannter Post' }}"
+                </p>
+              </div>
+            </div>
+
+            <!-- Error message -->
+            <div v-if="scheduleError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+              {{ scheduleError }}
+            </div>
+
+            <!-- Date input -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Datum
+              </label>
+              <input
+                v-model="scheduleDate"
+                type="date"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              />
+            </div>
+
+            <!-- Time input -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Uhrzeit
+              </label>
+              <input
+                v-model="scheduleTime"
+                type="time"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              />
+            </div>
+
+            <div class="flex gap-3 justify-end">
+              <button
+                @click="cancelSchedule"
+                :disabled="scheduling"
+                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+              >
+                Abbrechen
+              </button>
+              <button
+                @click="executeSchedule"
+                :disabled="scheduling || !scheduleDate || !scheduleTime"
+                class="px-4 py-2 bg-[#4C8BC2] text-white rounded-lg hover:bg-[#3a7ab1] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ scheduling ? 'Wird geplant...' : 'Post planen' }}
               </button>
             </div>
           </div>

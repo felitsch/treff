@@ -73,6 +73,7 @@ const assets = ref([])
 const exporting = ref(false)
 const savedPost = ref(null)
 const exportComplete = ref(false)
+const exportQuality = ref('1080') // '1080' = standard, '2160' = high
 
 // ── Computed ──────────────────────────────────────────────────────────
 const canProceed = computed(() => {
@@ -263,7 +264,7 @@ async function saveAndExport() {
     await api.post('/api/export/render', {
       post_id: response.data.id,
       platform: selectedPlatform.value,
-      resolution: '1080',
+      resolution: exportQuality.value,
       slide_count: slides.value.length,
     })
 
@@ -276,27 +277,36 @@ async function saveAndExport() {
   }
 }
 
-function downloadAsImage() {
-  // Client-side PNG generation using canvas
+function downloadAsImage(slideIndex = null) {
+  // Guard against click event being passed as argument
+  if (slideIndex !== null && typeof slideIndex !== 'number') {
+    slideIndex = null
+  }
+  // Client-side PNG generation using canvas at selected resolution
   const dims = getDimensions()
+  const scale = exportQuality.value === '2160' ? 2 : 1
   const canvas = document.createElement('canvas')
-  canvas.width = dims.w
-  canvas.height = dims.h
+  canvas.width = dims.w * scale
+  canvas.height = dims.h * scale
   const ctx = canvas.getContext('2d')
 
-  const slide = slides.value[currentPreviewSlide.value] || slides.value[0]
+  // Scale all drawing operations proportionally
+  ctx.scale(scale, scale)
+
+  const targetSlide = slideIndex !== null ? slideIndex : currentPreviewSlide.value
+  const slide = slides.value[targetSlide] || slides.value[0]
   if (!slide) return
 
   // Background
   ctx.fillStyle = slide.background_value || '#1A1A2E'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, dims.w, dims.h)
 
   // Gradient overlay
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+  const gradient = ctx.createLinearGradient(0, 0, 0, dims.h)
   gradient.addColorStop(0, 'rgba(76, 139, 194, 0.3)')
   gradient.addColorStop(1, 'rgba(26, 26, 46, 0.8)')
   ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, dims.w, dims.h)
 
   // TREFF logo
   ctx.fillStyle = '#4C8BC2'
@@ -311,44 +321,45 @@ function downloadAsImage() {
   ctx.fillStyle = '#4C8BC2'
   ctx.font = 'bold 52px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
-  wrapText(ctx, slide.headline || '', canvas.width / 2, 260, canvas.width - 160, 62)
+  wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
 
   // Subheadline
   if (slide.subheadline) {
     ctx.fillStyle = '#FDD000'
     ctx.font = 'bold 32px Inter, Arial, sans-serif'
-    wrapText(ctx, slide.subheadline, canvas.width / 2, 400, canvas.width - 160, 40)
+    wrapText(ctx, slide.subheadline, dims.w / 2, 400, dims.w - 160, 40)
   }
 
   // Body text
   if (slide.body_text) {
     ctx.fillStyle = '#D1D5DB'
     ctx.font = '24px Inter, Arial, sans-serif'
-    wrapText(ctx, slide.body_text, canvas.width / 2, 520, canvas.width - 160, 32)
+    wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
   }
 
   // CTA
   if (slide.cta_text) {
-    const ctaY = canvas.height - 180
+    const ctaY = dims.h - 180
     ctx.fillStyle = '#FDD000'
-    roundRect(ctx, canvas.width / 2 - 150, ctaY, 300, 56, 28)
+    roundRect(ctx, dims.w / 2 - 150, ctaY, 300, 56, 28)
     ctx.fill()
     ctx.fillStyle = '#1A1A2E'
     ctx.font = 'bold 24px Inter, Arial, sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText(slide.cta_text, canvas.width / 2, ctaY + 37)
+    ctx.fillText(slide.cta_text, dims.w / 2, ctaY + 37)
   }
 
   // TREFF bottom branding
   ctx.fillStyle = '#4C8BC2'
   ctx.font = 'bold 18px Inter, Arial, sans-serif'
   ctx.textAlign = 'left'
-  ctx.fillText('TREFF Sprachreisen', 60, canvas.height - 50)
+  ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
 
-  // Download
+  // Download with proper naming convention: TREFF_[category]_[platform]_[date]_[slide].png
   const link = document.createElement('a')
   const date = new Date().toISOString().split('T')[0]
-  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}.png`
+  const slideNum = String(targetSlide + 1).padStart(2, '0')
+  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}_${slideNum}.png`
   link.href = canvas.toDataURL('image/png')
   link.click()
 }
@@ -415,6 +426,7 @@ function resetWorkflow() {
   savedPost.value = null
   exportComplete.value = false
   currentPreviewSlide.value = 0
+  exportQuality.value = '1080'
 }
 
 function nextPreviewSlide() {
@@ -1027,6 +1039,39 @@ watch(slides, () => { currentPreviewSlide.value = 0 })
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-gray-500 dark:text-gray-400 text-xs">Headline</div>
             <div class="font-medium text-gray-900 dark:text-white truncate">{{ slides[0]?.headline }}</div>
+          </div>
+        </div>
+
+        <!-- Export Quality Selector -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Export-Qualitaet</label>
+          <div class="flex gap-3">
+            <button
+              @click="exportQuality = '1080'"
+              data-testid="quality-1080"
+              :class="[
+                'flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium',
+                exportQuality === '1080'
+                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/10 text-[#4C8BC2]'
+                  : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+              ]"
+            >
+              <div class="font-bold">Standard (1080px)</div>
+              <div class="text-xs mt-0.5 opacity-70">Empfohlen fuer Social Media</div>
+            </button>
+            <button
+              @click="exportQuality = '2160'"
+              data-testid="quality-2160"
+              :class="[
+                'flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium',
+                exportQuality === '2160'
+                  ? 'border-[#4C8BC2] bg-[#4C8BC2]/10 text-[#4C8BC2]'
+                  : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+              ]"
+            >
+              <div class="font-bold">Hohe Qualitaet (2160px)</div>
+              <div class="text-xs mt-0.5 opacity-70">Fuer Druck und hohe Aufloesung</div>
+            </button>
           </div>
         </div>
 
