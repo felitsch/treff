@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #53: Multi-platform export produces separate files per platform
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented multi-platform selection in Step 3 of the Create Post wizard (checkboxes instead of radio buttons)
+- Added `selectedPlatforms` array to the createPost Pinia store alongside existing `selectedPlatform` for backward compatibility
+- Created `togglePlatform()` method with logic to prevent deselecting the last platform
+- Added `renderSlideToCanvasForPlatform()` function that renders slides at specific platform dimensions
+- Added `getDimensionsForPlatform()` utility function
+- Implemented `exportAllPlatforms()` function that:
+  - Saves the post with comma-separated platform IDs
+  - Creates separate export_history records for each selected platform
+  - Generates a ZIP file with per-platform subfolders containing all slides at correct dimensions
+- Updated Step 9 export summary to show all selected platforms
+- Added "Alle N Plattformen exportieren" button (shown when multiple platforms selected)
+- Updated export-complete view to show multi-platform info
+
+### Files modified:
+- `frontend/src/stores/createPost.js` - Added `selectedPlatforms` ref, updated resetWorkflow
+- `frontend/src/views/CreatePostView.vue` - Multi-platform selection UI, export functions, template updates
+
+### Verification steps completed:
+1. Create a post targeting Instagram Feed + Story + TikTok - PASS
+   - Selected FAQ category, FAQ Story template (3 slides)
+   - Multi-select UI with checkmark badges on each selected platform
+   - Info text "3 Plattformen ausgewaehlt — Vorschau zeigt: Instagram Feed"
+2. Click Export All Platforms - PASS
+   - Clicked "Alle 3 Plattformen exportieren" button
+   - Post saved to DB (Post #53, platform="instagram_feed,instagram_story,tiktok", status="exported")
+   - ZIP file auto-downloaded: TREFF_faq_all_platforms_2026-02-12.zip
+3. Verify 3 separate exports are created - PASS
+   - Database export_history has 3 records: ID=7 (instagram_feed), ID=8 (instagram_story), ID=9 (tiktok)
+   - ZIP contains 3 folders: instagram_feed/, instagram_story/, tiktok/ with 3 PNGs each
+4. Verify each has correct dimensions for its platform - PASS
+   - Instagram Feed: 1080x1080px (square 1:1) - CORRECT
+   - Instagram Story: 1080x1920px (vertical 9:16) - CORRECT
+   - TikTok: 1080x1920px (vertical 9:16) - CORRECT
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Database records verified: 3 export_history entries, post status=exported
+- [x] Screenshots captured: feature53-step1-platform-selection.png through feature53-step4-export-success.png
+
+### Current state:
+- Feature #53 marked as PASSING
+- 65/163 features passing (39.9%)
+
 ## Session - Feature #50: Platform preview toggle switches between IG Feed Story TikTok
 **Date:** 2026-02-12
 **Status:** PASSING
