@@ -191,9 +191,142 @@ async def update_asset(
 async def crop_asset(
     request: dict,
     user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Crop image to dimensions."""
-    return {"message": "Crop endpoint - not yet implemented", "data": request}
+    """Crop and optionally resize an image asset.
+
+    Request body:
+    {
+        "asset_id": int,           # ID of the asset to crop
+        "x": int,                  # Left coordinate of crop area
+        "y": int,                  # Top coordinate of crop area
+        "width": int,              # Width of crop area
+        "height": int,             # Height of crop area
+        "target_width": int|null,  # Optional resize target width
+        "target_height": int|null, # Optional resize target height
+        "save_as_new": bool        # If true, save as new asset; if false, overwrite original
+    }
+    """
+    import io
+    from PIL import Image
+
+    asset_id = request.get("asset_id")
+    crop_x = request.get("x", 0)
+    crop_y = request.get("y", 0)
+    crop_width = request.get("width")
+    crop_height = request.get("height")
+    target_width = request.get("target_width")
+    target_height = request.get("target_height")
+    save_as_new = request.get("save_as_new", False)
+
+    if not asset_id or not crop_width or not crop_height:
+        raise HTTPException(status_code=400, detail="asset_id, width, and height are required")
+
+    # Fetch the asset
+    result = await db.execute(
+        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
+    )
+    asset = result.scalar_one_or_none()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    # Load the image file
+    source_path = ASSETS_UPLOAD_DIR / asset.filename
+    if not source_path.exists():
+        raise HTTPException(status_code=404, detail="Image file not found on disk")
+
+    try:
+        img = Image.open(source_path)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not open image: {str(e)}")
+
+    # Validate crop bounds
+    img_width, img_height = img.size
+    crop_x = max(0, int(crop_x))
+    crop_y = max(0, int(crop_y))
+    crop_width = int(crop_width)
+    crop_height = int(crop_height)
+
+    # Clamp to image bounds
+    if crop_x + crop_width > img_width:
+        crop_width = img_width - crop_x
+    if crop_y + crop_height > img_height:
+        crop_height = img_height - crop_y
+
+    if crop_width <= 0 or crop_height <= 0:
+        raise HTTPException(status_code=400, detail="Invalid crop dimensions")
+
+    # Perform crop: PIL crop takes (left, upper, right, lower)
+    cropped = img.crop((crop_x, crop_y, crop_x + crop_width, crop_y + crop_height))
+
+    # Optional resize
+    if target_width and target_height:
+        target_width = int(target_width)
+        target_height = int(target_height)
+        if target_width > 0 and target_height > 0:
+            cropped = cropped.resize((target_width, target_height), Image.LANCZOS)
+
+    # Determine output format
+    ext = os.path.splitext(asset.filename)[1].lower()
+    fmt = "JPEG"
+    content_type = "image/jpeg"
+    if ext == ".png":
+        fmt = "PNG"
+        content_type = "image/png"
+    elif ext == ".webp":
+        fmt = "WEBP"
+        content_type = "image/webp"
+
+    # Save to bytes
+    output_buffer = io.BytesIO()
+    if fmt == "JPEG":
+        # Convert RGBA to RGB for JPEG
+        if cropped.mode in ("RGBA", "LA", "P"):
+            cropped = cropped.convert("RGB")
+        cropped.save(output_buffer, format=fmt, quality=95)
+    else:
+        cropped.save(output_buffer, format=fmt, quality=95)
+    output_bytes = output_buffer.getvalue()
+
+    final_width, final_height = cropped.size
+
+    if save_as_new:
+        # Save as a new asset
+        new_filename = f"{uuid.uuid4()}{ext}"
+        new_path = ASSETS_UPLOAD_DIR / new_filename
+        with open(new_path, "wb") as f:
+            f.write(output_bytes)
+
+        new_asset = Asset(
+            user_id=user_id,
+            filename=new_filename,
+            original_filename=f"cropped_{asset.original_filename or asset.filename}",
+            file_path=f"/uploads/assets/{new_filename}",
+            file_type=content_type,
+            file_size=len(output_bytes),
+            width=final_width,
+            height=final_height,
+            source="crop",
+            category=asset.category,
+            country=asset.country,
+            tags=asset.tags,
+        )
+        db.add(new_asset)
+        await db.flush()
+        await db.refresh(new_asset)
+        return asset_to_dict(new_asset)
+    else:
+        # Overwrite original file
+        with open(source_path, "wb") as f:
+            f.write(output_bytes)
+
+        # Update asset record
+        asset.file_size = len(output_bytes)
+        asset.width = final_width
+        asset.height = final_height
+        await db.flush()
+        await db.refresh(asset)
+        return asset_to_dict(asset)
 
 
 @router.get("/stock/search")

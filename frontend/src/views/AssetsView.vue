@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
+import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 
 // State
 const assets = ref([])
@@ -15,6 +16,27 @@ const selectedFilter = ref('all')
 const selectedCategory = ref('all')
 const selectedCountry = ref('all')
 const showDeleteConfirm = ref(null)
+const showCropModal = ref(false)
+const cropAsset = ref(null)
+
+// Open crop tool for an asset
+function openCropTool(asset) {
+  cropAsset.value = asset
+  showCropModal.value = true
+}
+
+// Handle crop completion
+function onCropped(croppedAsset) {
+  // If saved as new, add to list; otherwise update existing
+  const existingIdx = assets.value.findIndex(a => a.id === croppedAsset.id)
+  if (existingIdx >= 0) {
+    assets.value[existingIdx] = croppedAsset
+  } else {
+    assets.value.unshift(croppedAsset)
+  }
+  showCropModal.value = false
+  cropAsset.value = null
+}
 
 // Upload metadata
 const uploadCategory = ref('')
@@ -528,27 +550,50 @@ onMounted(fetchAssets)
           </p>
         </div>
 
-        <!-- Hover overlay with delete button -->
+        <!-- Hover overlay with crop and delete buttons -->
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-start justify-end p-2 pointer-events-none">
-          <button
-            v-if="showDeleteConfirm === asset.id"
-            @click.stop="deleteAsset(asset.id)"
-            class="pointer-events-auto px-2 py-1 text-xs bg-red-500 text-white rounded shadow hover:bg-red-600 transition-colors"
-          >
-            Loeschen?
-          </button>
-          <button
-            v-else
-            @click.stop="showDeleteConfirm = asset.id"
-            class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-red-50 dark:hover:bg-red-900/30"
-            title="Asset loeschen"
-          >
-            <svg class="h-3.5 w-3.5 text-gray-500 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          <div class="flex gap-1">
+            <!-- Crop button -->
+            <button
+              @click.stop="openCropTool(asset)"
+              class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              title="Bild zuschneiden"
+              :data-testid="`crop-btn-${asset.id}`"
+            >
+              <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+            </button>
+            <!-- Delete button -->
+            <button
+              v-if="showDeleteConfirm === asset.id"
+              @click.stop="deleteAsset(asset.id)"
+              class="pointer-events-auto px-2 py-1 text-xs bg-red-500 text-white rounded shadow hover:bg-red-600 transition-colors"
+            >
+              Loeschen?
+            </button>
+            <button
+              v-else
+              @click.stop="showDeleteConfirm = asset.id"
+              class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-red-50 dark:hover:bg-red-900/30"
+              title="Asset loeschen"
+            >
+              <svg class="h-3.5 w-3.5 text-gray-500 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Crop Modal -->
+    <AssetCropModal
+      v-if="cropAsset"
+      :show="showCropModal"
+      :asset="cropAsset"
+      @close="showCropModal = false; cropAsset = null"
+      @cropped="onCropped"
+    />
   </div>
 </template>
