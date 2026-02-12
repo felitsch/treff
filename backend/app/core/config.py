@@ -1,13 +1,17 @@
 """Application configuration."""
 
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+# Resolve backend directory for absolute paths
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./treff.db"
+    # Database - use absolute path so it works regardless of CWD
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{_BACKEND_DIR / 'treff.db'}"
 
     # JWT Authentication
     JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
@@ -35,7 +39,7 @@ class Settings(BaseSettings):
     SQL_ECHO: bool = False
 
     class Config:
-        env_file = ".env"
+        env_file = str(_BACKEND_DIR / ".env")
         env_file_encoding = "utf-8"
 
 

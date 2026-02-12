@@ -40,6 +40,9 @@ backend/app/static/uploads/exports/*
 *.log
 npm-debug.log*
 
+# Screenshots (verification artifacts)
+*.png
+
 # Autoforge internal
 .autoforge/features.db
 .autoforge/features.db-shm
