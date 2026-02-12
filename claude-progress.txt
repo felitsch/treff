@@ -1,5 +1,68 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #137: Error messages announced to screen readers
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added `role="alert"` attribute to all error message elements across 12 views
+- This ensures screen readers announce error messages when they appear dynamically
+- Verified all error messages now have proper ARIA accessibility attributes
+
+### Files modified:
+- frontend/src/views/AssetsView.vue - Added role="alert" to general error state
+- frontend/src/views/HistoryView.vue - Added role="alert" to error state and scheduleError
+- frontend/src/views/SettingsView.vue - Added role="alert" to loading error and save error
+- frontend/src/views/DashboardView.vue - Added role="alert" to error state
+- frontend/src/views/CalendarView.vue - Added role="alert" to error and scheduleError
+- frontend/src/views/AnalyticsView.vue - Added role="alert" to error state
+- frontend/src/views/CreatePostView.vue - Added role="alert" to aiImageError
+- frontend/src/views/TemplatesView.vue - Added role="alert" to createError, editorSaveError, deleteError, and general error
+- frontend/src/views/EditPostView.vue - Added role="alert" to generic error state
+
+### Already had role="alert" (no changes needed):
+- LoginView.vue - error div (line 67)
+- RegisterView.vue - field errors (lines 117, 141) and general error (line 146)
+- AssetsView.vue - uploadError (line 382)
+- CreatePostView.vue - error (line 1066) and validationMessage (line 2090)
+- ThumbnailGeneratorView.vue - error (line 511)
+- TemplatesView.vue - field validation errors (lines 908, 936, 990, 1013)
+- EditPostView.vue - error (line 322)
+- ToastContainer.vue - toast notifications (line 38)
+
+### Verification steps completed:
+1. Submit login form with invalid credentials - PASS
+   - Error message "Invalid credentials" appears with role="alert"
+   - Accessibility snapshot confirms: `alert [ref=e18]: Invalid credentials`
+2. Verify error messages have role=alert or aria-live - PASS
+   - All 28 error message elements across all views now have role="alert"
+   - Confirmed via grep: zero error messages without role="alert"
+3. Verify screen reader would announce the error - PASS
+   - role="alert" is equivalent to aria-live="assertive" for screen readers
+   - Browser accessibility tree shows all errors as "alert" role
+4. Submit template form with validation errors - PASS
+   - Empty template form triggers 4 validation errors
+   - All 4 show as alert role in accessibility snapshot:
+     - `alert: Template-Name ist erforderlich`
+     - `alert: Kategorie ist erforderlich`
+     - `alert: HTML-Inhalt ist erforderlich`
+     - `alert: CSS-Styling ist erforderlich`
+5. Verify error announcements present - PASS
+   - All error elements across login, register, templates, and other views confirmed
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 3 warnings - all Vue property warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured:
+  - feature137-step1-login-error-role-alert.png
+  - feature137-step2-register-validation-alerts.png
+  - feature137-step4-template-validation-alerts.png
+
+### Current state:
+- Feature #137 marked as PASSING
+- 139/170 features passing (81.8%)
+
 ## Session - Feature #136: Color contrast meets WCAG AA standards
 **Date:** 2026-02-12
 **Status:** PASSING
