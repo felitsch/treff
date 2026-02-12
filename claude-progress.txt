@@ -1,5 +1,57 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #143: Export single post produces valid PNG file
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified PNG export for a single-slide post end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Client-side canvas rendering via renderSlideToCanvas() in CreatePostView.vue
+  - canvas.toDataURL('image/png') for PNG generation
+  - Auto-download via dynamically created anchor element
+  - Backend export record saved to export_history table
+  - Naming convention: TREFF_[category]_[platform]_[date]_[slide].png
+
+### Verification steps completed:
+1. Create a complete post - PASS
+   - Created post with "Fristen & CTA" category (1-slide template)
+   - AI-generated content: headline, subheadline, body text, CTA, captions, hashtags
+   - Post ID #170 created and saved in database
+2. Export as PNG - PASS
+   - Clicked "Post speichern & exportieren" on Step 9
+   - PNG file auto-downloaded: TREFF_fristen_cta_instagram_feed_2026-02-12_01.png
+   - Export recorded in export_history table (id=12, format=png, resolution=1080)
+3. Verify downloaded file is a valid PNG (check file headers) - PASS
+   - PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A (correct)
+   - IHDR dimensions: 1080x1080 (correct for Instagram Feed square)
+4. Open the PNG and verify content matches preview - PASS
+   - Visual inspection confirms: TREFF logo, headline, subheadline, body text, CTA button, bottom branding
+   - Colors match: dark blue background, blue headline, yellow subheadline/CTA
+5. Verify file size is reasonable (not 0 bytes) - PASS
+   - File size: 118,780 bytes
+
+### Additional verification:
+- Secondary "PNG herunterladen" button also triggers download correctly
+- Export history recorded in SQLite database with correct metadata
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+
+### Screenshots captured:
+- feature143-step9-export-page.png (Step 9 summary before export)
+- feature143-export-success.png (Success state after export)
+- Downloaded PNG visually inspected (TREFF branding, content all present)
+
+### No code changes needed:
+- renderSlideToCanvas() already generates proper canvas with all slide elements
+- downloadAsImage() correctly converts canvas to PNG data URL and triggers download
+- saveAndExport() correctly detects single-slide post and calls downloadAsImage()
+- Backend /api/export/render correctly records the export
+
+### Current state:
+- Feature #143 marked as PASSING
+- 145/170 features passing (85.3%)
+
 ## Session - Feature #139: Viewing a deleted post shows error not crash
 **Date:** 2026-02-12
 **Status:** PASSING
