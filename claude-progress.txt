@@ -1,5 +1,51 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #58: Asset search finds images by filename or tags
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete asset search functionality in the asset library
+- Added tags input field to upload form (text input with placeholder "Tags (z.B. kanada, landschaft)")
+- Tags are sent to backend via FormData during upload
+- Tags are displayed as yellow badges on asset cards in the grid
+- Tags are reset after successful upload
+
+### Implementation details:
+- Frontend (AssetsView.vue):
+  - Added `uploadTags` ref for tags input state
+  - Added tags text input to upload metadata section
+  - Tags sent in FormData as comma-separated string
+  - Client-side search filters by filename, tags, category, and country
+  - Tags displayed as yellow badges on asset cards (split by comma)
+- Backend (assets.py - already implemented):
+  - `tags` field stored in Asset model as string
+  - Search endpoint uses ilike for filename, original_filename, and tags
+  - Tags accepted as Form parameter in upload endpoint
+
+### Verification steps completed:
+1. Upload image with tags "kanada, landschaft" - PASS (uploaded via API, tags stored in DB)
+2. Search for "kanada" - PASS (1 result found: test_kanada_landschaft.png with tags kanada, landschaft)
+3. Verify the image appears in results - PASS (asset card shows with Foto/Kanada/kanada/landschaft badges)
+4. Search for nonexistent term "xyz_nonexistent_999" - PASS (0 results)
+5. Verify zero results with appropriate empty state - PASS ("Keine Treffer" heading, "Versuche einen anderen Suchbegriff oder Filter." description, "Filter zuruecksetzen" button)
+
+### Additional verification:
+- Search by filename "test_kanada" - PASS (finds the image by filename)
+- Search by tag "landschaft" - PASS (finds the image by second tag)
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All 7 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: PASS (data survives backend restart, search still works)
+- Backend search API: GET /api/assets?search=kanada returns 1 result with correct tags
+- Screenshots: feature58-step1-assets-page.png through feature58-step7-all-assets.png
+
+### Files modified:
+- frontend/src/views/AssetsView.vue - Added uploadTags ref, tags FormData, tags input field, tags display badges
+
+### Current state:
+- Feature #58 marked as PASSING
+- 68/163 features passing (~41.7%)
+
 ## Session - Feature #59: User can delete an asset from library
 **Date:** 2026-02-12
 **Status:** PASSING
