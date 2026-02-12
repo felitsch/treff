@@ -1,5 +1,55 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #156: AI image generation request with valid prompt succeeds
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full AI image generation feature in post editor (Step 8)
+- Backend: Rewrote /api/ai/generate-image endpoint with:
+  - Gemini API integration (uses google-genai SDK when API key configured)
+  - Fallback: Pillow-based branded placeholder image generation
+  - Theme-aware color gradients based on prompt keywords (USA=blue/red, Canada=red/green, etc.)
+  - Generated images saved to asset library with source="ai_generated" and ai_prompt stored
+  - Reads Gemini API key from user settings DB or environment variable
+- Frontend: Added "KI-Bild generieren" section to CreatePostView.vue Step 8:
+  - Prompt textarea with 500-char limit and character counter
+  - 8 pre-built prompt suggestions (American high school, Canadian mountains, Sydney, etc.)
+  - Purple-themed generate button with loading spinner
+  - Success/error feedback with source info and dimensions
+  - Auto-sets generated image as slide background
+  - Shows "KI" badge on AI-generated assets in library
+  - "oder" divider between AI generation and manual upload
+- Fixed Vite proxy: Added /api/uploads rewrite rule to correctly proxy
+  /api/uploads/assets/* to backend /uploads/assets/* static files
+
+### Files modified:
+- backend/app/api/routes/ai.py - Full rewrite of generate_image endpoint (already committed by prior session)
+- frontend/src/views/CreatePostView.vue - Added AI image generation UI to Step 8
+- frontend/vite.config.js - Added /api/uploads proxy rewrite rule
+
+### Verification steps completed:
+1. Open post editor - PASS (navigated to /create-post, went through Steps 1-7)
+2. Click Generate Image - PASS (clicked "Bild generieren" button on Step 8)
+3. Enter prompt: American high school hallway with students - PASS (clicked suggestion chip, auto-filled textarea)
+4. Submit generation request - PASS (POST /api/ai/generate-image => 200)
+5. Verify API returns image data or image URL - PASS (status: "success", image_url returned, 1024x1024px)
+6. Verify generated image appears in editor - PASS (image visible in slide preview with TREFF branding overlay)
+
+### Additional verification:
+- Zero JavaScript console errors
+- All 7 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: PASS (2 AI-generated assets still visible on dashboard and Assets page after restart)
+- All network requests 200, no 500s
+- Screenshots captured: feature156-step8-ai-image-section.png, feature156-prompt-entered.png, feature156-image-generated-success.png, feature156-image-generated-with-preview.png, feature156-assets-after-restart.png
+
+### Current state:
+- 38/163 features passing (23.3%)
+- Feature #156 marked as PASSING
+
+### Next steps:
+- Continue with remaining AI integration and UI-Backend features
+
 ## Session - Feature #14: JWT tokens refresh automatically before expiry
 **Date:** 2026-02-12
 **Status:** PASSING
