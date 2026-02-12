@@ -1,5 +1,66 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #155: Post creation stores country-specific data
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete country-specific data storage and retrieval workflow end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: Post model has `country` field (String, nullable) in post.py
+  - Backend: POST /api/posts stores country from post_data, GET /api/posts filters by country param
+  - Backend: post_to_dict() includes country in response
+  - Frontend: CreatePostView.vue has country selection buttons (USA, Kanada, Australien, Neuseeland, Irland) on Step 4
+  - Frontend: HistoryView.vue displays country with flag emoji and label, has country filter dropdown
+  - Frontend: Country filter sends `country=usa` / `country=canada` as query param to backend
+
+### Verification steps completed:
+1. Create post with country: USA - PASS
+   - Selected Laender-Spotlight category, USA Highschool Spotlight template
+   - Selected USA country on Step 4, topic: "COUNTRY_TEST_USA_155 Highschool in Amerika"
+   - Generated content, saved as Post #402 (status: exported)
+   - Database verified: country=usa stored correctly
+2. Verify country stored in database - PASS
+   - sqlite3 query confirms Post #402 has country=usa
+3. Create post with country: Kanada - PASS
+   - Selected Kanada Abenteuer template, Kanada country
+   - Topic: "COUNTRY_TEST_KANADA_155 Highschool in Kanada"
+   - Saved as Post #404 (status: exported)
+   - Database verified: country=canada stored correctly
+4. Navigate to History - PASS
+   - Both posts displayed with correct country flags and labels
+   - Post #404: 🇨🇦 Kanada shown in metadata row
+   - Post #402: 🇺🇸 USA shown in metadata row
+5. Verify country field displayed for each post - PASS
+   - Each post card shows: Category | Platform | Country (with flag) | Date
+   - Screenshot captured: feature155-step1-history-both-countries.png
+6. Filter by country and verify correct results - PASS
+   - Filter by USA: "1 Post gefunden" - only USA post shown (feature155-step2-filter-usa.png)
+   - Filter by Kanada: "1 Post gefunden" - only Kanada post shown (feature155-step3-filter-kanada.png)
+   - Reset to "Alle Laender": "2 Posts gefunden" - both posts shown
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Database persistence confirmed (country field stored as usa/canada in SQLite)
+- [x] Country filter sends correct query param to backend API
+- [x] No 500s in network requests (during filter operations)
+- [x] Screenshots captured:
+  - feature155-step1-history-both-countries.png (both posts with country flags)
+  - feature155-step2-filter-usa.png (filtered to USA only)
+  - feature155-step3-filter-kanada.png (filtered to Kanada only)
+
+### No code changes needed:
+- Post model already had country field (String, nullable)
+- posts.py already filtered by country query param
+- CreatePostView.vue already had country selection buttons with flag emojis
+- HistoryView.vue already displayed country with countryFlag()/countryLabel() helpers
+- HistoryView.vue already had country filter dropdown sending country param to API
+
+### Current state:
+- Feature #155 marked as PASSING
+- 159/170 features passing (93.5%)
+
 ## Session - Feature #153: Seasonal markers appear on calendar for Bewerbungsfristen
 **Date:** 2026-02-13
 **Status:** PASSING
