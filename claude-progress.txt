@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #23: Templates render at correct social media dimensions
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that templates render at exact pixel dimensions for all three social media formats
+- No code changes needed - all dimensions were already correctly implemented
+
+### Verification steps completed:
+1. Select an Instagram Feed template (1:1) - PASS
+   - Opened "Laender-Spotlight Feed" template in editor
+   - Preview label shows "Live-Vorschau · 1:1 Feed (1080x1080)"
+   - iframe style.width = "1080px", style.height = "1080px" (verified via JS evaluation)
+   - Template HTML wrapper: width:1080px;height:1080px
+
+2. Select an Instagram Story template (9:16) - PASS
+   - Opened "Laender-Spotlight Story" template in editor
+   - Preview label shows "Live-Vorschau · 9:16 Story (1080x1920)"
+   - iframe style.width = "1080px", style.height = "1920px" (verified via JS evaluation)
+   - Template HTML wrapper: width:1080px;height:1920px
+
+3. Select a Portrait Feed template (4:5) - PASS
+   - Opened "Erfahrungsbericht Carousel" template in editor
+   - Preview label shows "Live-Vorschau · 4:5 Portrait (1080x1350)"
+   - iframe style.width = "1080px", style.height = "1350px" (verified via JS evaluation)
+   - Template HTML wrapper: width:1080px;height:1350px, offsetWidth:1080, offsetHeight:1350
+
+### Additional verification:
+- Seed template code (seed_templates.py) correctly maps: feed_square=1080x1080, feed_portrait=1080x1350, story=1080x1920, tiktok=1080x1920
+- Export canvas rendering (CreatePostView.vue getDimensions()) uses matching dimensions
+- Template cards on Templates page show correct dimension labels (1080x1080, 1080x1350, 1080x1920)
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- Zero mock data pattern matches in frontend/src and backend/app
+
+### Screenshots:
+- feature23-step1-feed-square-1080x1080.png - 1:1 Feed template preview at 1080x1080
+- feature23-step2-story-1080x1920.png - 9:16 Story template preview at 1080x1920
+- feature23-step3-portrait-1080x1350.png - 4:5 Portrait template preview at 1080x1350
+
+### Current state:
+- Feature #23 marked as PASSING
+- 44/163 features passing (~27.0%)
+
+---
+
 ## Session - Feature #24: Sidebar navigation links route to correct pages
 **Date:** 2026-02-12
 **Status:** PASSING
