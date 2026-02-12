@@ -12,6 +12,35 @@ from app.models.post import Post
 router = APIRouter()
 
 
+def post_to_dict(post: Post) -> dict:
+    """Convert a Post model to a plain dict to avoid lazy-loading issues."""
+    return {
+        "id": post.id,
+        "user_id": post.user_id,
+        "template_id": post.template_id,
+        "category": post.category,
+        "country": post.country,
+        "platform": post.platform,
+        "status": post.status,
+        "title": post.title,
+        "slide_data": post.slide_data,
+        "caption_instagram": post.caption_instagram,
+        "caption_tiktok": post.caption_tiktok,
+        "hashtags_instagram": post.hashtags_instagram,
+        "hashtags_tiktok": post.hashtags_tiktok,
+        "cta_text": post.cta_text,
+        "custom_colors": post.custom_colors,
+        "custom_fonts": post.custom_fonts,
+        "tone": post.tone,
+        "scheduled_date": post.scheduled_date.isoformat() if post.scheduled_date else None,
+        "scheduled_time": post.scheduled_time,
+        "exported_at": post.exported_at.isoformat() if post.exported_at else None,
+        "posted_at": post.posted_at.isoformat() if post.posted_at else None,
+        "created_at": post.created_at.isoformat() if post.created_at else None,
+        "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+    }
+
+
 @router.get("")
 async def list_posts(
     category: Optional[str] = None,
@@ -39,7 +68,7 @@ async def list_posts(
     query = query.order_by(Post.created_at.desc())
     result = await db.execute(query)
     posts = result.scalars().all()
-    return posts
+    return [post_to_dict(p) for p in posts]
 
 
 @router.get("/{post_id}")
@@ -55,7 +84,7 @@ async def get_post(
     post = result.scalar_one_or_none()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return post
+    return post_to_dict(post)
 
 
 @router.post("", status_code=201)
@@ -69,7 +98,9 @@ async def create_post(
     db.add(post)
     await db.flush()
     await db.refresh(post)
-    return post
+    result = post_to_dict(post)
+    await db.commit()
+    return result
 
 
 @router.put("/{post_id}")
@@ -88,12 +119,14 @@ async def update_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     for key, value in post_data.items():
-        if hasattr(post, key):
+        if hasattr(post, key) and key not in ("id", "user_id", "created_at"):
             setattr(post, key, value)
 
     await db.flush()
     await db.refresh(post)
-    return post
+    response = post_to_dict(post)
+    await db.commit()
+    return response
 
 
 @router.delete("/{post_id}")
@@ -111,6 +144,7 @@ async def delete_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     await db.delete(post)
+    await db.commit()
     return {"message": "Post deleted"}
 
 
@@ -147,7 +181,9 @@ async def duplicate_post(
     db.add(new_post)
     await db.flush()
     await db.refresh(new_post)
-    return new_post
+    response = post_to_dict(new_post)
+    await db.commit()
+    return response
 
 
 @router.put("/{post_id}/status")
@@ -168,4 +204,6 @@ async def update_post_status(
     post.status = status_data.get("status", post.status)
     await db.flush()
     await db.refresh(post)
-    return post
+    response = post_to_dict(post)
+    await db.commit()
+    return response
