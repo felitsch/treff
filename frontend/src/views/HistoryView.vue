@@ -285,6 +285,22 @@ async function executeDelete() {
   }
 }
 
+// Mark post as posted
+async function markAsPosted(post) {
+  try {
+    const response = await api.put(`/api/posts/${post.id}/status`, {
+      status: 'posted',
+    })
+    // Update the post in the local list with the response data
+    const idx = posts.value.findIndex(p => p.id === post.id)
+    if (idx !== -1) {
+      posts.value[idx] = response.data
+    }
+  } catch (err) {
+    console.error('Failed to mark post as posted:', err)
+  }
+}
+
 // Navigate to edit
 function editPost(postId) {
   router.push(`/posts/${postId}/edit`)
@@ -507,11 +523,20 @@ onMounted(() => {
           <!-- Actions -->
           <div class="flex items-center gap-1 flex-shrink-0">
             <button
+              v-if="post.status !== 'scheduled' && post.status !== 'posted'"
               @click="openScheduleDialog(post)"
               class="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
               title="Planen"
             >
               📅
+            </button>
+            <button
+              v-if="post.status === 'scheduled' || post.status === 'reminded' || post.status === 'exported'"
+              @click="markAsPosted(post)"
+              class="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+              title="Als veroeffentlicht markieren"
+            >
+              ✅
             </button>
             <button
               @click="editPost(post.id)"

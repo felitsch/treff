@@ -1,7 +1,7 @@
 """Post routes."""
 
 from typing import Optional
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
@@ -266,7 +266,15 @@ async def update_post_status(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update post status."""
+    """Update post status with proper timestamp tracking."""
+    valid_statuses = {"draft", "scheduled", "reminded", "exported", "posted"}
+    new_status = status_data.get("status")
+    if not new_status or new_status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(sorted(valid_statuses))}"
+        )
+
     result = await db.execute(
         select(Post).where(Post.id == post_id, Post.user_id == user_id)
     )
@@ -274,7 +282,16 @@ async def update_post_status(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    post.status = status_data.get("status", post.status)
+    post.status = new_status
+
+    # Set posted_at timestamp when marking as posted
+    if new_status == "posted" and not post.posted_at:
+        post.posted_at = datetime.now(timezone.utc)
+
+    # Set exported_at timestamp when marking as exported
+    if new_status == "exported" and not post.exported_at:
+        post.exported_at = datetime.now(timezone.utc)
+
     await db.flush()
     await db.refresh(post)
     response = post_to_dict(post)
