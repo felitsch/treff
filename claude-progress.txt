@@ -1,5 +1,56 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #154: Calendar correctly handles month boundaries
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete calendar month boundary navigation end-to-end via browser
+- No code changes needed - all functionality was already correctly implemented:
+  - CalendarView.vue: `calendarDays` computed property uses `new Date(year, month, 0).getDate()` for correct days-in-month calculation
+  - `prevMonthNav()` / `nextMonthNav()` correctly handle Jan->Dec (year--) and Dec->Jan (year++) transitions
+  - `currentMonthLabel` computed uses monthNames array with 1-based month index
+
+### Verification steps completed:
+1. Navigate to end of January 2025 - PASS
+   - Navigated from Feb 2026 back 13 months to January 2025
+   - Calendar shows "Januar 2025" with days 1-31 (correct for January)
+   - Previous month trailing days: 30, 31 (December 2024)
+2. Click next month to February - PASS
+   - Calendar shows "Februar 2025" with days 1-28
+   - Correct: 2025 is NOT a leap year, so February has 28 days
+   - Previous month trailing days: 27-31 (January), next month leading: 1-9 (March)
+3. Verify correct number of days (28 or 29) - PASS
+   - February 2025: 28 days (not a leap year) - CORRECT
+   - February 2026: 28 days (not a leap year) - CORRECT (verified on initial load)
+4. Navigate to December and then to January next year - PASS
+   - December 2025 shows "Dezember 2025" with 31 days
+   - Click next -> "Januar 2026" with 31 days, year changed from 2025 to 2026
+5. Verify year changes correctly - PASS
+   - Forward: Dezember 2025 -> Januar 2026 (year incremented correctly)
+   - Backward: Januar 2026 -> Dezember 2025 (year decremented correctly)
+
+### Additional verification:
+- Zero JavaScript console errors on fresh session (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- No 500s or API errors (when token is valid)
+- Screenshots captured:
+  - feature154-step0-february-2026-calendar.png (initial calendar view)
+  - feature154-step1-january-2025.png (January 2025 with 31 days)
+  - feature154-step2-february-2025-28days.png (February 2025 with 28 days)
+  - feature154-step4-december-2025.png (December 2025 with 31 days)
+  - feature154-step5-january-2026-year-change.png (January 2026 after year boundary crossing)
+
+### No code changes needed:
+- CalendarView.vue already had correct month/year navigation logic
+- JavaScript Date constructor handles all month length calculations natively
+- Month boundary crossing (Dec->Jan, Jan->Dec) handled in prevMonthNav/nextMonthNav
+
+### Current state:
+- Feature #154 marked as PASSING
+- 157/170 features passing (92.4%)
+
+
 ## Session - Feature #152: No JavaScript console errors on any page
 **Date:** 2026-02-13
 **Status:** PASSING
