@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #64: Calendar color-codes posts by category
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete calendar color-coding system end-to-end via browser
+- No code changes needed - the feature was already fully implemented in CalendarView.vue
+
+### Verification steps completed:
+1. Create posts in different categories - PASS
+   - Created 6 posts in 6 different categories: laender_spotlight, erfahrungsberichte, faq, fristen_cta, tipps_tricks, infografiken
+   - Scheduled them across Feb 12-14, 2026 with specific times
+2. Schedule them on the calendar - PASS
+   - All 6 posts visible on calendar month view on their scheduled dates
+   - Calendar header shows "6 Posts in Februar 2026"
+3. Verify each category has a distinct color - PASS
+   - Blue background for Laender-Spotlight (laender_spotlight)
+   - Purple background for Erfahrungsberichte (erfahrungsberichte)
+   - Teal background for FAQ (faq)
+   - Red background for Fristen & CTA (fristen_cta)
+   - Amber background for Tipps & Tricks (tipps_tricks)
+   - Cyan background for Infografiken (infografiken)
+   - 9 total category color schemes defined: blue, purple, cyan, red, amber, teal, pink, violet, orange
+   - Each with bg, border, text, and dot color variants + dark mode support
+4. Verify legend or tooltip explains color coding - PASS
+   - Legend box "Kategorien" at bottom of calendar shows all 9 categories
+   - Each category has: colored dot + emoji icon + label name
+   - Tooltips on post cards show: "title - category label - status um time"
+   - Example: "CAL64_Laender_USA - Laender - Geplant um 10:00"
+
+### Additional verification:
+- Server restart persistence: All 6 posts persisted after full server restart
+- Zero JavaScript console errors on fresh page load
+- Mock data grep checks clean (zero matches in frontend/src and backend/app, excluding template CSS mockup comments)
+- Screenshots captured: feature64-step1-calendar-color-coded.png, feature64-step2-legend-section.png, feature64-step3-tooltip-on-hover.png, feature64-step4-posts-closeup.png, feature64-step5-persistence-after-restart.png
+
+### No code changes needed:
+- CalendarView.vue already had comprehensive categoryColors map with 9 categories
+- categoryMeta map provides labels and icons for each category
+- Legend component shows all categories with colored dots
+- Post cards use category-specific backgrounds, borders, and text colors
+- Dark mode variants included for all colors
+
+### Current state:
+- Feature #64 marked as PASSING
+- 72/163 features passing (44.2%)
+
 ## Session - Feature #63: Drag-and-drop posts onto calendar dates works
 **Date:** 2026-02-12
 **Status:** PASSING
