@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #43: User can regenerate individual text fields not whole post
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented per-field text regeneration in the Create Post editor (Step 7)
+- Added backend endpoint POST /api/ai/regenerate-field for regenerating individual text fields
+- Added regenerate_single_field() function to text_generator.py supporting 8 field types
+- Added "🔄 Neu" regenerate buttons next to every editable text field in Step 7
+- Added regeneratingField state to Pinia createPost store for loading state management
+
+### Files modified:
+- backend/app/core/text_generator.py - Added regenerate_single_field() function (8 field types: headline, subheadline, body_text, cta_text, caption_instagram, caption_tiktok, hashtags_instagram, hashtags_tiktok)
+- backend/app/api/routes/ai.py - Added POST /api/ai/regenerate-field endpoint with field validation
+- frontend/src/stores/createPost.js - Added regeneratingField reactive state
+- frontend/src/views/CreatePostView.vue - Added regenerateField() function and 🔄 Neu buttons for all fields in Step 7
+
+### Verification steps completed:
+1. Generate all text content for a post - PASS
+   - Selected Laender-Spotlight category, Laender-Spotlight Feed template (5 slides)
+   - Instagram Feed platform, USA country, topic "REGEN_TEST_43 Highschool in USA"
+   - Generated content with headline "Entdecke USA mit TREFF"
+2. Click regenerate on just the headline field - PASS
+   - Clicked "🔄 Neu" next to Headline
+   - Headline changed from "Entdecke USA mit TREFF" -> "Dein Highschool-Jahr in USA"
+   - Success toast "Feld neu generiert!" appeared
+3. Verify only headline changes, other fields remain - PASS
+   - Subheadline: "Das erwartet dich in USA" - UNCHANGED
+   - Body text: "REGEN_TEST_43..." - UNCHANGED
+   - Instagram Caption: still had old headline context - UNCHANGED
+   - All hashtags: UNCHANGED
+   - Live preview updated to show new headline
+4. Click regenerate on caption field - PASS
+   - Clicked "🔄 Neu" next to Instagram Caption
+   - Caption regenerated with new headline context ("Dein Highschool-Jahr in USA")
+   - Success toast appeared
+5. Verify only caption changes - PASS
+   - Headline: "Dein Highschool-Jahr in USA" - UNCHANGED (from earlier regen)
+   - Subheadline: "Das erwartet dich in USA" - UNCHANGED
+   - Body text: UNCHANGED
+   - Instagram Hashtags: UNCHANGED
+   - TikTok Hashtags: UNCHANGED
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No data persistence test needed (this is a client-side/API interaction feature, not CRUD data)
+- [x] Screenshots captured: feature43-step1-edit-with-regen-buttons.png, feature43-step2-headline-before-regen.png, feature43-step3-headline-regenerated.png, feature43-step4-caption-regenerated.png
+
+### Current state:
+- Feature #43 marked as PASSING
+- 57/163 features passing (35.0%)
+
 ## Session - Feature #41: AI generates TikTok captions shorter and hook-focused
 **Date:** 2026-02-12
 **Status:** PASSING
