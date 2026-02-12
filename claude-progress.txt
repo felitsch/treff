@@ -1,5 +1,36 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #107: Deleting a post removes its calendar entries
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete cascade delete behavior: deleting a post removes its calendar entries
+- No code changes needed - all functionality was already fully implemented:
+  - ORM level: `cascade="all, delete-orphan"` on Post.calendar_entries relationship (post.py line 46)
+  - Database level: `ForeignKey("posts.id", ondelete="CASCADE")` on CalendarEntry.post_id (calendar_entry.py line 14)
+  - Delete endpoint: `await db.delete(post)` in posts.py triggers cascade automatically
+
+### Verification steps completed:
+1. Created a post (ID 124) with title "CASCADE_TEST_107_POST" scheduled for 2026-02-15 at 10:00 - PASS
+2. Noted post ID: 124 - PASS
+3. Verified post appears on calendar (February 15) - PASS
+4. Inserted a calendar_entry record for post_id=124 in calendar_entries table - PASS
+5. Deleted the post via History page UI (confirmation dialog) - PASS
+6. Navigated to Calendar - post no longer appears on any date - PASS
+7. Verified calendar_entries table has no entry for deleted post - PASS (0 entries, clean cascade)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Database cascade verified: both post and calendar_entries removed
+- [x] Calendar UI confirms post no longer appears on any date
+- [x] Screenshots: feature107-step1 through step5
+
+### Current state:
+- Feature #107 marked as PASSING
+- 109/170 features passing (64.1%)
+
 ## Session - Feature #106: Deleting a post removes its slides from database
 **Date:** 2026-02-12
 **Status:** PASSING
