@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session 20 - Feature #31: User can create a new post via workflow
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented and verified the complete 9-step post creation workflow end-to-end
+- Created text_generator.py with rule-based German content generation (country data, categories, hashtags)
+- Connected AI generate-text endpoint to real text generator (no mock data)
+- Implemented export recording endpoints with real database persistence
+- Built complete CreatePostView.vue with 9-step wizard UI
+
+### Verification steps completed:
+1. Login and navigate to /create-post - PASS
+2. Step 1: Select "Laender-Spotlight" category - PASS (9 categories shown)
+3. Step 2: Select "Laender-Spotlight Feed" template (5 slides) - PASS (templates fetched from API)
+4. Step 3: Select "Instagram Feed" platform - PASS
+5. Step 4: Select Canada, enter topic, key points, jugendlich tone - PASS
+6. Step indicator shows ✓ for completed steps - PASS (all steps show green checkmarks)
+7. Step 5: Click "Inhalt generieren" - PASS (5 slides, Instagram/TikTok captions, hashtags generated)
+8. Step 6: Live preview shows TREFF branding, headline, body, slide dots, captions - PASS
+9. Step 7: Edit headline from "Entdecke Kanada mit TREFF" to "Kanada ruft – bist du bereit?" - PASS
+10. Live preview updates in real-time with edited headline - PASS
+11. Step 8: Background image upload (optional, skipped) - PASS
+12. Step 9: "Post speichern & exportieren" saves to DB with Post ID #3 - PASS
+13. Dashboard shows post with edited title, status "exported" - PASS
+14. API returns full post with all fields (slide_data, captions, hashtags, CTA, tone) - PASS
+15. Console errors: 0 - PASS
+16. Mock data grep: Zero matches for mock/dummy/fake/hardcoded patterns - PASS
+
+### Files modified:
+- backend/app/core/text_generator.py (NEW) - Rule-based German text generator
+- backend/app/api/routes/ai.py - Connected to real text generator
+- backend/app/api/routes/export.py - Export recording with DB persistence
+- frontend/src/views/CreatePostView.vue - Complete 9-step wizard
+
 ## Session 19 - Feature #39: AI text generation produces slide headlines from topic
 **Date:** 2026-02-12
 **Status:** PASSING
