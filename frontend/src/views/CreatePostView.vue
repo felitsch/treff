@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
+import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 
@@ -264,13 +265,21 @@ async function saveAndExport() {
     const response = await api.post('/api/posts', postData)
     savedPost.value = response.data
 
-    // Record the export
-    await api.post('/api/export/render', {
+    // Record the export - use carousel endpoint for multi-slide posts
+    const exportEndpoint = slides.value.length > 1 ? '/api/export/render-carousel' : '/api/export/render'
+    await api.post(exportEndpoint, {
       post_id: response.data.id,
       platform: selectedPlatform.value,
       resolution: exportQuality.value,
       slide_count: slides.value.length,
     })
+
+    // Auto-download: ZIP for multi-slide carousels, PNG for single slide
+    if (slides.value.length > 1) {
+      await downloadAsZip()
+    } else {
+      downloadAsImage(0)
+    }
 
     exportComplete.value = true
     successMsg.value = 'Post gespeichert und exportiert!'
@@ -287,20 +296,31 @@ function downloadAsImage(slideIndex = null) {
   if (slideIndex !== null && typeof slideIndex !== 'number') {
     slideIndex = null
   }
-  // Client-side PNG generation using canvas at selected resolution
+  const targetSlide = slideIndex !== null ? slideIndex : currentPreviewSlide.value
+  const canvas = renderSlideToCanvas(targetSlide)
+  if (!canvas) return
+
+  // Download with proper naming convention: TREFF_[category]_[platform]_[date]_[slide].png
+  const link = document.createElement('a')
+  const date = new Date().toISOString().split('T')[0]
+  const slideNum = String(targetSlide + 1).padStart(2, '0')
+  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}_${slideNum}.png`
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
+function renderSlideToCanvas(slideIndex) {
+  // Render a single slide to a canvas and return it
   const dims = getDimensions()
   const scale = exportQuality.value === '2160' ? 2 : 1
   const canvas = document.createElement('canvas')
   canvas.width = dims.w * scale
   canvas.height = dims.h * scale
   const ctx = canvas.getContext('2d')
-
-  // Scale all drawing operations proportionally
   ctx.scale(scale, scale)
 
-  const targetSlide = slideIndex !== null ? slideIndex : currentPreviewSlide.value
-  const slide = slides.value[targetSlide] || slides.value[0]
-  if (!slide) return
+  const slide = slides.value[slideIndex]
+  if (!slide) return null
 
   // Background
   ctx.fillStyle = slide.background_value || '#1A1A2E'
@@ -360,13 +380,35 @@ function downloadAsImage(slideIndex = null) {
   ctx.textAlign = 'left'
   ctx.fillText('TREFF Sprachreisen', 60, dims.h - 50)
 
-  // Download with proper naming convention: TREFF_[category]_[platform]_[date]_[slide].png
-  const link = document.createElement('a')
+  return canvas
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/png')
+  })
+}
+
+async function downloadAsZip() {
+  // Generate ZIP containing all slide PNGs
+  const zip = new JSZip()
   const date = new Date().toISOString().split('T')[0]
-  const slideNum = String(targetSlide + 1).padStart(2, '0')
-  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}_${slideNum}.png`
-  link.href = canvas.toDataURL('image/png')
+
+  for (let i = 0; i < slides.value.length; i++) {
+    const canvas = renderSlideToCanvas(i)
+    if (!canvas) continue
+    const blob = await canvasToBlob(canvas)
+    const slideNum = String(i + 1).padStart(2, '0')
+    const filename = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}_slide_${slideNum}.png`
+    zip.file(filename, blob)
+  }
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  const link = document.createElement('a')
+  link.download = `TREFF_${selectedCategory.value}_${selectedPlatform.value}_${date}_carousel.zip`
+  link.href = URL.createObjectURL(zipBlob)
   link.click()
+  URL.revokeObjectURL(link.href)
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -1123,6 +1165,15 @@ watch(slides, () => {
             {{ exporting ? 'Speichern...' : 'Post speichern & exportieren' }}
           </button>
           <button
+            v-if="slides.length > 1"
+            @click="downloadAsZip"
+            :disabled="slides.length === 0"
+            class="flex-1 px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] disabled:bg-gray-300 text-[#1A1A2E] font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            📦 Als ZIP herunterladen ({{ slides.length }} Slides)
+          </button>
+          <button
+            v-else
             @click="downloadAsImage"
             :disabled="slides.length === 0"
             class="flex-1 px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] disabled:bg-gray-300 text-[#1A1A2E] font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -1145,7 +1196,10 @@ watch(slides, () => {
           <div>Kategorie: <strong>{{ selectedCategoryObj?.label }}</strong></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
+          <button v-if="slides.length > 1" @click="downloadAsZip" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
+            📦 ZIP herunterladen ({{ slides.length }} Slides)
+          </button>
+          <button v-else @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
             ⬇ PNG herunterladen
           </button>
           <button @click="router.push('/dashboard')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition-colors">

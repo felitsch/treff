@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useToast } from '@/composables/useToast'
 
 const api = axios.create({
   baseURL: '',
@@ -46,6 +47,38 @@ api.interceptors.response.use(
           return Promise.reject(refreshError)
         }
       }
+    }
+
+    // Show error toast for non-401 errors (401 is handled by token refresh above)
+    if (error.response?.status !== 401) {
+      const toast = useToast()
+      // Map common English API messages to German
+      const messageTranslations = {
+        'Post not found': 'Post wurde nicht gefunden.',
+        'Template not found': 'Vorlage wurde nicht gefunden.',
+        'Asset not found': 'Asset wurde nicht gefunden.',
+        'Not authenticated': 'Nicht authentifiziert. Bitte melde dich erneut an.',
+        'Invalid credentials': 'Ungueltige Anmeldedaten.',
+        'Email already registered': 'Diese E-Mail-Adresse ist bereits registriert.',
+        'Not Found': 'Die angeforderte Ressource wurde nicht gefunden.',
+      }
+      // Extract user-friendly message from API response
+      const detail = error.response?.data?.detail
+      let message
+      if (typeof detail === 'string') {
+        message = messageTranslations[detail] || detail
+      } else if (error.response?.status === 404) {
+        message = 'Die angeforderte Ressource wurde nicht gefunden.'
+      } else if (error.response?.status === 500) {
+        message = 'Ein Serverfehler ist aufgetreten. Bitte versuche es spaeter erneut.'
+      } else if (error.response?.status === 403) {
+        message = 'Zugriff verweigert. Du hast keine Berechtigung fuer diese Aktion.'
+      } else if (error.response?.status) {
+        message = `Fehler bei der Anfrage (${error.response.status}). Bitte versuche es erneut.`
+      } else {
+        message = 'Netzwerkfehler. Bitte pruefe deine Internetverbindung.'
+      }
+      toast.error(message)
     }
 
     return Promise.reject(error)

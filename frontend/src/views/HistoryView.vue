@@ -280,6 +280,7 @@ async function executeDelete() {
     postToDelete.value = null
   } catch (err) {
     console.error('Failed to delete post:', err)
+    // Error toast is shown by global API interceptor
   } finally {
     deleting.value = false
   }
@@ -298,6 +299,7 @@ async function markAsPosted(post) {
     }
   } catch (err) {
     console.error('Failed to mark post as posted:', err)
+    // Error toast is shown by global API interceptor
   }
 }
 
