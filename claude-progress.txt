@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #32: User can view list of saved posts in History
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Built complete HistoryView.vue replacing placeholder skeleton
+- Implemented post list with card layout showing:
+  - Category-colored gradient thumbnails with emoji icons
+  - Post title (with "Unbenannter Post" fallback)
+  - Category label with icon (all 9 categories)
+  - Platform label with icon (Instagram Feed, Instagram Story, TikTok)
+  - Status badge (Entwurf/Geplant/Erinnert/Exportiert/Veroeffentlicht) with color coding
+  - Created date formatted in German locale (dd.MM.yyyy)
+- Implemented filter bar: search, category dropdown, platform dropdown, status dropdown
+- Posts fetched from GET /api/posts (real API, not hardcoded)
+- Edit and delete action buttons per post
+- Empty state, error state, loading skeleton, and filtered-no-results states
+- Active filter count and "Filter zuruecksetzen" button
+
+### Verification steps completed:
+1. Created 3 test posts via API with distinct categories/platforms/statuses - PASS
+2. Navigated to History page (/history) - PASS (3 Posts gefunden)
+3. All created posts appear in the list - PASS
+4. Each post shows: thumbnail, title, category, platform, status, date - PASS
+5. Posts loaded from API (GET /api/posts => 200), not hardcoded - PASS
+
+### Mock data grep: All clean (zero matches in frontend/src and backend/app)
+### Server restart persistence: PASS (3 posts survived kill + restart)
+### Console errors: 0 errors, 0 warnings
+### Network: GET /api/posts => 200, no 500s
+
+### Files modified:
+- frontend/src/views/HistoryView.vue - Complete rewrite with post list, filters, actions
+
+### Current state:
+- Feature #32 (User can view list of saved posts in History): PASSING
+- 21/163 features complete (12.9%)
+
+### Notes:
+- Database path issue: init.sh runs uvicorn from backend/ dir, so treff.db is at backend/treff.db
+- When restarting manually, must ensure CWD is backend/ to use same DB file
+- HistoryView.vue was also modified by a linter (delete confirmation dialog added)
+
 ## Session 22 - Feature #22: Template preview updates in real-time during customization
 **Date:** 2026-02-12
 **Status:** PASSING
