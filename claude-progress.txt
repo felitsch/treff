@@ -1,5 +1,50 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #158: Stock photo search integration works with Unsplash
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full stock photo search and import integration
+- Backend: Real Unsplash API search endpoint (`/api/assets/stock/search`) with API key support
+- Backend: Real Pexels API search endpoint support
+- Backend: Fallback to picsum.photos when no API keys configured (for demo/development)
+- Backend: Stock photo import endpoint (`/api/assets/stock/import`) that downloads images and saves as assets
+- Frontend: Added tabbed interface to AssetsView with "Meine Assets" and "Stock Fotos" tabs
+- Frontend: Stock photo search panel with query input, source selector (Unsplash/Pexels), search button
+- Frontend: Results grid showing 12 photos with thumbnails, descriptions, dimensions, photographer
+- Frontend: Import button with loading/success states ("Importieren" -> spinner -> "Importiert" badge)
+- Frontend: Imported photos immediately appear in "Meine Assets" library tab
+
+### Verification steps completed:
+1. Navigate to Assets page - PASS (tabbed interface visible)
+2. Switch to Stock Photo search tab - PASS ("Stock Fotos" tab active)
+3. Search for: school building - PASS (typed query, clicked Suchen)
+4. Verify results appear from Unsplash/Pexels - PASS (12 results with "via Unsplash")
+5. Verify each result shows preview thumbnail - PASS (all 12 show real photo thumbnails)
+6. Click Import to add to library - PASS (clicked Importieren, badge changed to green "Importiert", asset count 0->2)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+- [x] Data persisted in SQLite (verified assets via API after import)
+- [x] Screenshots captured:
+  - feature158-step1-assets-page.png (Assets page with tabs)
+  - feature158-step2-stock-tab.png (Stock Fotos tab empty state)
+  - feature158-step3-search-results.png (12 results for "school building")
+  - feature158-step4-import-success.png (Importiert badge, 2 Assets count)
+  - feature158-step5-library-with-imported.png (Library tab showing imported stock photo)
+
+### Files modified:
+- backend/app/api/routes/assets.py - Implemented stock search + import endpoints with Unsplash/Pexels/fallback
+- frontend/src/views/AssetsView.vue - Added tabbed interface, stock photo search, results grid, import
+
+### Current state:
+- Feature #158 marked as PASSING
+- 159/170 features passing (93.5%)
+
 ## Session - Feature #157: AI image generation errors show user-friendly message
 **Date:** 2026-02-13
 **Status:** PASSING
