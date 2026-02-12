@@ -1,5 +1,60 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #146: Calendar export as CSV includes all scheduled posts
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented calendar CSV export functionality (backend endpoint + frontend button)
+- Backend: Added `GET /api/calendar/export-csv` endpoint to `calendar.py`:
+  - Queries all scheduled posts for a given month/year (defaults to current month)
+  - Optional platform filter support
+  - Returns CSV file with columns: date, time, title, category, platform, status, country
+  - Sorted by scheduled_date ascending, then scheduled_time ascending
+  - StreamingResponse with proper Content-Disposition header for download
+  - Filename format: `TREFF_calendar_{month}_{year}.csv`
+- Frontend: Added "CSV Export" button to CalendarView.vue toolbar:
+  - Download icon + "CSV Export" text
+  - Fetches CSV from backend API with current month/year and platform filter
+  - Creates blob download with proper filename from Content-Disposition header
+  - Error handling with German error message
+
+### Verification steps completed:
+1. Schedule 5 posts on the calendar - PASS
+   - Created 5 posts with different categories, countries, and platforms
+   - Scheduled on Feb 15 (09:00), Feb 16 (12:30), Feb 17 (15:00), Feb 18 (10:00), Feb 19 (14:30)
+   - All 5 posts visible on calendar month view
+2. Click Export Calendar as CSV - PASS
+   - CSV Export button visible in calendar toolbar
+   - Clicked button, file downloaded as `TREFF_calendar_february_2026.csv`
+3. Verify CSV file downloads - PASS
+   - File successfully downloaded by browser (captured by Playwright)
+   - Content-Type: text/csv; charset=utf-8
+   - Content-Disposition: attachment; filename="TREFF_calendar_february_2026.csv"
+4. Open CSV and verify all 5 posts listed - PASS
+   - 6 lines total (1 header + 5 data rows)
+   - All 5 posts present with correct data
+5. Verify columns include: date, time, title, category, platform - PASS
+   - Header: date,time,title,category,platform,status,country
+   - All required columns present plus bonus status and country columns
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Data from real SQLite database (server restart persistence confirmed)
+- [x] CSV content verified programmatically (all assertions passed)
+- [x] Screenshots captured:
+  - feature146-step1-calendar-with-5-posts.png (calendar showing 5 posts on Feb 15-19)
+  - feature146-step2-csv-exported.png (calendar after CSV export)
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added export-csv endpoint with CSV generation
+- frontend/src/views/CalendarView.vue - Added exportCalendarCSV() function and CSV Export button
+
+### Current state:
+- Feature #146 marked as PASSING
+- 148/170 features passing (87.1%)
+
 ## Session - Feature #145: Batch export re-exports multiple posts from history
 **Date:** 2026-02-13
 **Status:** PASSING
