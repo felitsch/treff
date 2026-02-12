@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import api from '@/utils/api'
 
 const loading = ref(true)
@@ -22,6 +22,196 @@ const newTemplate = ref({
   css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #4C8BC2 100%);\n  min-height: 100%;\n}',
   placeholder_fields: '["title", "content"]',
 })
+
+// =============================================
+// Template Editor with Live Preview
+// =============================================
+const showEditorModal = ref(false)
+const editorTemplate = ref(null)
+const editorPreviewRef = ref(null)
+
+// Customization state - these drive the live preview
+const editorCustom = ref({
+  primaryColor: '#4C8BC2',
+  secondaryColor: '#FDD000',
+  accentColor: '#FFFFFF',
+  backgroundColor: '#1A1A2E',
+  headlineText: 'Dein Highschool-Abenteuer',
+  subheadlineText: 'Starte jetzt mit TREFF Sprachreisen',
+  bodyText: 'Erlebe das Abenteuer deines Lebens mit einem Highschool-Aufenthalt im Ausland.',
+  ctaText: 'Jetzt bewerben',
+  headingFont: 'Montserrat',
+  bodyFont: 'Inter',
+})
+
+// Available fonts for selection
+const availableFonts = [
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Poppins', label: 'Poppins' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+  { value: 'Lato', label: 'Lato' },
+]
+
+// Computed: rendered preview HTML that updates reactively
+const editorPreviewHtml = computed(() => {
+  if (!editorTemplate.value) return ''
+
+  const c = editorCustom.value
+  let html = editorTemplate.value.html_content || ''
+  let css = editorTemplate.value.css_content || ''
+
+  // Replace placeholders in HTML with user-entered text
+  html = html.replace(/\{\{title\}\}/g, c.headlineText)
+  html = html.replace(/\{\{headline\}\}/g, c.headlineText)
+  html = html.replace(/\{\{subheadline\}\}/g, c.subheadlineText)
+  html = html.replace(/\{\{content\}\}/g, c.bodyText)
+  html = html.replace(/\{\{body_text\}\}/g, c.bodyText)
+  html = html.replace(/\{\{cta_text\}\}/g, c.ctaText)
+  html = html.replace(/\{\{cta\}\}/g, c.ctaText)
+  html = html.replace(/\{\{quote_text\}\}/g, c.bodyText)
+  html = html.replace(/\{\{quote_author\}\}/g, 'Max M., Austauschschueler')
+  html = html.replace(/\{\{bullet_points\}\}/g, 'Punkt 1, Punkt 2, Punkt 3')
+  // Remove any remaining unmatched placeholders
+  html = html.replace(/\{\{image\}\}/g, '')
+  html = html.replace(/\{\{[^}]+\}\}/g, '')
+
+  // Build CSS with customized colors and fonts
+  // The templates use CSS variables like var(--primary-color), var(--secondary-color), var(--bg-color)
+  // We set these at the root level so inline style fallbacks get overridden
+  const customCss = `
+    @import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(c.headingFont)}:wght@400;600;700;800&family=${encodeURIComponent(c.bodyFont)}:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; }
+
+    :root {
+      --primary-color: ${c.primaryColor};
+      --secondary-color: ${c.secondaryColor};
+      --accent-color: ${c.accentColor};
+      --bg-color: ${c.backgroundColor};
+      --primary: ${c.primaryColor};
+      --secondary: ${c.secondaryColor};
+      --background: ${c.backgroundColor};
+      --heading-font: '${c.headingFont}', sans-serif;
+      --body-font: '${c.bodyFont}', sans-serif;
+    }
+
+    ${css}
+
+    /* Override font families with user selection */
+    .template-wrapper, .template, .slide, [class*="template"] {
+      font-family: '${c.bodyFont}', sans-serif !important;
+    }
+    .template-headline, .template-wrapper h1, .template h1, h1 {
+      font-family: '${c.headingFont}', sans-serif !important;
+    }
+    .template-subheadline, .template-wrapper h2, .template h2, h2 {
+      font-family: '${c.headingFont}', sans-serif !important;
+    }
+    .template-body-text, .template-wrapper p, .template p, p {
+      font-family: '${c.bodyFont}', sans-serif !important;
+    }
+
+    /* Override colors with user selection via inline style overrides */
+    .template-headline {
+      color: ${c.primaryColor} !important;
+    }
+    .template-subheadline {
+      color: ${c.secondaryColor} !important;
+    }
+    .template-bg {
+      background: ${c.backgroundColor} !important;
+    }
+    .template-cta {
+      background: ${c.secondaryColor} !important;
+      color: ${c.backgroundColor} !important;
+    }
+    .template-logo {
+      background: ${c.primaryColor} !important;
+    }
+  `
+
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + customCss + '</style></head><body>' + html + '</body></html>'
+})
+
+function openEditor(template) {
+  editorTemplate.value = { ...template }
+
+  // Parse existing colors from template
+  const colors = parseColors(template.default_colors)
+  let fonts = { heading_font: 'Montserrat', body_font: 'Inter' }
+  try {
+    fonts = JSON.parse(template.default_fonts) || fonts
+  } catch { /* use defaults */ }
+
+  // Parse placeholders to generate sample text
+  let placeholders = ['title', 'content']
+  try {
+    placeholders = JSON.parse(template.placeholder_fields) || placeholders
+  } catch { /* use defaults */ }
+
+  editorCustom.value = {
+    primaryColor: colors.primary || '#4C8BC2',
+    secondaryColor: colors.secondary || '#FDD000',
+    accentColor: colors.accent || '#FFFFFF',
+    backgroundColor: colors.background || '#1A1A2E',
+    headlineText: 'Dein Highschool-Abenteuer',
+    subheadlineText: 'Starte jetzt mit TREFF Sprachreisen',
+    bodyText: 'Erlebe das Abenteuer deines Lebens mit einem Highschool-Aufenthalt im Ausland.',
+    ctaText: 'Jetzt bewerben',
+    headingFont: fonts.heading_font || 'Montserrat',
+    bodyFont: fonts.body_font || 'Inter',
+  }
+
+  showEditorModal.value = true
+
+  // Update preview iframe after modal opens
+  nextTick(() => {
+    updatePreviewIframe()
+  })
+}
+
+function closeEditor() {
+  showEditorModal.value = false
+  editorTemplate.value = null
+}
+
+function updatePreviewIframe() {
+  const iframe = editorPreviewRef.value
+  if (!iframe) return
+  const doc = iframe.contentDocument || iframe.contentWindow?.document
+  if (!doc) return
+  doc.open()
+  doc.write(editorPreviewHtml.value)
+  doc.close()
+}
+
+// Watch for any customization change and update the iframe preview
+watch(editorCustom, () => {
+  nextTick(() => {
+    updatePreviewIframe()
+  })
+}, { deep: true })
+
+// Get platform dimensions for preview
+function getPreviewDimensions(platformFormat) {
+  const dims = {
+    feed_square: { width: 1080, height: 1080 },
+    feed_portrait: { width: 1080, height: 1350 },
+    story: { width: 1080, height: 1920 },
+    tiktok: { width: 1080, height: 1920 },
+  }
+  return dims[platformFormat] || dims.feed_square
+}
+
+function getPreviewScale(platformFormat) {
+  const dims = getPreviewDimensions(platformFormat)
+  // Scale to fit within ~400px wide preview area
+  return Math.min(380 / dims.width, 500 / dims.height)
+}
 
 // Category definitions with German labels and colors
 const categories = {
@@ -346,6 +536,8 @@ onMounted(() => {
             v-for="template in catTemplates"
             :key="template.id"
             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-treff-blue/50 dark:hover:border-treff-blue/50 transition-all cursor-pointer group overflow-hidden"
+            @click="openEditor(template)"
+            data-testid="template-card"
           >
             <!-- Visual Thumbnail -->
             <div class="relative">
@@ -629,6 +821,255 @@ onMounted(() => {
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             {{ creating ? 'Wird erstellt...' : 'Template erstellen' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =============================================
+         Template Editor Modal with Live Preview
+         ============================================= -->
+    <div
+      v-if="showEditorModal && editorTemplate"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      data-testid="template-editor-modal"
+    >
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeEditor"></div>
+
+      <!-- Modal Content - Full Width -->
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
+        <!-- Modal Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Template bearbeiten</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ editorTemplate.name }} &middot;
+              {{ getCategoryInfo(editorTemplate.category).icon }} {{ getCategoryInfo(editorTemplate.category).label }} &middot;
+              {{ getPlatformInfo(editorTemplate.platform_format).label }}
+            </p>
+          </div>
+          <button
+            @click="closeEditor"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Two-Column Layout: Controls + Preview -->
+        <div class="flex flex-1 overflow-hidden">
+          <!-- Left Panel: Customization Controls -->
+          <div class="w-[420px] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-5 space-y-5" data-testid="editor-controls">
+
+            <!-- Section: Colors -->
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-yellow-400"></span>
+                Farben
+              </h3>
+
+              <!-- Primary Color -->
+              <div class="flex items-center gap-3">
+                <label class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">Primaerfarbe</label>
+                <input
+                  v-model="editorCustom.primaryColor"
+                  type="color"
+                  class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                  data-testid="editor-primary-color"
+                />
+                <input
+                  v-model="editorCustom.primaryColor"
+                  type="text"
+                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+                  data-testid="editor-primary-color-text"
+                />
+              </div>
+
+              <!-- Secondary Color -->
+              <div class="flex items-center gap-3">
+                <label class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">Sekundaerfarbe</label>
+                <input
+                  v-model="editorCustom.secondaryColor"
+                  type="color"
+                  class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                  data-testid="editor-secondary-color"
+                />
+                <input
+                  v-model="editorCustom.secondaryColor"
+                  type="text"
+                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+                />
+              </div>
+
+              <!-- Background Color -->
+              <div class="flex items-center gap-3">
+                <label class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">Hintergrund</label>
+                <input
+                  v-model="editorCustom.backgroundColor"
+                  type="color"
+                  class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                  data-testid="editor-bg-color"
+                />
+                <input
+                  v-model="editorCustom.backgroundColor"
+                  type="text"
+                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+                />
+              </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-700" />
+
+            <!-- Section: Typography -->
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                <span class="text-base">Aa</span>
+                Schriftarten
+              </h3>
+
+              <!-- Heading Font -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Ueberschrift-Font</label>
+                <select
+                  v-model="editorCustom.headingFont"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-heading-font"
+                  :style="{ fontFamily: editorCustom.headingFont }"
+                >
+                  <option v-for="font in availableFonts" :key="font.value" :value="font.value" :style="{ fontFamily: font.value }">
+                    {{ font.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Body Font -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fliesstext-Font</label>
+                <select
+                  v-model="editorCustom.bodyFont"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-body-font"
+                  :style="{ fontFamily: editorCustom.bodyFont }"
+                >
+                  <option v-for="font in availableFonts" :key="font.value" :value="font.value" :style="{ fontFamily: font.value }">
+                    {{ font.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-700" />
+
+            <!-- Section: Content / Text -->
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                <span class="text-base">T</span>
+                Textinhalte
+              </h3>
+
+              <!-- Headline -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Ueberschrift</label>
+                <input
+                  v-model="editorCustom.headlineText"
+                  type="text"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-headline-text"
+                  placeholder="Ueberschrift eingeben..."
+                />
+              </div>
+
+              <!-- Subheadline -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Unterueberschrift</label>
+                <input
+                  v-model="editorCustom.subheadlineText"
+                  type="text"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-subheadline-text"
+                  placeholder="Unterueberschrift eingeben..."
+                />
+              </div>
+
+              <!-- Body Text -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fliesstext</label>
+                <textarea
+                  v-model="editorCustom.bodyText"
+                  rows="3"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-body-text"
+                  placeholder="Text eingeben..."
+                ></textarea>
+              </div>
+
+              <!-- CTA Text -->
+              <div>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Call-to-Action</label>
+                <input
+                  v-model="editorCustom.ctaText"
+                  type="text"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
+                  data-testid="editor-cta-text"
+                  placeholder="CTA-Text eingeben..."
+                />
+              </div>
+            </div>
+
+            <!-- Info hint -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <p class="text-xs text-blue-700 dark:text-blue-300">
+                Alle Aenderungen werden sofort in der Live-Vorschau angezeigt.
+                Die Vorschau aktualisiert sich in Echtzeit.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right Panel: Live Preview -->
+          <div class="flex-1 bg-gray-100 dark:bg-gray-900 overflow-auto flex flex-col items-center justify-start p-6" data-testid="editor-preview-panel">
+            <div class="mb-3 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+              <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              Live-Vorschau &middot; {{ getPlatformInfo(editorTemplate.platform_format).label }} ({{ getPlatformInfo(editorTemplate.platform_format).dim }})
+            </div>
+
+            <!-- Preview Container with correct aspect ratio -->
+            <div
+              class="bg-white shadow-xl rounded-lg overflow-hidden"
+              :style="{
+                width: getPreviewDimensions(editorTemplate.platform_format).width * getPreviewScale(editorTemplate.platform_format) + 'px',
+                height: getPreviewDimensions(editorTemplate.platform_format).height * getPreviewScale(editorTemplate.platform_format) + 'px',
+              }"
+              data-testid="editor-preview-container"
+            >
+              <iframe
+                ref="editorPreviewRef"
+                :style="{
+                  width: getPreviewDimensions(editorTemplate.platform_format).width + 'px',
+                  height: getPreviewDimensions(editorTemplate.platform_format).height + 'px',
+                  transform: `scale(${getPreviewScale(editorTemplate.platform_format)})`,
+                  transformOrigin: 'top left',
+                  border: 'none',
+                }"
+                sandbox="allow-same-origin"
+                data-testid="editor-preview-iframe"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between flex-shrink-0">
+          <p class="text-xs text-gray-400 dark:text-gray-500">
+            Vorschau aktualisiert sich automatisch bei jeder Aenderung
+          </p>
+          <button
+            @click="closeEditor"
+            class="px-5 py-2.5 text-sm font-medium text-white bg-treff-blue hover:bg-blue-600 rounded-lg transition-colors"
+          >
+            Schliessen
           </button>
         </div>
       </div>
