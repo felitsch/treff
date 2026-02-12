@@ -138,3 +138,56 @@
 ### Next steps:
 - Feature #3: Data persists across server restart
 - Then move to authentication features (#6-#11)
+
+## Session 5 - Feature #3: Data persists across server restart
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed 3 critical bugs preventing data persistence:
+  1. **bcrypt/passlib incompatibility**: passlib 1.7.4 crashes with bcrypt 4.x.
+     Replaced passlib with direct bcrypt usage in security.py.
+  2. **JWT sub claim type**: python-jose requires `sub` to be a string, not int.
+     Fixed auth.py to pass `str(user.id)` in token creation.
+  3. **Post data rollback bug (CRITICAL)**: FastAPI's JSON serialization of SQLAlchemy
+     models triggered lazy-loading of relationships in async context, causing
+     MissingGreenlet error. This exception was caught by get_db() except clause,
+     triggering a rollback - so posts appeared to save but were actually rolled back.
+     Fix: convert models to plain dicts before returning + explicit commit.
+
+### Persistence test results:
+1. Register user -> OK (user created in DB)
+2. Login -> OK (JWT token with string sub)
+3. Create post "RESTART_TEST_12345" -> OK (committed to disk)
+4. Verify post in GET /api/posts -> Found
+5. STOP server (kill -9, verify port 8000 free) -> Confirmed stopped
+6. RESTART server -> Healthy, DB connected
+7. Login again -> OK
+8. GET /api/posts -> **RESTART_TEST_12345 STILL EXISTS** -> PASS
+
+### Mock data grep: All clean (no matches in backend/app or frontend/src)
+### Browser verification: App loads, auth works, zero console errors
+
+### Files modified:
+- backend/app/core/security.py - direct bcrypt instead of passlib
+- backend/app/api/routes/auth.py - str(user.id) for JWT sub
+- backend/app/api/routes/posts.py - explicit commit + post_to_dict serialization
+- backend/requirements.txt - bcrypt==4.2.1 replaces passlib[bcrypt]==1.7.4
+
+### Important notes for future sessions:
+- Use 127.0.0.1 instead of localhost for curl (IPv6 resolution fails)
+- Other route files (templates, assets, calendar, etc.) may need the same
+  dict serialization fix when those features are implemented
+- SQL_ECHO was left as True in .env by session 4 (reverted to True by external)
+
+### Current state:
+- Feature #1 (Database connection established): PASSING
+- Feature #2 (Database schema applied correctly): PASSING
+- Feature #3 (Data persists across server restart): PASSING
+- Feature #4 (No mock data patterns in codebase): PASSING
+- Feature #5 (Backend API queries real database): PASSING
+- 5/163 features complete (3.1%) - ALL INFRASTRUCTURE PASSING
+
+### Next steps:
+- Move to authentication features (#6-#11)
+- Apply post_to_dict pattern to other route files as needed
