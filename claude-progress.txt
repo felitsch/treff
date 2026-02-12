@@ -1,5 +1,67 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #123: Malformed URL parameters handled gracefully
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that malformed URL parameters are handled gracefully throughout the app
+- Client-side ID validation and 422 catch were already implemented in EditPostView.vue (from prior sessions)
+- Tested multiple malformed URL patterns end-to-end via browser automation
+
+### Code already in place (no new changes needed):
+- EditPostView.vue: `Number.isInteger()` validation rejects non-numeric IDs before API call
+- EditPostView.vue: catch block handles both 404 and 422 responses as "not found"
+- CalendarView.vue: Uses internal state, ignores URL query params entirely
+- NotFoundView.vue: Global 404 catch-all for unmatched routes
+
+### Verification steps completed:
+1. Navigate to /posts/notanumber/edit - PASS
+   - Shows "Post nicht gefunden" 404 page with sad emoji
+   - Message: "Der Post mit ID #notanumber existiert nicht, wurde geloescht oder gehoert dir nicht."
+   - Navigation buttons "Zur History" and "Zum Dashboard" present and functional
+   - No API call made (caught client-side)
+2. Verify app does not crash - PASS
+   - Zero JavaScript console errors across all tests
+   - App remains fully functional after viewing malformed URLs
+3. Verify appropriate error or 404 displayed - PASS
+   - Beautiful 404 page with emoji, descriptive message, and navigation buttons
+   - Also tested: /posts/-1/edit (negative ID), /posts/3.14/edit (float), /posts/99999/edit (nonexistent)
+   - All show proper 404 page
+4. Navigate to /calendar?month=abc - PASS
+   - Calendar loads normally showing current month (February 2026)
+   - Invalid query param completely ignored (CalendarView uses internal state)
+   - Full calendar functionality works: gap detection, weekly goals, platform filters
+5. Verify graceful handling - PASS
+   - XSS payload in URL (/posts/<script>alert(1)</script>/edit) falls through to global 404
+   - No script execution, no crashes
+
+### Additional edge cases tested:
+- /posts/-1/edit -> 404 page (negative number rejected by validation)
+- /posts/3.14/edit -> 404 page (float rejected by Number.isInteger check)
+- /posts/99999/edit -> 404 page (valid int, but API returns 404 for nonexistent post)
+- /posts/<script>alert(1)</script>/edit -> global 404 page (route doesn't match)
+- "Zur History" button navigates correctly to /history
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Navigation buttons work correctly
+- [x] Screenshots captured:
+  - feature123-step1-notanumber-edit.png (before fix - validation error)
+  - feature123-step2-notanumber-404.png (after fix - clean 404 page)
+  - feature123-step3-negative-id.png (-1 shows 404)
+  - feature123-step4-float-id.png (3.14 shows 404)
+  - feature123-step5-calendar-abc.png (calendar ignores invalid param)
+  - feature123-step6-xss-in-id.png (XSS in URL shows global 404)
+  - feature123-step7-valid-nonexistent-id.png (99999 shows 404 via API)
+  - feature123-step8-notanumber-no-toast.png (clean 404 without toast)
+
+### Current state:
+- Feature #123 marked as PASSING
+- 126/170 features passing (74.1%)
+
 ## Session - Feature #124: Scheduled post shows correct date in calendar timezone
 **Date:** 2026-02-12
 **Status:** PASSING
