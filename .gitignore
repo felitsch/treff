@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+backend/.env
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+!.autoforge/features.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads (user content)
+backend/app/static/uploads/assets/*
+backend/app/static/uploads/exports/*
+!backend/app/static/uploads/assets/.gitkeep
+!backend/app/static/uploads/exports/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Autoforge internal
+.autoforge/features.db
+.autoforge/features.db-shm
+.autoforge/features.db-wal
+.autoforge/.agent.lock

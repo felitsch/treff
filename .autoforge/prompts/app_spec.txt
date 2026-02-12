@@ -1,0 +1,903 @@
+<project_specification>
+  <project_name>Highschool-Aufenthalte Post-Generator</project_name>
+
+  <overview>
+    Ein Web-basiertes Social-Media-Content-Tool fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland). Das Tool ermoeglicht der Social-Media-Mitarbeiterin, konsistente, hochwertige Instagram- und TikTok-Posts in Minuten statt Stunden zu erstellen — mit KI-gestuetzter Textgenerierung, KI-Bildgenerierung (Gemini 3 Pro Image / Nano Banana Pro), vorgefertigten anpassbaren HTML/CSS-Templates, Live-Preview, Content-Kalender, Scheduling und einem Analytics-Dashboard. Ziel ist es, den schwachen Online-Auftritt von TREFF (aktuell ~1.047 Instagram-Follower nach 40 Jahren) durch konsistentes Branding und hoehere Posting-Frequenz drastisch zu verbessern.
+  </overview>
+
+  <technology_stack>
+    <frontend>
+      <framework>Vue.js 3 (Composition API, script setup)</framework>
+      <styling>Tailwind CSS</styling>
+      <state_management>Pinia</state_management>
+      <routing>Vue Router</routing>
+      <build_tool>Vite</build_tool>
+      <additional>
+        - html2canvas or dom-to-image for client-side preview rendering
+        - FullCalendar Vue 3 component for content calendar
+        - Chart.js or ApexCharts for analytics dashboard
+        - vue-draggable-next for drag-and-drop slide reordering
+        - JSZip for multi-slide ZIP downloads
+      </additional>
+    </frontend>
+    <backend>
+      <runtime>Python 3.11+</runtime>
+      <framework>FastAPI</framework>
+      <database>SQLite (via SQLAlchemy ORM)</database>
+      <image_rendering>Puppeteer (Node.js subprocess) for server-side HTML-to-PNG rendering</image_rendering>
+      <scheduling>APScheduler for timed reminders and queue management</scheduling>
+      <additional>
+        - google-genai SDK (Gemini 3 Flash for text, Gemini 3 Pro Image for images)
+        - openai SDK as optional fallback for text generation
+        - Pillow for image processing (crop, resize, overlay)
+        - python-multipart for file uploads
+        - python-jose for JWT authentication
+        - passlib for password hashing
+        - httpx for async HTTP requests (stock photo APIs)
+      </additional>
+    </backend>
+    <communication>
+      <api>RESTful JSON API</api>
+      <cors>CORS enabled for frontend origin</cors>
+    </communication>
+    <deployment>
+      <containerization>Docker (docker-compose with frontend + backend services)</containerization>
+      <ci_cd>GitHub repository, deployable via Docker on any server</ci_cd>
+      <environment>Environment variables for all secrets (API keys, JWT secret)</environment>
+    </deployment>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Node.js 18+ (for frontend build and Puppeteer)
+      - Python 3.11+ (for backend)
+      - Google Gemini API key (for text and image generation)
+      - Optional: OpenAI API key (fallback)
+      - Optional: Unsplash/Pexels API key (stock photos)
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>163</feature_count>
+
+  <brand_identity>
+    <company>TREFF Sprachreisen</company>
+    <founded>1984</founded>
+    <location>Eningen u.A. / Pfullingen, Germany</location>
+    <programs>Highschool-Aufenthalte in USA, Kanada, Australien, Neuseeland, Irland</programs>
+    <target_audience>Deutsche Schueler (14-18 Jahre) und deren Eltern</target_audience>
+    <participants_per_year>~200</participants_per_year>
+    <primary_color>#4C8BC2 (Blau - Vertrauen, Bildung)</primary_color>
+    <secondary_color>#FDD000 (Gelb - Energie, Abenteuer)</secondary_color>
+    <accent_colors>#FFFFFF, #1A1A2E (Dark), #F5F5F5 (Light Gray)</accent_colors>
+    <tone_of_voice>Jugendlich aber serioess - die Zielgruppe sind Teenager, aber Eltern lesen mit und muessen Vertrauen fassen. Kein Slang, aber auch nicht steif.</tone_of_voice>
+    <social_platforms>Instagram (Feed + Stories + Reels), TikTok</social_platforms>
+    <price_range>13.800 EUR (USA Classic) bis 22.400 EUR (Australien)</price_range>
+    <countries>
+      - USA (Classic + Select Programme)
+      - Kanada (Englisch + Franzoesisch)
+      - Australien
+      - Neuseeland
+      - Irland
+    </countries>
+  </brand_identity>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="user">
+        <permissions>
+          - Full access to all tool features
+          - Create, edit, delete posts
+          - Manage templates
+          - Upload and manage assets
+          - View analytics dashboard
+          - Manage content calendar
+        </permissions>
+        <protected_routes>
+          - All routes require authentication
+        </protected_routes>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>Email/password with JWT tokens</method>
+      <session_timeout>7 days (refresh token), 1 hour (access token)</session_timeout>
+      <password_requirements>Minimum 8 characters</password_requirements>
+    </authentication>
+    <sensitive_operations>
+      - No highly sensitive operations in MVP (no payment, no user deletion cascade)
+    </sensitive_operations>
+  </security_and_access_control>
+
+  <post_categories>
+    <category name="laender_spotlight">
+      <description>Informative posts about specific destination countries</description>
+      <examples>Dein Highschool-Jahr in Kanada, Top 5 Gruende fuer die USA, Australien vs. Neuseeland</examples>
+      <typical_format>Carousel (5 slides: Cover, 3 Facts/Highlights, CTA)</typical_format>
+    </category>
+    <category name="erfahrungsberichte">
+      <description>Alumni testimonials and experience stories</description>
+      <examples>Quotes from returnees, before/after stories, host family experiences</examples>
+      <typical_format>Single post (quote on image) or Carousel (story arc)</typical_format>
+    </category>
+    <category name="infografiken">
+      <description>Visual data, comparisons, statistics</description>
+      <examples>5 Gruende fuer ein Auslandsjahr, USA vs Kanada Vergleich, Kosten-Uebersicht</examples>
+      <typical_format>Single post or Carousel</typical_format>
+    </category>
+    <category name="fristen_cta">
+      <description>Deadline announcements and calls-to-action</description>
+      <examples>Bewirb dich jetzt fuer 2027!, Nur noch 20 Plaetze fuer die USA, Stipendien-Deadline</examples>
+      <typical_format>Single post (bold, urgent design)</typical_format>
+    </category>
+    <category name="tipps_tricks">
+      <description>Practical advice for prospective students</description>
+      <examples>Was du vor deinem Auslandsjahr wissen musst, Packliste, Gastfamilien-Tipps</examples>
+      <typical_format>Carousel (tip per slide)</typical_format>
+    </category>
+    <category name="faq">
+      <description>Frequently asked questions as visual content</description>
+      <examples>Wie finde ich eine Gastfamilie?, Was kostet ein Auslandsjahr?, Brauche ich ein Visum?</examples>
+      <typical_format>Carousel (Question slide, Answer slide, repeat)</typical_format>
+    </category>
+    <category name="foto_posts">
+      <description>Photos from students abroad with branding overlay</description>
+      <examples>Student photos with TREFF logo, landscape shots with text overlay</examples>
+      <typical_format>Single post with branded overlay</typical_format>
+    </category>
+    <category name="reel_tiktok_thumbnails">
+      <description>Thumbnail designs for video content</description>
+      <examples>Reel cover images, TikTok thumbnails with text hooks</examples>
+      <typical_format>Single image (9:16 for Stories/Reels/TikTok or 1:1 for Feed)</typical_format>
+    </category>
+    <category name="story_posts">
+      <description>Instagram Story format content</description>
+      <examples>Quick polls, countdowns, swipe-up teasers, behind-the-scenes</examples>
+      <typical_format>9:16 vertical format</typical_format>
+    </category>
+  </post_categories>
+
+  <core_features>
+    <infrastructure>
+      - Database connection established and verified
+      - Database schema applied correctly with all required tables
+      - Data persists across server restart
+      - No mock data patterns in codebase
+      - Backend API queries real database
+    </infrastructure>
+
+    <authentication>
+      - User can register with email and password
+      - User can log in with valid credentials
+      - User sees error on invalid credentials
+      - User can log out
+      - JWT tokens refresh automatically
+      - Protected routes redirect to login when not authenticated
+    </authentication>
+
+    <template_system>
+      - Pre-built HTML/CSS templates for all 9 post categories
+      - Templates support multiple platform formats (1:1 Instagram Feed, 4:5 Portrait Feed, 9:16 Story/Reels/TikTok)
+      - Templates use TREFF brand colors, fonts, and logo by default
+      - Template editor allows customizing colors (primary, secondary, accent, background)
+      - Template editor allows customizing fonts (heading, body)
+      - Template editor allows adjusting layout (text positioning, image areas)
+      - Template preview updates in real-time as customizations are made
+      - Templates support placeholders: headline, subheadline, bullets, image, logo, CTA, quote, author
+      - Carousel templates support variable slide count (1, 3, 5, 10 slides)
+      - Templates can be saved as custom variants
+      - Template CRUD operations (create, read, update, delete custom templates)
+      - Default templates cannot be deleted, only customized
+      - Template categories match post categories
+      - Templates render correctly at exact social media dimensions (1080x1080, 1080x1350, 1080x1920)
+      - Server-side rendering via Puppeteer produces pixel-perfect PNG output
+      - Template system supports background images (uploaded or AI-generated)
+      - Templates include country-specific design elements (flags, icons, color accents per country)
+      - Template selection shows visual thumbnails of each template
+      - Batch rendering: all slides of a carousel rendered in one operation
+      - Template versioning: changes create new version, old versions accessible
+      - Country-themed template presets (USA red/blue, Canada red/white, Australia gold/green, etc.)
+    </template_system>
+
+    <post_creator_workflow>
+      - Step 1: User selects post category (Laender-Spotlight, Erfahrungsbericht, etc.)
+      - Step 2: User selects template variant from visual grid
+      - Step 3: User selects target platform(s) (Instagram Feed, Instagram Story, TikTok, or all)
+      - Step 4: User inputs raw content (topic, key points, or free text)
+      - Step 5: AI generates all text content (slide texts, captions, hashtags)
+      - Step 6: Live preview shows the post with generated content
+      - Step 7: User can edit all generated content
+      - Step 8: User can upload or generate background images
+      - Step 9: User exports/downloads final post
+      - Workflow state persists if user navigates away and returns
+      - Progress indicator shows current step
+      - User can go back to previous steps
+      - User can reset workflow and start over
+      - Workflow validates required fields before allowing next step
+      - Multi-platform export: one workflow produces assets for multiple platforms
+    </post_creator_workflow>
+
+    <ai_text_generation>
+      - Generate slide headlines from topic/keywords (short, impactful, Gen-Z-appropriate)
+      - Generate slide body text / bullet points
+      - Generate Instagram caption with emojis and line breaks
+      - Generate Instagram hashtags (mix of broad and niche: #Auslandsjahr #HighschoolUSA #GastfamilieUSA etc.)
+      - Generate TikTok caption (shorter, hook-focused, trend-aware)
+      - Generate TikTok hashtags (trending + niche)
+      - Generate call-to-action text (e.g., Link in Bio, Jetzt bewerben, DM uns)
+      - Tone selector: jugendlich (for student-targeted posts) vs. serioess (for parent-targeted posts)
+      - Country-aware generation: content adapts to selected country (USA facts vs. Kanada facts etc.)
+      - Text length auto-adjustment based on template text areas
+      - Regenerate individual fields (not whole post)
+      - AI uses Gemini 3 Flash via google-genai SDK (no LangChain)
+      - Prompts stored as Python constants in a dedicated prompts module
+      - Optional GPT-5.2 fallback via openai SDK
+    </ai_text_generation>
+
+    <ai_image_generation>
+      - Generate background images for posts via Gemini 3 Pro Image (Nano Banana Pro)
+      - Generate country-themed imagery (American high school, Canadian landscapes, Sydney Opera House, etc.)
+      - Generate abstract branded backgrounds matching TREFF color scheme
+      - Style transfer: apply artistic styles to uploaded photos
+      - Image editing via natural language prompts (e.g., add sunset sky, make more vibrant)
+      - Generated images at 4096px resolution, auto-cropped to template dimensions
+      - Image generation history (previously generated images saved to asset library)
+      - Prompt suggestions for common post types (e.g., Highschool hallway, host family dinner)
+    </ai_image_generation>
+
+    <content_editor>
+      - Two-column layout: edit panel (left) + live preview (right)
+      - Edit all text fields inline with character counters
+      - Character limit warnings when text exceeds template area
+      - Drag-and-drop slide reordering for carousels
+      - Add/remove slides from carousel
+      - Image upload with crop tool (aspect ratio locked to template requirements)
+      - Image position adjustment within template frame (drag to reposition)
+      - Color picker for overriding template colors on individual posts
+      - Font size adjustment per text field
+      - Undo/redo for all edits
+      - Copy content from one slide to another
+      - Duplicate slide functionality
+      - Preview toggle: switch between Instagram Feed / Instagram Story / TikTok preview
+      - Zoom in/out on preview
+      - Full-screen preview mode
+    </content_editor>
+
+    <live_preview>
+      - Real-time preview updates as user types or changes settings
+      - Accurate representation of final export (WYSIWYG)
+      - Platform-specific preview frames (phone mockup for Stories/TikTok)
+      - Preview shows exact dimensions and safe zones
+      - Multi-slide carousel preview with slide navigation
+      - Preview shows how text wrapping will look at final size
+      - Toggle between light and dark background for preview area
+      - Side-by-side comparison of different platform formats
+      - Preview loading state while rendering complex templates
+      - Preview matches server-side Puppeteer output pixel-perfectly
+    </live_preview>
+
+    <export_download>
+      - Export single post as PNG (high resolution 1080px+)
+      - Export carousel as ZIP containing all slides as PNGs
+      - Export for multiple platforms at once (IG Feed + IG Story + TikTok = 3 separate exports)
+      - Download all exports as single ZIP
+      - File naming convention: TREFF_[category]_[platform]_[date]_[slide].png
+      - Export includes metadata (category, platform, date) in filename
+      - Export quality selector (standard 1080px vs. high 2160px)
+      - Batch export from post history (re-export previous posts)
+    </export_download>
+
+    <asset_management>
+      - Image upload (JPG, PNG, WebP) with drag-and-drop
+      - Asset library with grid view and search
+      - Auto-categorization of assets (by country, by type)
+      - Stock photo integration: search Unsplash/Pexels directly from tool
+      - Stock photo preview and one-click import to library
+      - Built-in asset collection: country flags, map icons, TREFF logo variants
+      - Image crop and resize tool
+      - Logo watermark auto-placement on exported images
+      - Asset tagging for easy retrieval
+      - Asset usage tracking (which posts used which assets)
+    </asset_management>
+
+    <post_history>
+      - All created posts saved with full data (text, images, template, settings)
+      - List view with thumbnail previews
+      - Filter by category, platform, date range, country
+      - Search posts by text content
+      - Re-edit any previous post (opens in editor with all original data)
+      - Duplicate post (create new post based on existing one)
+      - Delete posts from history
+      - Post status tracking (draft, exported, posted)
+    </post_history>
+
+    <content_calendar>
+      - Monthly calendar view showing planned and published posts
+      - Weekly calendar view with time slots
+      - Drag-and-drop posts onto calendar dates
+      - Color-coded by post category
+      - Calendar shows post thumbnails
+      - Create new post directly from calendar (click on date)
+      - Move posts between dates via drag-and-drop
+      - Filter calendar by platform (Instagram only, TikTok only, all)
+      - Calendar shows posting frequency gaps (highlight days without posts)
+      - Weekly posting goal indicator (e.g., target 4x/week, show progress)
+      - Seasonal markers on calendar (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn)
+      - Export calendar as CSV or iCal
+    </content_calendar>
+
+    <scheduling>
+      - Assign planned date and time to posts
+      - Queue view showing upcoming scheduled posts in chronological order
+      - Reminder notifications (in-app) when a post is due for manual publishing
+      - Status transitions: draft -> scheduled -> reminded -> posted
+      - Reschedule posts by changing date/time
+      - Bulk scheduling (assign dates to multiple posts at once)
+    </scheduling>
+
+    <ai_content_suggestions>
+      - Weekly content plan suggestions based on posting goals
+      - Gap detection: suggests content when calendar has empty days
+      - Seasonal suggestions: automatic reminders for Bewerbungsfristen (application deadlines), Abflugzeiten (departure dates), Rueckkehr-Saison (return season), Stipendien-Deadlines (scholarship deadlines)
+      - Country rotation suggestions: detects if one country is underrepresented
+      - Category balance suggestions: ensures mix of categories (not all FAQ posts)
+      - Trending topic awareness: suggests timely content (e.g., back-to-school season)
+      - One-click: accept suggestion and start post creation workflow
+      - Suggestion history (track which suggestions were accepted/dismissed)
+    </ai_content_suggestions>
+
+    <video_thumbnails>
+      - Dedicated thumbnail generator for Reels and TikTok videos
+      - Text-on-image thumbnails with hook text (e.g., "Das hat NIEMAND erwartet...")
+      - Background image selection (upload, AI-generated, or solid color)
+      - Thumbnail templates optimized for attention-grabbing (bold text, emojis, faces)
+      - Export as 9:16 PNG for Stories/Reels/TikTok
+      - Export as 1:1 PNG for Instagram Feed preview
+    </video_thumbnails>
+
+    <analytics_dashboard>
+      - Overview: total posts created, posts per week/month, category distribution
+      - Chart: posting frequency over time (line chart)
+      - Chart: category distribution (pie/donut chart)
+      - Chart: platform distribution (Instagram vs. TikTok)
+      - Chart: country distribution across posts
+      - Table: most used templates
+      - Calendar heatmap showing posting density
+      - Goal tracking: weekly/monthly posting targets vs. actual
+    </analytics_dashboard>
+
+    <ui_ux>
+      - Clean, modern dashboard layout with sidebar navigation
+      - Sidebar: Dashboard, Create Post, Templates, Assets, Calendar, History, Analytics, Settings
+      - Dark mode toggle
+      - Responsive layout (desktop-first, but usable on tablet)
+      - Loading states and skeleton screens for all async operations
+      - Toast notifications for success/error feedback
+      - Breadcrumb navigation in multi-step workflows
+      - Keyboard shortcuts for common actions (Ctrl+S save, Ctrl+Z undo)
+      - Onboarding tour for first-time users (highlight key features)
+      - Settings page: manage account, API keys configuration, brand colors, posting goals
+      - App uses TREFF brand colors as design accents
+      - Empty states with helpful guidance (e.g., "No posts yet - create your first!")
+    </ui_ux>
+  </core_features>
+
+  <database_schema>
+    <tables>
+      <users>
+        - id (INTEGER PRIMARY KEY)
+        - email (TEXT UNIQUE NOT NULL)
+        - password_hash (TEXT NOT NULL)
+        - display_name (TEXT)
+        - created_at (DATETIME)
+        - updated_at (DATETIME)
+      </users>
+
+      <templates>
+        - id (INTEGER PRIMARY KEY)
+        - name (TEXT NOT NULL)
+        - category (TEXT NOT NULL) -- matches post_categories
+        - platform_format (TEXT NOT NULL) -- feed_square, feed_portrait, story, tiktok
+        - slide_count (INTEGER DEFAULT 1)
+        - html_content (TEXT NOT NULL) -- HTML template with placeholders
+        - css_content (TEXT NOT NULL) -- CSS styling for the template
+        - default_colors (TEXT) -- JSON: primary, secondary, accent, background
+        - default_fonts (TEXT) -- JSON: heading_font, body_font
+        - placeholder_fields (TEXT NOT NULL) -- JSON array of field names
+        - thumbnail_url (TEXT) -- preview image path
+        - is_default (BOOLEAN DEFAULT FALSE) -- system template vs user-created
+        - is_country_themed (BOOLEAN DEFAULT FALSE)
+        - country (TEXT) -- if country-themed: usa, canada, australia, newzealand, ireland
+        - version (INTEGER DEFAULT 1)
+        - parent_template_id (INTEGER) -- references original if customized
+        - created_at (DATETIME)
+        - updated_at (DATETIME)
+      </templates>
+
+      <posts>
+        - id (INTEGER PRIMARY KEY)
+        - user_id (INTEGER REFERENCES users)
+        - template_id (INTEGER REFERENCES templates)
+        - category (TEXT NOT NULL)
+        - country (TEXT) -- which country this post is about
+        - platform (TEXT NOT NULL) -- instagram_feed, instagram_story, tiktok
+        - status (TEXT DEFAULT 'draft') -- draft, scheduled, reminded, exported, posted
+        - title (TEXT) -- internal title for organizing
+        - slide_data (TEXT NOT NULL) -- JSON: array of slide content objects
+        - caption_instagram (TEXT)
+        - caption_tiktok (TEXT)
+        - hashtags_instagram (TEXT)
+        - hashtags_tiktok (TEXT)
+        - cta_text (TEXT)
+        - custom_colors (TEXT) -- JSON: overridden colors for this post
+        - custom_fonts (TEXT) -- JSON: overridden fonts for this post
+        - tone (TEXT DEFAULT 'jugendlich') -- jugendlich or serioess
+        - scheduled_date (DATETIME)
+        - scheduled_time (TEXT) -- HH:MM format
+        - exported_at (DATETIME)
+        - posted_at (DATETIME)
+        - created_at (DATETIME)
+        - updated_at (DATETIME)
+      </posts>
+
+      <post_slides>
+        - id (INTEGER PRIMARY KEY)
+        - post_id (INTEGER REFERENCES posts ON DELETE CASCADE)
+        - slide_index (INTEGER NOT NULL) -- order within carousel
+        - headline (TEXT)
+        - subheadline (TEXT)
+        - body_text (TEXT)
+        - bullet_points (TEXT) -- JSON array
+        - quote_text (TEXT)
+        - quote_author (TEXT)
+        - cta_text (TEXT)
+        - image_asset_id (INTEGER REFERENCES assets)
+        - background_type (TEXT) -- color, image, ai_generated
+        - background_value (TEXT) -- hex color, asset path, or AI prompt used
+        - custom_css_overrides (TEXT) -- JSON for per-slide styling
+      </post_slides>
+
+      <assets>
+        - id (INTEGER PRIMARY KEY)
+        - user_id (INTEGER REFERENCES users)
+        - filename (TEXT NOT NULL)
+        - original_filename (TEXT)
+        - file_path (TEXT NOT NULL)
+        - file_type (TEXT NOT NULL) -- image/jpeg, image/png, image/webp
+        - file_size (INTEGER)
+        - width (INTEGER)
+        - height (INTEGER)
+        - source (TEXT DEFAULT 'upload') -- upload, ai_generated, stock_unsplash, stock_pexels, system
+        - ai_prompt (TEXT) -- if AI-generated, the prompt used
+        - category (TEXT) -- country, logo, background, photo, icon
+        - country (TEXT) -- if country-specific
+        - tags (TEXT) -- JSON array of tags
+        - usage_count (INTEGER DEFAULT 0)
+        - created_at (DATETIME)
+      </assets>
+
+      <calendar_entries>
+        - id (INTEGER PRIMARY KEY)
+        - post_id (INTEGER REFERENCES posts ON DELETE CASCADE)
+        - scheduled_date (DATE NOT NULL)
+        - scheduled_time (TEXT) -- HH:MM
+        - reminder_sent (BOOLEAN DEFAULT FALSE)
+        - notes (TEXT) -- internal notes about this calendar slot
+        - created_at (DATETIME)
+        - updated_at (DATETIME)
+      </calendar_entries>
+
+      <content_suggestions>
+        - id (INTEGER PRIMARY KEY)
+        - suggestion_type (TEXT NOT NULL) -- weekly_plan, gap_fill, seasonal, country_rotation, category_balance
+        - title (TEXT NOT NULL)
+        - description (TEXT)
+        - suggested_category (TEXT)
+        - suggested_country (TEXT)
+        - suggested_date (DATE)
+        - reason (TEXT) -- why this was suggested
+        - status (TEXT DEFAULT 'pending') -- pending, accepted, dismissed
+        - accepted_post_id (INTEGER REFERENCES posts) -- if accepted, link to created post
+        - created_at (DATETIME)
+      </content_suggestions>
+
+      <export_history>
+        - id (INTEGER PRIMARY KEY)
+        - post_id (INTEGER REFERENCES posts)
+        - platform (TEXT NOT NULL)
+        - format (TEXT NOT NULL) -- png, zip
+        - file_path (TEXT)
+        - resolution (TEXT) -- 1080, 2160
+        - slide_count (INTEGER)
+        - exported_at (DATETIME)
+      </export_history>
+
+      <settings>
+        - id (INTEGER PRIMARY KEY)
+        - user_id (INTEGER REFERENCES users)
+        - key (TEXT NOT NULL)
+        - value (TEXT NOT NULL)
+        - UNIQUE(user_id, key)
+      </settings>
+    </tables>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <auth>
+      - POST /api/auth/register
+      - POST /api/auth/login
+      - POST /api/auth/refresh
+      - POST /api/auth/logout
+      - GET /api/auth/me
+    </auth>
+
+    <templates>
+      - GET /api/templates (list all, with filters: category, platform, country)
+      - GET /api/templates/:id
+      - POST /api/templates (create custom template)
+      - PUT /api/templates/:id (update custom template)
+      - DELETE /api/templates/:id (delete custom template, not defaults)
+      - GET /api/templates/:id/preview (render preview thumbnail)
+    </templates>
+
+    <posts>
+      - GET /api/posts (list with filters: category, platform, status, country, date_range)
+      - GET /api/posts/:id
+      - POST /api/posts (create new post)
+      - PUT /api/posts/:id (update post)
+      - DELETE /api/posts/:id
+      - POST /api/posts/:id/duplicate
+      - PUT /api/posts/:id/status (update status: draft, scheduled, posted)
+    </posts>
+
+    <post_slides>
+      - GET /api/posts/:id/slides
+      - PUT /api/posts/:id/slides (update all slides, including reorder)
+      - POST /api/posts/:id/slides (add slide)
+      - DELETE /api/posts/:id/slides/:slideId
+    </post_slides>
+
+    <ai_generation>
+      - POST /api/ai/generate-text (generate slide texts, captions, hashtags, CTA)
+      - POST /api/ai/generate-image (generate image via Gemini 3 Pro Image)
+      - POST /api/ai/edit-image (edit existing image via natural language)
+      - POST /api/ai/suggest-content (get content suggestions for calendar)
+      - POST /api/ai/suggest-weekly-plan (generate full week content plan)
+    </ai_generation>
+
+    <export>
+      - POST /api/export/render (render post to PNG via Puppeteer)
+      - POST /api/export/render-carousel (render all slides of carousel)
+      - GET /api/export/download/:exportId (download rendered file)
+      - POST /api/export/batch (render multiple posts)
+    </export>
+
+    <assets>
+      - GET /api/assets (list with filters: category, country, source, tags)
+      - POST /api/assets/upload (upload image file)
+      - DELETE /api/assets/:id
+      - PUT /api/assets/:id (update tags, category)
+      - POST /api/assets/crop (crop image to dimensions)
+      - GET /api/assets/stock/search?query=...&source=unsplash|pexels (search stock photos)
+      - POST /api/assets/stock/import (import stock photo to library)
+    </assets>
+
+    <calendar>
+      - GET /api/calendar?month=...&year=... (get calendar entries for month)
+      - GET /api/calendar/week?date=... (get calendar entries for week)
+      - POST /api/calendar/entries (create/assign post to date)
+      - PUT /api/calendar/entries/:id (move post to different date)
+      - DELETE /api/calendar/entries/:id
+      - GET /api/calendar/gaps (get days without scheduled content)
+      - GET /api/calendar/stats (posting frequency, goal progress)
+    </calendar>
+
+    <suggestions>
+      - GET /api/suggestions (list pending suggestions)
+      - POST /api/suggestions/generate (trigger AI suggestion generation)
+      - PUT /api/suggestions/:id/accept (accept and start post creation)
+      - PUT /api/suggestions/:id/dismiss
+    </suggestions>
+
+    <analytics>
+      - GET /api/analytics/overview (total posts, this week, this month)
+      - GET /api/analytics/frequency?period=week|month&range=... (posting frequency over time)
+      - GET /api/analytics/categories (category distribution)
+      - GET /api/analytics/platforms (platform distribution)
+      - GET /api/analytics/countries (country distribution)
+      - GET /api/analytics/templates (most used templates)
+      - GET /api/analytics/goals (weekly/monthly targets vs actual)
+    </analytics>
+
+    <settings>
+      - GET /api/settings
+      - PUT /api/settings (update settings: brand colors, posting goals, API keys)
+    </settings>
+
+    <health>
+      - GET /api/health (server status, database connectivity)
+    </health>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <main_structure>
+      Sidebar navigation (collapsible) on the left with main content area on the right.
+      Sidebar contains: Dashboard, Create Post, Templates, Assets, Calendar, History, Analytics, Settings.
+      Top bar shows current page title, user info, dark mode toggle.
+    </main_structure>
+
+    <pages>
+      <dashboard>
+        - Quick stats cards (posts this week, scheduled posts, total assets)
+        - Mini calendar showing next 7 days
+        - Recent posts list (last 5)
+        - Pending content suggestions
+        - Quick action buttons (Create Post, View Calendar)
+      </dashboard>
+
+      <create_post>
+        - Multi-step wizard layout
+        - Step indicators at top
+        - Left panel: input/editing controls
+        - Right panel: live preview (sticky, scrolls with content)
+        - Bottom bar: navigation buttons (Back, Next, Export)
+      </create_post>
+
+      <templates_page>
+        - Grid of template cards with visual thumbnails
+        - Filter bar: category, platform format, country
+        - Click template to preview full-size
+        - Edit button opens template customization modal
+        - Create new template button
+      </templates_page>
+
+      <assets_page>
+        - Grid view of all assets with thumbnails
+        - Upload area (drag-and-drop zone)
+        - Filter sidebar: category, country, source, tags
+        - Search bar
+        - Stock photo search tab (Unsplash/Pexels)
+        - Click asset to view details, edit tags, see usage
+      </assets_page>
+
+      <calendar_page>
+        - Full-screen calendar (monthly view default)
+        - Toggle: monthly / weekly view
+        - Posts shown as color-coded cards on calendar dates
+        - Sidebar: unscheduled drafts that can be dragged onto calendar
+        - Posting goal progress bar at top
+        - Seasonal markers highlighted
+      </calendar_page>
+
+      <history_page>
+        - Table/grid view of all posts
+        - Column: thumbnail, title, category, platform, country, status, date
+        - Filter bar and search
+        - Bulk actions: export, delete
+        - Click row to re-edit or view details
+      </history_page>
+
+      <analytics_page>
+        - Grid of chart cards
+        - Date range selector at top
+        - Charts: frequency line chart, category pie chart, platform bar chart, country distribution, template usage table
+        - Goal tracking section with progress bars
+        - Calendar heatmap
+      </analytics_page>
+
+      <settings_page>
+        - Account settings (email, password, display name)
+        - Brand settings (primary/secondary colors, logo upload)
+        - API key configuration (Gemini, OpenAI optional, Unsplash/Pexels optional)
+        - Posting goals (weekly target, monthly target)
+        - Default tone preference
+        - Default hashtag sets per country
+      </settings_page>
+    </pages>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      - Primary: #4C8BC2 (TREFF Blue)
+      - Secondary: #FDD000 (TREFF Yellow)
+      - Dark: #1A1A2E
+      - Light: #F5F5F5
+      - White: #FFFFFF
+      - Success: #10B981
+      - Warning: #F59E0B
+      - Error: #EF4444
+      - Gray shades: #6B7280, #9CA3AF, #D1D5DB, #E5E7EB
+    </color_palette>
+    <typography>
+      - Headings: Inter (bold, clean, modern)
+      - Body: Inter (regular)
+      - Monospace: JetBrains Mono (for technical displays)
+      - Template text: Configurable per template (Montserrat, Poppins, Playfair Display as options)
+    </typography>
+    <spacing>
+      - Based on Tailwind default spacing scale (4px base unit)
+      - Consistent padding and margins using Tailwind utilities
+    </spacing>
+    <components>
+      - Buttons: rounded-lg, primary (blue), secondary (outline), danger (red)
+      - Cards: rounded-xl with shadow-sm, hover shadow-md
+      - Inputs: rounded-lg with border-gray-300, focus ring blue
+      - Modals: centered overlay with backdrop blur
+      - Toasts: bottom-right positioned, auto-dismiss after 5 seconds
+    </components>
+  </design_system>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Project Foundation</title>
+      <tasks>
+        - Initialize Vue.js 3 + Vite frontend with Tailwind CSS
+        - Initialize FastAPI backend with SQLAlchemy + SQLite
+        - Set up project structure (src/components, src/views, src/composables, etc.)
+        - Create database models and migration
+        - Set up Docker configuration (Dockerfile, docker-compose.yml)
+        - Create init.sh script
+        - Implement health endpoint
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>Authentication</title>
+      <tasks>
+        - Implement user registration and login API
+        - Implement JWT token generation and refresh
+        - Create login and registration pages
+        - Add route guards for protected pages
+        - Create auth composable (useAuth)
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>Template System</title>
+      <tasks>
+        - Design and create 15-20 default HTML/CSS templates
+        - Implement template storage and CRUD API
+        - Set up Puppeteer rendering service
+        - Build template browser page with visual grid
+        - Implement template customization editor
+        - Build template preview rendering
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>AI Integration</title>
+      <tasks>
+        - Set up Gemini 3 Flash text generation via google-genai SDK
+        - Create prompt templates for all content types (slides, captions, hashtags, CTA)
+        - Implement country-aware and tone-aware generation
+        - Set up Gemini 3 Pro Image (Nano Banana Pro) for image generation
+        - Implement image editing via natural language
+        - Create AI service layer with error handling and fallback
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>Post Creator Workflow</title>
+      <tasks>
+        - Build multi-step post creation wizard
+        - Implement content editor with all editing capabilities
+        - Build live preview component with real-time updates
+        - Implement slide management (add, remove, reorder, duplicate)
+        - Connect AI generation to editor
+        - Implement workflow state persistence
+      </tasks>
+    </step>
+
+    <step number="6">
+      <title>Export System</title>
+      <tasks>
+        - Implement server-side PNG rendering pipeline
+        - Build carousel batch rendering
+        - Implement ZIP packaging for multi-slide exports
+        - Build multi-platform export (one post, multiple format outputs)
+        - Create export history tracking
+        - Implement download endpoints
+      </tasks>
+    </step>
+
+    <step number="7">
+      <title>Asset Management</title>
+      <tasks>
+        - Build image upload with drag-and-drop
+        - Implement asset library with grid view and search
+        - Build crop and resize tools
+        - Integrate Unsplash/Pexels stock photo search
+        - Implement asset tagging and categorization
+        - Build logo watermark system
+      </tasks>
+    </step>
+
+    <step number="8">
+      <title>Content Calendar and Scheduling</title>
+      <tasks>
+        - Build calendar views (monthly, weekly)
+        - Implement drag-and-drop scheduling
+        - Build queue view for upcoming posts
+        - Implement reminder system via APScheduler
+        - Add seasonal markers and posting gap detection
+        - Build posting goal tracking
+      </tasks>
+    </step>
+
+    <step number="9">
+      <title>AI Content Suggestions</title>
+      <tasks>
+        - Implement weekly plan suggestion generation
+        - Build gap detection and seasonal awareness
+        - Implement country rotation and category balance analysis
+        - Build suggestion UI with accept/dismiss actions
+        - Connect suggestion acceptance to post creation workflow
+      </tasks>
+    </step>
+
+    <step number="10">
+      <title>Video Thumbnails</title>
+      <tasks>
+        - Create thumbnail-specific templates (bold text, hooks, emojis)
+        - Build thumbnail generator UI
+        - Implement text-on-image rendering for thumbnails
+        - Support both 9:16 and 1:1 export formats
+      </tasks>
+    </step>
+
+    <step number="11">
+      <title>Analytics Dashboard</title>
+      <tasks>
+        - Implement analytics data aggregation API
+        - Build posting frequency chart
+        - Build category and platform distribution charts
+        - Build country distribution chart
+        - Create calendar heatmap
+        - Implement goal tracking with progress bars
+        - Build template usage table
+      </tasks>
+    </step>
+
+    <step number="12">
+      <title>Post History and Settings</title>
+      <tasks>
+        - Build post history page with filtering and search
+        - Implement post duplication and re-editing
+        - Build settings page (account, brand, API keys, goals)
+        - Implement dark mode
+        - Add onboarding tour
+        - Polish UI, responsive design, keyboard shortcuts
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - Social media employee can create a complete branded post in under 5 minutes
+      - AI generates high-quality German text appropriate for Gen-Z audience and parents
+      - Templates produce consistent visual branding across all posts
+      - Exported PNGs are pixel-perfect at social media dimensions
+      - Content calendar provides clear overview of posting schedule
+      - AI suggestions reduce mental effort of content planning
+    </functionality>
+    <user_experience>
+      - Intuitive multi-step workflow requires no training
+      - Live preview eliminates guesswork about final appearance
+      - Quick loading times for all operations
+      - Clear feedback for all user actions
+      - Dark mode available for extended use
+    </user_experience>
+    <technical_quality>
+      - All data persists in SQLite database (no mock data)
+      - JWT authentication secures all endpoints
+      - API handles errors gracefully with meaningful messages
+      - Docker deployment works reliably
+      - AI API calls have proper error handling and timeouts
+    </technical_quality>
+    <design_polish>
+      - Consistent use of TREFF brand colors and typography
+      - Modern, clean UI that feels professional
+      - Smooth animations and transitions
+      - Responsive layout works on desktop and tablet
+      - Template designs are visually appealing and on-brand
+    </design_polish>
+  </success_criteria>
+</project_specification>
