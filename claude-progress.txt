@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #106: Deleting a post removes its slides from database
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified cascade delete on post slides works end-to-end via browser and API
+- No code changes needed - cascade delete was already properly implemented at two levels:
+  - ORM Level: Post model has `cascade="all, delete-orphan"` on slides relationship
+  - Database Level: PostSlide has `ondelete="CASCADE"` on the post_id foreign key
+  - Delete endpoint uses `await db.delete(post)` which triggers ORM cascade
+
+### Verification steps completed:
+1. Create a carousel post with 3 slides - PASS
+   - Created post ID 125 "CASCADE_UI_TEST_106" via API
+   - Added 3 slides (Slide A - USA Spotlight, Slide B - Schulsystem, Slide C - Bewerbung)
+   - Confirmed 3 slides in database via SQLite query
+2. Note the post ID - PASS (ID = 125)
+3. Delete the post - PASS
+   - Deleted via UI on History page (clicked trash icon, confirmed in dialog)
+   - API returned {"message": "Post deleted"}
+4. Query database for slides - PASS
+   - SELECT COUNT(*) FROM post_slides WHERE post_id = 125 => 0
+   - No slides remain for the deleted post
+5. Verify no slides remain for deleted post - PASS
+   - Both post and all 3 slides confirmed deleted from database
+   - API returns 404 "Post not found" for deleted post ID
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence test PASS: post and slides remain deleted after full server restart
+- Delete confirmation dialog shown with post title before delete
+- Screenshots captured:
+  - feature106-step1-post-with-slides-before-delete.png
+  - feature106-step2-delete-confirmation-dialog.png
+  - feature106-step3-post-deleted-empty-history.png
+  - feature106-step4-post-deleted-persists-after-restart.png
+
+### No code changes needed:
+- Post model already had `cascade="all, delete-orphan"` on slides relationship
+- PostSlide model already had `ondelete="CASCADE"` on post_id foreign key
+- posts.py delete endpoint already used `await db.delete(post)` + `await db.commit()`
+
+### Current state:
+- Feature #106 marked as PASSING
+- 108/170 features passing (63.5%)
+
 ## Session - Feature #104: Double-click on delete does not cause duplicate deletions
 **Date:** 2026-02-12
 **Status:** PASSING
