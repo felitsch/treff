@@ -1,5 +1,55 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #67: Weekly posting goal indicator shows progress
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete weekly posting goal tracking workflow end-to-end via browser
+- No code changes needed - all functionality was already fully implemented:
+  - Settings page: "Posting-Ziele" section with "Posts pro Woche" dropdown (1-7 options)
+  - Backend: GET /api/calendar/stats endpoint counts posts_this_week and reads weekly_goal from user settings
+  - Calendar UI: "Woechentliches Posting-Ziel" progress indicator with bar, percentage, and goal-met celebration
+
+### Verification steps completed:
+1. Set weekly posting goal to 4 in settings - PASS
+   - Navigated to Settings > Posting-Ziele
+   - Changed "Posts pro Woche" from 3 to 4
+   - Saved settings - "Einstellungen erfolgreich gespeichert!" message shown
+2. Create and post 2 posts this week - PASS
+   - Created GOAL67_Post_1_Kanada (scheduled Feb 12, 10:00, IG Feed, Laender-Spotlight)
+   - Created GOAL67_Post_2_USA (scheduled Feb 13, 14:00, IG Story, Erfahrungsberichte)
+3. Navigate to Calendar - PASS
+4. Verify goal progress shows 2/4 - PASS
+   - Progress bar shows blue at 50%
+   - Text shows "2/4" and "Noch 2 Posts diese Woche"
+   - Screenshot: feature67-step2-calendar-2of4.png
+5. Post 2 more - PASS
+   - Created GOAL67_Post_3_Australien (scheduled Feb 14, 11:00, TikTok, Tipps)
+   - Created GOAL67_Post_4_Irland (scheduled Feb 15, 09:00, IG Feed, FAQ)
+6. Verify progress updates to 4/4 - PASS
+   - Progress bar shows green at 100%
+   - Text shows "4/4" with green checkmark
+   - "Ziel erreicht! 🎉" message displayed
+   - Screenshot: feature67-step3-calendar-4of4-goal-reached.png
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence verified: settings (weekly_goal=4) and posts (4 scheduled) persist
+- [x] API response after restart: {"posts_this_week":4,"weekly_goal":4,"posts_this_month":4,"monthly_goal":12}
+- [x] Calendar UI after restart still shows 4/4 with goal reached
+- [x] Screenshots: feature67-step1-settings-goal-4.png, feature67-step2-calendar-2of4.png, feature67-step3-calendar-4of4-goal-reached.png, feature67-step4-persistence-after-restart.png
+
+### No code changes needed:
+- SettingsView.vue already had postsPerWeek dropdown with save to PUT /api/settings
+- Calendar.py /api/calendar/stats already queries posts in current week and reads settings
+- CalendarView.vue already had weeklyGoalPercent computed, progress bar, and goal-met display
+
+### Current state:
+- Feature #67 marked as PASSING
+- 77/170 features passing (45.3%)
+
 ## Session - Feature #65: Calendar filter by platform works
 **Date:** 2026-02-12
 **Status:** PASSING
