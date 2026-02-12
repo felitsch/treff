@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import draggable from 'vuedraggable'
@@ -7,6 +7,7 @@ import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import { useCreatePostStore } from '@/stores/createPost'
+import { useUndoRedo } from '@/composables/useUndoRedo'
 
 const router = useRouter()
 const toast = useToast()
@@ -216,6 +217,10 @@ async function generateText() {
 
     successMsg.value = 'Inhalt erfolgreich generiert!'
     setTimeout(() => { successMsg.value = '' }, 3000)
+
+    // Initialize undo/redo history with newly generated content
+    ensureDragIds()
+    initFromState(getEditableState())
   } catch (e) {
     console.error('Text generation failed:', e)
     error.value = 'Textgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
@@ -594,6 +599,7 @@ function getDimensions() {
 
 function resetWorkflow() {
   store.resetWorkflow()
+  clearHistory()
 }
 
 function nextPreviewSlide() {
@@ -630,10 +636,111 @@ function onSlideReorder() {
   ensureDragIds()
 }
 
+// ── Add / Remove slide ─────────────────────────────────────────────────
+const showDeleteSlideConfirm = ref(false)
+const slideToDeleteIndex = ref(-1)
+
+function addSlide() {
+  const newSlide = {
+    headline: 'Neue Slide',
+    subheadline: '',
+    body_text: '',
+    cta_text: '',
+    background_type: 'color',
+    background_value: '#4C8BC2',
+  }
+  slides.value.push(newSlide)
+  ensureDragIds()
+  // Switch to the newly added slide
+  currentPreviewSlide.value = slides.value.length - 1
+}
+
+function requestRemoveSlide(index) {
+  if (slides.value.length <= 1) return // Prevent removing the last slide
+  slideToDeleteIndex.value = index
+  showDeleteSlideConfirm.value = true
+}
+
+function confirmRemoveSlide() {
+  if (slideToDeleteIndex.value < 0 || slideToDeleteIndex.value >= slides.value.length) return
+  slides.value.splice(slideToDeleteIndex.value, 1)
+  // Adjust current preview if needed
+  if (currentPreviewSlide.value >= slides.value.length) {
+    currentPreviewSlide.value = slides.value.length - 1
+  }
+  ensureDragIds()
+  showDeleteSlideConfirm.value = false
+  slideToDeleteIndex.value = -1
+}
+
+function cancelRemoveSlide() {
+  showDeleteSlideConfirm.value = false
+  slideToDeleteIndex.value = -1
+}
+
 // Watch for slide changes
 watch(slides, () => {
   currentPreviewSlide.value = 0
   ensureDragIds()
+})
+
+// ── Undo / Redo ────────────────────────────────────────────────────────
+function getEditableState() {
+  return {
+    slides: JSON.parse(JSON.stringify(slides.value)),
+    captionInstagram: captionInstagram.value,
+    captionTiktok: captionTiktok.value,
+    hashtagsInstagram: hashtagsInstagram.value,
+    hashtagsTiktok: hashtagsTiktok.value,
+    ctaText: ctaText.value,
+  }
+}
+
+function applyEditableState(state) {
+  slides.value = state.slides
+  captionInstagram.value = state.captionInstagram
+  captionTiktok.value = state.captionTiktok
+  hashtagsInstagram.value = state.hashtagsInstagram
+  hashtagsTiktok.value = state.hashtagsTiktok
+  ctaText.value = state.ctaText
+  ensureDragIds()
+}
+
+const { canUndo, canRedo, undo, redo, snapshot, initFromState, startListening, stopListening, isApplying, clearHistory } = useUndoRedo(applyEditableState)
+
+// Debounced snapshot on content changes
+let undoSnapshotTimer = null
+function debouncedSnapshot() {
+  if (isApplying.value) return
+  clearTimeout(undoSnapshotTimer)
+  undoSnapshotTimer = setTimeout(() => {
+    snapshot(getEditableState())
+  }, 500)
+}
+
+// Watch all editable fields for changes and record snapshots (only when on step 7 - edit mode)
+watch(
+  () => [
+    JSON.stringify(slides.value),
+    captionInstagram.value,
+    captionTiktok.value,
+    hashtagsInstagram.value,
+    hashtagsTiktok.value,
+    ctaText.value,
+  ],
+  () => {
+    if (currentStep.value >= 6) {
+      debouncedSnapshot()
+    }
+  },
+  { deep: false }
+)
+
+// Initialize undo history when content is first generated (entering step 6+)
+watch(currentStep, (newStep, oldStep) => {
+  if (newStep >= 6 && oldStep < 6 && slides.value.length > 0) {
+    initFromState(getEditableState())
+  }
 })
 
 // On mount: reload data if returning to an in-progress workflow
@@ -649,7 +756,17 @@ onMounted(() => {
     }
     // Re-assign drag IDs to slides if they exist
     ensureDragIds()
+    // If returning to edit steps with existing slides, init undo history
+    if (currentStep.value >= 6 && slides.value.length > 0) {
+      initFromState(getEditableState())
+    }
   }
+  startListening()
+})
+
+onUnmounted(() => {
+  stopListening()
+  clearTimeout(undoSnapshotTimer)
 })
 </script>
 
@@ -1066,43 +1183,102 @@ onMounted(() => {
     <!-- STEP 7: Edit Generated Content (Headline etc.) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 7">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 7: Inhalt bearbeiten</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Schritt 7: Inhalt bearbeiten</h2>
+        <!-- Undo / Redo buttons -->
+        <div class="flex gap-2">
+          <button
+            @click="undo"
+            :disabled="!canUndo"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 border"
+            :class="canUndo
+              ? 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'"
+            title="Rueckgaengig (Ctrl+Z)"
+            data-testid="undo-btn"
+          >
+            &#8630; Undo
+          </button>
+          <button
+            @click="redo"
+            :disabled="!canRedo"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 border"
+            :class="canRedo
+              ? 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'"
+            title="Wiederherstellen (Ctrl+Y)"
+            data-testid="redo-btn"
+          >
+            Redo &#8631;
+          </button>
+        </div>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Edit panel -->
         <div class="space-y-4">
-          <!-- Slide tabs with drag-and-drop reordering -->
-          <div v-if="slides.length > 1" class="mb-3">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-xs text-gray-500 dark:text-gray-400">↕ Slides per Drag & Drop neu anordnen</span>
+          <!-- Slide tabs with drag-and-drop reordering + Add/Remove -->
+          <div v-if="slides.length >= 1" class="mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <span v-if="slides.length > 1" class="text-xs text-gray-500 dark:text-gray-400">&#8597; Slides per Drag &amp; Drop neu anordnen</span>
+              <span v-else class="text-xs text-gray-500 dark:text-gray-400">{{ slides.length }} Slide</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ slides.length }} Slides</span>
             </div>
-            <draggable
-              v-model="slides"
-              item-key="dragId"
-              handle=".drag-handle"
-              animation="200"
-              ghost-class="slide-ghost"
-              class="flex gap-1 flex-wrap"
-              @end="onSlideReorder"
-            >
-              <template #item="{ element, index }">
-                <button
-                  @click="currentPreviewSlide = index"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
-                  :class="currentPreviewSlide === index
-                    ? 'bg-[#4C8BC2] text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'"
-                >
-                  <span class="opacity-50">⠿</span>
-                  Slide {{ index + 1 }}
-                  <span v-if="index === 0" class="font-normal">(Cover)</span>
-                  <span v-if="index === slides.length - 1 && index > 0" class="font-normal">(CTA)</span>
-                </button>
-              </template>
-            </draggable>
+            <div class="flex items-center gap-2 flex-wrap">
+              <draggable
+                v-model="slides"
+                item-key="dragId"
+                handle=".drag-handle"
+                animation="200"
+                ghost-class="slide-ghost"
+                class="flex gap-1 flex-wrap"
+                @end="onSlideReorder"
+              >
+                <template #item="{ element, index }">
+                  <button
+                    @click="currentPreviewSlide = index"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
+                    :class="currentPreviewSlide === index
+                      ? 'bg-[#4C8BC2] text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+                  >
+                    <span class="opacity-50">&#10495;</span>
+                    Slide {{ index + 1 }}
+                    <span v-if="index === 0" class="font-normal">(Cover)</span>
+                    <span v-if="index === slides.length - 1 && index > 0" class="font-normal">(CTA)</span>
+                  </button>
+                </template>
+              </draggable>
+              <!-- Add Slide button -->
+              <button
+                @click="addSlide"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#4C8BC2] hover:text-[#4C8BC2] dark:hover:border-[#4C8BC2] dark:hover:text-[#4C8BC2]"
+                title="Neue Slide hinzufuegen"
+                data-testid="add-slide-btn"
+              >
+                <span>+</span> Slide
+              </button>
+            </div>
           </div>
 
           <!-- Current slide edit -->
           <div v-if="slides[currentPreviewSlide]" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-3">
+            <!-- Slide header with delete button -->
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-700">
+              <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Slide {{ currentPreviewSlide + 1 }}
+                <span v-if="currentPreviewSlide === 0" class="text-xs font-normal text-gray-400">(Cover)</span>
+                <span v-if="currentPreviewSlide === slides.length - 1 && currentPreviewSlide > 0" class="text-xs font-normal text-gray-400">(CTA)</span>
+              </span>
+              <button
+                v-if="slides.length > 1"
+                @click="requestRemoveSlide(currentPreviewSlide)"
+                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Slide entfernen"
+                data-testid="remove-slide-btn"
+              >
+                &#128465; Entfernen
+              </button>
+            </div>
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Headline</label>
@@ -1206,6 +1382,47 @@ onMounted(() => {
             </div>
           </div>
 
+          <!-- Background Color Picker -->
+          <div v-if="slides[currentPreviewSlide]?.background_type !== 'image'" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Hintergrundfarbe</label>
+            <div class="flex items-center gap-3">
+              <div class="flex gap-1.5 flex-wrap">
+                <button
+                  v-for="preset in ['#1A1A2E', '#4C8BC2', '#FDD000', '#2D6A4F', '#E63946', '#7B2CBF', '#FF6B35', '#264653']"
+                  :key="preset"
+                  @click="slides[currentPreviewSlide].background_value = preset; slides[currentPreviewSlide].background_type = 'color'"
+                  class="w-7 h-7 rounded-lg border-2 transition-all hover:scale-110"
+                  :class="slides[currentPreviewSlide].background_value === preset ? 'border-white ring-2 ring-[#4C8BC2] scale-110' : 'border-gray-300 dark:border-gray-600'"
+                  :style="{ backgroundColor: preset }"
+                  :title="preset"
+                  data-testid="color-preset"
+                ></button>
+              </div>
+              <div class="flex items-center gap-2 ml-auto">
+                <input
+                  type="color"
+                  :value="slides[currentPreviewSlide].background_value || '#1A1A2E'"
+                  @input="slides[currentPreviewSlide].background_value = $event.target.value; slides[currentPreviewSlide].background_type = 'color'"
+                  class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                  title="Eigene Farbe waehlen"
+                  data-testid="color-picker-input"
+                />
+                <span class="text-xs text-gray-400 font-mono">{{ slides[currentPreviewSlide].background_value || '#1A1A2E' }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Hintergrund</label>
+            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>&#x1F5BC;</span>
+              <span>Bild als Hintergrund gesetzt</span>
+              <button
+                @click="slides[currentPreviewSlide].background_type = 'color'; slides[currentPreviewSlide].background_value = '#1A1A2E'"
+                class="ml-auto text-xs text-[#4C8BC2] hover:underline"
+              >Farbe verwenden</button>
+            </div>
+          </div>
+
           <!-- Captions editing -->
           <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -1285,21 +1502,27 @@ onMounted(() => {
         <div class="lg:sticky lg:top-4 self-start">
           <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Live-Vorschau</div>
           <div
-            class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]"
+            class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
             :class="{
               'aspect-square': selectedPlatform === 'instagram_feed',
               'aspect-[9/16]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
             }"
-            style="max-width: 320px;"
+            :style="{
+              maxWidth: '320px',
+              background: slides[currentPreviewSlide]?.background_type === 'image'
+                ? `url(${slides[currentPreviewSlide].background_value}) center/cover`
+                : slides[currentPreviewSlide]?.background_value || 'linear-gradient(135deg, #1A1A2E, #2a2a4e)',
+            }"
+            data-testid="live-preview-container"
           >
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between">
               <div class="flex items-center gap-1.5">
                 <div class="bg-[#4C8BC2] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
               </div>
               <div class="flex-1 flex flex-col justify-center py-3">
-                <h3 class="text-[#4C8BC2] text-base font-extrabold leading-tight mb-1.5">{{ slides[currentPreviewSlide].headline }}</h3>
-                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5">{{ slides[currentPreviewSlide].subheadline }}</p>
-                <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-300 text-[10px] leading-relaxed line-clamp-4">{{ slides[currentPreviewSlide].body_text }}</p>
+                <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
+                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
+                <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-200 text-[10px] leading-relaxed line-clamp-4 drop-shadow" data-testid="preview-body">{{ slides[currentPreviewSlide].body_text }}</p>
               </div>
               <div v-if="slides[currentPreviewSlide].cta_text">
                 <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[11px]">{{ slides[currentPreviewSlide].cta_text }}</div>
@@ -1619,6 +1842,44 @@ onMounted(() => {
         Weiter &#8594;
       </button>
     </div>
+
+    <!-- Delete Slide Confirmation Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteSlideConfirm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click.self="cancelRemoveSlide"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 transform transition-all" data-testid="delete-slide-modal">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <span class="text-lg">&#9888;</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Slide entfernen?</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Slide {{ slideToDeleteIndex + 1 }} wird unwiderruflich entfernt.
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button
+              @click="cancelRemoveSlide"
+              class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Abbrechen
+            </button>
+            <button
+              @click="confirmRemoveSlide"
+              class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+              data-testid="confirm-delete-slide-btn"
+            >
+              Entfernen
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
