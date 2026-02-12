@@ -1,5 +1,45 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #83: Post history filter by date range works
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented date range filtering for the Post History page (both backend and frontend)
+- Backend: Added `date_from` and `date_to` optional query parameters to `GET /api/posts`
+  - Filters on `created_at` field using YYYY-MM-DD format
+  - `date_to` includes the entire end day (23:59:59)
+- Frontend: Added date range filter UI row to HistoryView.vue with:
+  - Quick preset buttons: "Letzte 7 Tage", "Letzte 30 Tage", "Letzte 90 Tage"
+  - Active preset highlighting (blue background when matching current range)
+  - Custom Von/Bis date inputs for arbitrary ranges
+  - Clear date filter (X) button
+  - Date range included in activeFilters count and cleared by "Filter zuruecksetzen"
+  - Both client-side (filteredPosts computed) and server-side (API params) filtering
+
+### Files modified:
+- backend/app/api/routes/posts.py - Added date_from/date_to query parameters with datetime parsing
+- frontend/src/views/HistoryView.vue - Added date range filter UI, reactive state, preset/custom logic
+
+### Verification steps completed:
+1. Created 5 posts at different dates (today, 3d, 10d, 20d, 45d ago) - PASS
+2. "Letzte 7 Tage" filter -> 2 posts shown (TODAY + 3DAYS) - PASS
+3. "Letzte 30 Tage" filter -> 4 posts shown (TODAY + 3DAYS + 10DAYS + 20DAYS) - PASS
+4. "Letzte 90 Tage" filter -> 5 posts shown (all) - PASS
+5. Custom date range (Jan 20 - Feb 10) -> 3 posts shown (3DAYS + 10DAYS + 20DAYS) - PASS
+6. Clear filter -> all 5 posts return - PASS
+7. "Filter zuruecksetzen" clears date filter too - PASS
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Server restart persistence: all 5 posts persist, login works, date filter works after restart
+- [x] Screenshots captured: feature83-all-5-posts.png, feature83-last-7-days.png, feature83-last-30-days.png, feature83-custom-date-range.png, feature83-after-restart-7days.png
+
+### Current state:
+- Feature #83 marked as PASSING
+- 89/170 features passing (52.4%)
+
 ## Session - Feature #81: Post history can be filtered by platform
 **Date:** 2026-02-12
 **Status:** PASSING
