@@ -1,5 +1,60 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #157: AI image generation errors show user-friendly message
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented user-friendly error handling for AI image generation across backend and frontend
+- Backend: Wrapped file I/O and database operations in try/except with German error messages
+- Frontend: Mapped HTTP status codes to user-friendly German error messages in CreatePostView
+- Frontend: Fixed global API interceptor (api.js) to filter raw 500 error details, showing generic German message instead
+- Verified error messages are user-friendly (not raw API errors) for all error types
+
+### Code changes:
+1. **backend/app/api/routes/ai.py** - Added try/except around file save and DB operations (lines 550-599)
+   - OSError: "Das generierte Bild konnte nicht gespeichert werden. Bitte versuche es erneut."
+   - Exception: "Beim Speichern des generierten Bildes ist ein Fehler aufgetreten. Bitte versuche es erneut."
+2. **frontend/src/views/CreatePostView.vue** - Replaced raw error display with status-based message mapping
+   - 400: Pass through backend German validation messages
+   - 401/403: "Sitzung abgelaufen. Bitte melde dich erneut an."
+   - 429: "Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut."
+   - 500: Filter raw errors, use German-only messages or generic fallback
+   - Network: "Netzwerkfehler. Bitte pruefe deine Internetverbindung..."
+   - Timeout: "Die Anfrage hat zu lange gedauert..."
+3. **frontend/src/utils/api.js** - Fixed global interceptor to not pass through raw 500 error details as toast messages
+
+### Verification steps completed:
+1. Trigger image generation with server error - PASS
+   - Used ERROR_TEST prompt to simulate 500 error
+   - User sees: "Ein Serverfehler ist aufgetreten. Bitte versuche es erneut." (inline + toast)
+2. Verify error message is user-friendly - PASS
+   - Both inline alert and toast notification show German messages
+   - No raw API error strings exposed to user
+3. Verify raw errors are filtered - PASS
+   - Simulated raw error "NoneType object has no attribute 'image_bytes' at line 142"
+   - User sees generic German message instead of raw error
+4. Verify editor remains functional after error - PASS
+   - After error, typed new valid prompt and generated image successfully
+   - Image appeared in preview and assets list
+   - Navigation between steps works normally
+   - All form state preserved
+
+### Verification checklist:
+- [x] Error messages are user-friendly German text (not raw API errors)
+- [x] Editor remains functional after errors (can generate again successfully)
+- [x] Console.error logs technical details for developers
+- [x] Toast notifications also show friendly messages (global interceptor fixed)
+- [x] Zero mock data grep matches in frontend/src and backend/app
+- [x] Screenshots captured:
+  - feature157-step1-server-error-friendly-message.png
+  - feature157-step2-raw-error-filtered.png
+  - feature157-step3-editor-functional-after-error.png
+  - feature157-step4-editor-fully-functional.png
+
+### Current state:
+- Feature #157 marked as PASSING
+
 ## Session - Feature #155: Post creation stores country-specific data
 **Date:** 2026-02-13
 **Status:** PASSING
