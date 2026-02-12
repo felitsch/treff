@@ -101,8 +101,8 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
-    access_token = create_access_token(data={"sub": user.id})
-    new_refresh_token = create_refresh_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
+    new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
     return TokenResponse(
         access_token=access_token,

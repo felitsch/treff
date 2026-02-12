@@ -1,5 +1,41 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #14: JWT tokens refresh automatically before expiry
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed critical bug in refresh endpoint: `user.id` was passed as integer instead of `str(user.id)`, causing `JWTClaimsError: Subject must be a string` when the refreshed token was used for authenticated API calls
+- The fix aligns the refresh endpoint with the login endpoint (both now use `str(user.id)`)
+- Verified the complete JWT refresh flow end-to-end via API and browser automation
+
+### Bug fix:
+- **File:** `backend/app/api/routes/auth.py` (line 104-105)
+- **Before:** `create_access_token(data={"sub": user.id})` (integer sub claim)
+- **After:** `create_access_token(data={"sub": str(user.id)})` (string sub claim)
+- Same fix for `create_refresh_token` on the same endpoint
+
+### Verification steps completed:
+1. Login and capture access token - PASS (tokens returned with correct structure)
+2. Verify access token has short expiry (1 hour) - PASS (59.8 minutes, type="access")
+3. Verify refresh token exists with longer expiry (7 days) - PASS (7.0 days, type="refresh")
+4. Call POST /api/auth/refresh with refresh token - PASS (HTTP 200, new tokens returned)
+5. Verify new access token is returned - PASS (different token, valid JWT, same user sub)
+6. Verify old access token is replaced in app state - PASS (browser test: set invalid token, navigated to /history, interceptor auto-refreshed, page loaded successfully, localStorage updated with new valid JWT)
+
+### Additional verification:
+- Zero JavaScript console errors
+- Zero mock data pattern matches in frontend/src and backend/app
+- New access token successfully used for /api/auth/me endpoint
+- Frontend axios interceptor correctly handles 401 -> refresh -> retry flow
+- Screenshots captured: feature14-token-refresh-success.png
+
+### Current state:
+- 37/163 features passing (22.7%)
+- Feature #14 marked as PASSING
+
+---
+
 ## Session - Feature #12: User can logout successfully
 **Date:** 2026-02-12
 **Status:** PASSING
