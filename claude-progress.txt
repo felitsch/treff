@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #115: Search with only whitespace returns all results
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Fixed whitespace-only search handling in both frontend and backend
+- Whitespace-only search now correctly returns all results instead of filtering
+
+### Files modified:
+- frontend/src/views/HistoryView.vue:
+  - `filteredPosts` computed: added `.trim()` before checking searchQuery
+  - `activeFilters` computed: added `.trim()` so whitespace doesn't count as active filter
+  - `fetchPosts()`: added `.trim()` before sending search param to API
+  - Empty state v-if: added `.trim()` check for searchQuery
+- backend/app/api/routes/posts.py:
+  - `list_posts()`: added `.strip()` check so whitespace-only search doesn't apply ILIKE filter
+
+### Verification steps completed:
+1. Navigate to History - PASS (logged in as whitespace115@treff.de, navigated to /history)
+2. Enter only spaces in search box - PASS (typed 5 spaces via keyboard)
+3. Verify app does not crash - PASS (zero console errors, page renders normally)
+4. Verify all results shown - PASS:
+   - "1 Post gefunden" displayed (same as no search)
+   - WHITESPACE_TEST_115_Post fully visible
+   - No "Filter zuruecksetzen" button (whitespace not counted as active filter)
+5. Normal search still works - PASS:
+   - "NONEXISTENT_TERM_XYZ" correctly shows "Keine Posts gefunden"
+   - "Filter zuruecksetzen (1)" button appears for real search terms
+6. Backend API test - PASS:
+   - GET /api/posts?search=%20%20%20 returns all posts (same as no search)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Screenshots captured:
+  - feature115-step1-history-with-post.png (history page with 1 post, no search)
+  - feature115-step2-whitespace-search-all-results.png (5 spaces typed, all results shown)
+  - feature115-step3-spaces-fill-all-results.png (3 spaces filled, all results shown)
+
+### Current state:
+- Feature #115 marked as PASSING
+- 119/170 features passing (70.0%)
+
 ## Session - Feature #117: Asset library empty state shows upload guidance
 **Date:** 2026-02-12
 **Status:** PASSING
