@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #46: Drag-and-drop slide reordering works in carousel
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Added vuedraggable (already installed) to CreatePostView.vue Step 7 slide editor
+  - Replaced static slide tab buttons with draggable component
+  - Added drag handles, ghost class animation, dragId management
+  - Strip dragId before saving to prevent DB pollution
+- Complete rewrite of EditPostView.vue from 12-line placeholder to full ~340-line editor
+  - Two-column layout: edit panel (left) + live preview (right)
+  - Drag-and-drop slide reordering with same vuedraggable pattern
+  - Editable fields: headline, subheadline, body_text, cta_text per slide
+  - Caption/hashtag editing, post info bar, slide navigation dots
+  - Saves reordered slides to /api/posts/:id via PUT
+- Fixed backend slides.py: added slide_to_dict() helper to avoid MissingGreenlet errors,
+  proper field filtering, db.commit() calls
+
+### Verification:
+- Created carousel post via API with 5 distinctly-named slides (SLIDE-A through SLIDE-E)
+- Dragged Slide 3 (SLIDE-C) to position 1 in EditPostView
+- Verified editor and preview both updated correctly
+- Saved post, re-opened from History - order persisted
+- Server restart: killed both servers, restarted via init.sh
+- Logged back in, verified post #30 still shows SLIDE-C as Slide 1
+- Database confirmed reordered slide_data in treff.db
+- Zero mock data patterns, zero console errors
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue (added vuedraggable to Step 7)
+- frontend/src/views/EditPostView.vue (complete rewrite with drag-and-drop)
+- backend/app/api/routes/slides.py (fixed serialization and commits)
+
+---
+
 ## Session - Feature #61: Calendar monthly view displays scheduled posts
 **Date:** 2026-02-12
 **Status:** PASSING
