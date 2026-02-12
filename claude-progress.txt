@@ -1,5 +1,41 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #21: Default templates cannot be deleted
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that default (system) templates are fully protected from deletion at both UI and API levels
+- No code changes needed - protection was already implemented in previous sessions
+
+### Verification steps completed:
+1. Navigate to Templates page - PASS (22 von 22 Templates shown)
+2. Find a default (system) template - PASS (e.g., "Erfahrungsbericht Carousel" with green "Standard" badge)
+3. Hover over default template - ONLY "Vorschau" overlay shown, NO edit or delete buttons
+4. Hover over custom template "EDITED_TEMPLATE" - Both edit (pencil) and delete (trash) buttons visible
+5. Attempted DELETE /api/templates/4 (default template "Erfahrungsbericht Carousel") via API
+6. API returned 403 Forbidden with body: {"detail": "Cannot delete default templates"} - PASS
+
+### Implementation details (already in place):
+- Frontend: `v-if="!template.is_default"` wraps entire action buttons container (edit + delete)
+- Backend: DELETE endpoint checks `if template.is_default:` and returns HTTPException(403, "Cannot delete default templates")
+- Default templates show green "Standard" badge, custom templates show blue "Eigenes" badge
+
+### Mock data grep results: All checks clean (zero matches in frontend/src and backend/app)
+### Console errors: 0 errors
+### Network: All requests successful, no 500s
+
+### Screenshots:
+- feature21-step1-templates-page.png - Templates page showing default templates with Standard badge
+- feature21-step2-hover-default-no-buttons.png - Hovering default template shows only "Vorschau", no action buttons
+- feature21-step3-hover-custom-with-buttons.png - Hovering custom template shows edit + delete buttons
+
+### Current state:
+- Feature #21 marked as PASSING
+- 42/163 features passing (25.8%)
+
+---
+
 ## Session - Feature #20: User can delete a custom template
 **Date:** 2026-02-12
 **Status:** PASSING
