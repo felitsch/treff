@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #62: Calendar weekly view shows posts with time slots
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full calendar weekly view with hourly time slots (06:00-23:00)
+- Added view mode toggle (Monat/Woche) to switch between monthly and weekly views
+- Integrated collapsible unscheduled posts sidebar with drag-and-drop scheduling
+- Added /api/calendar/unscheduled backend endpoint
+
+### Frontend changes (CalendarView.vue):
+- Added viewMode state with 'month'/'week' toggle
+- Weekly view state: weekDate, weekPostsByDate, weekStartDate, weekEndDate
+- weekDays computed: builds 7-day Mon-Sun array with German day names and post counts
+- weekLabel computed: "10. - 16. Februar 2026" format with cross-month support
+- timeSlots array: 18 hourly slots from 06:00 to 23:00
+- getPostsAtTimeSlot(): filters posts by hour for correct time placement
+- getAllDayPosts(): shows posts without scheduled_time in all-day row
+- fetchWeek(): calls /api/calendar/week endpoint
+- Week navigation (prev/next week, go to today)
+- 8-column grid layout: time column + 7 day columns
+- Day headers with date, post count, today highlighting
+- "Ganzt." (all-day) row for posts without scheduled_time
+- Scrollable time slot rows with post cards showing category icon, title, platform, time, status
+- Collapsible sidebar with unscheduled posts list, drag-and-drop to calendar dates
+- Schedule time picker modal dialog for dropped posts
+- Category colors, platform icons, status indicators consistent with monthly view
+
+### Backend changes (calendar.py):
+- Added /api/calendar/unscheduled endpoint for fetching unscheduled draft posts
+- Added 'or_' import for search functionality
+
+### Verification steps completed:
+1. Navigate to Calendar page - PASS (loads with Monat/Woche toggle)
+2. Switch to weekly view - PASS (Woche button, week grid renders correctly)
+3. Week days displayed with time slots - PASS (Mon-Sun columns, 06:00-23:00 rows)
+4. Scheduled posts at correct times - PASS (4 test posts verified at 08:00, 10:00, 15:00, 18:00)
+5. Zero console errors - PASS
+6. Data persists after server restart - PASS
+7. No mock/hardcoded data in implementation - PASS
+
+---
+
 ## Session - Feature #60: Asset crop and resize tool works correctly
 **Date:** 2026-02-12
 **Status:** PASSING
