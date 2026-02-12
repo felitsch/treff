@@ -11,6 +11,7 @@ from app.models.post import Post
 from app.models.asset import Asset
 from app.models.calendar_entry import CalendarEntry
 from app.models.content_suggestion import ContentSuggestion
+from app.models.setting import Setting
 
 router = APIRouter()
 
@@ -328,11 +329,35 @@ async def get_goals(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get weekly/monthly targets vs actual."""
+    """Get weekly/monthly targets vs actual.
+
+    Reads target values from user settings (posts_per_week, posts_per_month).
+    Falls back to defaults (4/week, 16/month) if no settings exist.
+    """
     now = datetime.now(timezone.utc)
     week_start = now - timedelta(days=now.weekday())
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Read user-configured targets from settings
+    settings_result = await db.execute(
+        select(Setting).where(
+            Setting.user_id == user_id,
+            Setting.key.in_(["posts_per_week", "posts_per_month"]),
+        )
+    )
+    user_settings = {s.key: s.value for s in settings_result.scalars().all()}
+
+    # Parse targets with defaults
+    try:
+        weekly_target = int(user_settings.get("posts_per_week", "4"))
+    except (ValueError, TypeError):
+        weekly_target = 4
+
+    try:
+        monthly_target = int(user_settings.get("posts_per_month", "16"))
+    except (ValueError, TypeError):
+        monthly_target = 16
 
     week_result = await db.execute(
         select(func.count(Post.id)).where(
@@ -351,8 +376,8 @@ async def get_goals(
     monthly_actual = month_result.scalar() or 0
 
     return {
-        "weekly_target": 4,
+        "weekly_target": weekly_target,
         "weekly_actual": weekly_actual,
-        "monthly_target": 16,
+        "monthly_target": monthly_target,
         "monthly_actual": monthly_actual,
     }
