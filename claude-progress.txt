@@ -1,5 +1,57 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #132: Text overflow handled with ellipsis or wrapping
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete text overflow handling end-to-end via browser
+- Created posts with very long titles (200+ characters) including both normal text and non-breaking single-word text
+- History list: titles truncated with ellipsis via Tailwind `truncate` class (pre-existing, working correctly)
+- Dashboard "Letzte Posts": titles truncated with ellipsis (pre-existing, working correctly)
+- Calendar views: titles truncated with ellipsis (pre-existing, working correctly)
+- Delete dialog: long titles properly wrapped with `break-words`/`break-all` (implemented by feature #130)
+- Schedule dialog: long titles properly wrapped with `break-words`/`break-all` (implemented by feature #130)
+
+### Verification steps completed:
+1. Create post with very long title (200+ characters) - PASS
+   - Created post #154 with 250+ char title with spaces: "OVERFLOW_TEST_132 Dies ist ein extrem langer Titel..."
+   - Created post #155 with 120+ char non-breaking title: "NOBREAK_TEST_132_EinSehrLangesWort..."
+2. Navigate to History list - PASS
+   - Both posts visible with truncated titles ending in "..."
+   - No layout breaking, cards maintain structure (thumbnail, status badge, action buttons aligned)
+3. Verify title is truncated with ellipsis or properly wrapped - PASS
+   - History: `truncate` class on h3 + `min-w-0` on parent flex container = proper ellipsis
+   - Dashboard: `truncate` class on p + `min-w-0` on parent flex container = proper ellipsis
+   - Calendar: `truncate` class on span + `min-w-0` on parent = proper ellipsis
+   - Delete dialog: `break-words`/`break-all` wraps long titles within dialog boundary
+   - Schedule dialog: `break-words`/`break-all` wraps long titles within dialog boundary
+4. Verify no layout breaking occurs - PASS
+   - All post cards maintain consistent height and alignment
+   - Action buttons, status badges, and thumbnails not displaced
+   - Dialogs stay within viewport boundaries
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No layout breaking in any view
+- [x] Test data cleaned up (posts 154 and 155 deleted)
+- [x] Screenshots captured:
+  - feature132-step1-history-overflow.png (History with truncated long titles)
+  - feature132-step2-dashboard-overflow.png (Dashboard with truncated long titles)
+  - feature132-step3-delete-dialog-overflow.png (Delete dialog BEFORE fix - overflow)
+  - feature132-step4-delete-dialog-fixed.png (Delete dialog AFTER fix - wrapped properly)
+  - feature132-step5-schedule-dialog-fixed.png (Schedule dialog - wrapped properly)
+  - feature132-step6-history-final.png (Final History view - all correct)
+
+### No additional code changes needed:
+- Feature #130 already added `break-words`/`break-all` classes to HistoryView.vue dialogs
+- All list views already had `truncate` + `min-w-0` for proper ellipsis truncation
+
+### Current state:
+- Feature #132 marked as PASSING
+- 134/170 features passing (78.8%)
+
 ## Session - Feature #130: No horizontal scroll on any page at any viewport
 **Date:** 2026-02-12
 **Status:** PASSING
