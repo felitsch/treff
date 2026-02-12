@@ -1,5 +1,45 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #17: Templates can be filtered by platform format
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified that platform format filtering on the Templates page works correctly end-to-end
+- No code changes needed for the filtering itself - it was already implemented:
+  - Frontend: TemplatesView.vue has `selectedPlatform` dropdown and `filteredTemplates` computed property
+  - Backend: GET /api/templates supports `platform_format` query parameter
+- Also committed previously uncommitted template editor enhancements (save mode, edit button)
+
+### Verification steps completed:
+1. Navigate to Templates page - PASS (URL: /templates, 21 von 21 Templates shown)
+2. Select platform filter: Instagram Feed (1:1) - PASS (dropdown shows "1:1 Feed" selected)
+3. Verify only square format templates shown - PASS:
+   - 9 von 21 Templates displayed
+   - All 9 templates show "1:1 Feed" badge and "1080x1080" dimensions
+   - Templates: Erfahrungsbericht Quote, FAQ Carousel, Foto-Post mit Overlay, Fristen & CTA Bold, Infografik Vergleich, Kanada Abenteuer, Laender-Spotlight Feed, USA Highschool Spotlight, Tipps & Tricks Carousel
+4. Select platform filter: Story/TikTok (9:16) - PASS (dropdown shows "9:16 Story" selected)
+5. Verify only vertical format templates shown - PASS:
+   - 7 von 21 Templates displayed
+   - All 7 templates show "9:16 Story" badge and "1080x1920" dimensions
+   - Templates: FAQ Story, Fristen & CTA Story, Laender-Spotlight Story, Reel Thumbnail Bold, Story Countdown, Story Poll, Tipps & Tricks Story
+
+### Additional verification:
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All 6 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Filter reset button ("Filter zuruecksetzen") appears when filter is active
+- Template count updates correctly (e.g., "9 von 21 Templates")
+- Screenshots captured: feature17-step1-all-templates.png, feature17-step2-feed-square-filter.png, feature17-step4-story-filter.png
+
+### Current state:
+- 39/163 features passing (23.9%)
+- Feature #17 marked as PASSING
+
+### Next steps:
+- Continue with remaining UI-Backend Integration features
+
+---
+
 ## Session - Feature #16: Templates can be filtered by category
 **Date:** 2026-02-12
 **Status:** PASSING
