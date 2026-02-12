@@ -222,32 +222,58 @@ onMounted(() => {
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Headline</label>
             <input
               v-model="slides[currentPreviewSlide].headline"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
-            <span class="text-xs text-gray-400">{{ slides[currentPreviewSlide].headline?.length || 0 }} Zeichen</span>
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(slides[currentPreviewSlide].headline?.length || 0) > 40" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-else-if="(slides[currentPreviewSlide].headline?.length || 0) > 30" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].headline?.length || 0 }}/40</span>
+            </div>
           </div>
           <div v-if="slides[currentPreviewSlide].subheadline !== undefined">
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Subheadline</label>
             <input
               v-model="slides[currentPreviewSlide].subheadline"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 60" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-else-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 45" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].subheadline?.length || 0 }}/60</span>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Text</label>
             <textarea
               v-model="slides[currentPreviewSlide].body_text"
               rows="3"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
-            <span class="text-xs text-gray-400">{{ slides[currentPreviewSlide].body_text?.length || 0 }} Zeichen</span>
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(slides[currentPreviewSlide].body_text?.length || 0) > 200" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-else-if="(slides[currentPreviewSlide].body_text?.length || 0) > 150" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].body_text?.length || 0 }}/200</span>
+            </div>
           </div>
           <div v-if="slides[currentPreviewSlide].cta_text !== undefined">
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA</label>
             <input
               v-model="slides[currentPreviewSlide].cta_text"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent"
+              :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 25" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-else-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 20" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].cta_text?.length || 0 }}/25</span>
+            </div>
           </div>
         </div>
 
@@ -256,14 +282,27 @@ onMounted(() => {
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Instagram Caption</label>
             <textarea v-model="captionInstagram" rows="3"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              :class="(captionInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (captionInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(captionInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Instagram-Limit ueberschritten (max 2.200)</span>
+              <span v-else-if="(captionInstagram?.length || 0) > 1800" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Instagram-Limit</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(captionInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : (captionInstagram?.length || 0) > 1800 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ captionInstagram?.length || 0 }}/2.200</span>
+            </div>
           </div>
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"># Hashtags</label>
             <textarea v-model="hashtagsInstagram" rows="2"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#4C8BC2] focus:border-transparent resize-none"
+              :class="(hashtagsInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
             ></textarea>
+            <div class="flex items-center justify-between mt-0.5">
+              <span v-if="(hashtagsInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit ueberschritten</span>
+              <span v-else class="text-xs text-gray-400"></span>
+              <span class="text-xs" :class="(hashtagsInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-gray-400'">{{ hashtagsInstagram?.length || 0 }} Zeichen</span>
+            </div>
           </div>
         </div>
       </div>
