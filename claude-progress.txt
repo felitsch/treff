@@ -1,5 +1,46 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #119: Unsaved changes warning before leaving editor
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented and verified unsaved changes detection and warning dialog for both CreatePostView and EditPostView
+- Created useUnsavedChanges composable with Vue Router onBeforeRouteLeave guard and browser beforeunload handler
+- Added Teleport-based warning dialog matching existing modal pattern (dark mode support, backdrop blur)
+
+### Files created/modified:
+- frontend/src/composables/useUnsavedChanges.js - New composable with isDirty callback, route guard, beforeunload handler
+- frontend/src/views/CreatePostView.vue - Added import, composable setup (dirty = hasWorkflowState && !exportComplete), dialog template
+- frontend/src/views/EditPostView.vue - Added import, initial state tracking, composable setup (dirty = current != initial), dialog template
+
+### Verification steps completed:
+1. Open post editor and make changes - PASS (selected FAQ category on Create Post page)
+2. Try to navigate away via sidebar - PASS (clicked Dashboard link, dialog appeared)
+3. Verify unsaved changes warning dialog appears - PASS:
+   - Dialog shows "Ungespeicherte Aenderungen" heading
+   - Message: "Du hast ungespeicherte Aenderungen. Wenn du die Seite verlaesst, gehen diese verloren."
+   - Two buttons: "Auf Seite bleiben" and "Verwerfen & Verlassen"
+   - URL remains /create-post (navigation intercepted)
+4. Click Cancel to stay on page - PASS (dialog dismissed, URL still /create-post)
+5. Verify changes are preserved - PASS (advanced to Step 2 successfully, confirming category selection preserved)
+6. Click Leave/Discard - PASS (clicked "Verwerfen & Verlassen", dialog dismissed)
+7. Verify navigation proceeds - PASS (URL changed to /dashboard, Dashboard content loaded)
+
+### Additional verification:
+- Clean state navigation: No dialog when navigating from reset/empty workflow - PASS
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Screenshots captured:
+  - feature119-unsaved-changes-dialog.png (dialog visible with both buttons)
+  - feature119-stay-on-page-preserved.png (state preserved after cancel)
+  - feature119-step7-dashboard-after-leave.png (successful navigation after discard)
+
+### Current state:
+- Feature #119 marked as PASSING
+- 122/170 features passing (71.8%)
+
+
 ## Session - Feature #120: Direct URL access to post editor with valid ID works
 **Date:** 2026-02-12
 **Status:** PASSING
