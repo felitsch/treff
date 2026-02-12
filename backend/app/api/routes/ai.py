@@ -547,46 +547,59 @@ async def generate_image(
         logger.info(f"Generating local branded image for: {prompt[:50]}...")
         image_bytes = _generate_placeholder_image(prompt, req_width, req_height)
 
-    # Save image to disk
-    unique_filename = f"ai_{uuid.uuid4().hex[:12]}.png"
-    file_path = ASSETS_UPLOAD_DIR / unique_filename
+    # Save image to disk and database with proper error handling
+    try:
+        unique_filename = f"ai_{uuid.uuid4().hex[:12]}.png"
+        file_path = ASSETS_UPLOAD_DIR / unique_filename
 
-    with open(file_path, "wb") as f:
-        f.write(image_bytes)
+        with open(file_path, "wb") as f:
+            f.write(image_bytes)
 
-    # Get dimensions
-    img = Image.open(io.BytesIO(image_bytes))
-    width, height = img.size
+        # Get dimensions
+        img = Image.open(io.BytesIO(image_bytes))
+        width, height = img.size
 
-    # Save to asset library
-    asset = Asset(
-        user_id=user_id,
-        filename=unique_filename,
-        original_filename=f"AI: {prompt[:80]}",
-        file_path=f"/uploads/assets/{unique_filename}",
-        file_type="image/png",
-        file_size=len(image_bytes),
-        width=width,
-        height=height,
-        source="ai_generated",
-        ai_prompt=prompt,
-        category=category,
-        country=country,
-        tags="ai,generated",
-    )
-    db.add(asset)
-    await db.flush()
-    await db.refresh(asset)
+        # Save to asset library
+        asset = Asset(
+            user_id=user_id,
+            filename=unique_filename,
+            original_filename=f"AI: {prompt[:80]}",
+            file_path=f"/uploads/assets/{unique_filename}",
+            file_type="image/png",
+            file_size=len(image_bytes),
+            width=width,
+            height=height,
+            source="ai_generated",
+            ai_prompt=prompt,
+            category=category,
+            country=country,
+            tags="ai,generated",
+        )
+        db.add(asset)
+        await db.flush()
+        await db.refresh(asset)
 
-    asset_data = asset_to_dict(asset)
+        asset_data = asset_to_dict(asset)
 
-    return {
-        "status": "success",
-        "image_url": f"/api/uploads/assets/{unique_filename}",
-        "asset": asset_data,
-        "source": source,
-        "message": "Bild erfolgreich generiert!" if source == "gemini" else "Bild generiert (lokale Vorschau - fuer KI-Bilder Gemini API-Key in Einstellungen hinterlegen)",
-    }
+        return {
+            "status": "success",
+            "image_url": f"/api/uploads/assets/{unique_filename}",
+            "asset": asset_data,
+            "source": source,
+            "message": "Bild erfolgreich generiert!" if source == "gemini" else "Bild generiert (lokale Vorschau - fuer KI-Bilder Gemini API-Key in Einstellungen hinterlegen)",
+        }
+    except OSError as e:
+        logger.error(f"Failed to save AI-generated image to disk: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Das generierte Bild konnte nicht gespeichert werden. Bitte versuche es erneut.",
+        )
+    except Exception as e:
+        logger.error(f"Failed to store AI-generated image in database: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Beim Speichern des generierten Bildes ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+        )
 
 
 @router.post("/edit-image")

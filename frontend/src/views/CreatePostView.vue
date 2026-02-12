@@ -529,7 +529,36 @@ async function generateAiImage() {
     await loadAssets()
   } catch (e) {
     console.error('AI image generation failed:', e)
-    aiImageError.value = 'Bildgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+    // Map API errors to user-friendly German messages
+    const status = e.response?.status
+    const detail = e.response?.data?.detail || ''
+    let friendlyMessage = ''
+    if (status === 400) {
+      // Validation errors from backend are already user-friendly (German)
+      friendlyMessage = detail || 'Ungueltige Eingabe. Bitte ueberprüfe deinen Prompt.'
+    } else if (status === 401 || status === 403) {
+      friendlyMessage = 'Sitzung abgelaufen. Bitte melde dich erneut an.'
+    } else if (status === 429) {
+      friendlyMessage = 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.'
+    } else if (status === 500) {
+      // Backend 500 errors: use detail only if it looks like a user-friendly German message.
+      // Check for known German user-friendly phrases; otherwise show generic German fallback.
+      const knownGermanPhrases = [
+        'Bitte', 'Fehler', 'Serverfehler', 'konnte nicht', 'aufgetreten',
+        'Speichern', 'generiert', 'versuche', 'erneut',
+      ]
+      const looksUserFriendly = knownGermanPhrases.some(phrase => detail.includes(phrase))
+      friendlyMessage = (detail && looksUserFriendly)
+        ? detail
+        : 'Ein Serverfehler ist aufgetreten. Bitte versuche es erneut.'
+    } else if (e.code === 'ERR_NETWORK' || e.message?.includes('Network Error')) {
+      friendlyMessage = 'Netzwerkfehler. Bitte pruefe deine Internetverbindung und versuche es erneut.'
+    } else if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+      friendlyMessage = 'Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.'
+    } else {
+      friendlyMessage = 'Die Bildgenerierung ist leider fehlgeschlagen. Bitte versuche es erneut.'
+    }
+    aiImageError.value = friendlyMessage
   } finally {
     generatingImage.value = false
   }

@@ -65,8 +65,12 @@ api.interceptors.response.use(
       // Extract user-friendly message from API response
       const detail = error.response?.data?.detail
       let message
-      if (typeof detail === 'string') {
-        message = messageTranslations[detail] || detail
+      if (typeof detail === 'string' && messageTranslations[detail]) {
+        // Known English message with a German translation
+        message = messageTranslations[detail]
+      } else if (typeof detail === 'string' && error.response?.status !== 500) {
+        // Non-500 detail strings are often user-friendly (e.g. validation errors in German)
+        message = detail
       } else if (error.response?.status === 404) {
         message = 'Die angeforderte Ressource wurde nicht gefunden.'
       } else if (error.response?.status === 500) {

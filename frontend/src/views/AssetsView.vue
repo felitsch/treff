@@ -3,6 +3,9 @@ import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
 import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 
+// Tab state
+const activeTab = ref('library') // 'library' or 'stock'
+
 // State
 const assets = ref([])
 const loading = ref(true)
@@ -18,6 +21,16 @@ const selectedCountry = ref('all')
 const showDeleteConfirm = ref(null)
 const showCropModal = ref(false)
 const cropAsset = ref(null)
+
+// Stock photo state
+const stockSearchQuery = ref('')
+const stockSource = ref('unsplash')
+const stockResults = ref([])
+const stockLoading = ref(false)
+const stockError = ref(null)
+const stockImporting = ref({}) // track which photos are being imported by id
+const stockImportSuccess = ref({}) // track successfully imported photos by id
+const stockSearched = ref(false) // track if a search has been performed
 
 // Open crop tool for an asset
 function openCropTool(asset) {
@@ -126,7 +139,7 @@ async function uploadFile(file) {
 
   // Validate file size (max 20MB)
   if (file.size > 20 * 1024 * 1024) {
-    uploadError.value = 'Datei ist zu groß (max. 20 MB)'
+    uploadError.value = 'Datei ist zu gross (max. 20 MB)'
     return
   }
 
@@ -261,6 +274,67 @@ function fileTypeLabel(type) {
   return type.replace('image/', '').toUpperCase()
 }
 
+// Stock photo search
+async function searchStockPhotos() {
+  const query = stockSearchQuery.value.trim()
+  if (!query) return
+
+  stockLoading.value = true
+  stockError.value = null
+  stockResults.value = []
+  stockSearched.value = true
+
+  try {
+    const response = await api.get('/api/assets/stock/search', {
+      params: {
+        query,
+        source: stockSource.value,
+        per_page: 12,
+      },
+    })
+    stockResults.value = response.data.results || []
+  } catch (err) {
+    stockError.value = err.response?.data?.detail || 'Fehler bei der Stock-Foto-Suche'
+  } finally {
+    stockLoading.value = false
+  }
+}
+
+// Handle Enter key in stock search
+function onStockSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    searchStockPhotos()
+  }
+}
+
+// Import stock photo to library
+async function importStockPhoto(photo) {
+  if (stockImporting.value[photo.id]) return // prevent double-click
+
+  stockImporting.value = { ...stockImporting.value, [photo.id]: true }
+
+  try {
+    const response = await api.post('/api/assets/stock/import', {
+      download_url: photo.download_url,
+      description: photo.description,
+      photographer: photo.photographer,
+      source: photo.source,
+      source_url: photo.source_url,
+      width: photo.width,
+      height: photo.height,
+      category: 'photo',
+    })
+
+    // Add the imported asset to the library
+    assets.value.unshift(response.data)
+    stockImportSuccess.value = { ...stockImportSuccess.value, [photo.id]: true }
+  } catch (err) {
+    stockError.value = err.response?.data?.detail || 'Import fehlgeschlagen'
+  } finally {
+    stockImporting.value = { ...stockImporting.value, [photo.id]: false }
+  }
+}
+
 onMounted(fetchAssets)
 </script>
 
@@ -279,315 +353,516 @@ onMounted(fetchAssets)
       </div>
     </div>
 
-    <!-- Upload Drop Zone -->
-    <div
-      class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer"
-      :class="[
-        isDragOver
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-gray-800',
-        uploading ? 'pointer-events-none opacity-75' : ''
-      ]"
-      @dragenter="onDragEnter"
-      @dragover="onDragOver"
-      @dragleave="onDragLeave"
-      @drop="onDrop"
-      @click="$refs.fileInput.click()"
-      data-testid="drop-zone"
-    >
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        class="hidden"
-        @change="onFileSelect"
-      />
-
-      <!-- Upload progress -->
-      <div v-if="uploading" class="space-y-3">
-        <div class="flex items-center justify-center">
-          <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-        <p class="text-sm font-medium text-blue-600 dark:text-blue-400" data-testid="upload-progress-text">
-          Wird hochgeladen... {{ uploadProgress }}%
-        </p>
-        <div class="w-full max-w-xs mx-auto bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div
-            class="bg-blue-500 h-2 rounded-full transition-all duration-300"
-            :style="{ width: uploadProgress + '%' }"
-            data-testid="upload-progress-bar"
-          ></div>
-        </div>
-      </div>
-
-      <!-- Default drop zone content -->
-      <div v-else>
-        <div class="flex justify-center mb-3">
-          <svg class="h-12 w-12 text-gray-400" :class="{ 'text-blue-500': isDragOver }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-        </div>
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-          <span v-if="isDragOver" class="text-blue-600 dark:text-blue-400">Datei hier ablegen</span>
-          <span v-else>
-            Bild hierher ziehen oder <span class="text-blue-600 dark:text-blue-400 underline">durchsuchen</span>
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700" data-testid="asset-tabs">
+      <nav class="flex gap-4 -mb-px">
+        <button
+          @click="activeTab = 'library'"
+          :class="[
+            'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+            activeTab === 'library'
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+          ]"
+          data-testid="tab-library"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Meine Assets
           </span>
-        </p>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          JPG, PNG oder WebP &middot; max. 20 MB
-        </p>
-      </div>
+        </button>
+        <button
+          @click="activeTab = 'stock'"
+          :class="[
+            'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+            activeTab === 'stock'
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+          ]"
+          data-testid="tab-stock"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Stock Fotos
+          </span>
+        </button>
+      </nav>
     </div>
 
-    <!-- Upload Metadata (Category & Country selection for uploads) -->
-    <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3" data-testid="upload-metadata">
-      <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 shrink-0">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-        <span class="font-medium">Upload-Tags:</span>
-      </div>
-      <select
-        v-model="uploadCategory"
-        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-        data-testid="upload-category-select"
-        @click.stop
-      >
-        <option value="">Kategorie (optional)</option>
-        <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-      <select
-        v-model="uploadCountry"
-        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-        data-testid="upload-country-select"
-        @click.stop
-      >
-        <option value="">Land (optional)</option>
-        <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-      <input
-        v-model="uploadTags"
-        type="text"
-        placeholder="Tags (z.B. kanada, landschaft)"
-        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 flex-1 min-w-[180px]"
-        data-testid="upload-tags-input"
-        @click.stop
-      />
-    </div>
-
-    <!-- Upload error -->
-    <div v-if="uploadError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2" role="alert">
-      <span class="text-red-500">&#9888;&#65039;</span>
-      <p class="text-sm text-red-700 dark:text-red-400">{{ uploadError }}</p>
-      <button @click="uploadError = null" class="ml-auto text-red-500 hover:text-red-700">&#10005;</button>
-    </div>
-
-    <!-- Filters and Search -->
-    <div class="flex flex-col sm:flex-row gap-3" data-testid="filter-bar">
-      <div class="relative flex-1">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Assets durchsuchen..."
-          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-      <select
-        v-model="selectedCategory"
-        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-        data-testid="filter-category"
-      >
-        <option value="all">Alle Kategorien</option>
-        <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-      <select
-        v-model="selectedCountry"
-        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-        data-testid="filter-country"
-      >
-        <option value="all">Alle Laender</option>
-        <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-      <select
-        v-model="selectedFilter"
-        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-        data-testid="filter-type"
-      >
-        <option value="all">Alle Typen</option>
-        <option value="jpeg">JPG</option>
-        <option value="png">PNG</option>
-        <option value="webp">WebP</option>
-      </select>
-      <button
-        v-if="hasActiveFilters"
-        @click="clearFilters"
-        class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        data-testid="clear-filters-btn"
-      >
-        Filter zuruecksetzen
-      </button>
-    </div>
-
-    <!-- Active filters indicator -->
-    <div v-if="hasActiveFilters" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" data-testid="active-filters-indicator">
-      <span>Aktive Filter:</span>
-      <span v-if="selectedCategory !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
-        {{ categoryLabel(selectedCategory) }}
-        <button @click="selectedCategory = 'all'" class="hover:text-blue-900 dark:hover:text-blue-100">&times;</button>
-      </span>
-      <span v-if="selectedCountry !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
-        {{ countryLabel(selectedCountry) }}
-        <button @click="selectedCountry = 'all'" class="hover:text-green-900 dark:hover:text-green-100">&times;</button>
-      </span>
-      <span v-if="selectedFilter !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-        {{ selectedFilter.toUpperCase() }}
-        <button @click="selectedFilter = 'all'" class="hover:text-purple-900 dark:hover:text-purple-100">&times;</button>
-      </span>
-      <span v-if="searchQuery.trim()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
-        "{{ searchQuery }}"
-        <button @click="searchQuery = ''" class="hover:text-yellow-900 dark:hover:text-yellow-100">&times;</button>
-      </span>
-      <span class="text-gray-400 dark:text-gray-500">&middot; {{ filteredAssets.length }} Ergebnis{{ filteredAssets.length !== 1 ? 'se' : '' }}</span>
-    </div>
-
-    <!-- Loading state -->
-    <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <div v-for="i in 8" :key="i" class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 text-center" role="alert">
-      <p class="text-red-600 dark:text-red-400">{{ error }}</p>
-      <button @click="fetchAssets" class="mt-3 px-4 py-2 text-sm bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-700">
-        Erneut versuchen
-      </button>
-    </div>
-
-    <!-- Empty state -->
-    <div v-else-if="filteredAssets.length === 0 && !loading" class="text-center py-12">
-      <div class="text-4xl mb-3">&#128444;&#65039;</div>
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
-        {{ assets.length === 0 ? 'Noch keine Assets' : 'Keine Treffer' }}
-      </h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-        {{ assets.length === 0 ? 'Lade dein erstes Bild hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
-      </p>
-      <button
-        v-if="hasActiveFilters"
-        @click="clearFilters"
-        class="mt-3 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-700"
-        data-testid="empty-clear-filters-btn"
-      >
-        Filter zuruecksetzen
-      </button>
-    </div>
-
-    <!-- Asset Grid -->
-    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="asset-grid">
+    <!-- ============== LIBRARY TAB ============== -->
+    <template v-if="activeTab === 'library'">
+      <!-- Upload Drop Zone -->
       <div
-        v-for="asset in filteredAssets"
-        :key="asset.id"
-        class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
-        :data-testid="`asset-${asset.id}`"
+        class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer"
+        :class="[
+          isDragOver
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-gray-800',
+          uploading ? 'pointer-events-none opacity-75' : ''
+        ]"
+        @dragenter="onDragEnter"
+        @dragover="onDragOver"
+        @dragleave="onDragLeave"
+        @drop="onDrop"
+        @click="$refs.fileInput.click()"
+        data-testid="drop-zone"
       >
-        <!-- Image thumbnail -->
-        <div class="aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
-          <img
-            :src="asset.file_path"
-            :alt="asset.original_filename || asset.filename"
-            class="w-full h-full object-cover"
-            loading="lazy"
-            @error="(e) => e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/%3E%3C/svg%3E'"
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          class="hidden"
+          @change="onFileSelect"
+        />
+
+        <!-- Upload progress -->
+        <div v-if="uploading" class="space-y-3">
+          <div class="flex items-center justify-center">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-blue-600 dark:text-blue-400" data-testid="upload-progress-text">
+            Wird hochgeladen... {{ uploadProgress }}%
+          </p>
+          <div class="w-full max-w-xs mx-auto bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div
+              class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              :style="{ width: uploadProgress + '%' }"
+              data-testid="upload-progress-bar"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Default drop zone content -->
+        <div v-else>
+          <div class="flex justify-center mb-3">
+            <svg class="h-12 w-12 text-gray-400" :class="{ 'text-blue-500': isDragOver }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span v-if="isDragOver" class="text-blue-600 dark:text-blue-400">Datei hier ablegen</span>
+            <span v-else>
+              Bild hierher ziehen oder <span class="text-blue-600 dark:text-blue-400 underline">durchsuchen</span>
+            </span>
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            JPG, PNG oder WebP &middot; max. 20 MB
+          </p>
+        </div>
+      </div>
+
+      <!-- Upload Metadata (Category & Country selection for uploads) -->
+      <div class="flex flex-col sm:flex-row gap-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3" data-testid="upload-metadata">
+        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 shrink-0">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <span class="font-medium">Upload-Tags:</span>
+        </div>
+        <select
+          v-model="uploadCategory"
+          class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          data-testid="upload-category-select"
+          @click.stop
+        >
+          <option value="">Kategorie (optional)</option>
+          <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <select
+          v-model="uploadCountry"
+          class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          data-testid="upload-country-select"
+          @click.stop
+        >
+          <option value="">Land (optional)</option>
+          <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <input
+          v-model="uploadTags"
+          type="text"
+          placeholder="Tags (z.B. kanada, landschaft)"
+          class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 flex-1 min-w-[180px]"
+          data-testid="upload-tags-input"
+          @click.stop
+        />
+      </div>
+
+      <!-- Upload error -->
+      <div v-if="uploadError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2" role="alert">
+        <span class="text-red-500">&#9888;&#65039;</span>
+        <p class="text-sm text-red-700 dark:text-red-400">{{ uploadError }}</p>
+        <button @click="uploadError = null" class="ml-auto text-red-500 hover:text-red-700">&#10005;</button>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="flex flex-col sm:flex-row gap-3" data-testid="filter-bar">
+        <div class="relative flex-1">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Assets durchsuchen..."
+            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
+          <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
+        <select
+          v-model="selectedCategory"
+          class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          data-testid="filter-category"
+        >
+          <option value="all">Alle Kategorien</option>
+          <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <select
+          v-model="selectedCountry"
+          class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          data-testid="filter-country"
+        >
+          <option value="all">Alle Laender</option>
+          <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <select
+          v-model="selectedFilter"
+          class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          data-testid="filter-type"
+        >
+          <option value="all">Alle Typen</option>
+          <option value="jpeg">JPG</option>
+          <option value="png">PNG</option>
+          <option value="webp">WebP</option>
+        </select>
+        <button
+          v-if="hasActiveFilters"
+          @click="clearFilters"
+          class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          data-testid="clear-filters-btn"
+        >
+          Filter zuruecksetzen
+        </button>
+      </div>
 
-        <!-- Asset info -->
-        <div class="p-2">
-          <p class="text-xs font-medium text-gray-900 dark:text-white truncate" :title="asset.original_filename || asset.filename">
-            {{ asset.original_filename || asset.filename }}
-          </p>
-          <div class="flex items-center justify-between mt-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400">
-              {{ formatSize(asset.file_size) }}
-            </span>
-            <span class="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-              {{ fileTypeLabel(asset.file_type) }}
-            </span>
-          </div>
-          <!-- Category, Country, and Tags badges -->
-          <div v-if="asset.category || asset.country || asset.tags" class="flex flex-wrap gap-1 mt-1.5">
-            <span
-              v-if="asset.category"
-              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-              :data-testid="`asset-${asset.id}-category`"
-            >
-              {{ categoryLabel(asset.category) }}
-            </span>
-            <span
-              v-if="asset.country"
-              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-              :data-testid="`asset-${asset.id}-country`"
-            >
-              {{ countryLabel(asset.country) }}
-            </span>
-            <span
-              v-for="tag in (asset.tags || '').split(',').map(t => t.trim()).filter(t => t)"
-              :key="tag"
-              class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-              :data-testid="`asset-${asset.id}-tag-${tag}`"
-            >
-              {{ tag }}
-            </span>
-          </div>
-          <p v-if="asset.width && asset.height" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            {{ asset.width }}&times;{{ asset.height }}px
-          </p>
-        </div>
+      <!-- Active filters indicator -->
+      <div v-if="hasActiveFilters" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" data-testid="active-filters-indicator">
+        <span>Aktive Filter:</span>
+        <span v-if="selectedCategory !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
+          {{ categoryLabel(selectedCategory) }}
+          <button @click="selectedCategory = 'all'" class="hover:text-blue-900 dark:hover:text-blue-100">&times;</button>
+        </span>
+        <span v-if="selectedCountry !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
+          {{ countryLabel(selectedCountry) }}
+          <button @click="selectedCountry = 'all'" class="hover:text-green-900 dark:hover:text-green-100">&times;</button>
+        </span>
+        <span v-if="selectedFilter !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
+          {{ selectedFilter.toUpperCase() }}
+          <button @click="selectedFilter = 'all'" class="hover:text-purple-900 dark:hover:text-purple-100">&times;</button>
+        </span>
+        <span v-if="searchQuery.trim()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
+          "{{ searchQuery }}"
+          <button @click="searchQuery = ''" class="hover:text-yellow-900 dark:hover:text-yellow-100">&times;</button>
+        </span>
+        <span class="text-gray-400 dark:text-gray-500">&middot; {{ filteredAssets.length }} Ergebnis{{ filteredAssets.length !== 1 ? 'se' : '' }}</span>
+      </div>
 
-        <!-- Hover overlay with crop and delete buttons -->
-        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-start justify-end p-2 pointer-events-none">
-          <div class="flex gap-1">
-            <!-- Crop button -->
-            <button
-              @click.stop="openCropTool(asset)"
-              class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
-              title="Bild zuschneiden"
-              aria-label="Bild zuschneiden"
-              :data-testid="`crop-btn-${asset.id}`"
-            >
-              <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
-            </button>
-            <!-- Delete button -->
-            <button
-              v-if="showDeleteConfirm === asset.id"
-              @click.stop="deleteAsset(asset.id)"
-              class="pointer-events-auto px-2 py-1 text-xs bg-red-500 text-white rounded shadow hover:bg-red-600 transition-colors"
-            >
-              Loeschen?
-            </button>
-            <button
-              v-else
-              @click.stop="showDeleteConfirm = asset.id"
-              class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-red-50 dark:hover:bg-red-900/30"
-              title="Asset loeschen"
-              aria-label="Asset loeschen"
-            >
-              <svg class="h-3.5 w-3.5 text-gray-500 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+      <!-- Loading state -->
+      <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div v-for="i in 8" :key="i" class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 text-center" role="alert">
+        <p class="text-red-600 dark:text-red-400">{{ error }}</p>
+        <button @click="fetchAssets" class="mt-3 px-4 py-2 text-sm bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-700">
+          Erneut versuchen
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="filteredAssets.length === 0 && !loading" class="text-center py-12">
+        <div class="text-4xl mb-3">&#128444;&#65039;</div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+          {{ assets.length === 0 ? 'Noch keine Assets' : 'Keine Treffer' }}
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          {{ assets.length === 0 ? 'Lade dein erstes Bild hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
+        </p>
+        <button
+          v-if="hasActiveFilters"
+          @click="clearFilters"
+          class="mt-3 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-700"
+          data-testid="empty-clear-filters-btn"
+        >
+          Filter zuruecksetzen
+        </button>
+      </div>
+
+      <!-- Asset Grid -->
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="asset-grid">
+        <div
+          v-for="asset in filteredAssets"
+          :key="asset.id"
+          class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+          :data-testid="`asset-${asset.id}`"
+        >
+          <!-- Image thumbnail -->
+          <div class="aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
+            <img
+              :src="asset.file_path"
+              :alt="asset.original_filename || asset.filename"
+              class="w-full h-full object-cover"
+              loading="lazy"
+              @error="(e) => e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/%3E%3C/svg%3E'"
+            />
+          </div>
+
+          <!-- Asset info -->
+          <div class="p-2">
+            <p class="text-xs font-medium text-gray-900 dark:text-white truncate" :title="asset.original_filename || asset.filename">
+              {{ asset.original_filename || asset.filename }}
+            </p>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ formatSize(asset.file_size) }}
+              </span>
+              <span class="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {{ fileTypeLabel(asset.file_type) }}
+              </span>
+            </div>
+            <!-- Category, Country, and Tags badges -->
+            <div v-if="asset.category || asset.country || asset.tags" class="flex flex-wrap gap-1 mt-1.5">
+              <span
+                v-if="asset.category"
+                class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                :data-testid="`asset-${asset.id}-category`"
+              >
+                {{ categoryLabel(asset.category) }}
+              </span>
+              <span
+                v-if="asset.country"
+                class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                :data-testid="`asset-${asset.id}-country`"
+              >
+                {{ countryLabel(asset.country) }}
+              </span>
+              <span
+                v-for="tag in (asset.tags || '').split(',').map(t => t.trim()).filter(t => t)"
+                :key="tag"
+                class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                :data-testid="`asset-${asset.id}-tag-${tag}`"
+              >
+                {{ tag }}
+              </span>
+            </div>
+            <p v-if="asset.width && asset.height" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              {{ asset.width }}&times;{{ asset.height }}px
+            </p>
+          </div>
+
+          <!-- Hover overlay with crop and delete buttons -->
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-start justify-end p-2 pointer-events-none">
+            <div class="flex gap-1">
+              <!-- Crop button -->
+              <button
+                @click.stop="openCropTool(asset)"
+                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                title="Bild zuschneiden"
+                aria-label="Bild zuschneiden"
+                :data-testid="`crop-btn-${asset.id}`"
+              >
+                <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+              <!-- Delete button -->
+              <button
+                v-if="showDeleteConfirm === asset.id"
+                @click.stop="deleteAsset(asset.id)"
+                class="pointer-events-auto px-2 py-1 text-xs bg-red-500 text-white rounded shadow hover:bg-red-600 transition-colors"
+              >
+                Loeschen?
+              </button>
+              <button
+                v-else
+                @click.stop="showDeleteConfirm = asset.id"
+                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-red-50 dark:hover:bg-red-900/30"
+                title="Asset loeschen"
+                aria-label="Asset loeschen"
+              >
+                <svg class="h-3.5 w-3.5 text-gray-500 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
+
+    <!-- ============== STOCK PHOTOS TAB ============== -->
+    <template v-if="activeTab === 'stock'">
+      <!-- Stock Photo Search -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6" data-testid="stock-search-panel">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Stock-Foto-Suche</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Durchsuche kostenlose Stock-Fotos von Unsplash und Pexels
+        </p>
+
+        <!-- Search input + source selector -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <input
+              v-model="stockSearchQuery"
+              type="text"
+              placeholder="z.B. school building, campus, highschool..."
+              class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              data-testid="stock-search-input"
+              @keydown="onStockSearchKeydown"
+            />
+            <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <select
+            v-model="stockSource"
+            class="px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+            data-testid="stock-source-select"
+          >
+            <option value="unsplash">Unsplash</option>
+            <option value="pexels">Pexels</option>
+          </select>
+          <button
+            @click="searchStockPhotos"
+            :disabled="!stockSearchQuery.trim() || stockLoading"
+            class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            data-testid="stock-search-btn"
+          >
+            <svg v-if="stockLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ stockLoading ? 'Suche...' : 'Suchen' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Stock Error -->
+      <div v-if="stockError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2" role="alert">
+        <span class="text-red-500">&#9888;&#65039;</span>
+        <p class="text-sm text-red-700 dark:text-red-400">{{ stockError }}</p>
+        <button @click="stockError = null" class="ml-auto text-red-500 hover:text-red-700">&#10005;</button>
+      </div>
+
+      <!-- Stock Loading -->
+      <div v-if="stockLoading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div v-for="i in 8" :key="i" class="bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse aspect-[3/2]"></div>
+      </div>
+
+      <!-- Stock Results -->
+      <div v-else-if="stockResults.length > 0" data-testid="stock-results">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {{ stockResults.length }} Ergebnis{{ stockResults.length !== 1 ? 'se' : '' }} fuer "{{ stockSearchQuery }}"
+            <span class="text-gray-400">via {{ stockSource === 'unsplash' ? 'Unsplash' : 'Pexels' }}</span>
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" data-testid="stock-results-grid">
+          <div
+            v-for="photo in stockResults"
+            :key="photo.id"
+            class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+            :data-testid="`stock-photo-${photo.id}`"
+          >
+            <!-- Preview thumbnail -->
+            <div class="aspect-[3/2] bg-gray-100 dark:bg-gray-700 overflow-hidden">
+              <img
+                :src="photo.thumbnail_url"
+                :alt="photo.description"
+                class="w-full h-full object-cover"
+                loading="lazy"
+                @error="(e) => e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/%3E%3C/svg%3E'"
+              />
+            </div>
+
+            <!-- Photo info -->
+            <div class="p-2">
+              <p class="text-xs font-medium text-gray-900 dark:text-white truncate" :title="photo.description">
+                {{ photo.description }}
+              </p>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ photo.width }}&times;{{ photo.height }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 truncate ml-1" :title="photo.photographer">
+                  {{ photo.photographer }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Import button overlay -->
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center pointer-events-none">
+              <button
+                v-if="stockImportSuccess[photo.id]"
+                class="pointer-events-auto px-4 py-2 text-sm font-medium bg-green-500 text-white rounded-lg shadow-lg flex items-center gap-2"
+                disabled
+                :data-testid="`stock-imported-${photo.id}`"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Importiert
+              </button>
+              <button
+                v-else
+                @click.stop="importStockPhoto(photo)"
+                :disabled="stockImporting[photo.id]"
+                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg disabled:opacity-50 flex items-center gap-2"
+                :data-testid="`stock-import-btn-${photo.id}`"
+              >
+                <svg v-if="stockImporting[photo.id]" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {{ stockImporting[photo.id] ? 'Importiere...' : 'Importieren' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state when no search yet -->
+      <div v-else-if="!stockLoading && !stockSearched" class="text-center py-12">
+        <div class="text-4xl mb-3">&#128270;</div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+          Stock-Fotos durchsuchen
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Gib einen Suchbegriff ein, um kostenlose Stock-Fotos zu finden.
+        </p>
+      </div>
+
+      <!-- No results after search -->
+      <div v-else-if="!stockLoading && stockSearched && stockResults.length === 0" class="text-center py-12">
+        <div class="text-4xl mb-3">&#128533;</div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+          Keine Ergebnisse
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Versuche einen anderen Suchbegriff.
+        </p>
+      </div>
+    </template>
 
     <!-- Crop Modal -->
     <AssetCropModal
