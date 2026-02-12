@@ -8,6 +8,12 @@ const templates = ref([])
 const selectedCategory = ref('')
 const selectedPlatform = ref('')
 
+// Delete template state
+const showDeleteModal = ref(false)
+const deletingTemplate = ref(null)
+const deleting = ref(false)
+const deleteError = ref(null)
+
 // Create template modal state
 const showCreateModal = ref(false)
 const creating = ref(false)
@@ -465,6 +471,48 @@ async function createTemplate() {
   }
 }
 
+// =============================================
+// Delete Template
+// =============================================
+function openDeleteModal(template) {
+  deletingTemplate.value = template
+  deleteError.value = null
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  deletingTemplate.value = null
+  deleteError.value = null
+}
+
+async function confirmDeleteTemplate() {
+  if (!deletingTemplate.value) return
+
+  deleting.value = true
+  deleteError.value = null
+
+  try {
+    await api.delete(`/api/templates/${deletingTemplate.value.id}`)
+
+    // Remove the template from the local list
+    templates.value = templates.value.filter(t => t.id !== deletingTemplate.value.id)
+
+    closeDeleteModal()
+  } catch (err) {
+    console.error('Failed to delete template:', err)
+    if (err.response?.data?.detail) {
+      deleteError.value = typeof err.response.data.detail === 'string'
+        ? err.response.data.detail
+        : 'Fehler beim Loeschen des Templates.'
+    } else {
+      deleteError.value = 'Template konnte nicht geloescht werden. Bitte versuche es erneut.'
+    }
+  } finally {
+    deleting.value = false
+  }
+}
+
 onMounted(() => {
   fetchTemplates()
 })
@@ -602,18 +650,31 @@ onMounted(() => {
             @click="openEditor(template)"
             data-testid="template-card"
           >
-            <!-- Edit button for custom templates -->
-            <button
-              v-if="!template.is_default"
-              @click.stop="openEditor(template, true)"
-              class="absolute top-3 right-3 z-10 p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-treff-blue hover:text-white text-gray-600 dark:text-gray-300 transition-all opacity-0 group-hover:opacity-100"
-              :title="'Template bearbeiten'"
-              data-testid="template-edit-btn"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
+            <!-- Action buttons for custom templates -->
+            <div v-if="!template.is_default" class="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+              <!-- Edit button -->
+              <button
+                @click.stop="openEditor(template, true)"
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-treff-blue hover:text-white text-gray-600 dark:text-gray-300 transition-all"
+                title="Template bearbeiten"
+                data-testid="template-edit-btn"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <!-- Delete button -->
+              <button
+                @click.stop="openDeleteModal(template)"
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-red-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all"
+                title="Template loeschen"
+                data-testid="template-delete-btn"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
             <!-- Visual Thumbnail -->
             <div class="relative">
               <div
@@ -1193,5 +1254,72 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <!-- =============================================
+         Delete Confirmation Modal
+         ============================================= -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal && deletingTemplate"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        data-testid="delete-template-modal"
+      >
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeDeleteModal"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+          <!-- Warning Icon -->
+          <div class="mx-auto w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+
+          <!-- Title -->
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            Template loeschen?
+          </h3>
+
+          <!-- Description -->
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Moechtest du das Template wirklich loeschen?
+          </p>
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-testid="delete-template-name">
+            "{{ deletingTemplate.name }}"
+          </p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-5">
+            Diese Aktion kann nicht rueckgaengig gemacht werden.
+          </p>
+
+          <!-- Error Message -->
+          <div v-if="deleteError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4 text-left">
+            <p class="text-red-600 dark:text-red-400 text-sm">{{ deleteError }}</p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center justify-center gap-3">
+            <button
+              @click="closeDeleteModal"
+              class="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              data-testid="delete-cancel-btn"
+            >
+              Abbrechen
+            </button>
+            <button
+              @click="confirmDeleteTemplate"
+              :disabled="deleting"
+              class="px-5 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              data-testid="delete-confirm-btn"
+            >
+              <svg v-if="deleting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ deleting ? 'Wird geloescht...' : 'Loeschen' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
