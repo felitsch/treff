@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import api from '@/utils/api'
@@ -25,6 +25,15 @@ const filterPlatform = ref('')
 const filterStatus = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
+
+// Debounced search
+let searchTimer = null
+function debouncedSearch() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    fetchPosts()
+  }, 200)
+}
 
 // Sorting
 const sortBy = ref('created_at')
@@ -677,6 +686,10 @@ function createPost() {
 onMounted(() => {
   fetchPosts()
 })
+
+onUnmounted(() => {
+  clearTimeout(searchTimer)
+})
 </script>
 
 <template>
@@ -753,7 +766,7 @@ onMounted(() => {
               placeholder="Posts durchsuchen..."
               aria-label="Posts durchsuchen"
               class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
-              @input="fetchPosts"
+              @input="debouncedSearch"
             />
           </div>
         </div>
