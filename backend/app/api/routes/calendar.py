@@ -279,3 +279,42 @@ async def get_calendar_stats(
         "posts_this_month": posts_this_month,
         "monthly_goal": monthly_goal,
     }
+
+
+@router.get("/queue")
+async def get_calendar_queue(
+    platform: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get upcoming scheduled posts in chronological order (queue view).
+    Returns all posts with a scheduled_date >= today, sorted by date and time ascending.
+    Optionally filter by platform (instagram_feed, instagram_story, tiktok)."""
+    from datetime import timedelta
+
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= today_start,
+    ]
+
+    # Apply platform filter if specified
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = (
+        select(Post)
+        .where(and_(*conditions))
+        .order_by(Post.scheduled_date.asc(), Post.scheduled_time.asc())
+    )
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    return {
+        "posts": [post_to_calendar_dict(post) for post in posts],
+        "count": len(posts),
+    }

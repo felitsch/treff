@@ -25,7 +25,7 @@ const currentMonth = ref(new Date().getMonth() + 1) // 1-based
 const postsByDate = ref({})
 const totalPosts = ref(0)
 
-// View mode: 'month' or 'week'
+// View mode: 'month', 'week', or 'queue'
 const viewMode = ref('month')
 
 // Platform filter: null = all, or 'instagram_feed', 'instagram_story', 'tiktok'
@@ -56,6 +56,10 @@ const weekDate = ref(new Date().toISOString().split('T')[0]) // YYYY-MM-DD for c
 const weekPostsByDate = ref({})
 const weekStartDate = ref(null)
 const weekEndDate = ref(null)
+
+// Queue view state
+const queuePosts = ref([])
+const queueCount = ref(0)
 
 // German month names
 const monthNames = [
@@ -420,14 +424,40 @@ const weeklyGoalMet = computed(() => {
   return goalStats.value.posts_this_week >= goalStats.value.weekly_goal
 })
 
+// Fetch queue data (chronological list of upcoming scheduled posts)
+async function fetchQueue() {
+  loading.value = true
+  error.value = null
+  try {
+    let url = '/api/calendar/queue'
+    if (platformFilter.value) {
+      url += `?platform=${platformFilter.value}`
+    }
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    queuePosts.value = data.posts || []
+    queueCount.value = data.count || 0
+  } catch (err) {
+    console.error('Queue fetch error:', err)
+    error.value = 'Warteschlange konnte nicht geladen werden.'
+  } finally {
+    loading.value = false
+  }
+}
+
 // Unified fetch based on current view mode
 function fetchData() {
   fetchStats()
   if (viewMode.value === 'month') {
     fetchCalendar()
     fetchGaps()
-  } else {
+  } else if (viewMode.value === 'week') {
     fetchWeek()
+  } else if (viewMode.value === 'queue') {
+    fetchQueue()
   }
 }
 
@@ -594,6 +624,9 @@ const subtitleText = computed(() => {
   if (viewMode.value === 'month') {
     return `${totalPosts.value} ${totalPosts.value === 1 ? 'Post' : 'Posts'} in ${currentMonthLabel.value}${activePlatformLabel.value}`
   }
+  if (viewMode.value === 'queue') {
+    return `${queueCount.value} ${queueCount.value === 1 ? 'anstehender Post' : 'anstehende Posts'}${activePlatformLabel.value}`
+  }
   return `${weekTotalPosts.value} ${weekTotalPosts.value === 1 ? 'Post' : 'Posts'} in dieser Woche${activePlatformLabel.value}`
 })
 
@@ -667,10 +700,20 @@ onMounted(() => {
           >
             Woche
           </button>
+          <button
+            @click="setViewMode('queue')"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="viewMode === 'queue'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >
+            Warteschlange
+          </button>
         </div>
 
-        <!-- Today button -->
+        <!-- Today button (hide in queue mode) -->
         <button
+          v-if="viewMode !== 'queue'"
           @click="goToToday"
           class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
@@ -694,8 +737,8 @@ onMounted(() => {
           </span>
         </button>
 
-        <!-- Prev / Label / Next -->
-        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+        <!-- Prev / Label / Next (hide in queue mode) -->
+        <div v-if="viewMode !== 'queue'" class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
           <button
             @click="prevNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors"
@@ -1080,6 +1123,98 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- ==================== QUEUE VIEW ==================== -->
+    <div v-if="viewMode === 'queue'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <!-- Queue header -->
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">📋</span>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Anstehende Posts</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              {{ queueCount }} {{ queueCount === 1 ? 'Post' : 'Posts' }} chronologisch sortiert
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue list -->
+      <div v-if="queuePosts.length > 0" class="divide-y divide-gray-100 dark:divide-gray-700/50">
+        <div
+          v-for="(post, index) in queuePosts"
+          :key="'queue-' + post.id"
+          class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+        >
+          <!-- Position number -->
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-bold">
+            {{ index + 1 }}
+          </div>
+
+          <!-- Date & time column -->
+          <div class="flex-shrink-0 w-32 text-center">
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+              {{ formatDateForDisplay(post.scheduled_date) }}
+            </div>
+            <div v-if="post.scheduled_time" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ post.scheduled_time }} Uhr
+            </div>
+          </div>
+
+          <!-- Category color dot + post info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" :class="getCategoryStyle(post.category).dot"></span>
+              <span class="font-medium text-gray-900 dark:text-white truncate">
+                {{ post.title || 'Unbenannt' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <span>{{ getCategoryIcon(post.category) }} {{ getCategoryLabel(post.category) }}</span>
+              <span>{{ getPlatformIcon(post.platform) }} {{ post.platform ? post.platform.replace('_', ' ') : '' }}</span>
+              <span v-if="post.country" class="capitalize">{{ post.country }}</span>
+            </div>
+          </div>
+
+          <!-- Status badge -->
+          <div class="flex-shrink-0">
+            <span
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+              :class="{
+                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400': post.status === 'draft',
+                'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300': post.status === 'scheduled',
+                'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300': post.status === 'reminded',
+                'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300': post.status === 'exported',
+                'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300': post.status === 'posted',
+              }"
+            >
+              {{ getStatusMeta(post.status).icon }}
+              {{ getStatusMeta(post.status).label }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else class="py-12 text-center">
+        <div class="text-5xl mb-3">📭</div>
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          Keine anstehenden Posts
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Plane Posts ein, um sie in der Warteschlange zu sehen.
+        </p>
+        <router-link
+          to="/create-post"
+          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Post erstellen
+        </router-link>
+      </div>
+    </div>
+
     <!-- Legend -->
     <div class="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex flex-wrap items-start gap-6">
@@ -1109,9 +1244,9 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Empty state -->
+    <!-- Empty state (not for queue view - it has its own) -->
     <div
-      v-if="!loading && !error && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
+      v-if="!loading && !error && viewMode !== 'queue' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
       class="mt-6 text-center py-8"
     >
       <div class="text-5xl mb-3">📅</div>
