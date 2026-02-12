@@ -1,5 +1,37 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #101: Error toast appears when API call fails
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the global error toast system works end-to-end
+- Toast system components already existed (created by previous session but uncommitted):
+  - ToastContainer.vue: Teleported toast UI with slide-in animation, styled per type (success/error/info)
+  - useToast.js: Reactive composable with addToast, removeToast, success, error, info methods
+  - api.js interceptor: Global error handler translating API errors to German user-friendly messages
+  - App.vue: ToastContainer globally mounted
+- Committed all previously-uncommitted toast system files
+
+### Verification steps completed:
+1. Trigger API error - PASS: Navigated to /posts/99999/edit (non-existent post), triggered 404 API error
+2. Error toast appears - PASS: Red toast notification appeared in top-right corner with warning icon
+3. Error message is user-friendly - PASS: Shows "Post wurde nicht gefunden." (German), not raw JSON `{"detail":"Post not found"}`
+4. Toast is dismissible - PASS: Clicked × button, toast disappeared from DOM immediately
+
+### Mock data grep results: All checks clean (zero matches in frontend/src and backend/app)
+### Console errors: 0 errors
+### Screenshots: feature101-error-toast-visible.png, feature101-toast-dismissed.png
+
+### Current state:
+- Feature #101 marked as PASSING
+- 34/163 features passing (~20.9%)
+
+### Next steps:
+- Continue with remaining Feedback & Notification features
+
+---
+
 ## Session - Feature #46: Drag-and-drop slide reordering works in carousel
 **Date:** 2026-02-12
 **Status:** PASSING
