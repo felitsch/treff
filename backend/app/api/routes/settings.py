@@ -44,6 +44,7 @@ async def update_settings(
             db.add(setting)
 
     await db.flush()
+    await db.commit()
 
     # Return updated settings
     result = await db.execute(
