@@ -1,5 +1,34 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #12: User can logout successfully
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete logout flow end-to-end via browser automation
+- No code changes needed — logout was already fully implemented:
+  - TopBar.vue: "Logout" button calls auth.logout() + router.push('/login')
+  - auth.js store: logout() clears accessToken, refreshToken, user from state and localStorage
+  - Router beforeEach guard redirects unauthenticated users to /login?redirect=...
+
+### Verification steps completed:
+1. Login as registered user (test@treff.de) - PASS (redirected to /dashboard)
+2. Click logout button in TopBar - PASS (button visible, clicked)
+3. Verify redirect to login page - PASS (URL = /login)
+4. Verify tokens cleared - PASS (localStorage.access_token = null, refresh_token = null)
+5. Try to access /dashboard - PASS (redirects to /login?redirect=/dashboard)
+6. Try to access /settings - PASS (redirects to /login?redirect=/settings)
+7. Try to access /templates - PASS (redirects to /login?redirect=/templates)
+
+### Additional verification:
+- Zero JavaScript console errors
+- All 7 mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Screenshots captured: feature12-step1-logged-in-dashboard.png, feature12-step2-logout-redirect-to-login.png, feature12-step3-protected-route-redirect.png
+
+### Current state:
+- 36/163 features passing (22.1%)
+- Feature #12 marked as PASSING
+
 ## Session - Feature #100: Success toast appears after creating a post
 **Date:** 2026-02-12
 **Status:** PASSING
