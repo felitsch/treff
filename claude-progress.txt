@@ -540,3 +540,50 @@
 
 ### Next steps:
 - Continue with remaining asset management, calendar, and content features
+
+## Session 15 - Feature #15: Default templates are listed in template browser
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Created seed_templates.py with 21 default templates across all 9 post categories:
+  - Laender-Spotlight (5 templates including USA, Canada, Australia country-themed)
+  - Erfahrungsberichte (2), FAQ (2), Foto-Posts (2), Fristen & CTA (2)
+  - Infografiken (2), Tipps & Tricks (2), Story-Posts (2), Reel/TikTok (2)
+- Templates auto-seeded on app startup via main.py lifespan (skips if already seeded)
+- Fixed templates API route with template_to_dict() serialization (same MissingGreenlet fix as posts)
+- Added ordering by category and name to list endpoint
+- Built complete TemplatesView.vue with:
+  - Template grid grouped by category with visual thumbnail cards
+  - Category filter dropdown (9 categories) and platform format filter (4 formats)
+  - Visual thumbnails using gradient backgrounds matching template color schemes
+  - Country-themed templates show distinct flag badges and color schemes
+  - TREFF logo, CTA button, slide count indicators in thumbnail mockups
+  - Platform badges (1:1 Feed, 4:5 Portrait, 9:16 Story, TikTok)
+  - "Standard" badge for default templates
+  - Loading skeleton, error state, empty state with filter reset
+
+### Files modified:
+- backend/app/core/seed_templates.py - NEW: 21 default templates with HTML/CSS and category colors
+- backend/app/api/routes/templates.py - Added template_to_dict(), ordering, dict serialization
+- backend/app/main.py - Added seed_default_templates() call on startup
+- frontend/src/views/TemplatesView.vue - Complete rewrite with grid, filters, thumbnails
+
+### Verification steps completed:
+1. Login and navigate to Templates page - PASS (sidebar link, /templates URL)
+2. Verify template grid is displayed - PASS (21 templates in responsive grid)
+3. Verify templates are loaded from API (not hardcoded) - PASS (all have DB IDs, created_at timestamps)
+4. Verify each template shows a visual thumbnail - PASS (gradient backgrounds, TREFF logo, CTA, content lines)
+5. Verify templates cover multiple categories - PASS (all 9 categories: laender_spotlight, erfahrungsberichte, infografiken, fristen_cta, tipps_tricks, faq, foto_posts, reel_tiktok_thumbnails, story_posts)
+
+### Mock data grep results: All 7 checks clean (zero matches)
+### Server restart persistence: PASS (21 templates still present after restart)
+### Console errors: 0 errors, 0 warnings
+### Network: GET /api/templates => 200, no 500s
+
+### Current state:
+- Features #1-11, #13, #15, #27, #55 passing
+- 14/163 features complete (8.6%)
+
+### Next steps:
+- Continue with remaining template, calendar, and content features
