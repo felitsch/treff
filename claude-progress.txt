@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #72: AI content suggestions appear on dashboard
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full content suggestions section on the dashboard
+- Created seed_suggestions.py with 5 default suggestions across different types:
+  - Seasonal (Bewerbungsfristen), Country Rotation (Kanada), Category Balance (FAQ),
+    Gap Fill (Erfahrungsbericht), Weekly Plan (Tipps & Tricks)
+- Fixed suggestions API route (suggestions.py):
+  - Added suggestion_to_dict() for SQLAlchemy model serialization (avoids MissingGreenlet)
+  - Changed flush() to commit() for proper persistence
+- Updated dashboard endpoint (analytics.py) to include suggestions data
+- Updated main.py to seed default suggestions on app startup
+- Built complete DashboardView.vue suggestions UI with:
+  - Section header "Content-Vorschlaege" with open count badge (e.g., "5 offen")
+  - Each suggestion shows: type badge (color-coded), category label, country flag, date
+  - Suggestion title, description, and reason (italic with 💬 icon)
+  - Accept button (✅ Annehmen) - marks as accepted and navigates to create-post with pre-filled category/country
+  - Dismiss button (❌ Ablehnen) - marks as dismissed and removes from list
+  - Empty state when no suggestions exist
+  - Loading/disabled states on buttons during API calls
+
+### Files modified:
+- backend/app/core/seed_suggestions.py - NEW: 5 default content suggestions
+- backend/app/api/routes/suggestions.py - Added suggestion_to_dict(), fixed commit
+- backend/app/api/routes/analytics.py - Added suggestions to dashboard endpoint
+- backend/app/main.py - Added seed_default_suggestions() on startup
+- frontend/src/views/DashboardView.vue - Full suggestions section implementation
+
+### Verification steps completed:
+1. Navigate to Dashboard - PASS (URL: /dashboard)
+2. Verify content suggestions section is visible - PASS ("💡 Content-Vorschlaege" heading with "5 offen" badge)
+3. Verify suggestions include category and reason - PASS (category badges + reason in italic)
+4. Verify each suggestion has accept/dismiss buttons - PASS (✅ Annehmen / ❌ Ablehnen)
+5. Dismiss button works - PASS (removed from list, count decremented to "4 offen")
+6. Accept button works - PASS (navigated to /create-post?category=erfahrungsberichte&country=australia)
+7. Data persists after server restart - PASS (suggestions still in DB)
+8. Zero console errors - PASS (0 errors, 0 warnings)
+9. All mock data grep checks - PASS (zero matches in frontend/src and backend/app)
+
+### Current state:
+- Feature #72 marked as PASSING
+- 26/163 features passing (~16%)
+
+### Next steps:
+- Continue with remaining UI-Backend Integration features
+
 ## Session - Feature #68: Post scheduling assigns date and time correctly
 **Date:** 2026-02-12
 **Status:** PASSING
