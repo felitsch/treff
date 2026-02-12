@@ -1,5 +1,33 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #99: Loading states shown during API calls
+**Date:** 2026-02-12
+**Status:** PASSING
+
+### What was accomplished:
+- Verified loading skeletons on History page (4 animate-pulse skeleton cards)
+- Verified loading skeletons on Templates page (4 filter bar + 8 template card skeletons)
+- Verified AI generation loading spinners in CreatePostView (generatingText, generatingImage, regeneratingField, loadingTemplates, exporting)
+- Added double-click guards to prevent duplicate API requests in CreatePostView
+- Made delete in HistoryView idempotent (handles 404 as success for already-deleted posts)
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added duplicate request guards for generateText, regenerateField, generateAiImage
+- frontend/src/views/HistoryView.vue - Idempotent delete with double-click guard and 404 handling
+
+### Verification steps completed:
+1. History page shows loading skeleton during API call - PASS (4 animate-pulse skeleton cards detected via DOM polling with 5s delay)
+2. Templates page shows loading skeleton during API call - PASS (12 animate-pulse elements: 4 filter bar + 8 grid cards detected)
+3. CreatePostView loading indicators for AI generation - PASS (code-verified: generatingText spinner, generatingImage spinner, regeneratingField per-field spinners, loadingTemplates spinner, exporting spinner)
+
+### Verification checklist:
+- [x] No console errors in clean state (0 errors)
+- [x] No mock data or test artifacts in codebase
+- [x] All temp test code removed (asyncio delays reverted in posts.py and templates.py)
+- [x] App functions correctly after cleanup (22 templates shown, History page works)
+
+---
+
 ## Session - Feature #103: Submit button disabled during form processing
 **Date:** 2026-02-12
 **Status:** PASSING
