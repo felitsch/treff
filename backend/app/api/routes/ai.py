@@ -29,6 +29,7 @@ from app.models.student import Student
 from app.models.hashtag_set import HashtagSet
 from app.models.story_arc import StoryArc
 from app.models.story_episode import StoryEpisode
+from app.models.recurring_format import RecurringFormat
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -2058,17 +2059,36 @@ async def weekly_planner(
             assigned_count += 1
             preferred_arc_day += 2  # Space out multiple arcs
 
-    # 2) Insert recurring formats
+    # 2) Insert recurring formats (from database)
+    DAY_NAME_TO_IDX = {
+        "Montag": 0, "Dienstag": 1, "Mittwoch": 2, "Donnerstag": 3,
+        "Freitag": 4, "Samstag": 5, "Sonntag": 6,
+    }
+    db_recurring_formats = []
     if include_recurring:
-        for fmt in RECURRING_FORMATS:
+        from sqlalchemy import or_ as sql_or
+        rf_result = await db.execute(
+            select(RecurringFormat).where(
+                RecurringFormat.is_active == True,
+                sql_or(
+                    RecurringFormat.user_id == None,
+                    RecurringFormat.user_id == user_id,
+                ),
+            )
+        )
+        db_recurring_formats = rf_result.scalars().all()
+
+        for fmt in db_recurring_formats:
             if assigned_count >= posts_per_week:
                 break
-            day_idx = fmt["day_idx"]
+            day_idx = DAY_NAME_TO_IDX.get(fmt.preferred_day, None)
+            if day_idx is None:
+                continue
             slot = day_slots[day_idx]
             if slot["suggestions"] or slot["existing_posts"]:
                 continue  # Already has content
 
-            time_str = optimal_times_weekend[day_idx - 5] if slot["is_weekend"] else optimal_times_weekday[day_idx % len(optimal_times_weekday)]
+            time_str = fmt.preferred_time or (optimal_times_weekend[day_idx - 5] if slot["is_weekend"] else optimal_times_weekday[day_idx % len(optimal_times_weekday)])
 
             # Pick an underrepresented country
             country_counts = {c: recent_countries.count(c) for c in ALL_COUNTRIES}
@@ -2077,16 +2097,17 @@ async def weekly_planner(
             country_name = COUNTRY_NAMES.get(country, country)
 
             # Override with deadline country if a deadline is coming
-            reason = f"Wiederkehrendes Format: {fmt['label']}"
-            topic = f"{fmt['label']}: {country_name}"
+            reason = f"Wiederkehrendes Format: {fmt.name}"
+            topic = f"{fmt.name}: {country_name}"
 
-            if fmt["category"] == "faq" and day_idx == 4:
+            fmt_category = fmt.category or "tipps_tricks"
+            if fmt_category == "faq" and day_idx == 4:
                 topic = f"Freitags-Fail: Lustige Anekdoten aus {country_name}"
-            elif fmt["category"] == "tipps_tricks" and day_idx == 0:
+            elif fmt_category == "tipps_tricks" and day_idx == 0:
                 topic = f"Motivation Monday: Warum {country_name} dein Leben veraendert"
-            elif fmt["category"] == "laender_spotlight" and day_idx == 2:
+            elif fmt_category == "laender_spotlight" and day_idx == 2:
                 topic = f"Laender-Spotlight: {country_name} - Top 5 Highlights"
-            elif fmt["category"] == "foto_posts" and day_idx == 3:
+            elif fmt_category == "erfahrungsberichte" and day_idx == 3:
                 topic = f"Throwback Thursday: Erinnerungen an {country_name}"
 
             # Check for deadline override
@@ -2094,7 +2115,7 @@ async def weekly_planner(
                 dl_date = dl["date"]
                 if dl_date >= week_start and dl_date <= week_end:
                     if slot["date"] == dl_date.isoformat() or (not any(s.get("category") == "fristen_cta" for s in slot["suggestions"])):
-                        if fmt["day_idx"] in [0, 2, 4]:  # Override on Mon/Wed/Fri
+                        if day_idx in [0, 2, 4]:  # Override on Mon/Wed/Fri
                             topic = f"Frist beachten: {dl['label']}"
                             reason = f"Bevorstehende Frist: {dl['label']} am {dl['date'].strftime('%d.%m.%Y')}"
                             break
@@ -2104,17 +2125,18 @@ async def weekly_planner(
 
             slot["suggestions"].append({
                 "type": "recurring",
-                "category": fmt["category"],
+                "category": fmt_category,
                 "country": country,
                 "platform": platform,
                 "time": time_str,
                 "topic": topic,
                 "reason": reason,
-                "icon": fmt["icon"],
+                "icon": fmt.icon or "🔄",
                 "story_arc_id": None,
                 "episode_number": None,
                 "is_recurring": True,
                 "is_series": False,
+                "recurring_format_id": fmt.id,
             })
             assigned_count += 1
 
@@ -2175,7 +2197,17 @@ async def weekly_planner(
         "total_suggestions": assigned_count,
         "active_arcs": active_arcs,
         "posts_per_week": posts_per_week,
-        "recurring_formats": RECURRING_FORMATS if include_recurring else [],
+        "recurring_formats": [
+            {
+                "day": rf.preferred_day or "",
+                "day_idx": DAY_NAME_TO_IDX.get(rf.preferred_day, -1),
+                "label": rf.name,
+                "category": rf.category or "tipps_tricks",
+                "icon": rf.icon or "🔄",
+                "id": rf.id,
+            }
+            for rf in db_recurring_formats
+        ] if include_recurring else [],
         "season": season,
     }
 
@@ -4673,3 +4705,695 @@ def _generate_episode_text_fallback(
         return random.choice(hints)
 
     return ""
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Cliffhanger & Teaser System
+# ═══════════════════════════════════════════════════════════════════════
+
+TEASER_VARIANTS = {
+    "countdown": {
+        "label": "Countdown",
+        "description": "Noch X Tage bis...",
+        "icon": "⏳",
+    },
+    "question": {
+        "label": "Frage",
+        "description": "Was passiert wenn...?",
+        "icon": "❓",
+    },
+    "spoiler": {
+        "label": "Spoiler",
+        "description": "Naechstes Mal: Der erste Schnee",
+        "icon": "👀",
+    },
+}
+
+
+@router.post("/generate-cliffhanger")
+async def generate_cliffhanger(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate cliffhanger text and teaser variants for a story arc episode.
+
+    Expects:
+    - arc_id (int): Story arc ID (required)
+    - episode_number (int): Current episode number (default: 1)
+    - episode_content (str, optional): Summary/content of the current episode
+    - teaser_variant (str, optional): 'countdown', 'question', or 'spoiler' (default: auto-select)
+    - days_until_next (int, optional): Days until next episode (for countdown variant)
+
+    Returns:
+    - cliffhanger_text: The generated cliffhanger ending text
+    - teaser_text: The teaser for the next episode
+    - teaser_variant: Which variant was used
+    - next_episode_info: Info about the planned next episode (if exists)
+    - all_variants: All three teaser variants generated
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "generate-cliffhanger")
+
+    arc_id = request.get("arc_id")
+    episode_number = request.get("episode_number", 1)
+    episode_content = request.get("episode_content", "")
+    teaser_variant = request.get("teaser_variant", "")
+    days_until_next = request.get("days_until_next", 1)
+
+    if not arc_id:
+        raise HTTPException(status_code=400, detail="arc_id is required")
+
+    # Load story arc
+    result = await db.execute(
+        select(StoryArc).where(StoryArc.id == arc_id, StoryArc.user_id == user_id)
+    )
+    arc = result.scalar_one_or_none()
+    if not arc:
+        raise HTTPException(status_code=404, detail="Story arc not found")
+
+    # Load all episodes
+    result = await db.execute(
+        select(StoryEpisode)
+        .where(StoryEpisode.arc_id == arc_id)
+        .order_by(StoryEpisode.episode_number)
+    )
+    episodes = result.scalars().all()
+
+    # Get student name
+    student_name = "dem Studenten"
+    if arc.student_id:
+        result = await db.execute(
+            select(Student).where(Student.id == arc.student_id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_name = student.name
+
+    # Find current and next episode
+    current_episode = None
+    next_episode = None
+    for ep in episodes:
+        if ep.episode_number == episode_number:
+            current_episode = ep
+        elif ep.episode_number == episode_number + 1:
+            next_episode = ep
+
+    # Build context from all episodes
+    episode_context = []
+    for ep in episodes:
+        if ep.episode_number <= episode_number:
+            summary = f"Episode {ep.episode_number}: {ep.episode_title}"
+            if ep.teaser_text:
+                summary += f" - {ep.teaser_text}"
+            episode_context.append(summary)
+
+    # Next episode info for linking
+    next_episode_info = None
+    if next_episode:
+        # Find the linked post for the next episode
+        next_post_info = None
+        if next_episode.post_id:
+            result = await db.execute(
+                select(Post).where(Post.id == next_episode.post_id)
+            )
+            next_post = result.scalar_one_or_none()
+            if next_post:
+                next_post_info = {
+                    "id": next_post.id,
+                    "title": next_post.topic or next_post.caption_instagram or "",
+                    "scheduled_date": next_post.scheduled_date.isoformat() if next_post.scheduled_date else None,
+                }
+        next_episode_info = {
+            "episode_number": next_episode.episode_number,
+            "episode_title": next_episode.episode_title,
+            "teaser_text": next_episode.teaser_text,
+            "status": next_episode.status,
+            "post": next_post_info,
+        }
+
+    # Try AI generation
+    api_key = await _get_gemini_api_key(user_id, db)
+    cliffhanger_text = None
+    all_variants = {}
+    source = "rule_based"
+
+    if api_key:
+        try:
+            cliffhanger_result = await _generate_cliffhanger_ai(
+                arc_title=arc.title,
+                student_name=student_name,
+                episode_number=episode_number,
+                planned_episodes=arc.planned_episodes,
+                episode_content=episode_content,
+                episode_context=episode_context,
+                next_episode=next_episode,
+                days_until_next=days_until_next,
+                tone=arc.tone or "jugendlich",
+                country=arc.country,
+                api_key=api_key,
+            )
+            if cliffhanger_result:
+                cliffhanger_text = cliffhanger_result.get("cliffhanger")
+                all_variants = cliffhanger_result.get("variants", {})
+                source = "gemini"
+        except Exception as e:
+            logger.warning("AI cliffhanger generation failed, using fallback: %s", e)
+
+    # Fallback to rule-based
+    if not cliffhanger_text:
+        fallback = _generate_cliffhanger_fallback(
+            arc_title=arc.title,
+            student_name=student_name,
+            episode_number=episode_number,
+            planned_episodes=arc.planned_episodes,
+            episode_content=episode_content,
+            next_episode=next_episode,
+            days_until_next=days_until_next,
+            country=arc.country,
+        )
+        cliffhanger_text = fallback["cliffhanger"]
+        all_variants = fallback["variants"]
+
+    # Select the requested variant (or best one)
+    selected_variant = teaser_variant if teaser_variant in all_variants else "question"
+    teaser_text = all_variants.get(selected_variant, "")
+
+    return {
+        "cliffhanger_text": cliffhanger_text,
+        "teaser_text": teaser_text,
+        "teaser_variant": selected_variant,
+        "all_variants": all_variants,
+        "next_episode_info": next_episode_info,
+        "source": source,
+        "arc_title": arc.title,
+        "student_name": student_name,
+        "episode_number": episode_number,
+        "is_last_episode": episode_number >= arc.planned_episodes,
+    }
+
+
+@router.get("/teaser-variants")
+async def get_teaser_variants(
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get available teaser variant types."""
+    return {"variants": TEASER_VARIANTS}
+
+
+async def _generate_cliffhanger_ai(
+    arc_title: str,
+    student_name: str,
+    episode_number: int,
+    planned_episodes: int,
+    episode_content: str,
+    episode_context: list,
+    next_episode,
+    days_until_next: int,
+    tone: str,
+    country: str | None,
+    api_key: str,
+) -> dict | None:
+    """Use Gemini to generate cliffhanger and teaser variants."""
+    try:
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = {
+            "usa": "USA", "canada": "Kanada", "australia": "Australien",
+            "newzealand": "Neuseeland", "ireland": "Irland",
+        }.get(country or "", "")
+
+        context_text = "\n".join(episode_context) if episode_context else "(Erste Episode)"
+
+        next_ep_info = ""
+        if next_episode:
+            next_ep_info = f"\nNaechste Episode: '{next_episode.episode_title}'"
+            if next_episode.teaser_text:
+                next_ep_info += f" - {next_episode.teaser_text}"
+
+        prompt = f"""Du bist ein Social-Media-Texter fuer TREFF Sprachreisen.
+Erstelle einen packenden Cliffhanger und drei Teaser-Varianten fuer Episode {episode_number} der Story-Serie '{arc_title}' mit {student_name}.
+{f'Land: {country_name}' if country_name else ''}
+Tonalitaet: {tone}
+Episode {episode_number} von {planned_episodes}
+
+Bisherige Episoden:
+{context_text}
+{f'Inhalt der aktuellen Episode: {episode_content}' if episode_content else ''}
+{next_ep_info}
+
+Erstelle:
+
+1. CLIFFHANGER: Ein packender Cliffhanger-Text (1-2 Saetze) fuer das Ende der Episode.
+   - Erzeugt Spannung und Neugier
+   - Motiviert zum Weiterschauen
+   - Passt zur Tonalitaet ({tone})
+
+2. COUNTDOWN-TEASER: Ein Countdown-Teaser (1 Satz).
+   - Format: "Noch {days_until_next} Tag(e)..." + spannende Andeutung
+
+3. FRAGE-TEASER: Ein Frage-Teaser (1 Satz).
+   - Format: Eine offene, spannende Frage
+
+4. SPOILER-TEASER: Ein leichter Spoiler-Teaser (1 Satz).
+   - Format: "Naechstes Mal:" + Andeutung
+
+Antworte im JSON-Format:
+{{"cliffhanger": "...", "countdown": "...", "question": "...", "spoiler": "..."}}
+
+NUR das JSON, keine Erklaerungen."""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        text = response.text.strip()
+
+        # Parse JSON from response
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
+
+        result = json.loads(text)
+
+        return {
+            "cliffhanger": result.get("cliffhanger", ""),
+            "variants": {
+                "countdown": result.get("countdown", ""),
+                "question": result.get("question", ""),
+                "spoiler": result.get("spoiler", ""),
+            },
+        }
+
+    except Exception as e:
+        logger.warning("Gemini cliffhanger generation error: %s", e)
+        return None
+
+
+def _generate_cliffhanger_fallback(
+    arc_title: str,
+    student_name: str,
+    episode_number: int,
+    planned_episodes: int,
+    episode_content: str,
+    next_episode,
+    days_until_next: int,
+    country: str | None,
+) -> dict:
+    """Rule-based fallback for cliffhanger and teaser generation."""
+    import random
+
+    country_name = {
+        "usa": "den USA", "canada": "Kanada", "australia": "Australien",
+        "newzealand": "Neuseeland", "ireland": "Irland",
+    }.get(country or "", "dem Ausland")
+
+    cliffhangers = [
+        f"Aber was {student_name} am naechsten Tag erlebt, haette niemand erwartet...",
+        f"Wird {student_name} diese Herausforderung in {country_name} meistern?",
+        f"Das war erst der Anfang — denn was dann passiert, veraendert alles...",
+        f"Ob das gut geht? {student_name} steht vor der groessten Entscheidung des Auslandsjahres!",
+        f"Doch dann passiert etwas, das niemand kommen sah...",
+        f"Was {student_name} als naechstes entdeckt, wird alles auf den Kopf stellen!",
+    ]
+
+    next_title = ""
+    if next_episode and next_episode.episode_title:
+        next_title = next_episode.episode_title
+
+    days_text = f"{days_until_next} Tag" if days_until_next == 1 else f"{days_until_next} Tage"
+    countdown_teasers = [
+        f"Noch {days_text} bis {student_name} zum ersten Mal richtig ankommt in {country_name}!",
+        f"Noch {days_text}... und dann wird alles anders fuer {student_name}!",
+        f"In {days_text} geht es weiter mit {student_name} in {country_name}!",
+    ]
+
+    question_teasers = [
+        f"Was passiert, wenn {student_name} sich zum ersten Mal ganz allein zurechtfinden muss?",
+        f"Wird {student_name} die neue Herausforderung meistern oder scheitern?",
+        f"Kann {student_name} in {country_name} ueber sich hinauswachsen?",
+    ]
+
+    spoiler_teasers = [
+        f"Naechstes Mal: {student_name} entdeckt eine voellig neue Seite von {country_name}!",
+        f"Naechstes Mal: Neue Freundschaften, neue Abenteuer und eine grosse Ueberraschung!",
+    ]
+    if next_title:
+        spoiler_teasers.insert(0, f"Naechstes Mal: {next_title}")
+
+    return {
+        "cliffhanger": random.choice(cliffhangers),
+        "variants": {
+            "countdown": random.choice(countdown_teasers),
+            "question": random.choice(question_teasers),
+            "spoiler": random.choice(spoiler_teasers),
+        },
+    }
+
+
+@router.post("/auto-cliffhanger-slide")
+async def auto_generate_cliffhanger_slide(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Auto-generate a cliffhanger slide for a post that is part of a story arc.
+
+    Expects:
+    - post_id (int): The post ID to attach the cliffhanger slide to
+    - teaser_variant (str, optional): 'countdown', 'question', or 'spoiler'
+    - days_until_next (int, optional): Days until next episode
+
+    Returns the generated cliffhanger data and slide info.
+    """
+    from app.models.post_slide import PostSlide
+
+    post_id = request.get("post_id")
+    teaser_variant = request.get("teaser_variant", "question")
+    days_until_next = request.get("days_until_next", 1)
+
+    if not post_id:
+        raise HTTPException(status_code=400, detail="post_id is required")
+
+    # Load post
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if not post.story_arc_id:
+        raise HTTPException(status_code=400, detail="Post is not part of a story arc")
+
+    # Generate cliffhanger
+    cliffhanger_request = {
+        "arc_id": post.story_arc_id,
+        "episode_number": post.episode_number or 1,
+        "episode_content": post.topic or post.caption_instagram or "",
+        "teaser_variant": teaser_variant,
+        "days_until_next": days_until_next,
+    }
+
+    cliffhanger_result = await generate_cliffhanger(cliffhanger_request, user_id, db)
+
+    # Find last slide index
+    result = await db.execute(
+        select(PostSlide)
+        .where(PostSlide.post_id == post_id)
+        .order_by(PostSlide.slide_index.desc())
+    )
+    last_slide = result.scalar_one_or_none()
+    next_index = (last_slide.slide_index + 1) if last_slide else 0
+
+    # Check if a cliffhanger slide already exists
+    result = await db.execute(
+        select(PostSlide).where(PostSlide.post_id == post_id)
+    )
+    existing_slides = result.scalars().all()
+    cliffhanger_slide = None
+    for s in existing_slides:
+        if s.custom_css_overrides:
+            try:
+                overrides = json.loads(s.custom_css_overrides) if isinstance(s.custom_css_overrides, str) else s.custom_css_overrides
+                if overrides.get("_cliffhanger_slide"):
+                    cliffhanger_slide = s
+                    break
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+    # Build slide data
+    selected_teaser = cliffhanger_result["all_variants"].get(
+        cliffhanger_result["teaser_variant"], ""
+    )
+    slide_data = {
+        "headline": "Fortsetzung folgt...",
+        "body_text": cliffhanger_result["cliffhanger_text"],
+        "subheadline": selected_teaser,
+        "cta_text": f"Episode {(post.episode_number or 1) + 1} kommt bald!",
+        "background_type": "color",
+        "background_value": "#1A1A2E",
+        "custom_css_overrides": json.dumps({
+            "_cliffhanger_slide": True,
+            "teaser_variant": cliffhanger_result["teaser_variant"],
+            "all_variants": cliffhanger_result["all_variants"],
+        }),
+    }
+
+    if cliffhanger_slide:
+        for key, value in slide_data.items():
+            setattr(cliffhanger_slide, key, value)
+        await db.flush()
+        await db.refresh(cliffhanger_slide)
+        slide_dict = {
+            "id": cliffhanger_slide.id,
+            "post_id": cliffhanger_slide.post_id,
+            "slide_index": cliffhanger_slide.slide_index,
+            **slide_data,
+        }
+    else:
+        new_slide = PostSlide(post_id=post_id, slide_index=next_index, **slide_data)
+        db.add(new_slide)
+        await db.flush()
+        await db.refresh(new_slide)
+        slide_dict = {
+            "id": new_slide.id,
+            "post_id": new_slide.post_id,
+            "slide_index": new_slide.slide_index,
+            **slide_data,
+        }
+
+    await db.commit()
+
+    return {
+        "cliffhanger": cliffhanger_result,
+        "slide": slide_dict,
+        "message": "Cliffhanger-Slide erstellt" if not cliffhanger_slide else "Cliffhanger-Slide aktualisiert",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Recurring Format AI Text Generation (Feature #191)
+# ═══════════════════════════════════════════════════════════════════════
+
+RECURRING_FORMAT_PROMPTS = {
+    "TREFF Freitags-Fail": {
+        "system": "Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen lustigen 'Freitags-Fail' Post ueber einen typischen Kulturschock-Moment eines deutschen Austauschschuelers im Ausland. Der Ton ist witzig, selbstironisch und relatable. Keine ernsthaften Probleme - nur lustige Missverstaendnisse und Alltagssituationen.",
+        "example_topics": [
+            "Trinkgeld-Kultur in den USA nicht verstanden",
+            "Versucht, deutsches Brot zu finden",
+            "Small Talk im Aufzug - totale Panik",
+            "Linksverkehr in Australien/Neuseeland/Irland",
+            "Falsche Handgeste in einem anderen Land",
+        ],
+    },
+    "Motivation Monday": {
+        "system": "Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen inspirierenden 'Motivation Monday' Post. Nutze einen epischen Moment, ein motivierendes Zitat oder eine Erfolgsgeschichte eines Austauschschuelers. Der Ton ist motivierend, positiv und ermutigend. Ziel: Schueler sollen sich auf ihr Auslandsjahr freuen.",
+        "example_topics": [
+            "Erste Freundschaft im Ausland geschlossen",
+            "Rede vor der ganzen Schule gehalten",
+            "Sportwettbewerb im Ausland gewonnen",
+            "Beste Noten trotz Sprachbarriere",
+            "Mutiger erster Tag an der neuen Schule",
+        ],
+    },
+    "Throwback Thursday": {
+        "system": "Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen nostalgischen 'Throwback Thursday' Post. Blicke zurueck auf unvergessliche Momente von Alumni-Austauschschuelern. Der Ton ist emotional, warm und erinnerungswuerdig. Zeige wie das Auslandsjahr das Leben veraendert hat.",
+        "example_topics": [
+            "Abschied von der Gastfamilie",
+            "Erstes Weihnachten im Ausland",
+            "Schulabschluss an einer amerikanischen High School",
+            "Roadtrip mit neuen Freunden",
+            "Wiedersehen nach Jahren mit Gastgeschwistern",
+        ],
+    },
+    "Wusstest-du-Mittwoch": {
+        "system": "Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen informativen 'Wusstest du?' Post mit einem ueberraschenden Fun Fact ueber ein Zielland (USA, Kanada, Australien, Neuseeland oder Irland). Der Ton ist informativ aber unterhaltsam. Der Fakt soll ueberraschen und zum Teilen animieren.",
+        "example_topics": [
+            "Neuseeland hat mehr Schafe als Menschen",
+            "Kanadier entschuldigen sich per Gesetz",
+            "In den USA gibt es einen Nationalen Erdnussbutter-Tag",
+            "Australiens Outback ist groesser als ganz Westeuropa",
+            "Irland hat keine Schlangen - dank St. Patrick",
+        ],
+    },
+    "Sonntags-Sehnsucht": {
+        "system": "Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen stimmungsvollen 'Sonntags-Sehnsucht' Post, der Fernweh weckt. Beschreibe eine schoene Szene, einen Sonnenuntergang oder einen emotionalen Moment aus dem Auslandsjahr. Der Ton ist poetisch, sehnsuchtsvoll und vertraeumt. Wecke den Wunsch, die Welt zu entdecken.",
+        "example_topics": [
+            "Sonnenuntergang am Grand Canyon",
+            "Herbstfarben in Kanada - Indian Summer",
+            "Surfen bei Sonnenaufgang in Australien",
+            "Sternenhimmel ueber Neuseelands Bergen",
+            "Klippen von Irland im Morgennebel",
+        ],
+    },
+}
+
+
+@router.post("/generate-recurring-format-text")
+async def generate_recurring_format_text(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate AI text content for a specific recurring format.
+
+    Expects:
+    - format_id (int): The recurring format ID
+    - topic (str, optional): Specific topic to write about
+    - country (str, optional): Country focus (usa, kanada, australien, neuseeland, irland)
+
+    Returns:
+    - title (str): Post title
+    - caption (str): Instagram/TikTok caption text
+    - hashtags (list): Recommended hashtags
+    - topic_used (str): The topic that was used
+    - format_name (str): Name of the recurring format
+    """
+    import random
+
+    ai_rate_limiter.check_rate_limit(user_id, "generate-recurring-format-text")
+
+    format_id = request.get("format_id")
+    topic = request.get("topic")
+    country = request.get("country")
+
+    if not format_id:
+        raise HTTPException(status_code=400, detail="format_id is required")
+
+    # Load the recurring format
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(RecurringFormat).where(
+            RecurringFormat.id == format_id,
+            or_(
+                RecurringFormat.user_id == None,
+                RecurringFormat.user_id == user_id,
+            ),
+        )
+    )
+    fmt = result.scalar_one_or_none()
+    if not fmt:
+        raise HTTPException(status_code=404, detail="Recurring format not found")
+
+    # Parse hashtags
+    hashtags = []
+    if fmt.hashtags:
+        try:
+            hashtags = json.loads(fmt.hashtags)
+        except (json.JSONDecodeError, TypeError):
+            hashtags = []
+
+    # Get prompt config for this format
+    prompt_config = RECURRING_FORMAT_PROMPTS.get(fmt.name, {})
+    system_prompt = prompt_config.get("system", f"Du bist Social-Media-Texter fuer TREFF Sprachreisen. Erstelle einen Post im Stil von '{fmt.name}'. {fmt.description}")
+    example_topics = prompt_config.get("example_topics", [])
+
+    # Choose topic
+    if not topic and example_topics:
+        topic = random.choice(example_topics)
+    elif not topic:
+        topic = f"Allgemeiner {fmt.name} Post"
+
+    # Add country context
+    country_names = {
+        "usa": "USA", "kanada": "Kanada", "australien": "Australien",
+        "neuseeland": "Neuseeland", "irland": "Irland"
+    }
+    country_label = country_names.get(country, "")
+    if country_label:
+        topic = f"{topic} ({country_label})"
+
+    # Try Gemini API for AI generation
+    api_key = await _get_gemini_api_key(user_id, db)
+
+    if api_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel("gemini-2.5-flash-preview-05-20")
+
+            user_prompt = f"""Erstelle einen Social Media Post zum Thema: {topic}
+
+Format: {fmt.name}
+Tonalitaet: {fmt.tone or 'jugendlich'}
+{f'Land-Fokus: {country_label}' if country_label else ''}
+
+Antworte im folgenden JSON-Format:
+{{
+  "title": "Kurzer, knackiger Titel (max 60 Zeichen)",
+  "caption": "Instagram/TikTok Caption (150-300 Zeichen). Benutze passende Emojis. Schreibe auf Deutsch.",
+  "hashtags": ["#Hashtag1", "#Hashtag2", "#Hashtag3", "#Hashtag4", "#Hashtag5"]
+}}
+
+Wichtig: Antworte NUR mit dem JSON, kein anderer Text."""
+
+            response = model.generate_content(
+                [{"role": "user", "parts": [{"text": system_prompt + "\n\n" + user_prompt}]}],
+            )
+
+            response_text = response.text.strip()
+            # Try to parse JSON from response
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+
+            result_data = json.loads(response_text)
+
+            # Merge AI hashtags with format default hashtags
+            ai_hashtags = result_data.get("hashtags", [])
+            merged_hashtags = list(dict.fromkeys(ai_hashtags + hashtags))[:10]
+
+            return {
+                "title": result_data.get("title", f"{fmt.icon} {fmt.name}"),
+                "caption": result_data.get("caption", ""),
+                "hashtags": merged_hashtags,
+                "topic_used": topic,
+                "format_name": fmt.name,
+                "format_icon": fmt.icon,
+                "source": "gemini",
+            }
+        except Exception as e:
+            logger.warning(f"Gemini generation failed for recurring format, falling back to rule-based: {e}")
+
+    # Rule-based fallback
+    fallback_captions = {
+        "TREFF Freitags-Fail": [
+            f"{fmt.icon} TREFF Freitags-Fail! {topic} - Kennst du das? Jeder Austauschschueler hat diesen Moment erlebt! Erzaehl uns deinen groessten Kulturschock in den Kommentaren!",
+            f"{fmt.icon} Freitags-Fail der Woche: {topic}! Wir lachen MIT euch, nicht UEBER euch. Welcher Kulturschock hat euch am meisten ueberrascht?",
+        ],
+        "Motivation Monday": [
+            f"{fmt.icon} Motivation Monday! {topic} - So starten wir die Woche! Dein Auslandsjahr wartet auf dich. Was ist DEIN Traum?",
+            f"{fmt.icon} Happy Monday! {topic} - Jeder grosse Erfolg beginnt mit dem Mut, loszugehen. TREFF begleitet dich dabei!",
+        ],
+        "Throwback Thursday": [
+            f"{fmt.icon} Throwback Thursday! {topic} - Manche Erinnerungen bleiben fuer immer. Teile deinen unvergesslichsten Moment mit uns!",
+            f"{fmt.icon} #TBT: {topic} - Jahre spaeter und diese Erinnerung bringt uns immer noch zum Laecheln. Was vermisst IHR am meisten?",
+        ],
+        "Wusstest-du-Mittwoch": [
+            f"{fmt.icon} Wusstest du? {topic} - Mind blown! Welchen Fun Fact ueber dein Traumland kennst DU?",
+            f"{fmt.icon} Mittwochs-Wissen: {topic} - Haettest du das gewusst? Speichern und mit Freunden teilen!",
+        ],
+        "Sonntags-Sehnsucht": [
+            f"{fmt.icon} Sonntags-Sehnsucht... {topic} - Manchmal muss man die Augen schliessen und sich an diesen Moment erinnern. Wohin zieht es DICH?",
+            f"{fmt.icon} Sunday Vibes: {topic} - Diese Momente machen ein Auslandsjahr unvergesslich. Traeumst du auch davon?",
+        ],
+    }
+
+    captions = fallback_captions.get(fmt.name, [
+        f"{fmt.icon} {fmt.name}: {topic} - Folge TREFF Sprachreisen fuer mehr!",
+    ])
+    caption = random.choice(captions)
+
+    return {
+        "title": f"{fmt.icon} {fmt.name}",
+        "caption": caption,
+        "hashtags": hashtags,
+        "topic_used": topic,
+        "format_name": fmt.name,
+        "format_icon": fmt.icon,
+        "source": "rule_based",
+    }

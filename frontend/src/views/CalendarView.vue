@@ -57,6 +57,10 @@ const showSeasonalMarkers = ref(true)
 const recyclingSuggestions = ref({}) // dateStr -> suggestion
 const showRecyclingSuggestions = ref(true)
 
+// Recurring Format Placeholders
+const recurringPlaceholders = ref([]) // Array of placeholder objects from API
+const showRecurringFormats = ref(true)
+
 // Story Arc Timeline
 const showArcTimeline = ref(true)
 const arcTimelineData = ref([]) // Array of arc objects from API
@@ -583,6 +587,27 @@ function getMarkersForDate(dateStr) {
   return seasonalMarkers.value.filter(m => m.date === dateStr)
 }
 
+// Fetch recurring format placeholders
+async function fetchRecurringPlaceholders() {
+  try {
+    const res = await fetch(`/api/calendar/recurring-placeholders?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    recurringPlaceholders.value = data.placeholders || []
+  } catch (err) {
+    console.error('Recurring placeholders fetch error:', err)
+    recurringPlaceholders.value = []
+  }
+}
+
+// Get recurring format placeholders for a specific date
+function getRecurringForDate(dateStr) {
+  if (!showRecurringFormats.value) return []
+  return recurringPlaceholders.value.filter(p => p.date === dateStr && !p.has_existing_post)
+}
+
 // Seasonal marker color mapping
 const markerColorClasses = {
   red: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-700 dark:text-red-300', border: 'border-red-400', dot: 'bg-red-500', badge: 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200' },
@@ -734,6 +759,7 @@ function fetchData() {
     fetchSeasonalMarkers()
     fetchRecyclingSuggestions()
     fetchArcTimeline()
+    fetchRecurringPlaceholders()
   } else if (viewMode.value === 'week') {
     fetchWeek()
   } else if (viewMode.value === 'lanes') {
@@ -1235,6 +1261,24 @@ onMounted(() => {
           </span>
         </button>
 
+        <!-- Recurring Formats toggle (only in month view) -->
+        <button
+          v-if="viewMode === 'month'"
+          @click="showRecurringFormats = !showRecurringFormats; if (showRecurringFormats) fetchRecurringPlaceholders()"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="showRecurringFormats
+            ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Wiederkehrende Formate anzeigen/ausblenden"
+          aria-label="Wiederkehrende Formate anzeigen/ausblenden"
+        >
+          <span>🔄</span>
+          Formate
+          <span v-if="showRecurringFormats && recurringPlaceholders.length > 0" class="bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
+            {{ recurringPlaceholders.length }}
+          </span>
+        </button>
+
         <!-- Content-Mix toggle -->
         <button
           @click="mixPanelCollapsed = !mixPanelCollapsed"
@@ -1575,6 +1619,20 @@ onMounted(() => {
             >
               <span class="flex-shrink-0">{{ marker.icon }}</span>
               <span class="truncate">{{ marker.label }}</span>
+            </div>
+          </div>
+
+          <!-- Recurring format placeholders -->
+          <div v-if="getRecurringForDate(dayObj.dateStr).length > 0" class="space-y-0.5 mb-1">
+            <div
+              v-for="(rp, rpIdx) in getRecurringForDate(dayObj.dateStr)"
+              :key="'rp-' + rpIdx + '-' + dayObj.dateStr"
+              class="rounded-md px-1.5 py-0.5 text-[10px] font-medium border-l-[3px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+              :title="rp.format_name + (rp.preferred_time ? ' um ' + rp.preferred_time : '')"
+              @click="$router.push('/create-post')"
+            >
+              <span class="flex-shrink-0">{{ rp.format_icon || '🔄' }}</span>
+              <span class="truncate">{{ rp.format_name }}</span>
             </div>
           </div>
 

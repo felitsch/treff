@@ -20,6 +20,7 @@ const navItems = [
   { name: 'History', path: '/history', icon: '📋' },
   { name: 'Students', path: '/students', icon: '🎓' },
   { name: 'Story-Arcs', path: '/story-arcs', icon: '📖' },
+  { name: 'Formate', path: '/recurring-formats', icon: '🔄' },
   { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
   { name: 'Video-Overlay', path: '/video-overlays', icon: '🎞️' },
   { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },

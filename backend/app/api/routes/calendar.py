@@ -15,6 +15,7 @@ from app.core.security import get_current_user_id
 from app.models.post import Post
 from app.models.setting import Setting
 from app.models.story_arc import StoryArc
+from app.models.recurring_format import RecurringFormat
 
 router = APIRouter()
 
@@ -32,6 +33,7 @@ def post_to_calendar_dict(post: Post) -> dict:
         "scheduled_time": post.scheduled_time,
         "story_arc_id": post.story_arc_id,
         "episode_number": post.episode_number,
+        "linked_post_group_id": post.linked_post_group_id,
         "created_at": post.created_at.isoformat() if post.created_at else None,
     }
 
@@ -1198,3 +1200,402 @@ async def set_episode_gap_setting(
 
     await db.commit()
     return {"min_episode_gap_days": gap_days, "message": "Einstellung gespeichert."}
+
+
+# ========== PLATFORM LANES ==========
+
+PLATFORM_LANE_ORDER = ["instagram_feed", "instagram_story", "tiktok"]
+PLATFORM_LANE_LABELS = {
+    "instagram_feed": "IG Feed",
+    "instagram_story": "IG Story",
+    "tiktok": "TikTok",
+}
+PLATFORM_LANE_ICONS = {
+    "instagram_feed": "\U0001f4f7",   # camera
+    "instagram_story": "\U0001f4f1",   # mobile phone
+    "tiktok": "\U0001f3b5",            # musical note
+}
+
+
+@router.get("/platform-lanes")
+async def get_platform_lanes(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posts for a month grouped by platform lane AND date.
+
+    Returns posts organized as:
+    {
+        "lanes": [
+            {
+                "platform": "instagram_feed",
+                "label": "IG Feed",
+                "icon": "📷",
+                "posts_by_date": {"2026-02-13": [...], ...},
+                "total": 5
+            },
+            ...
+        ],
+        "cross_platform_stats": {
+            "instagram_feed": 5,
+            "instagram_story": 3,
+            "tiktok": 2,
+            "total": 10,
+            "linked_groups": 2
+        }
+    }
+    """
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    last_day_num = monthrange(year, month)[1]
+    first_dt = datetime(year, month, 1, 0, 0, 0)
+    last_dt = datetime(year, month, last_day_num, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+
+    query = select(Post).where(and_(*conditions)).order_by(Post.scheduled_date)
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    # Group by platform then by date
+    lanes = []
+    platform_counts = {}
+    linked_groups = set()
+
+    for platform in PLATFORM_LANE_ORDER:
+        platform_posts = [p for p in posts if p.platform == platform]
+        posts_by_date = {}
+        for post in platform_posts:
+            date_key = post.scheduled_date.strftime("%Y-%m-%d")
+            if date_key not in posts_by_date:
+                posts_by_date[date_key] = []
+            posts_by_date[date_key].append(post_to_calendar_dict(post))
+            if post.linked_post_group_id:
+                linked_groups.add(post.linked_post_group_id)
+
+        platform_counts[platform] = len(platform_posts)
+        lanes.append({
+            "platform": platform,
+            "label": PLATFORM_LANE_LABELS.get(platform, platform),
+            "icon": PLATFORM_LANE_ICONS.get(platform, ""),
+            "posts_by_date": posts_by_date,
+            "total": len(platform_posts),
+        })
+
+    return {
+        "lanes": lanes,
+        "month": month,
+        "year": year,
+        "cross_platform_stats": {
+            **platform_counts,
+            "total": len(posts),
+            "linked_groups": len(linked_groups),
+        },
+    }
+
+
+@router.get("/cross-platform-stats")
+async def get_cross_platform_stats(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get cross-platform performance statistics.
+
+    Compares content distribution across platforms for the given month.
+    """
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    last_day_num = monthrange(year, month)[1]
+    first_dt = datetime(year, month, 1, 0, 0, 0)
+    last_dt = datetime(year, month, last_day_num, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+
+    # Count per platform
+    for platform in PLATFORM_LANE_ORDER:
+        pass
+
+    query = select(Post).where(and_(*conditions)).order_by(Post.scheduled_date)
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    platform_data = {}
+    category_per_platform = {}
+    linked_groups = {}
+
+    for post in posts:
+        plat = post.platform
+        if plat not in platform_data:
+            platform_data[plat] = {"count": 0, "statuses": {}, "categories": {}}
+        platform_data[plat]["count"] += 1
+
+        # Status breakdown
+        st = post.status or "draft"
+        platform_data[plat]["statuses"][st] = platform_data[plat]["statuses"].get(st, 0) + 1
+
+        # Category breakdown
+        cat = post.category or "unknown"
+        platform_data[plat]["categories"][cat] = platform_data[plat]["categories"].get(cat, 0) + 1
+
+        # Track linked groups
+        if post.linked_post_group_id:
+            if post.linked_post_group_id not in linked_groups:
+                linked_groups[post.linked_post_group_id] = set()
+            linked_groups[post.linked_post_group_id].add(plat)
+
+    # Determine platforms with low coverage
+    total = len(posts)
+    recommendations = []
+    for plat in PLATFORM_LANE_ORDER:
+        count = platform_data.get(plat, {}).get("count", 0)
+        pct = round(count / total * 100, 1) if total > 0 else 0
+        if pct < 20:
+            recommendations.append({
+                "platform": plat,
+                "label": PLATFORM_LANE_LABELS.get(plat, plat),
+                "count": count,
+                "percentage": pct,
+                "message": f"Nur {count} Posts ({pct}%) auf {PLATFORM_LANE_LABELS.get(plat, plat)} - mehr Content empfohlen!",
+            })
+
+    # Multi-platform coverage
+    multi_platform_groups = sum(1 for g in linked_groups.values() if len(g) >= 2)
+    all_three_platforms = sum(1 for g in linked_groups.values() if len(g) >= 3)
+
+    return {
+        "month": month,
+        "year": year,
+        "total_posts": total,
+        "platforms": {
+            plat: {
+                "count": platform_data.get(plat, {}).get("count", 0),
+                "percentage": round(platform_data.get(plat, {}).get("count", 0) / total * 100, 1) if total > 0 else 0,
+                "statuses": platform_data.get(plat, {}).get("statuses", {}),
+                "categories": platform_data.get(plat, {}).get("categories", {}),
+                "label": PLATFORM_LANE_LABELS.get(plat, plat),
+                "icon": PLATFORM_LANE_ICONS.get(plat, ""),
+            }
+            for plat in PLATFORM_LANE_ORDER
+        },
+        "multi_platform": {
+            "linked_groups": len(linked_groups),
+            "multi_platform_groups": multi_platform_groups,
+            "all_three_platforms": all_three_platforms,
+        },
+        "recommendations": recommendations,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Recurring Format Placeholders for Calendar (Feature #191)
+# ═══════════════════════════════════════════════════════════════════════
+
+DAY_NAME_TO_WEEKDAY = {
+    "Montag": 0,
+    "Dienstag": 1,
+    "Mittwoch": 2,
+    "Donnerstag": 3,
+    "Freitag": 4,
+    "Samstag": 5,
+    "Sonntag": 6,
+}
+
+
+@router.get("/recurring-placeholders")
+async def get_recurring_placeholders(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get recurring format placeholder dates for a given month.
+
+    Returns a list of placeholder objects with date, format info, and whether
+    a post already exists on that date (to avoid double-showing).
+    """
+    import json as json_module
+
+    now = datetime.now()
+    target_month = month or now.month
+    target_year = year or now.year
+
+    # Get all active recurring formats (system defaults + user's own)
+    result = await db.execute(
+        select(RecurringFormat).where(
+            RecurringFormat.is_active == True,
+            or_(
+                RecurringFormat.user_id == None,
+                RecurringFormat.user_id == user_id,
+            ),
+        )
+    )
+    formats = result.scalars().all()
+
+    if not formats:
+        return {"placeholders": [], "format_count": 0}
+
+    # Get existing scheduled posts for this month (to mark covered days)
+    _, last_day = monthrange(target_year, target_month)
+    month_start = datetime(target_year, target_month, 1)
+    month_end = datetime(target_year, target_month, last_day, 23, 59, 59)
+
+    posts_result = await db.execute(
+        select(Post.scheduled_date, Post.category).where(
+            Post.user_id == user_id,
+            Post.scheduled_date.isnot(None),
+            Post.scheduled_date >= month_start,
+            Post.scheduled_date <= month_end,
+        )
+    )
+    existing_posts = posts_result.all()
+    posts_by_date = {}
+    for p_date, p_cat in existing_posts:
+        if p_date:
+            date_str = p_date.strftime("%Y-%m-%d")
+            if date_str not in posts_by_date:
+                posts_by_date[date_str] = []
+            posts_by_date[date_str].append(p_cat)
+
+    # Generate placeholders
+    placeholders = []
+
+    for fmt in formats:
+        if fmt.frequency == "weekly" and fmt.preferred_day:
+            weekday = DAY_NAME_TO_WEEKDAY.get(fmt.preferred_day)
+            if weekday is None:
+                continue
+
+            # Find all dates in this month that match the preferred day
+            current = date(target_year, target_month, 1)
+            while current.month == target_month:
+                if current.weekday() == weekday:
+                    date_str = current.isoformat()
+                    has_post = date_str in posts_by_date
+                    # Check if the existing post matches this format's category
+                    category_match = False
+                    if has_post and fmt.category:
+                        category_match = fmt.category in posts_by_date[date_str]
+
+                    hashtags = []
+                    if fmt.hashtags:
+                        try:
+                            hashtags = json_module.loads(fmt.hashtags)
+                        except (json_module.JSONDecodeError, TypeError):
+                            hashtags = []
+
+                    placeholders.append({
+                        "date": date_str,
+                        "format_id": fmt.id,
+                        "format_name": fmt.name,
+                        "format_icon": fmt.icon,
+                        "format_tone": fmt.tone,
+                        "format_category": fmt.category,
+                        "preferred_time": fmt.preferred_time,
+                        "hashtags": hashtags,
+                        "has_existing_post": has_post,
+                        "category_match": category_match,
+                        "is_default": fmt.is_default,
+                    })
+                current += timedelta(days=1)
+
+        elif fmt.frequency == "biweekly" and fmt.preferred_day:
+            weekday = DAY_NAME_TO_WEEKDAY.get(fmt.preferred_day)
+            if weekday is None:
+                continue
+
+            # Find every other occurrence of the preferred day
+            current = date(target_year, target_month, 1)
+            occurrence = 0
+            while current.month == target_month:
+                if current.weekday() == weekday:
+                    occurrence += 1
+                    if occurrence % 2 == 1:  # 1st, 3rd occurrence
+                        date_str = current.isoformat()
+                        has_post = date_str in posts_by_date
+
+                        hashtags = []
+                        if fmt.hashtags:
+                            try:
+                                hashtags = json_module.loads(fmt.hashtags)
+                            except (json_module.JSONDecodeError, TypeError):
+                                hashtags = []
+
+                        placeholders.append({
+                            "date": date_str,
+                            "format_id": fmt.id,
+                            "format_name": fmt.name,
+                            "format_icon": fmt.icon,
+                            "format_tone": fmt.tone,
+                            "format_category": fmt.category,
+                            "preferred_time": fmt.preferred_time,
+                            "hashtags": hashtags,
+                            "has_existing_post": has_post in posts_by_date,
+                            "category_match": False,
+                            "is_default": fmt.is_default,
+                        })
+                current += timedelta(days=1)
+
+        elif fmt.frequency == "monthly":
+            # Monthly: first occurrence of preferred_day, or 1st of month
+            if fmt.preferred_day:
+                weekday = DAY_NAME_TO_WEEKDAY.get(fmt.preferred_day)
+                if weekday is None:
+                    continue
+                current = date(target_year, target_month, 1)
+                while current.month == target_month:
+                    if current.weekday() == weekday:
+                        date_str = current.isoformat()
+                        has_post = date_str in posts_by_date
+
+                        hashtags = []
+                        if fmt.hashtags:
+                            try:
+                                hashtags = json_module.loads(fmt.hashtags)
+                            except (json_module.JSONDecodeError, TypeError):
+                                hashtags = []
+
+                        placeholders.append({
+                            "date": date_str,
+                            "format_id": fmt.id,
+                            "format_name": fmt.name,
+                            "format_icon": fmt.icon,
+                            "format_tone": fmt.tone,
+                            "format_category": fmt.category,
+                            "preferred_time": fmt.preferred_time,
+                            "hashtags": hashtags,
+                            "has_existing_post": has_post,
+                            "category_match": False,
+                            "is_default": fmt.is_default,
+                        })
+                        break  # Only first occurrence for monthly
+                    current += timedelta(days=1)
+
+    # Sort by date
+    placeholders.sort(key=lambda p: p["date"])
+
+    return {
+        "placeholders": placeholders,
+        "format_count": len(formats),
+    }

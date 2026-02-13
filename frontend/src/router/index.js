@@ -123,6 +123,11 @@ const routes = [
         name: 'StoryArcWizard',
         component: () => import('@/views/StoryArcWizardView.vue'),
       },
+      {
+        path: 'recurring-formats',
+        name: 'RecurringFormats',
+        component: () => import('@/views/RecurringFormatsView.vue'),
+      },
     ],
   },
   {
