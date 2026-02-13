@@ -4,10 +4,12 @@ import { RouterView, useRoute } from 'vue-router'
 import SidebarNav from './SidebarNav.vue'
 import TopBar from './TopBar.vue'
 import { useReminders } from '@/composables/useReminders'
+import { useSeriesReminders } from '@/composables/useSeriesReminders'
 
 const sidebarCollapsed = ref(false)
 const isMobileOverlay = ref(false)
 const { startPolling, stopPolling } = useReminders()
+const { startPolling: startSeriesPolling, stopPolling: stopSeriesPolling } = useSeriesReminders()
 
 const TABLET_BREAKPOINT = 1024
 
@@ -44,12 +46,14 @@ const handleResize = () => {
 // Start reminder polling when the layout mounts (user is authenticated)
 onMounted(() => {
   startPolling()
+  startSeriesPolling()
   handleResize()
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   stopPolling()
+  stopSeriesPolling()
   window.removeEventListener('resize', handleResize)
 })
 </script>

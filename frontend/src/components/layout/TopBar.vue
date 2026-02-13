@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ref } from 'vue'
+import NotificationPanel from '@/components/common/NotificationPanel.vue'
 
 defineEmits(['toggle-sidebar'])
 
@@ -44,6 +45,9 @@ if (localStorage.getItem('darkMode') === 'true') {
     </div>
 
     <div class="flex items-center gap-4">
+      <!-- Series Notification Bell -->
+      <NotificationPanel />
+
       <!-- Dark mode toggle -->
       <button
         class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 focus-ring"

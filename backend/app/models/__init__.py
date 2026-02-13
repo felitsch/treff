@@ -16,6 +16,7 @@ from app.models.hook import Hook
 from app.models.hashtag_set import HashtagSet
 from app.models.cta import CTA
 from app.models.interactive_element import PostInteractiveElement
+from app.models.series_reminder import SeriesReminder
 
 __all__ = [
     "User",
@@ -34,4 +35,5 @@ __all__ = [
     "HashtagSet",
     "CTA",
     "PostInteractiveElement",
+    "SeriesReminder",
 ]

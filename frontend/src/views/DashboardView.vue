@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import OnboardingTour from '@/components/common/OnboardingTour.vue'
 import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
+import SeriesStatusWidget from '@/components/dashboard/SeriesStatusWidget.vue'
 
 const router = useRouter()
 
@@ -498,6 +499,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- Series Status Widget -->
+      <SeriesStatusWidget />
 
       <!-- Content Recycling Panel -->
       <RecyclingPanel />

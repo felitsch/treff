@@ -18,7 +18,7 @@ from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements, recycling
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements, recycling, series_reminders
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,11 @@ async def lifespan(app: FastAPI):
         try:
             await conn.execute(text("ALTER TABLE posts ADD COLUMN story_arc_id INTEGER REFERENCES story_arcs(id)"))
             logger.info("Added story_arc_id column to posts table")
+        except Exception:
+            pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN episode_number INTEGER"))
+            logger.info("Added episode_number column to posts table")
         except Exception:
             pass  # Column already exists
 
@@ -212,6 +217,7 @@ app.include_router(hashtag_sets.router, prefix="/api/hashtag-sets", tags=["Hasht
 app.include_router(ctas.router, prefix="/api/ctas", tags=["CTAs"])
 app.include_router(interactive_elements.router, prefix="/api/posts", tags=["Interactive Elements"])
 app.include_router(recycling.router, prefix="/api/recycling", tags=["Content Recycling"])
+app.include_router(series_reminders.router, prefix="/api/series-reminders", tags=["Series Reminders"])
 
 
 if __name__ == "__main__":
