@@ -142,6 +142,7 @@ onMounted(() => {
         <button
           class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
           @click="openWizard"
+          data-tour="arcs-wizard-btn"
         >
           <span>+</span>
           <span>Neue Story-Serie</span>
@@ -160,7 +161,7 @@ onMounted(() => {
     />
 
     <!-- Stats cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6" data-tour="arcs-stats">
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
         <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total }}</p>
         <p class="text-xs text-gray-500 dark:text-gray-400">Gesamt</p>
@@ -184,7 +185,7 @@ onMounted(() => {
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-wrap gap-3 mb-6">
+    <div class="flex flex-wrap gap-3 mb-6" data-tour="arcs-filters">
       <select
         v-model="filterStatus"
         class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
@@ -309,6 +310,18 @@ onMounted(() => {
             <span>{{ formatDate(arc.created_at) }}</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Students connection hint -->
+    <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3" data-tour="arcs-students-hint">
+      <span class="text-2xl mt-0.5">🎓</span>
+      <div>
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Schueler-Profile als Protagonisten</p>
+        <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
+          Jede Story-Serie wird mit einem Schueler-Profil verknuepft. Die KI nutzt Name, Land, Schule und Persoenlichkeit fuer authentische Texte.
+          <router-link to="/students" class="underline font-medium hover:text-blue-800 dark:hover:text-blue-100">Schueler verwalten &rarr;</router-link>
+        </p>
       </div>
     </div>
 
