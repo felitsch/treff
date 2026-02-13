@@ -26,6 +26,7 @@ const navItems = [
   { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },
   { name: 'Video-Branding', path: '/video-templates', icon: '🏷️' },
   { name: 'Video-Export', path: '/video-export', icon: '📤' },
+  { name: 'Audio-Mixer', path: '/audio-mixer', icon: '🎵' },
   { name: 'Analytics', path: '/analytics', icon: '📈' },
   { name: 'Settings', path: '/settings', icon: '⚙️' },
 ]

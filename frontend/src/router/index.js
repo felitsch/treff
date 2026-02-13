@@ -109,6 +109,11 @@ const routes = [
         component: () => import('@/views/VideoExportView.vue'),
       },
       {
+        path: 'audio-mixer',
+        name: 'AudioMixer',
+        component: () => import('@/views/AudioMixerView.vue'),
+      },
+      {
         path: 'story-arcs',
         name: 'StoryArcs',
         component: () => import('@/views/StoryArcsView.vue'),
