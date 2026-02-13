@@ -1,5 +1,39 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #209: Create Post Tour - Schritt-fuer-Schritt Wizard Erklaerung
+**Date:** 2026-02-13
+**Feature ID:** #209
+**Status:** PASSING
+
+### What was implemented:
+Enhanced the Create Post page-level tour to provide a comprehensive, step-by-step explanation of the 9-step post creation wizard. The tour now has 11 educational steps that explain both technical workflow steps and marketing/social media concepts (CTA, Hook, Engagement-Boost), with emphasis on WHY each feature exists.
+
+### Tour Steps (11 total):
+1. Willkommen im Post-Wizard! — Overview of 9-step process
+2. Schritt 1: Kategorie waehlen — WHY categories matter
+3. Schritt 2: Template waehlen — WHY templates save design time
+4. Schritt 5: KI-Textgenerierung (Gemini AI) — What Gemini does
+5. Schritt 7: Slide-Editor (Drag & Drop) — WHY slide order matters
+6. Captions & Hashtags (Reichweiten-Turbo) — WHY hashtags boost reach
+7. CTA: Call-to-Action (Warum unverzichtbar) — WHY 300% more interaction
+8. Hook: Die ersten 2 Sekunden entscheiden — WHY first impression matters
+9. Interaktive Elemente & Engagement-Boost — WHY algorithms favor engagement
+10. Multi-Plattform: Instagram vs TikTok — Format differences
+11. Vorschau, Export & Speichern — Export and tour restart tip
+
+### Key fixes:
+- Fixed broken target cp-step1-content to cp-step-8 (always visible)
+- All 11 targets point to always-visible step indicator circles
+- Added WARUM explanations to every concept step
+
+### Verification:
+- All 11 steps render with proper highlighting (0 console errors)
+- Tour auto-starts on first visit, restarts via button
+- Mock data grep: clean
+- Git commit: 7779b10
+
+---
+
 ## Session - Feature #210: Templates Tour
 **Date:** 2026-02-13
 **Feature ID:** #210
