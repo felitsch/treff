@@ -243,6 +243,7 @@ onMounted(() => {
         <button
           class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
           @click="openCreateForm"
+          data-tour="students-add-btn"
         >
           <span>+</span>
           <span>Student hinzufuegen</span>
@@ -251,14 +252,16 @@ onMounted(() => {
     </div>
 
     <!-- Workflow Hint: Story-Arcs -->
-    <WorkflowHint
-      hint-id="students-story-arcs"
-      message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
-      link-text="Story-Arcs"
-      link-to="/story-arcs"
-      icon="📖"
-      :show="showStoryArcHint"
-    />
+    <div data-tour="students-story-arc-hint">
+      <WorkflowHint
+        hint-id="students-story-arcs"
+        message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
+        link-text="Story-Arcs"
+        link-to="/story-arcs"
+        icon="📖"
+        :show="showStoryArcHint"
+      />
+    </div>
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
@@ -310,9 +313,10 @@ onMounted(() => {
     <!-- Student list -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="students-list">
       <div
-        v-for="student in filteredStudents"
+        v-for="(student, idx) in filteredStudents"
         :key="student.id"
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow cursor-pointer"
+        :data-tour="idx === 0 ? 'students-personality' : undefined"
         @click="router.push(`/students/${student.id}`)"
       >
         <!-- Header row with profile image -->

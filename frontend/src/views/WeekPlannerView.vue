@@ -264,7 +264,7 @@ onMounted(() => {
 <template>
   <div class="p-4 md:p-6 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-start justify-between mb-6">
+    <div data-tour="wp-header" class="flex items-start justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <span>📅</span> Wochen-Content-Planer
@@ -313,36 +313,39 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Posts per Week -->
-        <div class="min-w-[120px]">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts/Woche</label>
-          <select
-            v-model.number="postsPerWeek"
-            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
-            <option :value="2">2 Posts</option>
-            <option :value="3">3 Posts</option>
-            <option :value="4">4 Posts</option>
-            <option :value="5">5 Posts</option>
-            <option :value="6">6 Posts</option>
-            <option :value="7">7 Posts</option>
-          </select>
-        </div>
+        <!-- Posts per Week + Toggles (Filter section) -->
+        <div data-tour="wp-filters" class="flex flex-wrap items-end gap-4">
+          <div class="min-w-[120px]">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts/Woche</label>
+            <select
+              v-model.number="postsPerWeek"
+              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            >
+              <option :value="2">2 Posts</option>
+              <option :value="3">3 Posts</option>
+              <option :value="4">4 Posts</option>
+              <option :value="5">5 Posts</option>
+              <option :value="6">6 Posts</option>
+              <option :value="7">7 Posts</option>
+            </select>
+          </div>
 
-        <!-- Toggles -->
-        <div class="flex items-center gap-4">
-          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input v-model="includeRecurring" type="checkbox" class="rounded border-gray-300 text-treff-blue focus:ring-treff-blue" />
-            Wiederkehrende Formate
-          </label>
-          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input v-model="includeSeries" type="checkbox" class="rounded border-gray-300 text-treff-blue focus:ring-treff-blue" />
-            Story-Serien
-          </label>
+          <!-- Toggles -->
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input v-model="includeRecurring" type="checkbox" class="rounded border-gray-300 text-treff-blue focus:ring-treff-blue" />
+              Wiederkehrende Formate
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input v-model="includeSeries" type="checkbox" class="rounded border-gray-300 text-treff-blue focus:ring-treff-blue" />
+              Story-Serien
+            </label>
+          </div>
         </div>
 
         <!-- Generate Button -->
         <button
+          data-tour="wp-generate"
           @click="generatePlan"
           :disabled="loading"
           class="px-5 py-2 bg-treff-blue text-white rounded-lg font-medium hover:bg-treff-blue/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
@@ -383,6 +386,7 @@ onMounted(() => {
         <div class="flex items-center gap-3">
           <span class="text-sm text-gray-500 dark:text-gray-400">{{ totalSuggestions }} Vorschlaege</span>
           <button
+            data-tour="wp-adopt"
             @click="adoptPlan"
             :disabled="adopting || totalSuggestions === 0"
             class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
@@ -516,7 +520,7 @@ onMounted(() => {
     </div>
 
     <!-- Legend -->
-    <div v-if="planGenerated" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mt-6">
+    <div v-if="planGenerated" data-tour="wp-legend" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mt-6">
       <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Legende & Tipps</h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600 dark:text-gray-400">
         <div class="flex items-center gap-2">
