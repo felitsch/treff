@@ -89,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-series-status">
     <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
         <span>{{ booksEmoji }}</span> Serien-Status

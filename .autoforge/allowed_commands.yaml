@@ -35,6 +35,14 @@ commands:
     description: Shell test command
   - name: chmod
     description: Change file permissions
+  - name: ffmpeg
+    description: FFmpeg video/audio processing tool
+  - name: ffprobe
+    description: FFprobe media file analysis tool
+  - name: cd
+    description: Change directory
+  - name: print
+    description: Python print function (used in -c scripts)
 
   # ==========================================
   # iOS Development Example
