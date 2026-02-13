@@ -14,6 +14,9 @@ import {
   Filler,
 } from 'chart.js'
 import api from '@/utils/api'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -30,6 +33,7 @@ ChartJS.register(
 
 const loading = ref(true)
 const error = ref(null)
+const tourRef = ref(null)
 
 // Overview stats
 const overview = ref({
@@ -371,12 +375,46 @@ async function fetchAnalytics() {
   }
 }
 
-onMounted(fetchAnalytics)
+// Workflow hint: check if posting goals are configured in settings
+const goalsNotConfigured = ref(false)
+async function checkGoalsConfig() {
+  try {
+    const res = await api.get('/api/settings')
+    const s = res.data
+    if (!s.posts_per_week && !s.posts_per_month) {
+      goalsNotConfigured.value = true
+    }
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  fetchAnalytics()
+  checkGoalsConfig()
+})
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Analytics</h1>
+    <div class="flex items-center gap-3 mb-6">
+      <h1 data-tour="analytics-header" class="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+      <button
+        @click="tourRef?.startTour()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        title="Seiten-Tour starten"
+      >
+        &#10067; Tour
+      </button>
+    </div>
+
+    <!-- Workflow Hint: Posting goals not configured -->
+    <WorkflowHint
+      hint-id="analytics-posting-goals"
+      message="Noch keine Posting-Ziele festgelegt? Konfiguriere woechentliche und monatliche Ziele in den Einstellungen."
+      link-text="Einstellungen"
+      link-to="/settings"
+      icon="🎯"
+      :show="goalsNotConfigured"
+    />
 
     <!-- Loading state -->
     <div v-if="loading" class="space-y-4">
@@ -400,7 +438,7 @@ onMounted(fetchAnalytics)
     </div>
 
     <!-- Analytics content -->
-    <div v-else class="space-y-6">
+    <div v-else data-tour="analytics-charts" class="space-y-6">
       <!-- Overview stats cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="overview-stats">
         <!-- Total posts -->
@@ -530,9 +568,15 @@ onMounted(fetchAnalytics)
         <!-- Category distribution - Doughnut Chart -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="category-distribution">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kategorieverteilung</h2>
-          <div v-if="categories.length === 0" class="text-center py-8">
-            <p class="text-gray-400 dark:text-gray-500">Noch keine Posts erstellt</p>
-          </div>
+          <EmptyState
+            v-if="categories.length === 0"
+            icon="📊"
+            title="Noch keine Daten"
+            description="Erstelle Posts, um die Kategorieverteilung hier zu sehen."
+            actionLabel="Post erstellen"
+            actionTo="/create-post"
+            :compact="true"
+          />
           <div v-else>
             <div class="relative" style="height: 320px;" data-testid="category-pie-chart">
               <Doughnut
@@ -549,9 +593,15 @@ onMounted(fetchAnalytics)
         <!-- Platform distribution -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="platform-distribution">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plattformverteilung</h2>
-          <div v-if="platforms.length === 0" class="text-center py-8">
-            <p class="text-gray-400 dark:text-gray-500">Noch keine Posts erstellt</p>
-          </div>
+          <EmptyState
+            v-if="platforms.length === 0"
+            icon="📱"
+            title="Noch keine Daten"
+            description="Erstelle Posts fuer Instagram oder TikTok, um die Plattformverteilung zu sehen."
+            actionLabel="Post erstellen"
+            actionTo="/create-post"
+            :compact="true"
+          />
           <div v-else class="space-y-4">
             <div v-for="p in platforms" :key="p.platform" class="flex items-center gap-3">
               <span class="text-xl">{{ platformIcon(p.platform) }}</span>
@@ -574,9 +624,15 @@ onMounted(fetchAnalytics)
       <!-- Country distribution -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="country-distribution">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Laenderverteilung</h2>
-        <div v-if="countries.length === 0" class="text-center py-8">
-          <p class="text-gray-400 dark:text-gray-500">Noch keine Posts mit Laenderzuweisung</p>
-        </div>
+        <EmptyState
+          v-if="countries.length === 0"
+          icon="🌍"
+          title="Noch keine Laenderdaten"
+          description="Weise Posts Laender zu (USA, Kanada, Australien, Neuseeland, Irland), um die Verteilung hier zu sehen."
+          actionLabel="Post erstellen"
+          actionTo="/create-post"
+          :compact="true"
+        />
         <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div
             v-for="c in countries"
@@ -592,5 +648,8 @@ onMounted(fetchAnalytics)
         </div>
       </div>
     </div>
+
+    <!-- Page-specific guided tour -->
+    <TourSystem ref="tourRef" page-key="analytics" />
   </div>
 </template>

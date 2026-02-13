@@ -4,10 +4,28 @@ import { useRouter } from 'vue-router'
 import { useStudentStore } from '@/stores/students'
 import { useToast } from '@/composables/useToast'
 import PersonalityEditor from '@/components/students/PersonalityEditor.vue'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import api from '@/utils/api'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
 const store = useStudentStore()
 const toast = useToast()
+
+const tourRef = ref(null)
+
+// Workflow hint: show Story-Arc hint when students exist but no arcs
+const storyArcCount = ref(-1) // -1 = not loaded yet
+async function checkStoryArcs() {
+  try {
+    const { data } = await api.get('/api/story-arcs')
+    storyArcCount.value = Array.isArray(data) ? data.length : 0
+  } catch { storyArcCount.value = 0 }
+}
+const showStoryArcHint = computed(() => {
+  return store.students.length > 0 && storyArcCount.value === 0
+})
 
 // Filters
 const filterCountry = ref('')
@@ -200,6 +218,7 @@ function getPersonalityBadge(student) {
 
 onMounted(() => {
   loadStudents()
+  checkStoryArcs()
 })
 </script>
 
@@ -221,6 +240,16 @@ onMounted(() => {
         <span>Student hinzufuegen</span>
       </button>
     </div>
+
+    <!-- Workflow Hint: Story-Arcs -->
+    <WorkflowHint
+      hint-id="students-story-arcs"
+      message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
+      link-text="Story-Arcs"
+      link-to="/story-arcs"
+      icon="📖"
+      :show="showStoryArcHint"
+    />
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
@@ -260,16 +289,14 @@ onMounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredStudents.length === 0"
-      class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
-    >
-      <p class="text-4xl mb-3">🎓</p>
-      <p class="text-gray-500 dark:text-gray-400 text-lg">Keine Studenten gefunden</p>
-      <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">
-        Erstelle einen neuen Studenten, um Content-Serien zu starten.
-      </p>
-    </div>
+      icon="🎓"
+      title="Noch keine Schueler angelegt"
+      description="Lege deinen ersten Austausch-Schueler an, um personalisierte Content-Serien und Story-Arcs zu erstellen."
+      actionLabel="Schueler anlegen"
+      @action="showForm = true"
+    />
 
     <!-- Student list -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -531,5 +558,8 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Page-specific guided tour -->
+    <TourSystem ref="tourRef" page-key="students" />
   </div>
 </template>
