@@ -58,6 +58,10 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const exportComplete = ref(false)
   const exportQuality = ref('1080')
 
+  // Network error retry state
+  const networkError = ref(false)
+  const lastSaveFunction = ref(null) // 'single' or 'multi' to identify which save to retry
+
   // Per-field regeneration state (tracks which field is currently being regenerated)
   const regeneratingField = ref('')
 
@@ -98,6 +102,8 @@ export const useCreatePostStore = defineStore('createPost', () => {
     generatedImageResult.value = null
     aiImageError.value = ''
     exporting.value = false
+    networkError.value = false
+    lastSaveFunction.value = null
     assets.value = []
     templates.value = []
     loadingTemplates.value = false
@@ -155,6 +161,8 @@ export const useCreatePostStore = defineStore('createPost', () => {
     savedPost,
     exportComplete,
     exportQuality,
+    networkError,
+    lastSaveFunction,
     // Per-field regeneration
     regeneratingField,
     // Validation

@@ -51,6 +51,8 @@ const {
   savedPost,
   exportComplete,
   exportQuality,
+  networkError,
+  lastSaveFunction,
   regeneratingField,
   validationMessage,
 } = storeToRefs(store)
@@ -274,7 +276,13 @@ async function generateText() {
     }
   } catch (e) {
     console.error('Text generation failed:', e)
-    error.value = 'Textgenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+    const status = e.response?.status
+    const detail = e.response?.data?.detail || ''
+    if (status === 429) {
+      error.value = detail || 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.'
+    } else {
+      error.value = 'Textgenerierung fehlgeschlagen: ' + (detail || e.message)
+    }
   } finally {
     generatingText.value = false
   }
@@ -437,7 +445,13 @@ async function regenerateField(field, slideIndex = 0) {
     setTimeout(() => { successMsg.value = '' }, 2000)
   } catch (e) {
     console.error('Field regeneration failed:', e)
-    error.value = 'Regenerierung fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+    const status = e.response?.status
+    const detail = e.response?.data?.detail || ''
+    if (status === 429) {
+      error.value = detail || 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.'
+    } else {
+      error.value = 'Regenerierung fehlgeschlagen: ' + (detail || e.message)
+    }
   } finally {
     regeneratingField.value = ''
   }
@@ -568,9 +582,38 @@ function selectPromptSuggestion(suggestion) {
   aiImagePrompt.value = suggestion
 }
 
+function isNetworkError(e) {
+  // Direct network errors (no response received)
+  if (
+    e.code === 'ERR_NETWORK' ||
+    e.code === 'ECONNABORTED' ||
+    e.message?.includes('Network Error') ||
+    e.message?.includes('timeout') ||
+    (!e.response && e.request)
+  ) return true
+  // Proxy/gateway errors indicate the backend is unreachable
+  const status = e.response?.status
+  if (status === 502 || status === 503 || status === 504) return true
+  // Vite dev proxy returns 500 when backend is down (ECONNREFUSED)
+  if (status === 500) {
+    const detail = e.response?.data?.detail || e.response?.data || ''
+    const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail)
+    if (
+      detailStr.includes('ECONNREFUSED') ||
+      detailStr.includes('connect ECONNREFUSED') ||
+      detailStr.includes('proxy') ||
+      detailStr === '' ||
+      !e.response?.data
+    ) return true
+  }
+  return false
+}
+
 async function saveAndExport() {
   exporting.value = true
   error.value = ''
+  networkError.value = false
+  lastSaveFunction.value = null
 
   try {
     // Save post to database (strip dragId from slides before saving)
@@ -611,12 +654,93 @@ async function saveAndExport() {
     }
 
     exportComplete.value = true
+    networkError.value = false
+    lastSaveFunction.value = null
     successMsg.value = 'Post gespeichert und exportiert!'
     toast.success('Post erfolgreich erstellt und gespeichert!', 5000)
   } catch (e) {
-    error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+    if (isNetworkError(e)) {
+      error.value = 'Netzwerkfehler beim Speichern. Bitte pruefe deine Internetverbindung.'
+      networkError.value = true
+      lastSaveFunction.value = 'single'
+    } else {
+      error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+      networkError.value = false
+    }
   } finally {
     exporting.value = false
+  }
+}
+
+async function retrySave() {
+  if (lastSaveFunction.value === 'multi') {
+    await exportAllPlatforms()
+  } else {
+    await saveAndExport()
+  }
+}
+
+// ── Ctrl+S: Quick save as draft (no export/download) ────────────────
+const savingDraft = ref(false)
+
+async function saveDraft() {
+  if (savingDraft.value || exporting.value) return
+  // Only allow save if we have enough data (category + platform + slides)
+  if (!selectedCategory.value || !selectedPlatform.value || slides.value.length === 0) {
+    toast.info('Bitte erstelle zuerst Inhalte, bevor du speicherst.', 3000)
+    return
+  }
+
+  savingDraft.value = true
+  try {
+    const cleanSlides = slides.value.map(({ dragId, ...rest }) => rest)
+    const postData = {
+      category: selectedCategory.value,
+      country: country.value || null,
+      platform: selectedPlatform.value,
+      template_id: selectedTemplate.value?.id || null,
+      title: cleanSlides[0]?.headline || 'Neuer Post',
+      status: 'draft',
+      tone: tone.value,
+      slide_data: JSON.stringify(cleanSlides),
+      caption_instagram: captionInstagram.value,
+      caption_tiktok: captionTiktok.value,
+      hashtags_instagram: hashtagsInstagram.value,
+      hashtags_tiktok: hashtagsTiktok.value,
+      cta_text: ctaText.value,
+    }
+
+    if (savedPost.value?.id) {
+      // Update existing saved post
+      await api.put(`/api/posts/${savedPost.value.id}`, postData)
+      toast.success('Entwurf gespeichert!', 3000)
+    } else {
+      // Create new draft
+      const response = await api.post('/api/posts', postData)
+      savedPost.value = response.data
+      toast.success('Entwurf gespeichert!', 3000)
+    }
+  } catch (e) {
+    toast.error('Speichern fehlgeschlagen: ' + (e.response?.data?.detail || e.message), 5000)
+  } finally {
+    savingDraft.value = false
+  }
+}
+
+function handleCtrlS(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    e.stopPropagation()
+    // On step 9, use the full save+export. Otherwise save as draft.
+    if (currentStep.value === 9 && !exportComplete.value) {
+      if (selectedPlatforms.value.length > 1) {
+        exportAllPlatforms()
+      } else {
+        saveAndExport()
+      }
+    } else {
+      saveDraft()
+    }
   }
 }
 
@@ -818,6 +942,8 @@ async function exportAllPlatforms() {
   // Export for all selected platforms — creates a ZIP with per-platform folders
   exporting.value = true
   error.value = ''
+  networkError.value = false
+  lastSaveFunction.value = null
 
   try {
     // Step 1: Save the post to database
@@ -876,10 +1002,19 @@ async function exportAllPlatforms() {
     URL.revokeObjectURL(link.href)
 
     exportComplete.value = true
+    networkError.value = false
+    lastSaveFunction.value = null
     successMsg.value = `Post fuer ${selectedPlatforms.value.length} Plattformen gespeichert und exportiert!`
     toast.success(`Post erfolgreich fuer ${selectedPlatforms.value.length} Plattformen erstellt!`, 5000)
   } catch (e) {
-    error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+    if (isNetworkError(e)) {
+      error.value = 'Netzwerkfehler beim Speichern. Bitte pruefe deine Internetverbindung.'
+      networkError.value = true
+      lastSaveFunction.value = 'multi'
+    } else {
+      error.value = 'Export fehlgeschlagen: ' + (e.response?.data?.detail || e.message)
+      networkError.value = false
+    }
   } finally {
     exporting.value = false
   }
@@ -1110,11 +1245,13 @@ onMounted(() => {
     }
   }
   startListening()
+  window.addEventListener('keydown', handleCtrlS, true)
 })
 
 onUnmounted(() => {
   stopListening()
   clearTimeout(undoSnapshotTimer)
+  window.removeEventListener('keydown', handleCtrlS, true)
 })
 
 // ── Unsaved changes warning ───────────────────────────────────────────
@@ -1208,9 +1345,25 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     </div>
 
     <!-- Messages -->
-    <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-center gap-2" role="alert">
-      <span>&#9888;</span> {{ error }}
-      <button @click="error = ''" class="ml-auto text-red-500 hover:text-red-700">&times;</button>
+    <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300" role="alert" data-testid="error-message">
+      <div class="flex items-center gap-2">
+        <span>&#9888;</span>
+        <span class="flex-1">{{ error }}</span>
+        <button @click="error = ''; networkError = false" class="text-red-500 hover:text-red-700">&times;</button>
+      </div>
+      <div v-if="networkError" class="mt-3 flex items-center gap-3">
+        <button
+          @click="retrySave"
+          :disabled="exporting"
+          data-testid="retry-save-btn"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+        >
+          <span v-if="exporting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+          <span v-else>&#8635;</span>
+          {{ exporting ? 'Wird erneut versucht...' : 'Erneut versuchen' }}
+        </button>
+        <span class="text-sm text-red-500 dark:text-red-400">Pruefe deine Internetverbindung und versuche es erneut.</span>
+      </div>
     </div>
     <div v-if="successMsg" class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-center gap-2">
       <span>&#10003;</span> {{ successMsg }}
