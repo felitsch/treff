@@ -1,35 +1,127 @@
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
-defineProps({
+const props = defineProps({
   collapsed: Boolean,
 })
 
 defineEmits(['toggle'])
 
 const route = useRoute()
-const router = useRouter()
 
-const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: '📊' },
-  { name: 'Create Post', path: '/create-post', icon: '✏️' },
-  { name: 'Templates', path: '/templates', icon: '📄' },
-  { name: 'Assets', path: '/assets', icon: '🖼️' },
-  { name: 'Calendar', path: '/calendar', icon: '📅' },
-  { name: 'Wochenplaner', path: '/week-planner', icon: '🗓️' },
-  { name: 'History', path: '/history', icon: '📋' },
-  { name: 'Students', path: '/students', icon: '🎓' },
-  { name: 'Story-Arcs', path: '/story-arcs', icon: '📖' },
-  { name: 'Formate', path: '/recurring-formats', icon: '🔄' },
-  { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
-  { name: 'Video-Overlay', path: '/video-overlays', icon: '🎞️' },
-  { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },
-  { name: 'Video-Branding', path: '/video-templates', icon: '🏷️' },
-  { name: 'Video-Export', path: '/video-export', icon: '📤' },
-  { name: 'Audio-Mixer', path: '/audio-mixer', icon: '🎵' },
-  { name: 'Analytics', path: '/analytics', icon: '📈' },
-  { name: 'Settings', path: '/settings', icon: '⚙️' },
+const navGroups = [
+  {
+    label: 'Uebersicht',
+    key: 'overview',
+    items: [
+      { name: 'Dashboard', path: '/dashboard', icon: '📊' },
+    ],
+  },
+  {
+    label: 'Content erstellen',
+    key: 'content',
+    items: [
+      { name: 'Create Post', path: '/create-post', icon: '✏️' },
+      { name: 'Templates', path: '/templates', icon: '📄' },
+      { name: 'Assets', path: '/assets', icon: '🖼️' },
+    ],
+  },
+  {
+    label: 'Planung',
+    key: 'planning',
+    items: [
+      { name: 'Kalender', path: '/calendar', icon: '📅' },
+      { name: 'Wochenplaner', path: '/week-planner', icon: '🗓️' },
+      { name: 'History', path: '/history', icon: '📋' },
+    ],
+  },
+  {
+    label: 'Serien & Formate',
+    key: 'series',
+    items: [
+      { name: 'Students', path: '/students', icon: '🎓' },
+      { name: 'Story-Arcs', path: '/story-arcs', icon: '📖' },
+      { name: 'Formate', path: '/recurring-formats', icon: '🔄' },
+    ],
+  },
+  {
+    label: 'Video-Tools',
+    key: 'video',
+    items: [
+      { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
+      { name: 'Video-Overlay', path: '/video-overlays', icon: '🎞️' },
+      { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },
+      { name: 'Video-Branding', path: '/video-templates', icon: '🏷️' },
+      { name: 'Video-Export', path: '/video-export', icon: '📤' },
+      { name: 'Audio-Mixer', path: '/audio-mixer', icon: '🎵' },
+    ],
+  },
+  {
+    label: 'Analyse & Einstellungen',
+    key: 'analytics',
+    items: [
+      { name: 'Analytics', path: '/analytics', icon: '📈' },
+      { name: 'Settings', path: '/settings', icon: '⚙️' },
+    ],
+  },
 ]
+
+// Track expanded state of each group
+const expandedGroups = ref({})
+
+// Initialize all groups as expanded (desktop default)
+const initGroups = (allExpanded) => {
+  const state = {}
+  navGroups.forEach((group) => {
+    state[group.key] = allExpanded
+  })
+  return state
+}
+
+// Detect mobile breakpoint
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  const wasMobile = isMobile.value
+  isMobile.value = window.innerWidth < 768
+  // When crossing the mobile/desktop boundary, reset group states
+  if (wasMobile !== isMobile.value) {
+    expandedGroups.value = initGroups(!isMobile.value)
+    expandActiveGroup()
+  }
+}
+
+// Auto-expand group containing active route
+const expandActiveGroup = () => {
+  navGroups.forEach((group) => {
+    if (group.items.some((item) => route.path.startsWith(item.path))) {
+      expandedGroups.value[group.key] = true
+    }
+  })
+}
+
+onMounted(() => {
+  isMobile.value = window.innerWidth < 768
+  // On mobile: groups collapsed by default; on desktop: all expanded
+  expandedGroups.value = initGroups(!isMobile.value)
+  // Always expand the group containing the active route
+  expandActiveGroup()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+// When route changes, ensure the active group is expanded
+watch(() => route.path, () => {
+  expandActiveGroup()
+})
+
+const toggleGroup = (key) => {
+  expandedGroups.value[key] = !expandedGroups.value[key]
+}
 
 const isActive = (path) => route.path.startsWith(path)
 </script>
@@ -48,25 +140,88 @@ const isActive = (path) => route.path.startsWith(path)
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto py-4" role="navigation" aria-label="Hauptnavigation" data-tour="sidebar">
-      <ul class="space-y-1 px-2">
-        <li v-for="item in navItems" :key="item.path">
-          <router-link
-            :to="item.path"
-            :class="[
-              'flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-base focus-ring',
-              isActive(item.path)
-                ? 'bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
-            ]"
-            :aria-label="item.name"
-            :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
+    <nav class="flex-1 overflow-y-auto py-2" role="navigation" aria-label="Hauptnavigation" data-tour="sidebar">
+      <!-- Collapsed mode: flat icon list -->
+      <template v-if="collapsed">
+        <ul class="space-y-1 px-2">
+          <template v-for="group in navGroups" :key="group.key">
+            <li v-for="item in group.items" :key="item.path">
+              <router-link
+                :to="item.path"
+                :class="[
+                  'flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-base focus-ring',
+                  isActive(item.path)
+                    ? 'bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+                ]"
+                :aria-label="item.name"
+                :title="item.name"
+                :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
+              >
+                <span class="text-lg">{{ item.icon }}</span>
+              </router-link>
+            </li>
+          </template>
+        </ul>
+      </template>
+
+      <!-- Expanded mode: grouped navigation -->
+      <template v-else>
+        <div v-for="(group, groupIndex) in navGroups" :key="group.key" :class="groupIndex > 0 ? 'mt-1' : ''">
+          <!-- Group header / divider -->
+          <button
+            @click="toggleGroup(group.key)"
+            class="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer select-none"
+            :aria-expanded="expandedGroups[group.key]"
+            :aria-controls="'nav-group-' + group.key"
           >
-            <span class="text-lg" :class="collapsed ? '' : 'mr-3'">{{ item.icon }}</span>
-            <span v-if="!collapsed">{{ item.name }}</span>
-          </router-link>
-        </li>
-      </ul>
+            <span>{{ group.label }}</span>
+            <svg
+              :class="[
+                'w-3 h-3 transition-transform duration-200',
+                expandedGroups[group.key] ? 'rotate-0' : '-rotate-90',
+              ]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Group items (collapsible) -->
+          <ul
+            :id="'nav-group-' + group.key"
+            :class="[
+              'overflow-hidden transition-all duration-200 px-2',
+              expandedGroups[group.key] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+            ]"
+          >
+            <li v-for="item in group.items" :key="item.path">
+              <router-link
+                :to="item.path"
+                :class="[
+                  'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-base focus-ring',
+                  isActive(item.path)
+                    ? 'bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+                ]"
+                :aria-label="item.name"
+                :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
+              >
+                <span class="text-lg mr-3">{{ item.icon }}</span>
+                <span>{{ item.name }}</span>
+              </router-link>
+            </li>
+          </ul>
+
+          <!-- Divider between groups (not after last) -->
+          <div
+            v-if="groupIndex < navGroups.length - 1 && !expandedGroups[group.key]"
+            class="mx-4 mt-1 border-b border-gray-100 dark:border-gray-800"
+          />
+        </div>
+      </template>
     </nav>
 
     <!-- Collapse toggle -->
