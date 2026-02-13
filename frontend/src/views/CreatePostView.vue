@@ -157,6 +157,7 @@ const categories = [
   { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬', desc: 'Thumbnails fuer Videos' },
   { id: 'story_posts', label: 'Story-Posts', icon: '📱', desc: 'Instagram Story Content' },
   { id: 'story_teaser', label: 'Story-Teaser', icon: '👉', desc: 'Feed-Post als Wegweiser zu Story-Serien' },
+  { id: 'story_series', label: 'Story-Serien', icon: '📚', desc: 'Mehrteilige Story-Serien mit Episoden' },
 ]
 
 // Step 3: Platform (static data)

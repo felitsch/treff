@@ -106,6 +106,317 @@ def _make_story_teaser_css() -> str:
 """
 
 
+def _make_story_series_html(variant: str, country: str = None) -> str:
+    """Generate HTML for story-series templates optimized for multi-part Instagram Stories.
+
+    These templates have a consistent design with series title, episode number,
+    progress bar, and navigation hints for brand recognition across episodes.
+    """
+    d = {"w": 1080, "h": 1920}  # Story 9:16 format
+
+    # Country-specific accent colors
+    country_accent = {
+        "usa": "#B22234",
+        "canada": "#FF0000",
+        "australia": "#00843D",
+        "newzealand": "#00247D",
+        "ireland": "#169B62",
+    }
+    accent = country_accent.get(country, TREFF_BLUE)
+
+    if variant == "intro":
+        # Intro slide: "Jonathans Geschichte — Teil 3: Der erste Schneetag"
+        return f"""<div class="template-wrapper story-series story-series-intro" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(180deg, {TREFF_DARK} 0%, #1E2A4A 50%, {accent} 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 50px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;">
+      <div class="template-logo" style="width:100px;height:36px;background:{TREFF_BLUE};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;letter-spacing:1px;">TREFF</div>
+      <div class="series-badge" style="background:linear-gradient(135deg, {accent}, {TREFF_YELLOW});padding:8px 18px;border-radius:16px;color:#fff;font-weight:800;font-size:13px;letter-spacing:1px;">SERIE</div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;">
+      <div class="student-avatar" style="width:140px;height:140px;border-radius:50%;border:4px solid {TREFF_YELLOW};background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:56px;">{{{{student_name_initial}}}}</div>
+      <div class="arc-label" style="color:{TREFF_YELLOW};font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">{{{{arc_title}}}}</div>
+      <h1 class="template-headline" style="font-size:52px;font-weight:800;color:#FFFFFF;line-height:1.15;">{{{{student_name}}}}s Geschichte</h1>
+      <div class="episode-label" style="font-size:28px;font-weight:600;color:rgba(255,255,255,0.85);">Teil {{{{episode_number}}}} — {{{{episode_title}}}}</div>
+      <div class="progress-bar-container" style="width:80%;max-width:600px;margin-top:20px;">
+        <div class="progress-label" style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px;color:rgba(255,255,255,0.6);">
+          <span>Episode {{{{episode_number}}}}</span>
+          <span>von {{{{total_episodes}}}}</span>
+        </div>
+        <div class="progress-track" style="height:8px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;">
+          <div class="progress-fill" style="height:100%;background:linear-gradient(90deg, {TREFF_YELLOW}, {accent});border-radius:4px;width:40%;transition:width 0.5s;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="template-footer" style="text-align:center;padding-top:30px;">
+      <div class="swipe-hint" style="color:rgba(255,255,255,0.5);font-size:15px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <span class="swipe-arrow" style="font-size:24px;animation:swipeUp 1.5s infinite;">&#8593;</span>
+        Wische nach oben fuer mehr
+      </div>
+      <div style="margin-top:16px;color:rgba(255,255,255,0.35);font-size:12px;">@treff_sprachreisen</div>
+    </div>
+  </div>
+</div>"""
+
+    elif variant == "recap":
+        # Recap slide: "Bisher passiert..." with mini summary
+        return f"""<div class="template-wrapper story-series story-series-recap" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(180deg, #0F1629 0%, {TREFF_DARK} 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 50px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+      <div class="template-logo" style="width:100px;height:36px;background:{TREFF_BLUE};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">TREFF</div>
+      <div class="episode-badge" style="background:rgba(255,255,255,0.1);padding:6px 16px;border-radius:12px;color:rgba(255,255,255,0.7);font-weight:600;font-size:13px;">EP {{{{episode_number}}}} / {{{{total_episodes}}}}</div>
+    </div>
+    <div class="series-title-bar" style="background:rgba(255,255,255,0.05);border-left:4px solid {TREFF_YELLOW};padding:12px 18px;border-radius:0 8px 8px 0;margin-bottom:40px;">
+      <div style="color:{TREFF_YELLOW};font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">{{{{arc_title}}}}</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:14px;margin-top:4px;">{{{{student_name}}}}s Geschichte</div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;gap:30px;">
+      <h1 class="template-headline" style="font-size:44px;font-weight:800;color:#FFFFFF;line-height:1.15;">Bisher passiert...</h1>
+      <div class="recap-box" style="background:rgba(255,255,255,0.06);border-radius:16px;padding:30px;flex:1;">
+        <p class="recap-text" style="font-size:22px;color:rgba(255,255,255,0.85);line-height:1.6;">{{{{previously_text}}}}</p>
+      </div>
+      <div class="progress-bar-container" style="width:100%;">
+        <div class="progress-track" style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+          <div class="progress-fill" style="height:100%;background:linear-gradient(90deg, {TREFF_YELLOW}, {accent});border-radius:3px;width:40%;"></div>
+        </div>
+        <div class="progress-label" style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:rgba(255,255,255,0.4);">
+          <span>Episode {{{{episode_number}}}} von {{{{total_episodes}}}}</span>
+          <span>{{{{arc_title}}}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="template-footer" style="text-align:center;padding-top:24px;">
+      <div style="color:rgba(255,255,255,0.5);font-size:14px;">Tippe fuer die naechste Slide &#10145;</div>
+      <div style="margin-top:12px;color:rgba(255,255,255,0.3);font-size:12px;">@treff_sprachreisen</div>
+    </div>
+  </div>
+</div>"""
+
+    elif variant == "episode":
+        # Standard episode slide with content area and progress
+        return f"""<div class="template-wrapper story-series story-series-episode" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(180deg, {TREFF_DARK} 0%, #1A2544 60%, {accent}33 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 50px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <div class="template-logo" style="width:100px;height:36px;background:{TREFF_BLUE};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">TREFF</div>
+      <div class="episode-badge" style="background:{accent};padding:8px 18px;border-radius:20px;color:#fff;font-weight:800;font-size:14px;">EP {{{{episode_number}}}}</div>
+    </div>
+    <div class="series-title-bar" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div class="student-avatar-sm" style="width:44px;height:44px;border-radius:50%;border:3px solid {TREFF_YELLOW};background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;">{{{{student_name_initial}}}}</div>
+      <div>
+        <div style="color:#fff;font-weight:700;font-size:15px;">{{{{student_name}}}}</div>
+        <div style="color:{TREFF_YELLOW};font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">{{{{arc_title}}}}</div>
+      </div>
+    </div>
+    <div class="progress-bar-container" style="margin-bottom:32px;">
+      <div class="progress-track" style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+        <div class="progress-fill" style="height:100%;background:linear-gradient(90deg, {TREFF_YELLOW}, {accent});border-radius:2px;width:40%;"></div>
+      </div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;gap:24px;">
+      <h1 class="template-headline" style="font-size:40px;font-weight:800;color:#FFFFFF;line-height:1.15;">{{{{episode_title}}}}</h1>
+      <p class="template-body-text" style="font-size:22px;color:rgba(255,255,255,0.85);line-height:1.6;">{{{{body_text}}}}</p>
+    </div>
+    <div class="template-footer" style="margin-top:auto;padding-top:30px;">
+      <div class="progress-label" style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px;">
+        <span>Episode {{{{episode_number}}}} von {{{{total_episodes}}}}</span>
+        <span>{{{{arc_title}}}}</span>
+      </div>
+      <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:12px;">@treff_sprachreisen</div>
+    </div>
+  </div>
+</div>"""
+
+    elif variant == "cliffhanger":
+        # Cliffhanger slide: "Morgen geht es weiter!"
+        return f"""<div class="template-wrapper story-series story-series-cliffhanger" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(180deg, {TREFF_DARK} 0%, #0D0D1A 50%, {accent}44 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 50px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <div class="template-logo" style="width:100px;height:36px;background:{TREFF_BLUE};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">TREFF</div>
+      <div class="episode-badge" style="background:rgba(255,255,255,0.1);padding:6px 16px;border-radius:12px;color:rgba(255,255,255,0.7);font-weight:600;font-size:13px;">EP {{{{episode_number}}}} / {{{{total_episodes}}}}</div>
+    </div>
+    <div class="series-title-bar" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div class="student-avatar-sm" style="width:44px;height:44px;border-radius:50%;border:3px solid {TREFF_YELLOW};background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;">{{{{student_name_initial}}}}</div>
+      <div>
+        <div style="color:#fff;font-weight:700;font-size:15px;">{{{{student_name}}}}</div>
+        <div style="color:{TREFF_YELLOW};font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">{{{{arc_title}}}}</div>
+      </div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:32px;">
+      <div class="cliffhanger-icon" style="font-size:80px;animation:pulse 2s infinite;">&#128064;</div>
+      <p class="cliffhanger-text" style="font-size:28px;color:rgba(255,255,255,0.9);line-height:1.5;font-style:italic;max-width:800px;">{{{{cliffhanger_text}}}}</p>
+      <div class="divider" style="width:60px;height:3px;background:{TREFF_YELLOW};border-radius:2px;"></div>
+      <h1 class="template-headline" style="font-size:48px;font-weight:800;color:{TREFF_YELLOW};line-height:1.2;">Morgen geht es weiter!</h1>
+      <p class="next-hint" style="font-size:18px;color:rgba(255,255,255,0.5);">{{{{next_episode_hint}}}}</p>
+    </div>
+    <div class="template-footer" style="margin-top:auto;padding-top:24px;">
+      <div class="progress-bar-container" style="width:100%;margin-bottom:16px;">
+        <div class="progress-track" style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+          <div class="progress-fill" style="height:100%;background:linear-gradient(90deg, {TREFF_YELLOW}, {accent});border-radius:3px;width:40%;"></div>
+        </div>
+        <div class="progress-label" style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:rgba(255,255,255,0.4);">
+          <span>Episode {{{{episode_number}}}} von {{{{total_episodes}}}}</span>
+          <span>Fortsetzung folgt...</span>
+        </div>
+      </div>
+      <div style="text-align:center;color:rgba(255,255,255,0.3);font-size:12px;">@treff_sprachreisen</div>
+    </div>
+  </div>
+</div>"""
+
+    elif variant == "finale":
+        # Finale slide: Series completion celebration
+        return f"""<div class="template-wrapper story-series story-series-finale" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(180deg, {accent} 0%, {TREFF_DARK} 50%, #0A0A1A 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px 50px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+      <div class="template-logo" style="width:100px;height:36px;background:{TREFF_BLUE};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">TREFF</div>
+      <div class="finale-badge" style="background:linear-gradient(135deg, {TREFF_YELLOW}, #FFB800);padding:8px 20px;border-radius:16px;color:{TREFF_DARK};font-weight:800;font-size:13px;letter-spacing:1px;">FINALE</div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:28px;">
+      <div class="celebration-icon" style="font-size:72px;">&#127881;</div>
+      <div class="student-avatar" style="width:120px;height:120px;border-radius:50%;border:4px solid {TREFF_YELLOW};background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:48px;">{{{{student_name_initial}}}}</div>
+      <h1 class="template-headline" style="font-size:44px;font-weight:800;color:#FFFFFF;line-height:1.15;">{{{{episode_title}}}}</h1>
+      <div class="arc-label" style="color:{TREFF_YELLOW};font-size:18px;font-weight:600;">{{{{arc_title}}}} — Das Finale</div>
+      <p class="template-body-text" style="font-size:22px;color:rgba(255,255,255,0.85);line-height:1.6;max-width:800px;">{{{{body_text}}}}</p>
+      <div class="progress-bar-container" style="width:80%;max-width:600px;margin-top:16px;">
+        <div class="progress-track" style="height:8px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;">
+          <div class="progress-fill" style="height:100%;background:linear-gradient(90deg, {TREFF_YELLOW}, #FFB800, {accent});border-radius:4px;width:100%;"></div>
+        </div>
+        <div class="progress-label" style="display:flex;justify-content:center;margin-top:10px;font-size:14px;color:{TREFF_YELLOW};font-weight:600;">
+          <span>Episode {{{{episode_number}}}} von {{{{total_episodes}}}} — Abgeschlossen!</span>
+        </div>
+      </div>
+    </div>
+    <div class="template-footer" style="text-align:center;padding-top:24px;">
+      <div class="cta-container" style="margin-bottom:16px;">
+        <span class="template-cta" style="display:inline-block;background:{TREFF_YELLOW};color:{TREFF_DARK};padding:14px 32px;border-radius:12px;font-weight:800;font-size:18px;">{{{{cta_text}}}}</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.3);font-size:12px;">@treff_sprachreisen</div>
+    </div>
+  </div>
+</div>"""
+
+    # Fallback to episode variant
+    return _make_story_series_html("episode", country)
+
+
+def _make_story_series_css() -> str:
+    """Generate CSS for story-series templates with animations."""
+    return """
+.template-wrapper.story-series {
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+.template-wrapper.story-series * {
+  box-sizing: border-box;
+}
+.template-headline {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.series-badge, .finale-badge {
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.episode-badge {
+  backdrop-filter: blur(4px);
+}
+.student-avatar, .student-avatar-sm {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.recap-box {
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.progress-fill {
+  transition: width 0.5s ease-out;
+}
+.cliffhanger-text {
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.template-cta {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(253,208,0,0.3);
+}
+@keyframes swipeUp {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-8px); opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+"""
+
+
+# Country-specific series color themes
+SERIES_COUNTRY_THEMES = {
+    "usa": {"primary": "#B22234", "secondary": "#3C3B6E", "accent": "#FFFFFF", "background": "#1A1A2E"},
+    "canada": {"primary": "#FF0000", "secondary": "#FFFFFF", "accent": "#FF0000", "background": "#1A1A2E"},
+    "australia": {"primary": "#00843D", "secondary": "#FFCD00", "accent": "#012169", "background": "#1A1A2E"},
+    "newzealand": {"primary": "#00247D", "secondary": "#CC142B", "accent": "#FFFFFF", "background": "#1A1A2E"},
+    "ireland": {"primary": "#169B62", "secondary": "#FF883E", "accent": "#FFFFFF", "background": "#1A1A2E"},
+}
+
+# Story series template definitions
+STORY_SERIES_TEMPLATES = [
+    {
+        "name": "Serien-Intro: Neue Episode",
+        "category": "story_series",
+        "platform_format": "story",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_number", "episode_title", "student_name", "student_name_initial", "total_episodes"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_series_variant": "intro",
+    },
+    {
+        "name": "Serien-Recap: Bisher passiert",
+        "category": "story_series",
+        "platform_format": "story",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_number", "student_name", "previously_text", "total_episodes"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_series_variant": "recap",
+    },
+    {
+        "name": "Serien-Episode: Standard",
+        "category": "story_series",
+        "platform_format": "story",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_number", "episode_title", "student_name", "student_name_initial", "body_text", "total_episodes"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_series_variant": "episode",
+    },
+    {
+        "name": "Serien-Cliffhanger: Morgen weiter!",
+        "category": "story_series",
+        "platform_format": "story",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_number", "student_name", "student_name_initial", "cliffhanger_text", "next_episode_hint", "total_episodes"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_series_variant": "cliffhanger",
+    },
+    {
+        "name": "Serien-Finale: Abschluss",
+        "category": "story_series",
+        "platform_format": "story",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_number", "episode_title", "student_name", "student_name_initial", "body_text", "cta_text", "total_episodes"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_series_variant": "finale",
+    },
+]
+
+
 def _make_html(category: str, platform: str, variant: str = "default") -> str:
     """Generate HTML template content for a given category and platform."""
     # Dimensions based on platform
@@ -360,6 +671,8 @@ DEFAULT_TEMPLATES = [
         "is_country_themed": False,
         "_story_teaser_variant": "finale",
     },
+    # --- STORY-SERIEN (Instagram Story series templates) ---
+    *STORY_SERIES_TEMPLATES,
     # --- COUNTRY-THEMED TEMPLATES ---
     {
         "name": "USA Highschool Spotlight",
@@ -413,11 +726,15 @@ async def seed_default_templates(db: AsyncSession) -> int:
         category = tpl_data["category"]
         platform = tpl_data["platform_format"]
 
-        # Generate HTML and CSS - use special templates for story_teaser
+        # Generate HTML and CSS - use special templates for story_teaser and story_series
         if category == "story_teaser":
             variant = tpl_data.get("_story_teaser_variant", "neue_serie")
             html_content = _make_story_teaser_html(variant)
             css_content = _make_story_teaser_css()
+        elif category == "story_series":
+            variant = tpl_data.get("_story_series_variant", "episode")
+            html_content = _make_story_series_html(variant)
+            css_content = _make_story_series_css()
         else:
             html_content = _make_html(category, platform)
             css_content = _make_css(category)
@@ -508,4 +825,65 @@ async def seed_story_teaser_templates(db: AsyncSession) -> int:
 
     await db.commit()
     logger.info(f"Seeded {created} story-teaser templates.")
+    return created
+
+
+async def seed_story_series_templates(db: AsyncSession) -> int:
+    """Seed story-series templates if they don't exist yet.
+
+    These are Instagram Story templates optimized for multi-part series:
+    Intro, Recap, Standard Episode, Cliffhanger, and Finale slides.
+    Each has a consistent design with series title, episode number,
+    progress bar, and navigation hints.
+    """
+    # Check if story-series templates already exist
+    result = await db.execute(
+        select(func.count()).select_from(Template).where(
+            Template.is_default == True,
+            Template.category == "story_series",
+        )
+    )
+    existing_count = result.scalar()
+
+    if existing_count > 0:
+        logger.info(f"Found {existing_count} story-series templates, skipping seed.")
+        return 0
+
+    logger.info("No story-series templates found. Seeding...")
+    created = 0
+
+    for tpl_data in STORY_SERIES_TEMPLATES:
+        variant = tpl_data.get("_story_series_variant", "episode")
+        country = tpl_data.get("country")
+        html_content = _make_story_series_html(variant, country)
+        css_content = _make_story_series_css()
+
+        # Use country-specific colors if applicable
+        if country and country in SERIES_COUNTRY_THEMES:
+            colors = json.dumps(SERIES_COUNTRY_THEMES[country])
+        else:
+            colors = DEFAULT_COLORS
+
+        template = Template(
+            name=tpl_data["name"],
+            category="story_series",
+            platform_format=tpl_data["platform_format"],
+            slide_count=tpl_data["slide_count"],
+            html_content=html_content,
+            css_content=css_content,
+            default_colors=colors,
+            default_fonts=DEFAULT_FONTS,
+            placeholder_fields=tpl_data["placeholder_fields"],
+            thumbnail_url=None,
+            is_default=True,
+            is_country_themed=tpl_data.get("is_country_themed", False),
+            country=tpl_data.get("country"),
+            version=1,
+            parent_template_id=None,
+        )
+        db.add(template)
+        created += 1
+
+    await db.commit()
+    logger.info(f"Seeded {created} story-series templates.")
     return created

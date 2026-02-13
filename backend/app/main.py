@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import engine, Base, async_session
-from app.core.seed_templates import seed_default_templates, seed_story_teaser_templates
+from app.core.seed_templates import seed_default_templates, seed_story_teaser_templates, seed_story_series_templates
 from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
@@ -97,6 +97,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} story-teaser templates")
         except Exception as e:
             logger.error(f"Failed to seed story-teaser templates: {e}")
+
+    # Seed story-series templates if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_story_series_templates(session)
+            if count > 0:
+                logger.info(f"Seeded {count} story-series templates")
+        except Exception as e:
+            logger.error(f"Failed to seed story-series templates: {e}")
 
     # Seed default content suggestions if not already present
     async with async_session() as session:

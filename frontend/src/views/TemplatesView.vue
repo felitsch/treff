@@ -107,6 +107,13 @@ const editorPreviewHtml = computed(() => {
   html = html.replace(/\{\{cliffhanger_text\}\}/g, escapeHtml('Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet...'))
   html = html.replace(/\{\{next_episode_hint\}\}/g, escapeHtml('Naechste Episode: Jonathan entdeckt eine neue Seite von Amerika!'))
   html = html.replace(/\{\{episode_number\}\}/g, escapeHtml('3'))
+  html = html.replace(/\{\{episode_title\}\}/g, escapeHtml('Der erste Schneetag'))
+  html = html.replace(/\{\{total_episodes\}\}/g, escapeHtml('8'))
+  html = html.replace(/\{\{student_name\}\}/g, escapeHtml('Jonathan'))
+  html = html.replace(/\{\{student_name_initial\}\}/g, escapeHtml('J'))
+  html = html.replace(/\{\{arc_title\}\}/g, escapeHtml('Mein Jahr in Seattle'))
+  html = html.replace(/\{\{student_photo\}\}/g, escapeHtml('J'))
+  html = html.replace(/\{\{episode_preview\}\}/g, escapeHtml('Wie es weitergeht...'))
   // Remove any remaining unmatched placeholders
   html = html.replace(/\{\{image\}\}/g, '')
   html = html.replace(/\{\{[^}]+\}\}/g, '')
@@ -366,6 +373,7 @@ const categories = {
   reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '\u{1F3AC}', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
   story_posts: { label: 'Story-Posts', icon: '\u{1F4F1}', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
   story_teaser: { label: 'Story-Teaser', icon: '\u{1F449}', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
+  story_series: { label: 'Story-Serien', icon: '\u{1F4DA}', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300' },
 }
 
 // Platform format labels
