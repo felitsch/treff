@@ -237,14 +237,27 @@ function prevPreviewSlide() {
   if (currentPreviewSlide.value > 0) currentPreviewSlide.value--
 }
 
+// ── Ctrl+S keyboard shortcut to save ─────────────────────────────────
+function handleCtrlS(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!saving.value && post.value) {
+      savePost()
+    }
+  }
+}
+
 onMounted(() => {
   loadPost()
   startListening()
+  window.addEventListener('keydown', handleCtrlS, true)
 })
 
 onUnmounted(() => {
   stopListening()
   clearTimeout(snapshotTimer)
+  window.removeEventListener('keydown', handleCtrlS, true)
 })
 
 // ── Unsaved changes warning ───────────────────────────────────────────
