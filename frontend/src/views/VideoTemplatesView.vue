@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const { addToast } = useToast()
 
@@ -246,7 +247,7 @@ onMounted(() => {
 <template>
   <div class="p-6 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="vt-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Video-Branding Templates</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
@@ -254,6 +255,7 @@ onMounted(() => {
         </p>
       </div>
       <button
+        data-tour="vt-create"
         class="px-4 py-2 bg-treff-blue text-white rounded-lg hover:bg-treff-blue/90 transition-colors"
         @click="showCreateForm = !showCreateForm"
       >
@@ -328,11 +330,11 @@ onMounted(() => {
     </div>
 
     <!-- Main Layout: 2 columns -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div data-tour="vt-workflow" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left: Template Library (2/3) -->
       <div class="lg:col-span-2">
         <!-- Tabs & Filters -->
-        <div class="flex flex-wrap items-center gap-3 mb-4">
+        <div data-tour="vt-filters" class="flex flex-wrap items-center gap-3 mb-4">
           <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <button
               v-for="tab in [{ key: 'all', label: 'Alle' }, { key: 'intro', label: 'Intros' }, { key: 'outro', label: 'Outros' }]"
@@ -372,7 +374,7 @@ onMounted(() => {
         </div>
 
         <!-- Template Grid -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div v-else data-tour="vt-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             v-for="tmpl in filteredTemplates"
             :key="tmpl.id"
@@ -457,7 +459,7 @@ onMounted(() => {
 
       <!-- Right: Apply Panel (1/3) -->
       <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sticky top-6">
+        <div data-tour="vt-apply" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sticky top-6">
           <h2 class="text-lg font-semibold mb-4">Branding anwenden</h2>
 
           <!-- Video Asset Selector -->
@@ -643,5 +645,8 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Tour System -->
+    <TourSystem page-key="video-templates" />
   </div>
 </template>

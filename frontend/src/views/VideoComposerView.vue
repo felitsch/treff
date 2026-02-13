@@ -285,7 +285,7 @@ onMounted(() => {
 <template>
   <div class="max-w-7xl mx-auto px-4 py-6" data-testid="video-composer-page">
     <!-- Page header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="vc-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <span class="text-2xl">🎬</span>
@@ -300,6 +300,7 @@ onMounted(() => {
           to="/video-templates"
           class="px-3 py-2 text-sm font-medium text-treff-blue bg-treff-blue/10 rounded-lg hover:bg-treff-blue/20 transition-colors flex items-center gap-1.5"
           data-testid="branding-templates-link"
+          data-tour="vc-branding-link"
         >
           <span>🏷️</span> Intro/Outro Branding
         </router-link>
@@ -317,7 +318,7 @@ onMounted(() => {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- LEFT: Clip Library -->
       <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div data-tour="vc-library" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📁</span> Video-Bibliothek
@@ -394,7 +395,7 @@ onMounted(() => {
       <!-- RIGHT: Timeline & Controls -->
       <div class="lg:col-span-2 space-y-4">
         <!-- Output Format Selector -->
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div data-tour="vc-format" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <div class="flex items-center gap-4 flex-wrap">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Ausgabe-Format:</span>
             <div class="flex gap-2">
@@ -427,7 +428,7 @@ onMounted(() => {
         </div>
 
         <!-- Timeline -->
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div data-tour="vc-timeline" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>🎞️</span> Timeline
@@ -709,7 +710,7 @@ onMounted(() => {
         </div>
 
         <!-- Action Bar -->
-        <div class="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div data-tour="vc-compose" class="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
             <input
               type="checkbox"
@@ -781,5 +782,8 @@ onMounted(() => {
         </div>
       </div>
     </teleport>
+
+    <!-- Tour System -->
+    <TourSystem page-key="video-composer" />
   </div>
 </template>

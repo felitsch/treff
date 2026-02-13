@@ -336,7 +336,7 @@ onMounted(() => {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- LEFT: Video Library -->
       <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div data-tour="ve-library" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📁</span> Video auswaehlen
@@ -450,7 +450,7 @@ onMounted(() => {
           </div>
 
           <!-- Aspect Ratio Selection -->
-          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="aspect-ratio-section">
+          <div data-tour="ve-aspect-ratio" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="aspect-ratio-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span>📐</span> Seitenverhaeltnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
             </h3>
@@ -507,7 +507,7 @@ onMounted(() => {
           </div>
 
           <!-- Focus Point (Smart Cropping) -->
-          <div v-if="cropInfo?.needs_crop" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="focus-point-section">
+          <div v-if="cropInfo?.needs_crop" data-tour="ve-focus" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="focus-point-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span>🎯</span> Fokus-Punkt (Smart Cropping) <HelpTooltip :text="tooltipTexts.video.focusPoint" size="sm" />
             </h3>
@@ -559,7 +559,7 @@ onMounted(() => {
           </div>
 
           <!-- Platform Preset -->
-          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="platform-section">
+          <div data-tour="ve-platform" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="platform-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span>📱</span> Platform-Preset
             </h3>
@@ -593,7 +593,7 @@ onMounted(() => {
           </div>
 
           <!-- Quality Slider -->
-          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="quality-section">
+          <div data-tour="ve-quality" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="quality-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span>🎚️</span> Kompression: Qualitaet vs. Dateigroesse <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
             </h3>
@@ -618,7 +618,7 @@ onMounted(() => {
           </div>
 
           <!-- Batch Mode: Format Selection -->
-          <div v-if="batchMode" class="bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-200 dark:border-purple-800 p-4" data-testid="batch-section">
+          <div v-if="batchMode" data-tour="ve-batch" class="bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-200 dark:border-purple-800 p-4" data-testid="batch-section">
             <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
               <span>📦</span> Batch-Export: Formate waehlen
             </h3>
@@ -782,7 +782,7 @@ onMounted(() => {
           </div>
 
           <!-- Export History -->
-          <div v-if="exportHistory.length > 0" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-testid="export-history">
+          <div v-if="exportHistory.length > 0" data-tour="ve-history" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-testid="export-history">
             <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span>📋</span> Export-Verlauf

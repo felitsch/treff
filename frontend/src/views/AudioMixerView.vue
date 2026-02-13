@@ -317,7 +317,7 @@ onMounted(async () => {
         <div class="lg:col-span-1 space-y-6">
 
           <!-- Step 1: Video Selection -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-video-select" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
               Video waehlen
@@ -372,7 +372,7 @@ onMounted(async () => {
           </div>
 
           <!-- Step 2: Audio Source Toggle -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-audio-source" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
               Audio-Quelle
@@ -531,7 +531,7 @@ onMounted(async () => {
         <div class="lg:col-span-2 space-y-6">
 
           <!-- Waveform Visualizations -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-waveform" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
               Audio-Waveform Visualisierung
@@ -607,7 +607,7 @@ onMounted(async () => {
           </div>
 
           <!-- Volume Mixer -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-mixer" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">4</span>
               Lautstaerke-Mixer
@@ -716,7 +716,7 @@ onMounted(async () => {
           </div>
 
           <!-- Fade Effects -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-fade" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
               Fade-Effekte
@@ -792,7 +792,7 @@ onMounted(async () => {
           </div>
 
           <!-- Output Options + Mix Button -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div data-tour="am-output" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">6</span>
               Ausgabe-Optionen

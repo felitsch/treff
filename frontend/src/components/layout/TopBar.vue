@@ -32,6 +32,9 @@ const routeToTourKey = {
   '/video-export': 'video-export',
   '/audio-mixer': 'audio-mixer',
   '/thumbnail-generator': 'thumbnail-generator',
+  '/video-overlays': 'video-overlays',
+  '/video-composer': 'video-composer',
+  '/video-templates': 'video-templates',
 }
 
 // Current page tour key (reactive to route changes)
