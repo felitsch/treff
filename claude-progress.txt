@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #214: Students Tour - Schueler-Datenbank
+**Date:** 2026-02-13
+**Feature ID:** #214
+**Status:** PASSING
+
+### What was implemented:
+Expanded the Students page tour from 2 generic steps to 5 comprehensive, educational steps covering the full purpose and workflow of the Schüler-Datenbank.
+
+### Tour Steps (5 total):
+1. **"Warum eine Schueler-Datenbank?"** (targets: students-header) - Explains why real student stories = best social media content, how the database feeds KI text generation
+2. **"Schueler anlegen: Name, Land, Bio & Fun-Facts"** (targets: students-add-btn) - Explains the create form fields, which are mandatory vs optional, and how each field improves content quality
+3. **"Persoenlichkeits-Presets: Tonalitaet steuern"** (targets: students-personality on first student card) - Explains tone selection (witzig, emotional, motivierend, etc.), humor level, and how presets affect KI output
+4. **"Story-Arcs: Schueler als Hauptfiguren"** (targets: students-story-arc-hint) - Explains the connection between students and multi-part story arcs, with example ("Lisas erstes Semester in Neuseeland")
+5. **"Wie Schueler-Daten in Posts einfliessen"** (targets: students-list) - Explains how student data flows into the Post-Wizard and KI text generation for personalized content
+
+### Files modified:
+- `frontend/src/tours/tourConfigs.js` - Expanded students tour from 2 to 5 steps with comprehensive descriptions
+- `frontend/src/views/StudentsView.vue` - Added 3 new data-tour attributes:
+  - `data-tour="students-add-btn"` on the "+ Student hinzufuegen" button
+  - `data-tour="students-story-arc-hint"` wrapper div around WorkflowHint
+  - `data-tour="students-personality"` conditionally on the first student card (idx === 0)
+
+### Verification steps completed:
+1. Navigate to Students page - PASS (page loads, tour auto-starts on first visit)
+2. Tour Step 1/5: "Warum eine Schueler-Datenbank?" - PASS (highlights header)
+3. Tour Step 2/5: "Schueler anlegen" - PASS (highlights + Student hinzufuegen button)
+4. Tour Step 3/5: "Persoenlichkeits-Presets" - PASS (highlights first student card with personality badge visible)
+5. Tour Step 4/5: "Story-Arcs: Schueler als Hauptfiguren" - PASS (highlights story-arc-hint area)
+6. Tour Step 5/5: "Wie Schueler-Daten in Posts einfliessen" - PASS (highlights student list, shows "Tour beenden")
+7. In-page "? Tour" restart button - PASS (restarts tour from step 1)
+8. TopBar "Seiten-Tour starten" button - PASS (restarts tour from step 1)
+9. Console errors: 0 errors - PASS
+10. Mock data grep: zero matches - PASS
+11. Test data cleanup: created/deleted Lisa Schmidt test student - PASS
+
+### Notes:
+- Steps 3 and 5 target elements (student cards) that only exist when students are present. The TourSystem gracefully skips missing targets (jumps from step 2 to step 4 when empty).
+- Step 3 was placed on the first student card (idx === 0) via conditional `data-tour` binding.
+- The tourConfigs.js changes were auto-committed by a concurrent session alongside feature #216.
+
+### Git commit: ddb649e
+### Current state:
+- Feature #214 marked as PASSING
+- 217/225 features passing (96.4%)
+
+---
+
 ## Session - Feature #216: Recurring Formats Tour - Wiederkehrende Formate
 **Date:** 2026-02-13
 **Feature ID:** #216
