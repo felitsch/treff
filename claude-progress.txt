@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #216: Recurring Formats Tour - Wiederkehrende Formate
+**Date:** 2026-02-13
+**Feature ID:** #216
+**Status:** PASSING
+
+### What was implemented:
+Expanded the Recurring Formats page tour from 1 step to 5 comprehensive steps explaining the concept, creation, AI-preview, calendar integration, and best practices.
+
+### Tour Steps:
+1. **Was sind wiederkehrende Formate?** (formats-header) - Explains recurring formats as regular content rubrics (Motivation Monday, Freitags-Fail, Throwback Thursday), why they create recognition and structure
+2. **Format erstellen: Name, Frequenz & Ton** (formats-create) - Highlights the "+ Neues Format" button, explains all form fields: name, frequency (daily/weekly/biweekly/monthly), preferred day/time, tone, hashtags
+3. **KI-Textvorschlag: AI-Preview** (formats-ai-preview) - Highlights the "KI-Text" button on format cards, explains topic/country input and AI-generated title, caption, hashtags
+4. **Kalender & Wochenplaner: Automatische Integration** (formats-info) - Highlights the info section, explains how active formats appear as placeholders in calendar and are suggested by the weekly planner
+5. **Best Practices: Die richtige Balance** (formats-list) - Highlights the formats grid, recommends 2-3 formats per week with example schedule, advises deactivating instead of deleting
+
+### data-tour attributes added to RecurringFormatsView.vue:
+- `formats-create` on "+ Neues Format" button (always visible)
+- `formats-list` on the formats grid container
+- `formats-ai-preview` on KI-Text button (first format card)
+- `formats-info` on the info section at bottom
+
+### Verification completed:
+- All 5 tour steps navigable via Weiter/Zurueck buttons - PASS
+- Tour auto-starts on first visit - PASS
+- Tour restart via in-page "❓ Tour" button - PASS
+- Tour restart via TopBar "Seiten-Tour starten" button - PASS
+- Tour beenden correctly ends the tour - PASS
+- Console errors: 0 - PASS
+- Mock data grep: zero matches - PASS
+
+### Screenshots captured:
+- feature216-step1-was-sind-formate.png (Step 1: header highlighted)
+- feature216-step2-format-erstellen.png (Step 2: create button highlighted)
+- feature216-step3-ai-preview.png (Step 3: KI-Text button highlighted)
+- feature216-step4-kalender-integration.png (Step 4: info section highlighted)
+- feature216-step5-fixed-position.png (Step 5: formats grid highlighted, tooltip visible)
+
+### Files modified:
+- frontend/src/tours/tourConfigs.js - Expanded recurring-formats tour from 1 to 5 steps
+- frontend/src/views/RecurringFormatsView.vue - Added 4 data-tour attributes
+
+### Git commit: 850a8fe
+
+### Current state:
+- Feature #216 marked as PASSING
+- 217/225 features passing (96.4%)
+
+---
+
 ## Session - Feature #212: Kalender Tour - Content-Planung
 **Date:** 2026-02-13
 **Feature ID:** #212
