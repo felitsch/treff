@@ -26,6 +26,11 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const country = ref('')
   const tone = ref('jugendlich')
 
+  // Step 4: Humor Format (optional)
+  const humorFormats = ref([])
+  const selectedHumorFormat = ref(null)
+  const loadingHumorFormats = ref(false)
+
   // Step 5: AI Generation
   const generatingText = ref(false)
   const generatedContent = ref(null)
@@ -79,6 +84,9 @@ export const useCreatePostStore = defineStore('createPost', () => {
     keyPoints.value = ''
     country.value = ''
     tone.value = 'jugendlich'
+    selectedHumorFormat.value = null
+    humorFormats.value = []
+    loadingHumorFormats.value = false
     generatedContent.value = null
     slides.value = []
     captionInstagram.value = ''
@@ -139,6 +147,9 @@ export const useCreatePostStore = defineStore('createPost', () => {
     keyPoints,
     country,
     tone,
+    humorFormats,
+    selectedHumorFormat,
+    loadingHumorFormats,
     // Step 5
     generatingText,
     generatedContent,

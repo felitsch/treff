@@ -23,6 +23,7 @@ from app.models.asset import Asset
 from app.models.setting import Setting
 from app.models.post import Post
 from app.models.content_suggestion import ContentSuggestion
+from app.models.humor_format import HumorFormat
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -1613,3 +1614,360 @@ async def suggest_weekly_plan(
         "week_start": (today + timedelta(days=((7 - today.weekday()) % 7) or 7)).isoformat(),
         "message": f"Wochenplan mit {len(plan)} Posts generiert! ({source})",
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Humor Format endpoints
+# ═══════════════════════════════════════════════════════════════════════
+
+@router.get("/humor-formats")
+async def list_humor_formats(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all available humor/meme formats with their templates and examples.
+
+    Returns a list of humor formats that can be used with the generate-humor endpoint.
+    """
+    result = await db.execute(select(HumorFormat).order_by(HumorFormat.id))
+    formats = result.scalars().all()
+
+    return {
+        "humor_formats": [
+            {
+                "id": fmt.id,
+                "name": fmt.name,
+                "description": fmt.description,
+                "template_structure": json.loads(fmt.template_structure) if fmt.template_structure else {},
+                "example_text": json.loads(fmt.example_text) if fmt.example_text else {},
+                "platform_fit": fmt.platform_fit,
+                "icon": fmt.icon,
+            }
+            for fmt in formats
+        ],
+        "total": len(formats),
+    }
+
+
+@router.get("/humor-formats/{format_id}")
+async def get_humor_format(
+    format_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a single humor format by ID."""
+    result = await db.execute(select(HumorFormat).where(HumorFormat.id == format_id))
+    fmt = result.scalar_one_or_none()
+    if not fmt:
+        raise HTTPException(status_code=404, detail="Humor format not found")
+
+    return {
+        "id": fmt.id,
+        "name": fmt.name,
+        "description": fmt.description,
+        "template_structure": json.loads(fmt.template_structure) if fmt.template_structure else {},
+        "example_text": json.loads(fmt.example_text) if fmt.example_text else {},
+        "platform_fit": fmt.platform_fit,
+        "icon": fmt.icon,
+    }
+
+
+def _generate_humor_with_gemini(
+    api_key: str,
+    format_name: str,
+    format_description: str,
+    template_structure: dict,
+    example_text: dict,
+    topic: str,
+    country: str | None = None,
+    tone: str = "jugendlich",
+) -> dict | None:
+    """Generate humor content using Gemini 2.5 Flash for a specific humor format.
+
+    Returns structured humor content or None if generation fails.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = {
+            "usa": "USA", "canada": "Kanada", "australia": "Australien",
+            "newzealand": "Neuseeland", "ireland": "Irland"
+        }.get(country, country or "allgemein")
+
+        country_info = ""
+        if country:
+            country_data = {
+                "usa": "Classic + Select Programme, ab 13.800 EUR, Highlights: Football, Prom, Yellow School Bus, Gastfamilien",
+                "canada": "Englisch + Franzoesisch, ab 15.200 EUR, Highlights: Hockey, Poutine, Rocky Mountains, Multikulti",
+                "australia": "ab 19.800 EUR, Highlights: Surfen, Schuluniformen, Koalas, Great Barrier Reef, relaxte Kultur",
+                "newzealand": "ab 17.900 EUR, Highlights: Maori-Kultur, Schafe, Herr der Ringe, Haka, atemberaubende Natur",
+                "ireland": "ab 14.500 EUR, Highlights: Freundliche Menschen, Pub Culture, gruene Landschaften, Geschichte",
+            }
+            country_info = f"\nLand-Details: {country_data.get(country, '')}"
+
+        tone_instruction = (
+            "Verwende Du-Anrede, 3-5 Emojis, begeisternd und lustig, Sprache wie ein cooler aelterer Freund."
+            if tone == "jugendlich"
+            else "Verwende Sie-Anrede, max 2-3 Emojis, humorvoll aber professionell, betone Sicherheit und Qualitaet."
+        )
+
+        system_prompt = f"""Du bist der Social-Media-Content-Creator fuer TREFF Sprachreisen (seit 1984).
+Deine Aufgabe: Generiere humorvolle/unterhaltsame Inhalte fuer Instagram und TikTok.
+
+MARKENRICHTLINIEN:
+- Firma: TREFF Sprachreisen, gegruendet 1984, Eningen u.A.
+- Zielgruppe: Deutsche Schueler (14-18) und deren Eltern
+- Ton: {tone_instruction}
+- Laender: USA, Kanada, Australien, Neuseeland, Irland
+- Ziel: Engagement steigern, Markenbekanntheit erhoehen, Humor + Information verbinden
+
+WICHTIG:
+- Alle Texte auf DEUTSCH
+- Humor soll relatable sein fuer Austauschschueler
+- Nie respektlos gegenueber Gastlaendern oder Kulturen
+- TREFF immer positiv darstellen, aber nicht zu werblich
+- Hashtags IMMER mit #TREFFSprachreisen beginnen
+"""
+
+        content_prompt = f"""Generiere humorvollen Content im Format "{format_name}".
+
+FORMAT-BESCHREIBUNG: {format_description}
+
+TEMPLATE-STRUKTUR: {json.dumps(template_structure, ensure_ascii=False)}
+
+BEISPIEL (als Referenz fuer Stil und Struktur): {json.dumps(example_text, ensure_ascii=False)}
+
+THEMA: {topic}
+LAND: {country_name}{country_info}
+
+Generiere neuen, kreativen Content der dem Format und Beispiel folgt aber NICHT kopiert.
+Der Content soll viral-tauglich sein und zum Kommentieren/Teilen anregen.
+
+Antworte als JSON mit GENAU diesen Feldern:
+- "format_name": "{format_name}"
+- "topic": das Thema
+- "content": ein Objekt mit den Format-spezifischen Feldern (gleiche Struktur wie das Beispiel)
+- "caption": Instagram/TikTok Caption (2-3 Saetze, emotional, mit Emojis, Call-to-Action)
+- "hashtags": Liste von 5-8 relevanten Hashtags (erstes muss #TREFFSprachreisen sein)
+- "slides": eine Liste mit mindestens 1 Slide-Objekt, jedes mit: headline, subheadline, body_text, cta_text
+
+NUR valides JSON zurueckgeben, kein Markdown, keine Erklaerung."""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.9,
+                max_output_tokens=4096,
+            ),
+        )
+
+        response_text = response.text.strip()
+
+        # Handle potential markdown code fences
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+
+        result = json.loads(response_text)
+
+        if not isinstance(result, dict):
+            logger.warning("Gemini humor response is not a dict")
+            return None
+
+        # Ensure required fields
+        result.setdefault("format_name", format_name)
+        result.setdefault("topic", topic)
+        result.setdefault("content", {})
+        result.setdefault("caption", "")
+        result.setdefault("hashtags", ["#TREFFSprachreisen"])
+
+        # Ensure slides array exists
+        if "slides" not in result or not isinstance(result.get("slides"), list):
+            # Build slides from content fields
+            content = result.get("content", {})
+            slide = {
+                "slide_index": 0,
+                "headline": content.get("title", content.get("pov_title", content.get("situation", format_name))),
+                "subheadline": content.get("reality_text", content.get("scene_text", content.get("fact", ""))),
+                "body_text": content.get("expectation_text", content.get("punchline", content.get("conclusion", ""))),
+                "cta_text": content.get("reassurance", content.get("cta", content.get("verdict", "Mehr auf treff-sprachreisen.de!"))),
+                "bullet_points": content.get("things_list", content.get("items", content.get("bingo_items", []))),
+            }
+            result["slides"] = [slide]
+        else:
+            # Ensure all slides have required fields
+            for i, slide in enumerate(result["slides"]):
+                slide.setdefault("slide_index", i)
+                slide.setdefault("headline", "")
+                slide.setdefault("subheadline", "")
+                slide.setdefault("body_text", "")
+                slide.setdefault("cta_text", "")
+                slide.setdefault("bullet_points", [])
+
+        result["source"] = "gemini"
+        logger.info("Gemini humor generation succeeded for format=%s, topic=%s", format_name, topic)
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.warning("Failed to parse Gemini humor JSON response: %s", e)
+        return None
+    except ImportError:
+        logger.warning("google-genai package not installed")
+        return None
+    except Exception as e:
+        logger.warning("Gemini humor generation failed: %s", e)
+        return None
+
+
+def _generate_humor_rule_based(
+    format_name: str,
+    template_structure: dict,
+    example_text: dict,
+    topic: str,
+    country: str | None = None,
+) -> dict:
+    """Generate humor content using the example text as a template (rule-based fallback).
+
+    Returns the example text with minor customizations based on topic and country.
+    """
+    import copy
+    content = copy.deepcopy(example_text)
+
+    country_name = {
+        "usa": "USA", "canada": "Kanada", "australia": "Australien",
+        "newzealand": "Neuseeland", "ireland": "Irland"
+    }.get(country, "")
+
+    country_flag = {
+        "usa": "🇺🇸", "canada": "🇨🇦", "australia": "🇦🇺",
+        "newzealand": "🇳🇿", "ireland": "🇮🇪"
+    }.get(country, "🌍")
+
+    # Build a slide from the example content
+    headline = content.get("title", content.get("pov_title", content.get("situation", content.get("myth", format_name))))
+    subheadline = content.get("reality_text", content.get("scene_text", content.get("fact", "")))
+    body_text = content.get("expectation_text", content.get("punchline", content.get("conclusion", content.get("reassurance", ""))))
+    cta_text = content.get("verdict", content.get("cta", content.get("fun_fact", "Mehr auf treff-sprachreisen.de!")))
+
+    # For list-based formats, join items into body_text
+    list_items = content.get("things_list", content.get("items", content.get("bingo_items", content.get("clues", []))))
+    if list_items and isinstance(list_items, list):
+        if isinstance(list_items[0], dict):
+            body_text = "\n".join([f"{item.get('level', '')}: {item.get('text', '')}" for item in list_items])
+        else:
+            body_text = "\n".join(list_items)
+
+    # Rankings special handling
+    rankings = content.get("rankings", [])
+    if rankings and isinstance(rankings, list) and isinstance(rankings[0], dict):
+        body_text = "\n".join([f"{r.get('level', '').upper()}: {r.get('text', '')}" for r in rankings])
+
+    slide = {
+        "slide_index": 0,
+        "headline": headline if headline else f"{format_name}: {topic}",
+        "subheadline": subheadline if subheadline else f"{country_flag} {country_name}" if country_name else topic,
+        "body_text": body_text if body_text else f"Humor-Content zum Thema: {topic}",
+        "cta_text": cta_text if cta_text else "Mehr auf treff-sprachreisen.de!",
+        "bullet_points": list_items if isinstance(list_items, list) else [],
+    }
+
+    caption = content.get("caption", f"{format_name}: {topic} {country_flag} #TREFFSprachreisen")
+    hashtags = content.get("hashtags", ["#TREFFSprachreisen", "#Auslandsjahr", f"#{format_name.replace(' ', '')}"])
+
+    return {
+        "format_name": format_name,
+        "topic": topic,
+        "content": content,
+        "caption": caption,
+        "hashtags": hashtags,
+        "slides": [slide],
+        "source": "rule_based",
+    }
+
+
+@router.post("/generate-humor")
+async def generate_humor(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate humor/meme content for a specific humor format.
+
+    Uses Gemini 2.5 Flash when an API key is available, with rule-based fallback.
+
+    Expects:
+    - format_id (int) OR format_type (str): Which humor format to use
+    - topic (str): Topic or subject for the humor content
+    - country (str, optional): Target country
+    - tone (str, optional): jugendlich or serioess (default: jugendlich)
+
+    Returns structured humor content with text, caption, and hashtags.
+    """
+    # Rate limit check
+    ai_rate_limiter.check_rate_limit(user_id, "generate-humor")
+
+    try:
+        format_id = request.get("format_id")
+        format_type = request.get("format_type")
+        topic = request.get("topic", "Auslandsjahr")
+        country = request.get("country")
+        tone = request.get("tone", "jugendlich")
+
+        # Look up the humor format
+        humor_format = None
+        if format_id:
+            result = await db.execute(select(HumorFormat).where(HumorFormat.id == format_id))
+            humor_format = result.scalar_one_or_none()
+        elif format_type:
+            result = await db.execute(select(HumorFormat).where(HumorFormat.name == format_type))
+            humor_format = result.scalar_one_or_none()
+
+        if not humor_format:
+            raise HTTPException(status_code=404, detail="Humor format not found. Use GET /api/ai/humor-formats to see available formats.")
+
+        template_structure = json.loads(humor_format.template_structure) if humor_format.template_structure else {}
+        example_text = json.loads(humor_format.example_text) if humor_format.example_text else {}
+
+        # Try Gemini first
+        api_key = await _get_gemini_api_key(user_id, db)
+        result = None
+
+        if api_key:
+            result = _generate_humor_with_gemini(
+                api_key=api_key,
+                format_name=humor_format.name,
+                format_description=humor_format.description,
+                template_structure=template_structure,
+                example_text=example_text,
+                topic=topic,
+                country=country,
+                tone=tone,
+            )
+
+        # Fallback to rule-based
+        if not result:
+            result = _generate_humor_rule_based(
+                format_name=humor_format.name,
+                template_structure=template_structure,
+                example_text=example_text,
+                topic=topic,
+                country=country,
+            )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Humor generation failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Humor generation failed: {str(e)}")
