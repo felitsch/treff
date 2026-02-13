@@ -22,6 +22,7 @@ const calendarEntries = ref([])
 const suggestions = ref([])
 const acceptingId = ref(null)
 const dismissingId = ref(null)
+const generatingSuggestions = ref(false)
 
 // Mini calendar: next 7 days
 const next7Days = computed(() => {
@@ -196,6 +197,22 @@ async function dismissSuggestion(suggestion) {
     console.error('Failed to dismiss suggestion:', err)
   } finally {
     dismissingId.value = null
+  }
+}
+
+// Generate new AI content suggestions
+async function generateSuggestions() {
+  generatingSuggestions.value = true
+  try {
+    const res = await api.post('/api/ai/suggest-content', {})
+    if (res.data.suggestions && res.data.suggestions.length > 0) {
+      // Prepend new suggestions to existing ones
+      suggestions.value = [...res.data.suggestions, ...suggestions.value]
+    }
+  } catch (err) {
+    console.error('Failed to generate suggestions:', err)
+  } finally {
+    generatingSuggestions.value = false
   }
 }
 
@@ -482,21 +499,43 @@ onMounted(() => {
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>💡</span> Content-Vorschlaege
           </h2>
-          <span
-            v-if="suggestions.length > 0"
-            class="text-xs font-medium px-2.5 py-1 rounded-full bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20"
-          >
-            {{ suggestions.length }} offen
-          </span>
+          <div class="flex items-center gap-2">
+            <span
+              v-if="suggestions.length > 0"
+              class="text-xs font-medium px-2.5 py-1 rounded-full bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20"
+            >
+              {{ suggestions.length }} offen
+            </span>
+            <button
+              @click="generateSuggestions"
+              :disabled="generatingSuggestions"
+              data-testid="generate-suggestions-btn"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
+              <span v-else>✨</span>
+              {{ generatingSuggestions ? 'Generiere...' : 'Generieren' }}
+            </button>
+          </div>
         </div>
         <div class="p-5">
           <!-- Empty state -->
           <div v-if="suggestions.length === 0" class="text-center py-8">
             <div class="text-4xl mb-3">💡</div>
             <p class="text-gray-500 dark:text-gray-400 font-medium">Keine Vorschlaege vorhanden</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              Content-Vorschlaege werden hier angezeigt, sobald sie generiert werden.
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1 mb-4">
+              Klicke auf "Generieren" um KI-gestuetzte Content-Vorschlaege zu erhalten.
             </p>
+            <button
+              @click="generateSuggestions"
+              :disabled="generatingSuggestions"
+              data-testid="generate-suggestions-empty-btn"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
+              <span v-else>✨</span>
+              {{ generatingSuggestions ? 'Vorschlaege werden generiert...' : 'Vorschlaege generieren' }}
+            </button>
           </div>
 
           <!-- Suggestions list -->
