@@ -12,6 +12,10 @@ from app.models.setting import Setting
 from app.models.student import Student
 from app.models.humor_format import HumorFormat
 from app.models.story_arc import StoryArc
+from app.models.hook import Hook
+from app.models.hashtag_set import HashtagSet
+from app.models.cta import CTA
+from app.models.interactive_element import PostInteractiveElement
 
 __all__ = [
     "User",
@@ -26,4 +30,8 @@ __all__ = [
     "Student",
     "HumorFormat",
     "StoryArc",
+    "Hook",
+    "HashtagSet",
+    "CTA",
+    "PostInteractiveElement",
 ]

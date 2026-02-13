@@ -9,6 +9,11 @@ import { useToast } from '@/composables/useToast'
 import { useCreatePostStore } from '@/stores/createPost'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+import CtaPicker from '@/components/posts/CtaPicker.vue'
+import HookSelector from '@/components/posts/HookSelector.vue'
+import InteractiveElementPreview from '@/components/interactive/InteractiveElementPreview.vue'
+import InteractiveElementEditor from '@/components/interactive/InteractiveElementEditor.vue'
+import { useStudentStore } from '@/stores/students'
 
 const router = useRouter()
 const route = useRoute()
@@ -59,9 +64,53 @@ const {
   humorFormats,
   selectedHumorFormat,
   loadingHumorFormats,
+  interactiveElements,
 } = storeToRefs(store)
 
 const totalSteps = 9
+
+// ── Hook / Attention-Grabber state ──────────────────────────────────────
+const selectedHook = ref(null)
+
+function onHookSelected(hook) {
+  selectedHook.value = hook
+  if (hook && slides.value.length > 0) {
+    // Apply the hook as the subheadline of the first slide (attention-grabbing opener)
+    const firstSlide = slides.value[0]
+    if (firstSlide) {
+      firstSlide.subheadline = hook.hook_text
+    }
+  }
+}
+
+// ── Hashtag Auto-Suggest state ──────────────────────────────────────────
+const suggestingHashtags = ref(false)
+const suggestedEmojis = ref([])
+
+async function suggestHashtags() {
+  if (suggestingHashtags.value) return
+  suggestingHashtags.value = true
+  try {
+    const res = await api.post('/api/ai/suggest-hashtags', {
+      topic: topic.value || '',
+      country: country.value || '',
+      platform: selectedPlatform.value || 'instagram_feed',
+      category: selectedCategory.value || '',
+      tone: tone.value || 'jugendlich',
+    })
+    if (res.data && res.data.hashtag_string) {
+      hashtagsInstagram.value = res.data.hashtag_string
+      hashtagsTiktok.value = res.data.hashtag_string
+    }
+    if (res.data && res.data.emoji_suggestions) {
+      suggestedEmojis.value = res.data.emoji_suggestions.recommended_emojis || []
+    }
+  } catch (err) {
+    console.error('Hashtag suggestion failed:', err)
+  } finally {
+    suggestingHashtags.value = false
+  }
+}
 
 // ── Race condition protection for AI generation ──────────────────────────
 // Track generation requests so late responses don't overwrite manual edits
@@ -113,6 +162,46 @@ const toneOptions = [
 ]
 
 const selectedToneObj = computed(() => toneOptions.find(t => t.id === tone.value))
+
+// Student/Personality integration
+const studentStore = useStudentStore()
+const selectedStudentId = ref(null)
+const selectedStudentPreset = computed(() => {
+  if (!selectedStudentId.value) return null
+  const student = studentStore.students.find(s => s.id === selectedStudentId.value)
+  if (!student || !student.personality_preset) return null
+  try {
+    return typeof student.personality_preset === 'string'
+      ? JSON.parse(student.personality_preset)
+      : student.personality_preset
+  } catch { return null }
+})
+
+const toneIcons = {
+  witzig: '😂', emotional: '🥺', motivierend: '💪', jugendlich: '✨',
+  serioess: '📋', storytelling: '📖', 'behind-the-scenes': '🎬',
+  provokant: '⚡', wholesome: '🥰', informativ: '📊',
+}
+
+function selectStudent(studentId) {
+  if (selectedStudentId.value === studentId) {
+    selectedStudentId.value = null
+    return
+  }
+  selectedStudentId.value = studentId
+  const student = studentStore.students.find(s => s.id === studentId)
+  if (student && student.personality_preset) {
+    try {
+      const preset = typeof student.personality_preset === 'string'
+        ? JSON.parse(student.personality_preset)
+        : student.personality_preset
+      if (preset && preset.tone) {
+        tone.value = preset.tone
+        toast.info(`Persoenlichkeits-Preset von ${student.name} uebernommen: ${toneIcons[preset.tone] || ''} ${preset.tone}`)
+      }
+    } catch { /* ignore parse errors */ }
+  }
+}
 
 // Step 8: Prompt suggestions (static data)
 const promptSuggestions = [
@@ -382,6 +471,7 @@ async function generateText() {
       platform: selectedPlatform.value,
       slide_count: slideCount,
       tone: tone.value,
+      student_id: selectedStudentId.value || null,
     })
 
     // Check if this is still the latest request (another generation may have started)
@@ -771,6 +861,25 @@ async function saveAndExport() {
 
     const response = await api.post('/api/posts', postData)
     savedPost.value = response.data
+
+    // Save interactive elements if any exist
+    if (interactiveElements.value.length > 0) {
+      try {
+        const elementsData = interactiveElements.value.map(el => ({
+          slide_index: el.slide_index,
+          element_type: el.element_type,
+          question_text: el.question_text,
+          options: el.options,
+          correct_answer: el.correct_answer,
+          emoji: el.emoji,
+          position_x: el.position_x || 50,
+          position_y: el.position_y || 50,
+        }))
+        await api.put(`/api/posts/${response.data.id}/interactive-elements`, elementsData)
+      } catch (ieErr) {
+        console.warn('Failed to save interactive elements:', ieErr)
+      }
+    }
 
     // Record the export - use carousel endpoint for multi-slide posts
     const exportEndpoint = slides.value.length > 1 ? '/api/export/render-carousel' : '/api/export/render'
@@ -1281,6 +1390,35 @@ function cancelRemoveSlide() {
   slideToDeleteIndex.value = -1
 }
 
+// ── Interactive Story Element handlers ────────────────────────────────
+function addInteractiveElement(element) {
+  interactiveElements.value = [...interactiveElements.value, element]
+}
+
+function removeInteractiveElement(element) {
+  interactiveElements.value = interactiveElements.value.filter(
+    el => (el.id || el._tempId) !== (element.id || element._tempId)
+  )
+}
+
+function editInteractiveElement(updatedElement) {
+  interactiveElements.value = interactiveElements.value.map(el =>
+    (el.id || el._tempId) === (updatedElement.id || updatedElement._tempId)
+      ? updatedElement
+      : el
+  )
+}
+
+// Computed: elements for the currently previewed slide
+const currentSlideInteractiveElements = computed(() =>
+  interactiveElements.value.filter(el => el.slide_index === currentPreviewSlide.value)
+)
+
+// Check if we should show interactive elements (story platform selected)
+const showInteractiveElements = computed(() =>
+  selectedPlatforms.value.includes('instagram_story')
+)
+
 // Watch for slide changes
 watch(slides, () => {
   currentPreviewSlide.value = 0
@@ -1353,6 +1491,9 @@ watch(currentStep, (newStep, oldStep) => {
 // On mount: reload data if returning to an in-progress workflow,
 // or pre-fill from accepted suggestion query params
 onMounted(() => {
+  // Load students for personality preset selection in step 4
+  studentStore.fetchStudents()
+
   // Check if navigated from an accepted suggestion (query params from dashboard)
   const suggestionCategory = route.query.category
   const suggestionCountry = route.query.country
@@ -1641,6 +1782,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           ></textarea>
         </div>
 
+        <!-- Student / Personality Preset (optional) -->
+        <div v-if="studentStore.students.length > 0" class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎭 Studenten-Persoenlichkeit (optional)</label>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Waehle einen Studenten, um dessen Persoenlichkeits-Preset fuer die KI-Textgenerierung zu verwenden.</p>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="student in studentStore.students" :key="student.id" type="button" @click="selectStudent(student.id)" class="px-3 py-2 rounded-lg border-2 transition-all text-sm text-left" :class="selectedStudentId === student.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-500/30' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'">
+              <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ student.name }}</div>
+              <div v-if="student.personality_preset" class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">🎭 Preset aktiv</div>
+              <div v-else class="text-xs text-gray-400 mt-0.5">Kein Preset</div>
+            </button>
+          </div>
+          <div v-if="selectedStudentPreset" class="mt-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-xs text-purple-700 dark:text-purple-300"><span class="font-medium">Aktives Preset:</span> {{ toneIcons[selectedStudentPreset.tone] || '🎭' }} {{ selectedStudentPreset.tone }} · Humor {{ selectedStudentPreset.humor_level || 3 }}/5 · Emoji: {{ selectedStudentPreset.emoji_usage || 'moderate' }} · {{ selectedStudentPreset.perspective === 'first_person' ? 'Ich-Perspektive' : 'Dritte Person' }}</div>
+        </div>
+
         <!-- Tone -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tonalitaet</label>
@@ -1764,6 +1919,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
           <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
           <div><strong>Tonalitaet:</strong> {{ selectedToneObj?.icon }} {{ selectedToneObj?.label || tone }}</div>
+          <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)"><strong>🎭 Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
           <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
             <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
             <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
@@ -1798,6 +1954,17 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <li v-if="generatedContent.humor_format">Humor-Format: {{ generatedContent.humor_format }}</li>
             <li v-if="generatedContent.source">Quelle: {{ generatedContent.source === 'gemini' ? 'KI (Gemini)' : 'Vorlage' }}</li>
           </ul>
+        </div>
+
+        <!-- Hook / Attention-Grabber Selector (shown after content is generated) -->
+        <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <HookSelector
+            :topic="topic"
+            :country="country"
+            :tone="tone"
+            :platform="selectedPlatform"
+            @hook-selected="onHookSelected"
+          />
         </div>
       </div>
     </div>
@@ -1899,6 +2066,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 ></button>
               </div>
             </div>
+
+            <!-- Interactive Story Element Overlays (visual preview) -->
+            <InteractiveElementPreview
+              v-for="(el, ielIdx) in currentSlideInteractiveElements"
+              :key="el.id || el._tempId || ielIdx"
+              :element="el"
+              :interactive="false"
+            />
           </div>
 
           <!-- Slide navigation -->
@@ -2123,9 +2298,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <span class="text-xs" :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].body_text?.length || 0 }}/200</span>
               </div>
             </div>
-            <div v-if="slides[currentPreviewSlide].cta_text">
+            <div v-if="slides[currentPreviewSlide].cta_text !== undefined">
               <div class="flex items-center justify-between mb-1">
-                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">CTA</label>
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">CTA-Bibliothek</label>
                 <button
                   @click="regenerateField('cta_text', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
@@ -2136,17 +2311,12 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   <span>Neu</span>
                 </button>
               </div>
-              <input
+              <CtaPicker
                 v-model="slides[currentPreviewSlide].cta_text"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
-                :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
+                :category="selectedCategory"
+                :platform="selectedPlatform"
+                :topic="topic"
               />
-              <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 25" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
-                <span v-else-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 20" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
-                <span v-else class="text-xs text-gray-400"></span>
-                <span class="text-xs" :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].cta_text?.length || 0 }}/25</span>
-              </div>
             </div>
           </div>
 
@@ -2220,15 +2390,27 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center justify-between mb-2">
                 <label class="text-sm font-bold text-gray-700 dark:text-gray-300"># Instagram Hashtags</label>
-                <button
-                  @click="regenerateField('hashtags_instagram')"
-                  :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  :title="'Instagram Hashtags neu generieren'"
-                >
-                  <span :class="{ 'animate-spin': regeneratingField === 'hashtags_instagram' }" class="text-sm">&#x1F504;</span>
-                  <span>Neu</span>
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    @click="suggestHashtags"
+                    :disabled="suggestingHashtags"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="KI-optimierte Hashtags vorschlagen"
+                    data-testid="suggest-hashtags-btn"
+                  >
+                    <span :class="{ 'animate-spin': suggestingHashtags }" class="text-sm">&#x2728;</span>
+                    <span>{{ suggestingHashtags ? 'Lade...' : 'Auto-Suggest' }}</span>
+                  </button>
+                  <button
+                    @click="regenerateField('hashtags_instagram')"
+                    :disabled="!!regeneratingField"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    :title="'Instagram Hashtags neu generieren'"
+                  >
+                    <span :class="{ 'animate-spin': regeneratingField === 'hashtags_instagram' }" class="text-sm">&#x1F504;</span>
+                    <span>Neu</span>
+                  </button>
+                </div>
               </div>
               <textarea v-model="hashtagsInstagram" rows="2"
                 class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
@@ -2238,6 +2420,17 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <span v-if="(hashtagsInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit ueberschritten</span>
                 <span v-else class="text-xs text-gray-400"></span>
                 <span class="text-xs" :class="(hashtagsInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-gray-400'">{{ hashtagsInstagram?.length || 0 }} Zeichen</span>
+              </div>
+              <!-- Emoji Suggestions Row -->
+              <div v-if="suggestedEmojis.length > 0" class="mt-2 flex items-center gap-1.5 flex-wrap" data-testid="emoji-suggestions">
+                <span class="text-xs text-gray-500 dark:text-gray-400">Empfohlene Emojis:</span>
+                <button
+                  v-for="(emoji, eidx) in suggestedEmojis"
+                  :key="eidx"
+                  @click="captionInstagram += ' ' + emoji"
+                  class="text-lg hover:scale-125 transition-transform cursor-pointer"
+                  :title="'In Caption einfuegen: ' + emoji"
+                >{{ emoji }}</button>
               </div>
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -2264,6 +2457,18 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
             </div>
           </div>
+
+          <!-- Interactive Story Elements Editor (only when Instagram Story is selected) -->
+          <InteractiveElementEditor
+            v-if="showInteractiveElements"
+            :interactive-elements="interactiveElements"
+            :slide-index="currentPreviewSlide"
+            :topic="topic || slides[0]?.headline || ''"
+            :country="country"
+            @add="addInteractiveElement"
+            @remove="removeInteractiveElement"
+            @edit="editInteractiveElement"
+          />
         </div>
 
         <!-- Mini live preview (sticky) -->
@@ -2314,6 +2519,16 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[11px]">{{ slides[currentPreviewSlide].cta_text }}</div>
               </div>
             </div>
+
+            <!-- Interactive Story Element Overlays (mini preview) -->
+            <InteractiveElementPreview
+              v-for="(el, ielIdx) in currentSlideInteractiveElements"
+              :key="'mini-' + (el.id || el._tempId || ielIdx)"
+              :element="el"
+              :interactive="true"
+              @remove="removeInteractiveElement"
+              @edit="(e) => { /* handled by editor panel */ }"
+            />
           </div>
         </div>
       </div>
@@ -2537,6 +2752,26 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-gray-500 dark:text-gray-400 text-xs">Headline</div>
             <div class="font-medium text-gray-900 dark:text-white truncate">{{ slides[0]?.headline }}</div>
+          </div>
+        </div>
+
+        <!-- Interactive Elements Reminder (shown when elements exist) -->
+        <div v-if="interactiveElements.length > 0" class="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800" data-testid="export-interactive-reminder">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">🎯</span>
+            <div>
+              <h4 class="font-bold text-amber-800 dark:text-amber-300 text-sm mb-1">Vergiss nicht die interaktiven Elemente!</h4>
+              <p class="text-xs text-amber-700 dark:text-amber-400 leading-relaxed mb-2">
+                Du hast {{ interactiveElements.length }} interaktive{{ interactiveElements.length > 1 ? ' Elemente' : 's Element' }} erstellt. Diese muessen beim echten Posten in Instagram manuell hinzugefuegt werden:
+              </p>
+              <ul class="space-y-1">
+                <li v-for="(el, idx) in interactiveElements" :key="idx" class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                  <span>{{ { poll: '📊', quiz: '🧠', slider: '🎚️', question: '❓' }[el.element_type] }}</span>
+                  <span class="font-medium">{{ { poll: 'Umfrage', quiz: 'Quiz', slider: 'Emoji-Slider', question: 'Fragen-Sticker' }[el.element_type] }}:</span>
+                  <span class="truncate">{{ el.question_text }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 

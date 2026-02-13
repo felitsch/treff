@@ -16,7 +16,9 @@ from app.core.database import engine, Base, async_session
 from app.core.seed_templates import seed_default_templates
 from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs
+from app.core.seed_hashtag_sets import seed_hashtag_sets
+from app.core.seed_ctas import seed_default_ctas
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,11 @@ async def lifespan(app: FastAPI):
             logger.info("Added thumbnail_path column to assets table")
         except Exception:
             pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE students ADD COLUMN personality_preset TEXT"))
+            logger.info("Added personality_preset column to students table")
+        except Exception:
+            pass  # Column already exists
 
     # Seed default templates if not already present
     async with async_session() as session:
@@ -77,6 +84,24 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default humor formats")
         except Exception as e:
             logger.error(f"Failed to seed humor formats: {e}")
+
+    # Seed default hashtag sets if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_hashtag_sets(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default hashtag sets")
+        except Exception as e:
+            logger.error(f"Failed to seed hashtag sets: {e}")
+
+    # Seed default CTAs if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_default_ctas(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default CTAs")
+        except Exception as e:
+            logger.error(f"Failed to seed CTAs: {e}")
 
     yield
 
@@ -169,6 +194,9 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"]
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
 app.include_router(story_arcs.router, prefix="/api/story-arcs", tags=["Story Arcs"])
+app.include_router(hashtag_sets.router, prefix="/api/hashtag-sets", tags=["Hashtag Sets"])
+app.include_router(ctas.router, prefix="/api/ctas", tags=["CTAs"])
+app.include_router(interactive_elements.router, prefix="/api/posts", tags=["Interactive Elements"])
 
 
 if __name__ == "__main__":

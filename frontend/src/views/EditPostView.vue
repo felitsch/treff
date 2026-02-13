@@ -5,6 +5,7 @@ import draggable from 'vuedraggable'
 import api from '@/utils/api'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+import CtaPicker from '@/components/posts/CtaPicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -472,18 +473,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
           </div>
           <div v-if="slides[currentPreviewSlide].cta_text !== undefined">
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA</label>
-            <input
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA-Bibliothek</label>
+            <CtaPicker
               v-model="slides[currentPreviewSlide].cta_text"
-              class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
-              :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
+              :category="post?.category || ''"
+              :platform="post?.platform || ''"
+              :topic="post?.title || ''"
             />
-            <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 25" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
-              <span v-else-if="(slides[currentPreviewSlide].cta_text?.length || 0) > 20" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
-              <span v-else class="text-xs text-gray-400"></span>
-              <span class="text-xs" :class="(slides[currentPreviewSlide].cta_text?.length || 0) > 25 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].cta_text?.length || 0) > 20 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].cta_text?.length || 0 }}/25</span>
-            </div>
           </div>
         </div>
 
