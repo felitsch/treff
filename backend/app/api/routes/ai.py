@@ -28,6 +28,7 @@ from app.models.hook import Hook
 from app.models.student import Student
 from app.models.hashtag_set import HashtagSet
 from app.models.story_arc import StoryArc
+from app.models.story_episode import StoryEpisode
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -573,6 +574,103 @@ async def generate_text(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text generation failed: {str(e)}")
+
+
+@router.post("/adapt-for-platform")
+async def adapt_text_for_platform(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Adapt existing text content for a different platform.
+
+    Takes text that was written for one platform and adapts it for another.
+    For example: Instagram Feed caption -> Instagram Story caption -> TikTok caption.
+
+    Body:
+    - original_text: str - The original text to adapt
+    - source_platform: str - Platform the text was written for
+    - target_platform: str - Platform to adapt the text for
+    - category: str (optional) - Content category for context
+    - tone: str (optional) - Tone to maintain
+    """
+    original_text = request.get("original_text", "")
+    source_platform = request.get("source_platform", "instagram_feed")
+    target_platform = request.get("target_platform", "tiktok")
+    category = request.get("category", "")
+    tone = request.get("tone", "jugendlich")
+
+    if not original_text:
+        raise HTTPException(status_code=400, detail="original_text is required")
+
+    platform_guidelines = {
+        "instagram_feed": "Instagram Feed: Laengere Captions (bis 2200 Zeichen), Hashtags am Ende, informativ/storytelling, Call-to-Action",
+        "instagram_story": "Instagram Story: Kurz und knackig (max 100 Zeichen), CTA mit Swipe-Up/Link, 1-2 Emojis, Frage oder Poll zum Interagieren",
+        "tiktok": "TikTok: Hook-fokussiert (erste 3 Sekunden entscheidend), kurz (max 150 Zeichen), trendige Sprache, Hashtags inline, weniger Emojis",
+    }
+
+    source_desc = platform_guidelines.get(source_platform, source_platform)
+    target_desc = platform_guidelines.get(target_platform, target_platform)
+
+    try:
+        from app.core.text_generator import generate_text_with_gemini
+        prompt = f"""Du bist ein Social-Media-Experte fuer TREFF Sprachreisen (Highschool-Aufenthalte im Ausland).
+
+AUFGABE: Adaptiere den folgenden Text von {source_platform} fuer {target_platform}.
+
+ORIGINALTEXT ({source_platform}):
+{original_text}
+
+ZIELPLATTFORM-REGELN ({target_platform}):
+{target_desc}
+
+TONALITAET: {tone}
+{"KATEGORIE: " + category if category else ""}
+
+WICHTIG:
+- Behalte die Kernaussage bei
+- Passe Laenge, Stil und Format an die Zielplattform an
+- Alle Texte auf Deutsch
+- Gib NUR den adaptierten Text zurueck, keine Erklaerung"""
+
+        result = await generate_text_with_gemini(
+            prompt=prompt,
+            platform=target_platform,
+            tone=tone,
+        )
+
+        adapted_text = ""
+        if isinstance(result, dict):
+            adapted_text = result.get("caption", result.get("text", str(result)))
+        else:
+            adapted_text = str(result)
+
+        return {
+            "adapted_text": adapted_text.strip(),
+            "source_platform": source_platform,
+            "target_platform": target_platform,
+        }
+    except Exception as e:
+        # Fallback: simple rule-based adaptation
+        adapted = original_text
+        if target_platform == "instagram_story":
+            # Shorten for stories
+            sentences = original_text.split('. ')
+            adapted = '. '.join(sentences[:2]) + ('...' if len(sentences) > 2 else '')
+            if len(adapted) > 120:
+                adapted = adapted[:117] + '...'
+        elif target_platform == "tiktok":
+            # Hook-focused for TikTok
+            sentences = original_text.split('. ')
+            adapted = sentences[0] + (' ' + sentences[1] if len(sentences) > 1 else '')
+            if len(adapted) > 150:
+                adapted = adapted[:147] + '...'
+
+        return {
+            "adapted_text": adapted.strip(),
+            "source_platform": source_platform,
+            "target_platform": target_platform,
+            "fallback": True,
+        }
 
 
 @router.post("/regenerate-field")
@@ -3986,3 +4084,592 @@ async def engagement_boost(
         "platform": platform,
         "format": post_format,
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Story-Arc Chapter/Episode Suggestions (Wizard)
+# ═══════════════════════════════════════════════════════════════════════
+
+# Default episode templates for a typical exchange year
+TYPICAL_EXCHANGE_EPISODES = [
+    {"title": "Ankunft & Erste Eindruecke", "description": "Der erste Tag im neuen Land - Flughafen, Gastfamilie, neue Umgebung"},
+    {"title": "Erster Schultag", "description": "Neues Schulsystem, neue Mitschueler, erste Stunden - alles ist anders"},
+    {"title": "Neue Freundschaften", "description": "Die ersten echten Kontakte und wie sich Freundschaften entwickeln"},
+    {"title": "Homecoming / Schulfeier", "description": "Das erste grosse Event: Homecoming Dance, School Spirit und Traditionen"},
+    {"title": "Herbst-Abenteuer", "description": "Herbstferien, Halloween, Thanksgiving-Vorbereitungen und Herbstfarben"},
+    {"title": "Weihnachten in der Ferne", "description": "Weihnachten bei der Gastfamilie - Traditionen, Heimweh und neue Rituale"},
+    {"title": "Halbzeit-Reflexion", "description": "Die Haelfte ist geschafft - Was hat sich veraendert? Was wurde gelernt?"},
+    {"title": "Winter & Neues Semester", "description": "Neues Halbjahr, neue Kurse, Wintersport und kalte Tage"},
+    {"title": "Fruehling & Aufbruch", "description": "Neue Energie, Fruehlings-Events, Spring Break Erlebnisse"},
+    {"title": "Prom Night", "description": "Der grosse Abschlussball - Outfit, Date, unvergesslicher Abend"},
+    {"title": "Graduation & Abschied", "description": "Abschlussfeier, letzte Tage, Abschiede von Freunden und Gastfamilie"},
+    {"title": "Heimkehr & Rueckblick", "description": "Zurueck in Deutschland - Was bleibt? Was hat sich veraendert?"},
+]
+
+COUNTRY_SPECIFIC_EPISODES = {
+    "usa": [
+        {"title": "Football Friday Night", "description": "Das erste Friday Night Lights Erlebnis - Highschool Football hautnah"},
+        {"title": "Thanksgiving mit der Gastfamilie", "description": "Turkey, Pie und Family Time - das amerikanischste aller Feste"},
+        {"title": "Road Trip Adventure", "description": "Erster amerikanischer Road Trip - Highway, Diners und endlose Weite"},
+    ],
+    "kanada": [
+        {"title": "Erster Schnee & Wintersport", "description": "Kanadas Winter erleben - Skifahren, Eishockey und Schneesturm"},
+        {"title": "Thanksgiving auf Kanadisch", "description": "Kanadisches Erntedankfest im Oktober - anders als in den USA"},
+        {"title": "Nature & Wildlife", "description": "Kanadas wilde Natur - Baeren, Wale und endlose Waelder"},
+    ],
+    "australien": [
+        {"title": "Surf's Up!", "description": "Erste Surfstunde, Strandleben und die australische Outdoor-Kultur"},
+        {"title": "Christmas am Strand", "description": "Weihnachten bei 35 Grad - BBQ statt Gaensebraten"},
+        {"title": "Outback-Abenteuer", "description": "Rotes Land, Kängurus und die Weite des australischen Outbacks"},
+    ],
+    "neuseeland": [
+        {"title": "Maori-Kultur erleben", "description": "Haka, Hangi und die faszinierende Kultur der Maori"},
+        {"title": "Herr der Ringe Landschaften", "description": "Mittelerde in echt - atemberaubende Natur und Filmkulissen"},
+        {"title": "Extremsport-Premiere", "description": "Bungee, Skydiving oder Rafting - Neuseeland ist Adrenalin pur"},
+    ],
+    "irland": [
+        {"title": "Pub Culture & Irish Music", "description": "Traditionelle Musik, Irish Dance und die gemuetliche Pub-Atmosphaere"},
+        {"title": "St. Patrick's Day", "description": "Das groesste irische Fest - Paraden, Gruen und nationale Begeisterung"},
+        {"title": "Cliffs & Castles", "description": "Irlands wilde Kueste, historische Burgen und mystische Landschaften"},
+    ],
+}
+
+
+@router.post("/suggest-arc-chapters")
+async def suggest_arc_chapters(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Suggest chapter/episode structure for a new story arc.
+
+    Request body:
+    {
+        "student_id": int (optional),
+        "country": str (optional),
+        "title": str (optional),
+        "description": str (optional),
+        "planned_episodes": int (default 8),
+        "tone": str (default "jugendlich")
+    }
+
+    Returns:
+    {
+        "episodes": [{"number": 1, "title": "...", "description": "..."}],
+        "source": "gemini" | "rule_based"
+    }
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "suggest-arc-chapters")
+
+    student_id = request.get("student_id")
+    country = request.get("country", "")
+    title = request.get("title", "")
+    description = request.get("description", "")
+    planned_episodes = request.get("planned_episodes", 8)
+    tone = request.get("tone", "jugendlich")
+
+    # Clamp episodes
+    planned_episodes = max(3, min(planned_episodes, 20))
+
+    # Look up student info if provided
+    student_name = None
+    student_country = None
+    student_start = None
+    student_end = None
+    if student_id:
+        result = await db.execute(
+            select(Student).where(Student.id == student_id, Student.user_id == user_id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_name = student.name
+            student_country = student.country
+            student_start = student.start_date
+            student_end = student.end_date
+            if not country:
+                country = student_country
+
+    # Try AI generation first
+    api_key = settings.GEMINI_API_KEY if hasattr(settings, "GEMINI_API_KEY") else os.environ.get("GEMINI_API_KEY", "")
+    if api_key:
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=api_key)
+
+            country_names = {
+                "usa": "USA", "kanada": "Kanada", "australien": "Australien",
+                "neuseeland": "Neuseeland", "irland": "Irland"
+            }
+            country_name = country_names.get(country, country or "Ausland")
+
+            student_context = ""
+            if student_name:
+                student_context = f"\nStudent: {student_name}"
+                if student_start and student_end:
+                    student_context += f" (Aufenthalt: {student_start.strftime('%B %Y')} bis {student_end.strftime('%B %Y')})"
+
+            system_prompt = f"""Du bist Content-Planer fuer TREFF Sprachreisen.
+Erstelle eine Kapitelstruktur fuer eine Instagram-Story-Serie ueber einen Highschool-Aufenthalt in {country_name}.
+Der Ton soll {tone} sein.{student_context}
+
+Jedes Kapitel soll:
+- Einen praegnanten, emotionalen Titel haben
+- Eine kurze Beschreibung (1 Satz) was in der Episode passiert
+- Chronologisch zum typischen Ablauf eines Auslandsjahres passen
+- Spannung aufbauen und zum Weiterlesen motivieren
+
+Antworte NUR mit einem JSON-Array:
+[{{"number": 1, "title": "...", "description": "..."}}, ...]"""
+
+            user_prompt = f"Erstelle genau {planned_episodes} Kapitel"
+            if title:
+                user_prompt += f' fuer die Serie "{title}"'
+            if description:
+                user_prompt += f". Beschreibung: {description}"
+            user_prompt += f" in {country_name}."
+
+            response = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.8,
+                    max_output_tokens=2000,
+                ),
+            )
+
+            text = response.text.strip()
+            # Extract JSON from response
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
+
+            episodes = json.loads(text)
+            if isinstance(episodes, list) and len(episodes) > 0:
+                # Ensure proper numbering
+                for i, ep in enumerate(episodes):
+                    ep["number"] = i + 1
+                return {
+                    "episodes": episodes[:planned_episodes],
+                    "source": "gemini",
+                }
+        except Exception as e:
+            logger.warning(f"Gemini arc chapter suggestion failed: {e}")
+
+    # Fallback: rule-based episode suggestions
+    episodes = []
+
+    # Start with typical exchange episodes
+    base_episodes = list(TYPICAL_EXCHANGE_EPISODES)
+
+    # Insert country-specific episodes if available
+    country_key = country.lower() if country else ""
+    country_eps = COUNTRY_SPECIFIC_EPISODES.get(country_key, [])
+
+    # Interleave country-specific episodes at appropriate positions
+    if country_eps:
+        # Insert after position 3, 5, 7
+        insert_positions = [3, 5, 7]
+        for i, pos in enumerate(insert_positions):
+            if i < len(country_eps) and pos <= len(base_episodes):
+                base_episodes.insert(pos + i, country_eps[i])
+
+    # Select the requested number of episodes
+    selected = base_episodes[:planned_episodes]
+
+    for i, ep in enumerate(selected):
+        episodes.append({
+            "number": i + 1,
+            "title": ep["title"],
+            "description": ep["description"],
+        })
+
+    return {
+        "episodes": episodes,
+        "source": "rule_based",
+    }
+
+
+@router.post("/suggest-arc-title")
+async def suggest_arc_title(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Suggest title and description for a story arc based on student and country.
+
+    Request body:
+    {
+        "student_id": int (optional),
+        "country": str (optional),
+        "tone": str (default "jugendlich")
+    }
+
+    Returns:
+    {
+        "suggestions": [{"title": "...", "subtitle": "...", "description": "..."}],
+        "source": "gemini" | "rule_based"
+    }
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "suggest-arc-title")
+
+    student_id = request.get("student_id")
+    country = request.get("country", "")
+    tone = request.get("tone", "jugendlich")
+
+    # Look up student
+    student_name = None
+    if student_id:
+        result = await db.execute(
+            select(Student).where(Student.id == student_id, Student.user_id == user_id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_name = student.name
+            if not country:
+                country = student.country
+
+    country_names = {
+        "usa": "USA", "kanada": "Kanada", "australien": "Australien",
+        "neuseeland": "Neuseeland", "irland": "Irland"
+    }
+    country_name = country_names.get(country, country or "Ausland")
+
+    # Try AI generation
+    api_key = settings.GEMINI_API_KEY if hasattr(settings, "GEMINI_API_KEY") else os.environ.get("GEMINI_API_KEY", "")
+    if api_key:
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=api_key)
+
+            name_context = f" ueber {student_name}" if student_name else ""
+            system_prompt = f"""Du bist Content-Planer fuer TREFF Sprachreisen.
+Erstelle 3 Vorschlaege fuer den Titel einer Instagram-Story-Serie{name_context} in {country_name}.
+Ton: {tone}
+
+Jeder Vorschlag soll enthalten:
+- title: Ein kurzer, einpraegsamer Serientitel (max 40 Zeichen)
+- subtitle: Ein Untertitel (max 60 Zeichen)
+- description: Eine kurze Beschreibung der Serie (1-2 Saetze)
+
+Antworte NUR mit einem JSON-Array:
+[{{"title": "...", "subtitle": "...", "description": "..."}}, ...]"""
+
+            response = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=f"Erstelle 3 Titelvorschlaege fuer eine Story-Serie in {country_name}.",
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.9,
+                    max_output_tokens=1000,
+                ),
+            )
+
+            text = response.text.strip()
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
+
+            suggestions = json.loads(text)
+            if isinstance(suggestions, list) and len(suggestions) > 0:
+                return {
+                    "suggestions": suggestions[:3],
+                    "source": "gemini",
+                }
+        except Exception as e:
+            logger.warning(f"Gemini arc title suggestion failed: {e}")
+
+    # Fallback: rule-based title suggestions
+    fallback_titles = []
+    if student_name:
+        fallback_titles = [
+            {
+                "title": f"{student_name}s {country_name}-Abenteuer",
+                "subtitle": f"Ein Auslandsjahr voller Ueberraschungen",
+                "description": f"Begleite {student_name} auf der Reise durch ein unvergessliches Highschool-Jahr in {country_name}.",
+            },
+            {
+                "title": f"Mein Jahr in {country_name}",
+                "subtitle": f"{student_name} erzaehlt",
+                "description": f"Aus erster Hand: {student_name} teilt die Hoehen und Tiefen eines Auslandsjahres in {country_name}.",
+            },
+            {
+                "title": f"Dear Diary: {country_name}",
+                "subtitle": f"Die Geschichte von {student_name}",
+                "description": f"Wie ein Tagebuch: {student_name}s persoenlichste Momente, Gedanken und Erlebnisse in {country_name}.",
+            },
+        ]
+    else:
+        fallback_titles = [
+            {
+                "title": f"Highschool-Leben in {country_name}",
+                "subtitle": "Eine Story-Serie von TREFF",
+                "description": f"Erlebe den Alltag eines deutschen Austauschschuelers in {country_name} - von der Ankunft bis zum Abschied.",
+            },
+            {
+                "title": f"Fernweh: {country_name}",
+                "subtitle": "Highschool-Abenteuer hautnah",
+                "description": f"Was erlebt man wirklich bei einem Highschool-Aufenthalt in {country_name}? Diese Serie zeigt es!",
+            },
+            {
+                "title": f"Exchange Diaries: {country_name}",
+                "subtitle": "Geschichten aus dem Auslandsjahr",
+                "description": f"Authentische Geschichten und Erlebnisse aus {country_name} - direkt von unseren TREFF-Teilnehmern.",
+            },
+        ]
+
+    return {
+        "suggestions": fallback_titles,
+        "source": "rule_based",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Episode Text Suggestions (Rueckblick, Cliffhanger, Teaser)
+# ═══════════════════════════════════════════════════════════════════════
+
+@router.post("/suggest-episode-text")
+async def suggest_episode_text(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate AI suggestions for episode-specific text fields.
+
+    Given a story arc and episode number, generates:
+    - previously_text: "Bisher bei [Student]..." recap of previous episodes
+    - cliffhanger_text: Cliffhanger ending for the current episode
+    - next_episode_hint: Teaser for what comes next
+
+    Expects:
+    - arc_id (int): Story arc ID
+    - episode_number (int): Current episode number
+    - field (str): Which field to generate: 'previously_text', 'cliffhanger_text', or 'next_episode_hint'
+    - topic (str, optional): Current episode topic/title
+    - tone (str, optional): Tone for generation (default: jugendlich)
+
+    Returns generated text suggestion.
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "suggest-episode-text")
+
+    arc_id = request.get("arc_id")
+    episode_number = request.get("episode_number", 1)
+    field = request.get("field", "previously_text")
+    topic_text = request.get("topic", "")
+    tone = request.get("tone", "jugendlich")
+
+    if not arc_id:
+        raise HTTPException(status_code=400, detail="arc_id is required")
+
+    valid_fields = {"previously_text", "cliffhanger_text", "next_episode_hint"}
+    if field not in valid_fields:
+        raise HTTPException(status_code=400, detail=f"field must be one of: {', '.join(sorted(valid_fields))}")
+
+    # Load the story arc
+    result = await db.execute(
+        select(StoryArc).where(StoryArc.id == arc_id, StoryArc.user_id == user_id)
+    )
+    arc = result.scalar_one_or_none()
+    if not arc:
+        raise HTTPException(status_code=404, detail="Story arc not found")
+
+    # Load previous episodes for context
+    result = await db.execute(
+        select(StoryEpisode)
+        .where(StoryEpisode.arc_id == arc_id)
+        .order_by(StoryEpisode.episode_number)
+    )
+    episodes = result.scalars().all()
+
+    # Load student name if linked
+    student_name = "dem Studenten"
+    if arc.student_id:
+        result = await db.execute(
+            select(Student).where(Student.id == arc.student_id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_name = student.name
+
+    # Build context from previous episodes
+    prev_episode_summaries = []
+    for ep in episodes:
+        if ep.episode_number < episode_number:
+            summary = f"Episode {ep.episode_number}: {ep.episode_title}"
+            if ep.teaser_text:
+                summary += f" - {ep.teaser_text}"
+            prev_episode_summaries.append(summary)
+
+    # Try AI generation first
+    api_key = await _get_gemini_api_key(user_id, db)
+    suggestion = None
+    source = "rule_based"
+
+    if api_key:
+        try:
+            suggestion = await _generate_episode_text_ai(
+                field=field,
+                arc_title=arc.title,
+                student_name=student_name,
+                episode_number=episode_number,
+                planned_episodes=arc.planned_episodes,
+                prev_episodes=prev_episode_summaries,
+                topic=topic_text,
+                tone=tone,
+                country=arc.country,
+                api_key=api_key,
+            )
+            if suggestion:
+                source = "gemini"
+        except Exception as e:
+            logger.warning("AI episode text generation failed, using fallback: %s", e)
+
+    # Fallback to rule-based
+    if not suggestion:
+        suggestion = _generate_episode_text_fallback(
+            field=field,
+            arc_title=arc.title,
+            student_name=student_name,
+            episode_number=episode_number,
+            planned_episodes=arc.planned_episodes,
+            prev_episodes=prev_episode_summaries,
+            topic=topic_text,
+            country=arc.country,
+        )
+
+    return {
+        "field": field,
+        "suggestion": suggestion,
+        "source": source,
+        "arc_title": arc.title,
+        "student_name": student_name,
+        "episode_number": episode_number,
+    }
+
+
+async def _generate_episode_text_ai(
+    field: str,
+    arc_title: str,
+    student_name: str,
+    episode_number: int,
+    planned_episodes: int,
+    prev_episodes: list,
+    topic: str,
+    tone: str,
+    country: str | None,
+    api_key: str,
+) -> str | None:
+    """Use Gemini to generate episode-specific text."""
+    try:
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = {
+            "usa": "USA", "canada": "Kanada", "australia": "Australien",
+            "newzealand": "Neuseeland", "ireland": "Irland",
+        }.get(country or "", "")
+
+        prev_context = ""
+        if prev_episodes:
+            prev_context = "\n".join(prev_episodes)
+        else:
+            prev_context = "(Dies ist die erste Episode - kein Rueckblick noetig)"
+
+        field_instructions = {
+            "previously_text": f"""Schreibe einen kurzen 'Bisher bei {student_name}...' Rueckblick (2-3 Saetze).
+Fasse zusammen, was in den bisherigen Episoden passiert ist.
+Beginne mit 'Bisher bei {student_name}...' oder 'In den letzten Episoden...'
+Der Text soll Zuschauer abholen, die nicht alle Episoden gesehen haben.""",
+
+            "cliffhanger_text": f"""Schreibe einen Cliffhanger-Text (1-2 Saetze) fuer das Ende von Episode {episode_number}.
+Der Text soll Spannung erzeugen und zum Weiterschauen motivieren.
+Verwende Fragen oder ueberraschende Wendungen.
+Beispiel: 'Aber was {student_name} am naechsten Tag erlebt, haette niemand erwartet...'""",
+
+            "next_episode_hint": f"""Schreibe einen kurzen Teaser (1-2 Saetze) fuer die naechste Episode.
+Der Text soll neugierig machen, ohne zu viel zu verraten.
+Beispiel: 'In der naechsten Episode: {student_name} entdeckt...'
+Verwende Formulierungen wie 'Naechste Episode:', 'Kommt als naechstes:', 'Stay tuned:'""",
+        }
+
+        prompt = f"""Du bist ein Social-Media-Texter fuer TREFF Sprachreisen.
+Schreibe fuer die Story-Serie '{arc_title}' mit {student_name}.
+{f'Land: {country_name}' if country_name else ''}
+Tonalitaet: {tone}
+Episode: {episode_number} von {planned_episodes}
+{f'Aktuelles Thema: {topic}' if topic else ''}
+
+Bisherige Episoden:
+{prev_context}
+
+{field_instructions[field]}
+
+Antworte NUR mit dem gewuenschten Text, ohne Anweisungen oder Erklaerungen."""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        text = response.text.strip()
+        # Remove surrounding quotes if present
+        if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
+            text = text[1:-1]
+        return text if text else None
+
+    except Exception as e:
+        logger.warning("Gemini episode text generation error: %s", e)
+        return None
+
+
+def _generate_episode_text_fallback(
+    field: str,
+    arc_title: str,
+    student_name: str,
+    episode_number: int,
+    planned_episodes: int,
+    prev_episodes: list,
+    topic: str,
+    country: str | None,
+) -> str:
+    """Rule-based fallback for episode text generation."""
+    country_name = {
+        "usa": "den USA", "canada": "Kanada", "australia": "Australien",
+        "newzealand": "Neuseeland", "ireland": "Irland",
+    }.get(country or "", "dem Ausland")
+
+    if field == "previously_text":
+        if episode_number <= 1:
+            return f"Willkommen zur ersten Episode von '{arc_title}'! Begleite {student_name} auf dem Abenteuer in {country_name}."
+        if len(prev_episodes) > 0:
+            last_ep = prev_episodes[-1]
+            return f"Bisher bei {student_name}: {last_ep.split(': ', 1)[-1] if ': ' in last_ep else last_ep}. Jetzt geht die Reise weiter!"
+        return f"Bisher bei {student_name}: Die Reise in {country_name} hat begonnen und es gab schon einige unvergessliche Momente. Weiter geht's!"
+
+    elif field == "cliffhanger_text":
+        cliffhangers = [
+            f"Aber was {student_name} am naechsten Tag erlebt, haette niemand erwartet...",
+            f"Wird {student_name} diese Herausforderung meistern? Die Antwort kommt in der naechsten Episode!",
+            f"Das war erst der Anfang - denn was dann passiert, veraendert alles...",
+            f"Ob das gut geht? Findet es in der naechsten Episode heraus!",
+        ]
+        import random
+        return random.choice(cliffhangers)
+
+    elif field == "next_episode_hint":
+        hints = [
+            f"Naechste Episode: {student_name} entdeckt eine voellig neue Seite von {country_name}!",
+            f"Stay tuned: In Episode {episode_number + 1} wird es richtig spannend!",
+            f"Kommt als naechstes: Neue Abenteuer, neue Freundschaften und eine grosse Ueberraschung!",
+            f"Naechstes Mal bei '{arc_title}': {student_name} erlebt etwas Unvergessliches.",
+        ]
+        import random
+        return random.choice(hints)
+
+    return ""

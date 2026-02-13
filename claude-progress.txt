@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #180: Student-Post-Verknuepfung
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added student_id nullable FK column to Post model with ON DELETE SET NULL
+- Added student relationship on Post model
+- Added student_id to post_to_dict serialization in posts routes
+- Added student_id query parameter filter to GET /api/posts endpoint
+- Added student_id to duplicate_post logic
+- Added student_id to CreatePostView saveDraft (persists selected student when saving)
+- Added full student integration to EditPostView:
+  - Import useStudentStore, fetch students on mount
+  - Load selectedStudentId from post data
+  - Save student_id in updateData
+  - Student selector dropdown UI ("Student verknuepfen")
+- Added student name badge to HistoryView post cards:
+  - Import useStudentStore, fetch students on mount
+  - getStudentName helper resolves student_id to name
+  - Shows graduation cap emoji + student name between country and date
+- Students dashboard endpoint already had OR logic for student_id-linked posts (from feature #179)
+
+### Verification steps completed:
+- Backend API: Created test post with student_id=8, verified it returns student_id in response
+- Backend API: Created test post without student_id, verified student_id is null
+- Backend API: Filtered GET /api/posts?student_id=8 returns only linked post
+- Backend API: Dashboard endpoint returns student_id-linked post in student's posts list
+- Browser: History page shows graduation cap badge with "LINKTEST Student" on linked post
+- Browser: History page does NOT show badge on unlinked post
+- Browser: Student Detail page (/students/8) shows "Zugehoerige Posts (1)" with linked post
+- Browser: Student Detail stats show "1 Gesamt Posts", "1 Entwuerfe"
+- Browser: Edit Post page (/posts/493/edit) shows student selector with "LINKTEST Student (usa)" selected
+- Browser: No console errors
+- Feature marked as passing via MCP tool
+
+### Files changed:
+- backend/app/models/post.py - Added student_id column and Student relationship
+- backend/app/api/routes/posts.py - Added student_id to dict, filter, and duplicate
+- frontend/src/views/CreatePostView.vue - Added student_id to saveDraft
+- frontend/src/views/EditPostView.vue - Full student selector integration
+- frontend/src/views/HistoryView.vue - Student name badge on post cards
+
+---
+
 ## Session - Feature #175: Video-Templates mit TREFF-Branding (Intro/Outro)
 **Date:** 2026-02-13
 **Status:** PASSING
@@ -8595,3 +8639,83 @@
 
 ### Current state:
 - Feature #204 marked as PASSING
+
+---
+
+## Session: Feature #177 - Video-Export als Reel/TikTok (9:16, 1:1, 4:5)
+**Date:** 2026-02-13
+**Feature ID:** #177
+**Status:** PASSING
+
+### What was implemented:
+Complete video export pipeline for social media formats with smart cropping, compression, and batch export capabilities.
+
+### Backend (FastAPI):
+- **VideoExport model** (`backend/app/models/video_export.py`) - SQLAlchemy model tracking export jobs with progress (status, progress %, output info, batch_id)
+- **Video export API** (`backend/app/api/routes/video_export.py`) - Full REST API with endpoints:
+  - `GET /formats` - Available aspect ratios (9:16, 1:1, 4:5) and platform presets (Instagram Reel/Feed/Portrait, TikTok)
+  - `POST /analyze` - Analyzes video asset, returns crop info per ratio, platform compatibility
+  - `POST /` - Single video export with smart cropping via ffmpeg (focus-point-based crop, CRF compression, H.264/AAC)
+  - `POST /batch` - Batch export multiple formats simultaneously with shared batch_id
+  - `GET /` - List exports with optional asset_id filter
+  - `GET /{export_id}` - Get single export details
+  - `GET /{export_id}/download` - Download exported MP4 file
+  - `DELETE /{export_id}` - Delete export and file from disk
+- **Smart cropping algorithm** - Calculates crop dimensions based on source vs target aspect ratios, using focus point percentage (0-100) for offset
+- **Quality mapping** - Maps quality slider (1-100%) to ffmpeg CRF values (45-15), with H.264 codec, AAC audio, yuv420p pixel format
+- **Platform presets** - Instagram Reel (90s max), Instagram Feed (60s), Instagram Feed Portrait (60s), TikTok (180s max)
+
+### Frontend (Vue.js 3):
+- **VideoExportView.vue** (`frontend/src/views/VideoExportView.vue`) - Complete export UI:
+  - Video library panel showing user's video assets with thumbnails
+  - Source video info display (resolution, duration, file size)
+  - Aspect ratio selection cards (9:16, 1:1, 4:5) with visual previews and crop percentage indicators
+  - Focus-point sliders (X/Y axes) for smart cropping control
+  - Platform preset buttons with max duration info and auto-warnings
+  - Quality slider with labels (Hoch/Mittel/Niedrig/Minimal)
+  - Duration warning when video exceeds platform limit
+  - Single export with animated progress bar
+  - Batch mode toggle with checkbox format selection
+  - Export result display with download button
+  - Export history list with download/delete per entry
+  - Toast notifications for success/error states
+
+### Integration:
+- Route added: `/video-export` in `frontend/src/router/index.js`
+- Sidebar nav item: "Video-Export" with 📤 icon between Video-Branding and Analytics
+- Router registered in `backend/app/main.py` at prefix `/api/video-export`
+- Model registered in `backend/app/models/__init__.py`
+
+### Verification steps completed:
+1. Navigate to Video-Export page - PASS (sidebar link works, page loads)
+2. Upload test video and select it - PASS (video appears in library, analysis returns crop info)
+3. Export 9:16 format - PASS (ffmpeg processes video, output 1080x1920, file downloadable)
+4. Export 1:1 format - PASS (output 1080x1080, correct dimensions)
+5. Batch export 3 formats - PASS (all 3 exports created with shared batch_id, all status "done")
+6. Download exported files - PASS (MP4 files download correctly)
+7. Export history persists after server restart - PASS (4 exports visible after restart)
+8. Delete export - PASS (export removed from list and file deleted from disk)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors
+- [x] All mock data grep checks clean (zero matches in new files)
+- [x] Server restart persistence verified (4 exports survive restart)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+- [x] Correct output dimensions verified (1080x1920 for 9:16, 1080x1080 for 1:1)
+- [x] File sizes reasonable (475KB for 9:16, 353KB for 1:1)
+
+### Files created/modified:
+- backend/app/models/video_export.py (NEW) - VideoExport SQLAlchemy model (~47 lines)
+- backend/app/api/routes/video_export.py (NEW) - Video export API endpoints (~774 lines)
+- backend/app/models/__init__.py (modified) - Added VideoExport import
+- backend/app/main.py (modified) - Added video_export router
+- frontend/src/views/VideoExportView.vue (NEW) - Complete video export UI (~822 lines)
+- frontend/src/router/index.js (modified) - Added /video-export route
+- frontend/src/components/layout/SidebarNav.vue (modified) - Added Video-Export nav item
+
+### Git commit: 1cc6069 (committed together with feature #175)
+**Note:** Video export infrastructure was committed alongside video branding templates in feature #175 as they share dependencies (ffmpeg pipeline, audio mixer).
+
+### Current state:
+- Feature #177 marked as PASSING

@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional
-from datetime import date
+from datetime import date, timedelta, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -10,6 +10,8 @@ from sqlalchemy import select, func
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.story_arc import StoryArc
+from app.models.story_episode import StoryEpisode
+from app.models.post import Post
 from app.models.content_suggestion import ContentSuggestion
 from app.models.student import Student
 
@@ -91,10 +93,15 @@ async def list_story_arcs(
     student_id: Optional[int] = None,
     country: Optional[str] = None,
     status: Optional[str] = None,
+    enriched: bool = False,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List story arcs with optional filters: student_id, country, status."""
+    """List story arcs with optional filters: student_id, country, status.
+
+    Set enriched=true to include student_name, episode counts (published/total),
+    and cover_image_url for card-based overview displays.
+    """
     where_clauses = [StoryArc.user_id == user_id]
 
     if student_id is not None:
@@ -113,23 +120,143 @@ async def list_story_arcs(
     query = select(StoryArc).where(*where_clauses).order_by(StoryArc.created_at.desc())
     result = await db.execute(query)
     arcs = result.scalars().all()
-    return [story_arc_to_dict(a) for a in arcs]
+
+    if not enriched:
+        return [story_arc_to_dict(a) for a in arcs]
+
+    # Enriched mode: add student_name, episode stats, cover_image_url
+    enriched_arcs = []
+    for arc in arcs:
+        arc_dict = story_arc_to_dict(arc)
+
+        # Get student name
+        if arc.student_id:
+            student_result = await db.execute(
+                select(Student.name).where(Student.id == arc.student_id)
+            )
+            student_name = student_result.scalar_one_or_none()
+            arc_dict["student_name"] = student_name
+        else:
+            arc_dict["student_name"] = None
+
+        # Count episodes and published episodes
+        total_eps_result = await db.execute(
+            select(func.count(StoryEpisode.id)).where(StoryEpisode.arc_id == arc.id)
+        )
+        total_episodes = total_eps_result.scalar() or 0
+
+        published_eps_result = await db.execute(
+            select(func.count(StoryEpisode.id)).where(
+                StoryEpisode.arc_id == arc.id,
+                StoryEpisode.status == "published",
+            )
+        )
+        published_episodes = published_eps_result.scalar() or 0
+
+        arc_dict["total_episodes"] = total_episodes
+        arc_dict["published_episodes"] = published_episodes
+
+        # Get cover image URL if available
+        if arc.cover_image_id:
+            from app.models.asset import Asset
+            asset_result = await db.execute(
+                select(Asset.file_path).where(Asset.id == arc.cover_image_id)
+            )
+            file_path = asset_result.scalar_one_or_none()
+            arc_dict["cover_image_url"] = f"/api/assets/file/{file_path}" if file_path else None
+        else:
+            arc_dict["cover_image_url"] = None
+
+        enriched_arcs.append(arc_dict)
+
+    return enriched_arcs
 
 
 @router.get("/{arc_id}")
 async def get_story_arc(
     arc_id: int,
+    include_episodes: bool = False,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get a single story arc by ID."""
+    """Get a single story arc by ID.
+
+    Set include_episodes=true to include full episode list with linked post info.
+    """
     result = await db.execute(
         select(StoryArc).where(StoryArc.id == arc_id, StoryArc.user_id == user_id)
     )
     arc = result.scalar_one_or_none()
     if not arc:
         raise HTTPException(status_code=404, detail="Story arc not found")
-    return story_arc_to_dict(arc)
+
+    arc_dict = story_arc_to_dict(arc)
+
+    # Add student name
+    if arc.student_id:
+        student_result = await db.execute(
+            select(Student.name).where(Student.id == arc.student_id)
+        )
+        arc_dict["student_name"] = student_result.scalar_one_or_none()
+    else:
+        arc_dict["student_name"] = None
+
+    # Add cover image URL
+    if arc.cover_image_id:
+        from app.models.asset import Asset
+        asset_result = await db.execute(
+            select(Asset.file_path).where(Asset.id == arc.cover_image_id)
+        )
+        file_path = asset_result.scalar_one_or_none()
+        arc_dict["cover_image_url"] = f"/api/assets/file/{file_path}" if file_path else None
+    else:
+        arc_dict["cover_image_url"] = None
+
+    if include_episodes:
+        # Get all episodes sorted by episode_number
+        eps_result = await db.execute(
+            select(StoryEpisode)
+            .where(StoryEpisode.arc_id == arc.id)
+            .order_by(StoryEpisode.episode_number)
+        )
+        episodes = eps_result.scalars().all()
+
+        episodes_list = []
+        for ep in episodes:
+            ep_dict = {
+                "id": ep.id,
+                "arc_id": ep.arc_id,
+                "post_id": ep.post_id,
+                "episode_number": ep.episode_number,
+                "episode_title": ep.episode_title,
+                "teaser_text": ep.teaser_text,
+                "cliffhanger_text": ep.cliffhanger_text,
+                "previously_text": ep.previously_text,
+                "next_episode_hint": ep.next_episode_hint,
+                "status": ep.status,
+                "created_at": ep.created_at.isoformat() if ep.created_at else None,
+                "updated_at": ep.updated_at.isoformat() if ep.updated_at else None,
+            }
+            # Get linked post info if available
+            if ep.post_id:
+                post_result = await db.execute(
+                    select(Post).where(Post.id == ep.post_id)
+                )
+                post = post_result.scalar_one_or_none()
+                if post:
+                    ep_dict["post_title"] = post.title
+                    ep_dict["post_status"] = post.status
+                    ep_dict["post_scheduled_date"] = post.scheduled_date.isoformat() if post.scheduled_date else None
+                    ep_dict["post_platform"] = post.platform
+            episodes_list.append(ep_dict)
+
+        arc_dict["episodes"] = episodes_list
+
+        # Add episode counts
+        arc_dict["total_episodes"] = len(episodes_list)
+        arc_dict["published_episodes"] = sum(1 for e in episodes_list if e["status"] == "published")
+
+    return arc_dict
 
 
 @router.post("", status_code=201)
@@ -266,3 +393,155 @@ async def delete_story_arc(
     await db.delete(arc)
     await db.commit()
     return {"message": "Story arc deleted"}
+
+
+@router.post("/wizard", status_code=201)
+async def create_story_arc_wizard(
+    wizard_data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a story arc with episodes and optional calendar placeholders in one step.
+
+    Request body:
+    {
+        "title": str (required),
+        "subtitle": str,
+        "description": str,
+        "student_id": int,
+        "country": str,
+        "tone": str,
+        "planned_episodes": int,
+        "cover_image_id": int,
+        "status": str (default "draft"),
+        "episodes": [{"title": "...", "description": "..."}],
+        "schedule_frequency": str ("daily", "twice_weekly", "weekly", "biweekly"),
+        "schedule_start_date": str (ISO date),
+        "create_calendar_placeholders": bool (default false)
+    }
+    """
+    # Validate required field
+    if not wizard_data.get("title"):
+        raise HTTPException(status_code=400, detail="Title is required")
+
+    # Validate status if provided
+    status = wizard_data.get("status", "draft")
+    valid_statuses = {"draft", "active", "paused", "completed"}
+    if status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(sorted(valid_statuses))}"
+        )
+
+    # Validate tone if provided
+    tone = wizard_data.get("tone", "jugendlich")
+    valid_tones = {"jugendlich", "serioess"}
+    if tone not in valid_tones:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid tone. Must be one of: {', '.join(sorted(valid_tones))}"
+        )
+
+    # Create the Story Arc
+    arc = StoryArc(
+        user_id=user_id,
+        title=wizard_data["title"],
+        subtitle=wizard_data.get("subtitle"),
+        description=wizard_data.get("description"),
+        student_id=wizard_data.get("student_id"),
+        country=wizard_data.get("country"),
+        status=status,
+        planned_episodes=wizard_data.get("planned_episodes", 8),
+        cover_image_id=wizard_data.get("cover_image_id"),
+        tone=tone,
+    )
+    db.add(arc)
+    await db.flush()
+    await db.refresh(arc)
+
+    # Create episodes
+    episodes_data = wizard_data.get("episodes", [])
+    created_episodes = []
+
+    for i, ep_data in enumerate(episodes_data):
+        episode = StoryEpisode(
+            arc_id=arc.id,
+            episode_number=i + 1,
+            episode_title=ep_data.get("title", f"Episode {i + 1}"),
+            teaser_text=ep_data.get("description"),
+            status="planned",
+        )
+        db.add(episode)
+        created_episodes.append(episode)
+
+    # Update arc current_episode count
+    arc.current_episode = len(created_episodes)
+
+    # Create calendar placeholders if requested
+    created_posts = []
+    if wizard_data.get("create_calendar_placeholders") and wizard_data.get("schedule_start_date"):
+        frequency = wizard_data.get("schedule_frequency", "weekly")
+        try:
+            start_date = date.fromisoformat(wizard_data["schedule_start_date"])
+        except (ValueError, TypeError):
+            start_date = date.today() + timedelta(days=1)
+
+        # Calculate dates based on frequency
+        day_gaps = {
+            "daily": 1,
+            "twice_weekly": 3,  # ~2x per week = every 3-4 days
+            "weekly": 7,
+            "biweekly": 14,
+        }
+        gap = day_gaps.get(frequency, 7)
+
+        for i, ep_data in enumerate(episodes_data):
+            scheduled_date = start_date + timedelta(days=i * gap)
+            post = Post(
+                user_id=user_id,
+                title=f"{arc.title} - {ep_data.get('title', f'Episode {i + 1}')}",
+                status="draft",
+                category="story_teaser",
+                country=wizard_data.get("country", ""),
+                platform="instagram_story",
+                scheduled_date=scheduled_date,
+                scheduled_time="18:00",
+                story_arc_id=arc.id,
+                episode_number=i + 1,
+                student_id=wizard_data.get("student_id"),
+            )
+            db.add(post)
+            created_posts.append(post)
+
+    await db.flush()
+
+    # Link posts to episodes
+    for i, post in enumerate(created_posts):
+        await db.refresh(post)
+        if i < len(created_episodes):
+            await db.refresh(created_episodes[i])
+            created_episodes[i].post_id = post.id
+
+    # Auto-suggest feed teaser when arc is created as active
+    suggestion_info = None
+    if arc.status == "active":
+        suggestion_info = await _auto_suggest_story_teaser(arc, db)
+
+    await db.commit()
+
+    response = story_arc_to_dict(arc)
+    response["episodes"] = [
+        {
+            "id": ep.id,
+            "episode_number": ep.episode_number,
+            "episode_title": ep.episode_title,
+            "teaser_text": ep.teaser_text,
+            "status": ep.status,
+        }
+        for ep in created_episodes
+    ]
+    response["calendar_posts_created"] = len(created_posts)
+    if suggestion_info:
+        response["teaser_suggestion"] = suggestion_info
+
+    return response

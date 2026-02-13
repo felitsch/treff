@@ -108,6 +108,21 @@ const routes = [
         name: 'VideoExport',
         component: () => import('@/views/VideoExportView.vue'),
       },
+      {
+        path: 'story-arcs',
+        name: 'StoryArcs',
+        component: () => import('@/views/StoryArcsView.vue'),
+      },
+      {
+        path: 'story-arcs/:id',
+        name: 'StoryArcDetail',
+        component: () => import('@/views/StoryArcDetailView.vue'),
+      },
+      {
+        path: 'story-arc-wizard',
+        name: 'StoryArcWizard',
+        component: () => import('@/views/StoryArcWizardView.vue'),
+      },
     ],
   },
   {
