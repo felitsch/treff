@@ -1,5 +1,61 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #170: Implement AI weekly plan suggestion with Gemini 2.5 Flash
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented the full /api/ai/suggest-weekly-plan endpoint (replaced placeholder)
+- Created _generate_weekly_plan_rule_based() for fallback plan generation:
+  - Balances countries and categories based on recent posting history
+  - Spreads posts across the week (Tue/Thu/Sat for 3 posts, more days for higher counts)
+  - Integrates upcoming TREFF deadlines (fristen_cta posts for approaching deadlines)
+  - Optimal posting times: 17:00-20:00 weekdays, 11:00-14:00 weekends
+- Created _generate_weekly_plan_with_gemini() for AI-powered plan generation:
+  - Comprehensive system prompt with TREFF brand identity and content strategy
+  - Structured JSON output with validation and normalization
+  - Context-aware: uses posting history, upcoming deadlines, season
+  - Gemini 2.5 Flash model with temperature=0.8 for creative variety
+- Updated suggest_weekly_plan() endpoint:
+  - Accepts posts_per_week parameter (2-7, default 3)
+  - Fetches user's recent posts for context (categories, countries, platforms)
+  - Tries Gemini first, falls back to rule-based
+  - Saves plan entries as content_suggestions with type="weekly_plan"
+  - Returns full plan with day, date, time, platform, category, country, topic, reason
+
+### Files modified:
+- backend/app/api/routes/ai.py - Replaced placeholder with full Gemini + rule-based implementation
+
+### Verification steps completed:
+1. POST /api/ai/suggest-weekly-plan implemented - PASS (returns 200 with plan)
+2. Prompt with content calendar context - PASS (includes recent posts, deadlines, season)
+3. Gemini 2.5 Flash generates weekly plan - PASS (source="gemini", 3-5 posts)
+4. Response format: list of posts with day, time, platform, category, country, topic - PASS
+5. Good content mix (not 5x same country) - PASS:
+   - 3-post plan: USA, USA(deadline), Canada - 2 countries
+   - 5-post plan: USA, USA(deadline), Canada, Australia, Ireland - 4 countries
+   - 5 different categories in 5-post plan
+6. Sensible posting times - PASS:
+   - Weekdays: 17:30, 18:00, 19:00
+   - Weekend: 12:00, 13:00
+
+### Additional verification:
+- Rule-based fallback tested directly: 4 different countries, 4 different categories
+- Dashboard shows "📋 Wochenplan" badge on suggestions - PASS
+- "5 offen" badge correctly shows 5 pending suggestions - PASS
+- Zero JavaScript console errors (0 errors, 0 warnings)
+- All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- Server restart persistence: 12 weekly_plan suggestions persist in SQLite - PASS
+- Dashboard still shows suggestions after server restart - PASS
+- Screenshots captured:
+  - feature170-step1-dashboard-weekly-plan-suggestions.png
+  - feature170-step3-weekly-plan-suggestions-section.png
+  - feature170-step4-persistence-after-restart.png
+
+### Current state:
+- Feature #170 marked as PASSING
+- 167/170 features passing (98.2%)
+
 ## Session - Feature #169: Implement AI content suggestion endpoint with Gemini 2.5 Flash
 **Date:** 2026-02-13
 **Status:** PASSING
