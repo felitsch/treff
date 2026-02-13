@@ -1,5 +1,60 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #162: Template HTML/CSS injection prevented
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented comprehensive XSS prevention for template HTML/CSS content
+- Three layers of defense:
+  1. **Backend sanitization** (sanitizer.py): Strips `<script>`, `<iframe>`, `<object>`, `<embed>`, `<form>` tags and content; removes on* event handlers (onclick, onerror, etc.); neutralizes javascript:/data: URIs; strips CSS expressions and @import
+  2. **Frontend text escaping** (TemplatesView.vue): Added `escapeHtml()` function that converts `<>&"'` to HTML entities when replacing template placeholders with user text input
+  3. **Iframe sandbox** (already existed): `sandbox="allow-same-origin"` prevents script execution even if HTML somehow contains scripts
+
+### Files created:
+- backend/app/core/sanitizer.py - sanitize_html(), sanitize_css(), escape_text() utilities
+
+### Files modified:
+- backend/app/api/routes/templates.py - Import sanitizer; sanitize HTML/CSS on create and update
+- frontend/src/views/TemplatesView.vue - Added escapeHtml() function; all placeholder replacements now escape user text
+
+### Verification steps completed:
+1. Create template with HTML: `<script>alert('xss')</script>` - PASS
+   - Created via API with XSS payloads: script tag, onerror handler, onclick handler
+   - Backend sanitized: script tag removed, event handlers stripped, javascript: URI neutralized
+   - Stored in database with clean HTML: `<div class="template"><h1>{{title}}</h1><img src=x><p>{{content}}</p></div>`
+2. Save template - PASS (template saved to database as ID #23)
+3. View template preview - PASS
+   - Opened template editor modal, iframe renders sanitized content
+   - No alert dialogs appeared
+   - Screenshot: feature162-step1-xss-template-preview.png
+4. Verify script does not execute - PASS
+   - Typed `<script>alert('xss')</script>` into headline text field
+   - Preview shows it as literal text: "&lt;script&gt;alert('xss')&lt;/script&gt;"
+   - Screenshot: feature162-step2-xss-text-input-escaped.png
+   - Typed `<img src=x onerror="alert('xss_headline')">` into headline field
+   - Preview shows it as literal text (not rendered as img tag)
+   - Screenshot: feature162-step3-img-onerror-escaped.png
+5. Verify content is properly sanitized or escaped - PASS
+   - Backend: sanitize_html() strips script tags, event handlers, dangerous URIs
+   - Backend: sanitize_css() strips @import rules, CSS expressions, javascript: in url()
+   - Frontend: escapeHtml() converts < > & " ' to HTML entities
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings - only Vite HMR websocket)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+- [x] Test template cleaned up after verification (deleted via UI)
+- [x] Screenshots captured:
+  - feature162-step1-xss-template-preview.png (sanitized template in preview, no script execution)
+  - feature162-step2-xss-text-input-escaped.png (script tag in text field rendered as literal text)
+  - feature162-step3-img-onerror-escaped.png (img onerror in text field rendered as literal text)
+
+### Current state:
+- Feature #162 marked as PASSING
+- 163/170 features passing (95.9%)
+
 ## Session - Feature #161: Image upload rejects non-image files
 **Date:** 2026-02-13
 **Status:** PASSING
