@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import ContentMixPanel from '@/components/calendar/ContentMixPanel.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -14,6 +15,9 @@ const error = ref(null)
 const unscheduledPosts = ref([])
 const loadingUnscheduled = ref(false)
 const sidebarCollapsed = ref(window.innerWidth < 768)
+
+// Content-Mix right sidebar
+const mixPanelCollapsed = ref(window.innerWidth < 1024)
 
 // Drag-and-drop state
 const draggedPost = ref(null)
@@ -706,6 +710,13 @@ function isPastDate(dateStr) {
 // Scheduling error message for past dates
 const scheduleError = ref(null)
 
+// Episode order validation state
+const episodeConflicts = ref([])
+const episodeWarnings = ref([])
+const episodeInfo = ref(null)
+const shiftFollowing = ref(false)
+const validatingOrder = ref(false)
+
 // ========== DRAG AND DROP ==========
 
 function onDragStart(event, post) {
@@ -743,7 +754,7 @@ function onDragLeave(event, dateStr) {
   }
 }
 
-function onDrop(event, dateStr) {
+async function onDrop(event, dateStr) {
   event.preventDefault()
   dragOverDate.value = null
   if (!draggedPost.value) return
@@ -755,8 +766,45 @@ function onDrop(event, dateStr) {
   scheduleTargetDate.value = dateStr
   scheduleTime.value = '10:00'
   scheduleError.value = null
+  episodeConflicts.value = []
+  episodeWarnings.value = []
+  episodeInfo.value = null
+  shiftFollowing.value = false
   showTimeDialog.value = true
+
+  // If post is part of a story arc, validate episode order
+  if (draggedPost.value.story_arc_id) {
+    await validateEpisodeOrder(draggedPost.value.id, dateStr)
+  }
+
   draggedPost.value = null
+}
+
+// Validate episode order when scheduling arc episodes
+async function validateEpisodeOrder(postId, targetDate) {
+  validatingOrder.value = true
+  try {
+    const res = await fetch('/api/calendar/validate-episode-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+      body: JSON.stringify({
+        post_id: postId,
+        target_date: targetDate,
+      }),
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    episodeConflicts.value = data.conflicts || []
+    episodeWarnings.value = data.warnings || []
+    episodeInfo.value = data.episode_info || null
+  } catch (err) {
+    console.error('Episode order validation error:', err)
+  } finally {
+    validatingOrder.value = false
+  }
 }
 
 async function confirmSchedule() {
@@ -771,17 +819,51 @@ async function confirmSchedule() {
   scheduleError.value = null
 
   try {
-    const res = await fetch(`/api/posts/${schedulingPost.value.id}/schedule`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.accessToken}`,
-      },
-      body: JSON.stringify({
-        scheduled_date: scheduleTargetDate.value,
-        scheduled_time: scheduleTime.value,
-      }),
-    })
+    // Use episode-aware scheduling for arc posts, regular for others
+    const isArcPost = schedulingPost.value.story_arc_id
+    let res
+
+    if (isArcPost) {
+      // Use episode-aware schedule endpoint
+      res = await fetch('/api/calendar/schedule-episode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          post_id: schedulingPost.value.id,
+          scheduled_date: scheduleTargetDate.value,
+          scheduled_time: scheduleTime.value,
+          force: episodeConflicts.value.length > 0, // force if user proceeds despite conflicts
+          shift_following: shiftFollowing.value,
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (!data.success) {
+          // Order conflict - show error but don't close dialog
+          scheduleError.value = data.message || 'Reihenfolge-Konflikt'
+          episodeConflicts.value = data.conflicts || []
+          episodeWarnings.value = data.warnings || []
+          return
+        }
+      }
+    } else {
+      // Regular scheduling for non-arc posts
+      res = await fetch(`/api/posts/${schedulingPost.value.id}/schedule`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          scheduled_date: scheduleTargetDate.value,
+          scheduled_time: scheduleTime.value,
+        }),
+      })
+    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}))
@@ -798,6 +880,10 @@ async function confirmSchedule() {
     schedulingPost.value = null
     scheduleTargetDate.value = null
     scheduleError.value = null
+    episodeConflicts.value = []
+    episodeWarnings.value = []
+    episodeInfo.value = null
+    shiftFollowing.value = false
   }
 }
 
@@ -805,6 +891,10 @@ function cancelScheduleDialog() {
   showTimeDialog.value = false
   schedulingPost.value = null
   scheduleTargetDate.value = null
+  episodeConflicts.value = []
+  episodeWarnings.value = []
+  episodeInfo.value = null
+  shiftFollowing.value = false
 }
 
 function formatDateForDisplay(dateStr) {
@@ -907,6 +997,13 @@ watch([currentMonth, currentYear], () => {
 watch(weekDate, () => {
   if (viewMode.value === 'week') {
     fetchWeek()
+  }
+})
+
+// Re-validate episode order when date changes in scheduling dialog
+watch(scheduleTargetDate, async (newDate) => {
+  if (showTimeDialog.value && schedulingPost.value?.story_arc_id && newDate && !isPastDate(newDate)) {
+    await validateEpisodeOrder(schedulingPost.value.id, newDate)
   }
 })
 
@@ -1037,6 +1134,20 @@ onMounted(() => {
           <span v-if="showArcTimeline && arcTimelineData.length > 0" class="bg-violet-200 dark:bg-violet-800 text-violet-800 dark:text-violet-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ arcTimelineData.length }}
           </span>
+        </button>
+
+        <!-- Content-Mix toggle -->
+        <button
+          @click="mixPanelCollapsed = !mixPanelCollapsed"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="!mixPanelCollapsed
+            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Content-Mix Analyse anzeigen/ausblenden"
+          aria-label="Content-Mix Analyse anzeigen/ausblenden"
+        >
+          <span>📊</span>
+          Mix
         </button>
 
         <!-- Export Calendar as CSV button -->
@@ -1242,20 +1353,19 @@ onMounted(() => {
       </div>
 
       <!-- Story Arc Timeline Layer -->
-      <div v-if="showArcTimeline && arcTimelineRows.length > 0" class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20 px-1 py-1.5">
+      <div v-if="showArcTimeline && arcTimelineRows.length > 0" class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20 py-1.5">
         <div
           v-for="(row, rowIdx) in arcTimelineRows"
           :key="'arc-' + row.arc.id"
-          class="relative mb-1 last:mb-0"
+          class="grid grid-cols-7 mb-1 last:mb-0"
           :style="{ height: '26px' }"
         >
-          <!-- Arc bar background - positioned absolutely across the grid -->
+          <!-- Arc bar using CSS grid-column start/end for precise alignment -->
           <div
-            class="absolute rounded-full flex items-center overflow-hidden transition-all"
+            class="relative rounded-full flex items-center overflow-visible mx-0.5"
             :style="{
-              left: (row.startCol / 7 * 100) + '%',
-              width: (row.spanCols / 7 * 100) + '%',
-              top: '0',
+              gridColumnStart: row.startCol + 1,
+              gridColumnEnd: row.endCol + 2,
               height: '24px',
               backgroundColor: row.arc.color.light,
               border: '2px solid ' + row.arc.color.bg,
@@ -1264,33 +1374,33 @@ onMounted(() => {
           >
             <!-- Arc title (inside the bar) -->
             <span
-              class="text-[11px] font-semibold truncate px-2 leading-none whitespace-nowrap"
+              class="text-[11px] font-semibold truncate px-2 leading-none whitespace-nowrap pointer-events-none"
               :style="{ color: row.arc.color.text }"
             >
               {{ row.arc.title }}
               <span class="font-normal opacity-75">({{ row.arc.total_episodes }}/{{ row.arc.planned_episodes }})</span>
             </span>
-          </div>
 
-          <!-- Episode dots on the bar -->
-          <div
-            v-for="ep in row.episodes"
-            :key="'ep-' + ep.id"
-            class="absolute cursor-pointer z-10 group"
-            :style="{
-              left: 'calc(' + ((ep.colIndex + 0.5) / 7 * 100) + '% - 6px)',
-              top: '3px',
-              width: '18px',
-              height: '18px',
-            }"
-            @mouseenter="showEpisodeTooltip($event, row.arc, ep)"
-            @mouseleave="hideEpisodeTooltip"
-            @click.stop="onEpisodeClick(ep)"
-          >
+            <!-- Episode dots on the bar -->
             <div
-              class="w-full h-full rounded-full border-2 border-white dark:border-gray-800 shadow-sm transition-transform group-hover:scale-125"
-              :style="{ backgroundColor: getEpisodeStatusColor(ep.status) }"
-            ></div>
+              v-for="ep in row.episodes"
+              :key="'ep-' + ep.id"
+              class="absolute cursor-pointer z-10 group"
+              :style="{
+                left: 'calc(' + ((ep.colIndex - row.startCol + 0.5) / row.spanCols * 100) + '% - 9px)',
+                top: '1px',
+                width: '18px',
+                height: '18px',
+              }"
+              @mouseenter="showEpisodeTooltip($event, row.arc, ep)"
+              @mouseleave="hideEpisodeTooltip"
+              @click.stop="onEpisodeClick(ep)"
+            >
+              <div
+                class="w-full h-full rounded-full border-2 border-white dark:border-gray-800 shadow-sm transition-transform group-hover:scale-125"
+                :style="{ backgroundColor: getEpisodeStatusColor(ep.status) }"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1374,18 +1484,26 @@ onMounted(() => {
             <div
               v-for="post in dayObj.posts.slice(0, 3)"
               :key="post.id"
-              class="rounded-md px-1.5 py-1 border-l-3 text-xs cursor-default truncate"
+              draggable="true"
+              @dragstart="onDragStart($event, post)"
+              @dragend="onDragEnd"
+              class="rounded-md px-1.5 py-1 border-l-3 text-xs cursor-grab active:cursor-grabbing truncate"
               :class="[
                 getCategoryStyle(post.category).bg,
                 getCategoryStyle(post.category).text,
                 'border-l-[3px]',
                 getCategoryStyle(post.category).border,
               ]"
-              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}`"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''}`"
             >
               <div class="flex items-center gap-1">
                 <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
                 <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
+                <span
+                  v-if="post.episode_number"
+                  class="flex-shrink-0 ml-auto text-[9px] font-bold px-1 py-0 rounded bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-300"
+                  :title="'Episode ' + post.episode_number"
+                >E{{ post.episode_number }}</span>
               </div>
               <div class="flex items-center gap-1 mt-0.5 opacity-75">
                 <span class="flex-shrink-0 text-[10px]">{{ getPlatformIcon(post.platform) }}</span>
@@ -1733,6 +1851,12 @@ onMounted(() => {
     </div>
 
       </div><!-- end flex-1 calendar content area -->
+
+      <!-- Content-Mix right sidebar -->
+      <ContentMixPanel
+        :collapsed="mixPanelCollapsed"
+        @toggle="mixPanelCollapsed = !mixPanelCollapsed"
+      />
     </div><!-- end flex gap-4 main layout -->
 
     <!-- Schedule time picker dialog (modal) -->
@@ -1741,13 +1865,20 @@ onMounted(() => {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       @click.self="cancelScheduleDialog"
     >
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
-          Post planen
+          {{ schedulingPost?.story_arc_id ? 'Episode planen' : 'Post planen' }}
         </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
           {{ schedulingPost?.title || 'Unbenannt' }}
         </p>
+        <!-- Episode badge if arc post -->
+        <div v-if="schedulingPost?.story_arc_id && episodeInfo" class="mb-4">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
+            Episode {{ episodeInfo.episode_number || '?' }} von {{ episodeInfo.total_episodes }}
+          </span>
+        </div>
+        <div v-else class="mb-4"></div>
 
         <!-- Date picker (only allows today and future dates) -->
         <div class="mb-4">
@@ -1758,7 +1889,12 @@ onMounted(() => {
             type="date"
             :min="getTodayStr()"
             class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="isPastDate(scheduleTargetDate) ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+            :class="[
+              isPastDate(scheduleTargetDate) ? 'border-red-400 dark:border-red-500' : '',
+              episodeConflicts.length > 0 ? 'border-red-400 dark:border-red-500 ring-2 ring-red-200 dark:ring-red-800' : '',
+              episodeWarnings.length > 0 && episodeConflicts.length === 0 ? 'border-amber-400 dark:border-amber-500' : '',
+              !isPastDate(scheduleTargetDate) && episodeConflicts.length === 0 && episodeWarnings.length === 0 ? 'border-gray-300 dark:border-gray-600' : '',
+            ]"
           />
           <p v-if="isPastDate(scheduleTargetDate)" class="mt-1 text-xs text-red-500 dark:text-red-400">
             Vergangene Daten koennen nicht ausgewaehlt werden.
@@ -1774,6 +1910,69 @@ onMounted(() => {
             type="time"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+        </div>
+
+        <!-- Validation loading -->
+        <div v-if="validatingOrder" class="mb-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-500"></div>
+          Reihenfolge wird geprueft...
+        </div>
+
+        <!-- Episode order conflicts (hard errors) -->
+        <div v-if="episodeConflicts.length > 0" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg" role="alert">
+          <div class="flex items-center gap-2 mb-2">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span class="font-semibold text-sm text-red-700 dark:text-red-300">Reihenfolge-Konflikt</span>
+          </div>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(conflict, cIdx) in episodeConflicts"
+              :key="'conflict-' + cIdx"
+              class="text-xs text-red-600 dark:text-red-400 flex items-start gap-1.5"
+            >
+              <span class="flex-shrink-0 mt-0.5">&#x274C;</span>
+              <span>{{ conflict.message }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Episode order warnings (soft - gap too small) -->
+        <div v-if="episodeWarnings.length > 0 && episodeConflicts.length === 0" class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span class="font-semibold text-sm text-amber-700 dark:text-amber-300">Abstandswarnung</span>
+          </div>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(warning, wIdx) in episodeWarnings"
+              :key="'warning-' + wIdx"
+              class="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5"
+            >
+              <span class="flex-shrink-0 mt-0.5">&#x26A0;&#xFE0F;</span>
+              <span>{{ warning.message }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Shift following episodes option (only for arc posts that already have a scheduled date) -->
+        <div v-if="schedulingPost?.story_arc_id && episodeInfo?.episode_number" class="mb-4">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              v-model="shiftFollowing"
+              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500"
+            />
+            <span class="text-sm text-gray-700 dark:text-gray-300">
+              Alle folgenden Episoden mit verschieben
+            </span>
+          </label>
+          <p class="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">
+            Verschiebt Episode {{ (episodeInfo?.episode_number || 0) + 1 }}+ um den gleichen Zeitabstand.
+          </p>
         </div>
 
         <!-- Error message -->
@@ -1793,9 +1992,13 @@ onMounted(() => {
             @click="confirmSchedule"
             :disabled="isPastDate(scheduleTargetDate)"
             class="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
-            :class="isPastDate(scheduleTargetDate) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+            :class="[
+              isPastDate(scheduleTargetDate) ? 'bg-gray-400 cursor-not-allowed' : '',
+              episodeConflicts.length > 0 && !isPastDate(scheduleTargetDate) ? 'bg-red-600 hover:bg-red-700' : '',
+              episodeConflicts.length === 0 && !isPastDate(scheduleTargetDate) ? 'bg-blue-600 hover:bg-blue-700' : '',
+            ]"
           >
-            Post planen
+            {{ episodeConflicts.length > 0 ? 'Trotzdem planen' : (schedulingPost?.story_arc_id ? 'Episode planen' : 'Post planen') }}
           </button>
         </div>
       </div>
