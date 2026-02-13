@@ -1,5 +1,33 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #196: Interaktive Story-Elemente (Polls, Quizzes, Slider)
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified the complete Interactive Story Elements feature end-to-end via browser
+- All infrastructure already implemented: backend model, CRUD API, AI endpoint, frontend components
+- Backend: PostInteractiveElement model, CRUD routes at /api/posts/{id}/interactive-elements, AI generation via Gemini 2.5 Flash
+- Frontend: InteractiveElementEditor (type selector, AI generate, manual create, edit, remove), InteractiveElementPreview (visual overlays)
+- Integrated into CreatePostView Step 7 when instagram_story platform is selected
+- Export reminder on Step 9 lists all interactive elements
+
+### Verification steps completed:
+1. InteractiveElement components (Poll, Quiz, Slider, Question) - PASS (all 4 render correctly)
+2. PostInteractiveElement data model - PASS (SQLAlchemy with all fields, CASCADE delete)
+3. Story-Editor integration - PASS (editor shows in Step 7 for instagram_story)
+4. AI endpoint POST /api/ai/generate-interactive - PASS (all 4 types with Gemini + fallback)
+5. Quiz example - PASS (contextual questions per country)
+6. Preview overlays - PASS (4 overlays visible on story preview)
+7. Export reminder - PASS (Step 9 shows "Vergiss nicht die interaktiven Elemente!")
+8. All element types tested - PASS (Poll/Quiz via AI, Slider/Question via manual)
+
+### Additional checks:
+- Zero console errors, mock data grep clean, server restart persistence verified
+- CRUD: create, read, update, delete, bulk update all work
+- Edit/remove inline: tested and working
+- Screenshots: feature196-step7-editor.png, feature196-all-4-types.png, feature196-export-reminder.png
+
 ## Session - Feature #197: Story-Teaser-Posts fuer den Feed
 **Date:** 2026-02-13
 **Status:** PASSING
@@ -7891,3 +7919,35 @@
 
 ### Current state:
 - Feature #194 marked as PASSING
+
+## Session - Feature #200: Story-Arc Timeline im Kalender
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added Story-Arc timeline layer to CalendarView showing arcs as horizontal bars
+- Backend: GET /api/calendar/arc-timeline endpoint returns arcs with episodes, colors, date ranges
+- Frontend: Arc timeline bars between day headers and calendar cells using CSS grid positioning
+- Episode dots with status colors (draft=gray, scheduled=blue, reminded=amber, posted=green)
+- Tooltip on hover showing arc name, episode title, number, date, status
+- Click-to-navigate to post editor (/posts/{id}/edit)
+- Toggle show/hide via toolbar button with arc count badge
+- Story-Arcs legend section in sidebar with arc colors and status colors
+- ARC_COLORS palette (8 colors) auto-assigned to arcs
+
+### Files modified:
+- backend/app/api/routes/calendar.py - Added StoryArc import, ARC_COLORS, /arc-timeline endpoint, story_arc_id/episode_number to post_to_calendar_dict
+- frontend/src/views/CalendarView.vue - Arc timeline layer, tooltip, toggle, legend, fetchArcTimeline()
+
+### Verification completed:
+- Browser: 2 arc bars visible spanning Feb 10 - Mar 14 and Feb 12 - Mar 12
+- Browser: Episode dots with correct status colors on arc bars
+- Browser: Toggle hides/shows arc layer (icon changes from open book to closed book)
+- Browser: Tooltip shows arc name, episode title, episode number, date, status
+- Browser: Story-Arcs legend shows in sidebar with arc names and status colors
+- Console: Zero errors
+- Mock data: No globalThis/devStore/mockDb/testData patterns in frontend or backend
+- Git commit: e91aaf2
+
+### Current state:
+- Feature #200 marked as PASSING
