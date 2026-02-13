@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #163: Keyboard shortcut Ctrl+S saves current work
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added Ctrl+S keyboard shortcut to EditPostView.vue for quick-saving posts
+- CreatePostView.vue already had Ctrl+S support from a previous session (saveDraft function)
+- Both views: preventDefault() stops browser save dialog, capture phase intercepts before other handlers
+
+### Implementation details:
+- EditPostView.vue: Added handleCtrlS() function that calls savePost() on Ctrl+S/Cmd+S
+  - Registered in onMounted with window.addEventListener('keydown', handleCtrlS, true)
+  - Cleaned up in onUnmounted with removeEventListener
+  - Guards: only fires when not already saving and post is loaded
+- CreatePostView.vue (already existed): handleCtrlS() calls saveDraft() for steps 1-8, saveAndExport() for step 9
+  - saveDraft() saves as draft without triggering export/download
+  - Shows info toast when no content exists yet
+
+### Verification steps completed:
+1. Open post editor with unsaved changes - PASS
+   - Created test post CTRL_S_TEST_163, navigated to /posts/406/edit
+   - Modified headline to "CTRL_S_SAVED"
+2. Press Ctrl+S - PASS
+   - Pressed Ctrl+S, post saved to database (confirmed via API: title="CTRL_S_SAVED")
+3. Verify post is saved - PASS
+   - API GET /api/posts/406 returns updated title and updated_at timestamp
+   - Second save: title changed to "CTRL_S_TEST_FINAL", body to "CTRL_S_BODY_CHANGE"
+   - Page reload shows persisted data
+4. Verify success feedback shown - PASS
+   - EditPostView: successMsg "Post gespeichert!" green banner for 3 seconds
+   - CreatePostView: toast "Bitte erstelle zuerst Inhalte..." info message on step 1
+5. Verify no browser save dialog appears - PASS
+   - preventDefault() stops the browser native save dialog
+   - Page stays on editor, no navigation away
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src)
+- [x] No 500s in network requests
+- [x] Data persists across page reloads (confirmed via API and page reload)
+- [x] Screenshots captured:
+  - feature163-step1-ctrlS-edit-success.png (Edit page after Ctrl+S save)
+  - feature163-step2-success-message.png (Edit page with saved data visible)
+  - feature163-step3-ctrlS-create-no-content-toast.png (Create page toast on early Ctrl+S)
+  - feature163-step4-persisted-after-reload.png (Edit page reload confirms persistence)
+
+### Files modified:
+- frontend/src/views/EditPostView.vue - Added handleCtrlS with keydown listener
+
+### Current state:
+- Feature #163 marked as PASSING
+- 164/170 features passing (96.5%)
+
 ## Session - Feature #160: API rate limiting for AI generation endpoints
 **Date:** 2026-02-13
 **Status:** PASSING
