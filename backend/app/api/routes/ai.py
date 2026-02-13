@@ -27,6 +27,7 @@ from app.models.humor_format import HumorFormat
 from app.models.hook import Hook
 from app.models.student import Student
 from app.models.hashtag_set import HashtagSet
+from app.models.story_arc import StoryArc
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -1762,6 +1763,397 @@ async def suggest_weekly_plan(
         "posts_per_week": posts_per_week,
         "week_start": (today + timedelta(days=((7 - today.weekday()) % 7) or 7)).isoformat(),
         "message": f"Wochenplan mit {len(plan)} Posts generiert! ({source})",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Series-Aware Weekly Content Planner (Feature #204)
+# ═══════════════════════════════════════════════════════════════════════
+
+RECURRING_FORMATS = [
+    {"day": "Montag", "day_idx": 0, "label": "Motivation Monday", "category": "tipps_tricks", "icon": "💪"},
+    {"day": "Dienstag", "day_idx": 1, "label": "Story/Serie Episoden-Tag", "category": "erfahrungsberichte", "icon": "📖"},
+    {"day": "Mittwoch", "day_idx": 2, "label": "Laender-Spotlight", "category": "laender_spotlight", "icon": "🌍"},
+    {"day": "Donnerstag", "day_idx": 3, "label": "Throwback Thursday", "category": "foto_posts", "icon": "📸"},
+    {"day": "Freitag", "day_idx": 4, "label": "Freitags-Fail / Fun Facts", "category": "faq", "icon": "😂"},
+    {"day": "Samstag", "day_idx": 5, "label": "Behind-the-Scenes", "category": "erfahrungsberichte", "icon": "🎬"},
+    {"day": "Sonntag", "day_idx": 6, "label": "Teaser fuer naechste Woche", "category": "tipps_tricks", "icon": "👀"},
+]
+
+
+@router.post("/weekly-planner")
+async def weekly_planner(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Series-aware AI weekly content planner.
+
+    Generates a complete week plan considering:
+    - Active story arcs (next episode scheduling)
+    - Recurring formats (Motivation Monday, Freitags-Fail, etc.)
+    - Seasonal events (TREFF deadlines)
+    - Country balance
+    - Posting frequency goals
+
+    Expects:
+    - week_start (str, optional): ISO date for the Monday of the target week. Defaults to next Monday.
+    - posts_per_week (int, optional): Target posts (2-7, default 5)
+    - include_recurring (bool, optional): Include recurring format suggestions (default true)
+    - include_series (bool, optional): Include story arc episodes (default true)
+
+    Returns the weekly plan as an array of day slots (Mo-So) with suggested posts.
+    """
+    today = date.today()
+    season = SEASON_NAMES.get(today.month, "Fruehling")
+
+    # Parse week_start
+    week_start_str = request.get("week_start")
+    if week_start_str:
+        try:
+            week_start = date.fromisoformat(week_start_str)
+            # Snap to Monday
+            week_start = week_start - timedelta(days=week_start.weekday())
+        except (ValueError, TypeError):
+            week_start = None
+
+    if not week_start_str or week_start is None:
+        days_until_monday = (7 - today.weekday()) % 7
+        if days_until_monday == 0:
+            days_until_monday = 7
+        week_start = today + timedelta(days=days_until_monday)
+
+    week_end = week_start + timedelta(days=6)
+
+    # Parse options
+    posts_per_week = max(2, min(7, int(request.get("posts_per_week", 5))))
+    include_recurring = request.get("include_recurring", True)
+    include_series = request.get("include_series", True)
+
+    # Fetch active story arcs
+    active_arcs = []
+    if include_series:
+        arcs_result = await db.execute(
+            select(StoryArc).where(
+                StoryArc.user_id == user_id,
+                StoryArc.status == "active",
+            )
+        )
+        arcs = arcs_result.scalars().all()
+        for arc in arcs:
+            # Find current episode number (last scheduled episode)
+            last_ep_result = await db.execute(
+                select(func.max(Post.episode_number)).where(
+                    Post.user_id == user_id,
+                    Post.story_arc_id == arc.id,
+                )
+            )
+            last_ep = last_ep_result.scalar() or 0
+            next_ep = last_ep + 1
+            if next_ep <= (arc.planned_episodes or 999):
+                active_arcs.append({
+                    "id": arc.id,
+                    "title": arc.title,
+                    "country": arc.country,
+                    "tone": arc.tone,
+                    "student_id": arc.student_id,
+                    "planned_episodes": arc.planned_episodes,
+                    "next_episode": next_ep,
+                })
+
+    # Fetch recent posts for context
+    recent_result = await db.execute(
+        select(Post.category, Post.country, Post.platform)
+        .where(Post.user_id == user_id)
+        .order_by(Post.created_at.desc())
+        .limit(20)
+    )
+    recent_posts = recent_result.all()
+    recent_categories = [r[0] for r in recent_posts if r[0]]
+    recent_countries = [r[1] for r in recent_posts if r[1]]
+
+    # Fetch existing posts for target week (to avoid double-scheduling)
+    from datetime import datetime as dt
+    existing_result = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+            Post.scheduled_date.isnot(None),
+            Post.scheduled_date >= dt(week_start.year, week_start.month, week_start.day),
+            Post.scheduled_date <= dt(week_end.year, week_end.month, week_end.day, 23, 59, 59),
+        )
+    )
+    existing_posts = existing_result.scalars().all()
+    existing_dates = set()
+    for ep in existing_posts:
+        if ep.scheduled_date:
+            existing_dates.add(ep.scheduled_date.strftime("%Y-%m-%d"))
+
+    # Get upcoming deadlines
+    upcoming_deadlines = _get_upcoming_deadlines(today, lookahead_days=30)
+
+    # Build the weekly plan
+    day_names = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    optimal_times_weekday = ["17:30", "18:00", "19:00", "18:30", "17:00"]
+    optimal_times_weekend = ["11:00", "12:00", "13:00"]
+
+    # Build 7 day slots
+    day_slots = []
+    for i in range(7):
+        slot_date = week_start + timedelta(days=i)
+        is_weekend = i >= 5
+        day_slots.append({
+            "day": day_names[i],
+            "day_index": i,
+            "date": slot_date.isoformat(),
+            "is_weekend": is_weekend,
+            "existing_posts": [
+                {
+                    "id": p.id,
+                    "title": p.title,
+                    "category": p.category,
+                    "platform": p.platform,
+                    "country": p.country,
+                }
+                for p in existing_posts
+                if p.scheduled_date and p.scheduled_date.strftime("%Y-%m-%d") == slot_date.isoformat()
+            ],
+            "suggestions": [],
+        })
+
+    # Assign posts to days
+    assigned_count = 0
+
+    # 1) Insert story arc episodes first (they have priority)
+    if include_series and active_arcs:
+        # Assign episodes to Tuesday (story day) or next available
+        preferred_arc_day = 1  # Dienstag
+        for arc in active_arcs:
+            if assigned_count >= posts_per_week:
+                break
+            # Find best day for this episode
+            target_day = preferred_arc_day
+            for offset in [0, 2, 4, 1, 3, 5, 6]:  # Try preferred, then others
+                candidate = (preferred_arc_day + offset) % 7
+                slot = day_slots[candidate]
+                if not slot["suggestions"] and not slot["existing_posts"]:
+                    target_day = candidate
+                    break
+
+            slot = day_slots[target_day]
+            time_str = optimal_times_weekend[0] if slot["is_weekend"] else optimal_times_weekday[0]
+            country_name = COUNTRY_NAMES.get(arc["country"], arc["country"] or "")
+
+            slot["suggestions"].append({
+                "type": "series_episode",
+                "category": "erfahrungsberichte",
+                "country": arc["country"] or "usa",
+                "platform": "instagram_stories",
+                "time": time_str,
+                "topic": f"Story-Arc: {arc['title']} - Episode {arc['next_episode']}",
+                "reason": f"Naechste Episode der laufenden Serie '{arc['title']}' ({country_name})",
+                "icon": "📖",
+                "story_arc_id": arc["id"],
+                "episode_number": arc["next_episode"],
+                "is_recurring": False,
+                "is_series": True,
+            })
+            assigned_count += 1
+            preferred_arc_day += 2  # Space out multiple arcs
+
+    # 2) Insert recurring formats
+    if include_recurring:
+        for fmt in RECURRING_FORMATS:
+            if assigned_count >= posts_per_week:
+                break
+            day_idx = fmt["day_idx"]
+            slot = day_slots[day_idx]
+            if slot["suggestions"] or slot["existing_posts"]:
+                continue  # Already has content
+
+            time_str = optimal_times_weekend[day_idx - 5] if slot["is_weekend"] else optimal_times_weekday[day_idx % len(optimal_times_weekday)]
+
+            # Pick an underrepresented country
+            country_counts = {c: recent_countries.count(c) for c in ALL_COUNTRIES}
+            sorted_c = sorted(ALL_COUNTRIES, key=lambda c: country_counts.get(c, 0))
+            country = sorted_c[assigned_count % len(sorted_c)]
+            country_name = COUNTRY_NAMES.get(country, country)
+
+            # Override with deadline country if a deadline is coming
+            reason = f"Wiederkehrendes Format: {fmt['label']}"
+            topic = f"{fmt['label']}: {country_name}"
+
+            if fmt["category"] == "faq" and day_idx == 4:
+                topic = f"Freitags-Fail: Lustige Anekdoten aus {country_name}"
+            elif fmt["category"] == "tipps_tricks" and day_idx == 0:
+                topic = f"Motivation Monday: Warum {country_name} dein Leben veraendert"
+            elif fmt["category"] == "laender_spotlight" and day_idx == 2:
+                topic = f"Laender-Spotlight: {country_name} - Top 5 Highlights"
+            elif fmt["category"] == "foto_posts" and day_idx == 3:
+                topic = f"Throwback Thursday: Erinnerungen an {country_name}"
+
+            # Check for deadline override
+            for dl in upcoming_deadlines:
+                dl_date = dl["date"]
+                if dl_date >= week_start and dl_date <= week_end:
+                    if slot["date"] == dl_date.isoformat() or (not any(s.get("category") == "fristen_cta" for s in slot["suggestions"])):
+                        if fmt["day_idx"] in [0, 2, 4]:  # Override on Mon/Wed/Fri
+                            topic = f"Frist beachten: {dl['label']}"
+                            reason = f"Bevorstehende Frist: {dl['label']} am {dl['date'].strftime('%d.%m.%Y')}"
+                            break
+
+            platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
+            platform = platforms[assigned_count % len(platforms)]
+
+            slot["suggestions"].append({
+                "type": "recurring",
+                "category": fmt["category"],
+                "country": country,
+                "platform": platform,
+                "time": time_str,
+                "topic": topic,
+                "reason": reason,
+                "icon": fmt["icon"],
+                "story_arc_id": None,
+                "episode_number": None,
+                "is_recurring": True,
+                "is_series": False,
+            })
+            assigned_count += 1
+
+    # 3) Fill remaining slots with AI-balanced suggestions
+    if assigned_count < posts_per_week:
+        country_counts = {c: recent_countries.count(c) for c in ALL_COUNTRIES}
+        sorted_countries = sorted(ALL_COUNTRIES, key=lambda c: country_counts.get(c, 0))
+        cat_counts = {c: recent_categories.count(c) for c in ALL_CATEGORIES}
+        sorted_cats = sorted(ALL_CATEGORIES, key=lambda c: cat_counts.get(c, 0))
+
+        fill_idx = 0
+        for slot in day_slots:
+            if assigned_count >= posts_per_week:
+                break
+            if slot["suggestions"] or slot["existing_posts"]:
+                continue
+
+            category = sorted_cats[fill_idx % len(sorted_cats)]
+            country = sorted_countries[fill_idx % len(sorted_countries)]
+            country_name = COUNTRY_NAMES.get(country, country)
+            cat_name = CATEGORY_DISPLAY.get(category, category)
+            platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
+            platform = platforms[fill_idx % len(platforms)]
+            time_str = optimal_times_weekend[0] if slot["is_weekend"] else optimal_times_weekday[fill_idx % len(optimal_times_weekday)]
+
+            topic_ideas = {
+                "laender_spotlight": f"{country_name}-Spotlight: Highlights und Fakten",
+                "erfahrungsberichte": f"Erfahrungsbericht aus {country_name}",
+                "infografiken": f"Infografik: Highschool in {country_name}",
+                "fristen_cta": f"Bewerbungsfristen fuer {country_name}",
+                "tipps_tricks": f"Tipps fuer dein Auslandsjahr in {country_name}",
+                "faq": f"FAQ: Haeufige Fragen zu {country_name}",
+                "foto_posts": f"Foto-Impressionen aus {country_name}",
+            }
+
+            slot["suggestions"].append({
+                "type": "balanced",
+                "category": category,
+                "country": country,
+                "platform": platform,
+                "time": time_str,
+                "topic": topic_ideas.get(category, f"{cat_name}: {country_name}"),
+                "reason": f"Content-Mix Optimierung: {cat_name} + {country_name}",
+                "icon": "✨",
+                "story_arc_id": None,
+                "episode_number": None,
+                "is_recurring": False,
+                "is_series": False,
+            })
+            assigned_count += 1
+            fill_idx += 1
+
+    return {
+        "status": "success",
+        "week_start": week_start.isoformat(),
+        "week_end": week_end.isoformat(),
+        "day_slots": day_slots,
+        "total_suggestions": assigned_count,
+        "active_arcs": active_arcs,
+        "posts_per_week": posts_per_week,
+        "recurring_formats": RECURRING_FORMATS if include_recurring else [],
+        "season": season,
+    }
+
+
+@router.post("/weekly-planner/adopt")
+async def adopt_weekly_plan(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Adopt a weekly plan: create draft posts for all selected plan items.
+
+    Expects:
+    - items: list of plan items to adopt, each with:
+        - date (str): ISO date
+        - time (str): HH:MM
+        - category (str)
+        - country (str)
+        - platform (str)
+        - topic (str)
+        - story_arc_id (int, optional)
+        - episode_number (int, optional)
+
+    Returns the created posts.
+    """
+    items = request.get("items", [])
+    if not items:
+        raise HTTPException(status_code=400, detail="No items to adopt")
+
+    created_posts = []
+    for item in items:
+        # Parse the scheduled date
+        scheduled_date = None
+        if item.get("date"):
+            try:
+                parsed = date.fromisoformat(item["date"])
+                scheduled_date = datetime(parsed.year, parsed.month, parsed.day)
+            except (ValueError, TypeError):
+                pass
+
+        post = Post(
+            user_id=user_id,
+            title=item.get("topic", "Geplanter Post")[:200],
+            category=item.get("category", "laender_spotlight"),
+            country=item.get("country", "usa"),
+            platform=item.get("platform", "instagram_feed"),
+            status="scheduled",
+            scheduled_date=scheduled_date,
+            scheduled_time=item.get("time", "18:00"),
+            story_arc_id=item.get("story_arc_id"),
+            episode_number=item.get("episode_number"),
+            slide_data="[]",
+            tone="jugendlich",
+        )
+        db.add(post)
+        await db.flush()
+        await db.refresh(post)
+        created_posts.append({
+            "id": post.id,
+            "title": post.title,
+            "category": post.category,
+            "country": post.country,
+            "platform": post.platform,
+            "scheduled_date": post.scheduled_date.strftime("%Y-%m-%d") if post.scheduled_date else None,
+            "scheduled_time": post.scheduled_time,
+            "story_arc_id": post.story_arc_id,
+            "episode_number": post.episode_number,
+        })
+
+    await db.commit()
+
+    return {
+        "status": "success",
+        "created_posts": created_posts,
+        "count": len(created_posts),
+        "message": f"{len(created_posts)} Posts in den Kalender uebernommen!",
     }
 
 

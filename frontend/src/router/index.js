@@ -78,6 +78,11 @@ const routes = [
         name: 'ThumbnailGenerator',
         component: () => import('@/views/ThumbnailGeneratorView.vue'),
       },
+      {
+        path: 'week-planner',
+        name: 'WeekPlanner',
+        component: () => import('@/views/WeekPlannerView.vue'),
+      },
     ],
   },
   {

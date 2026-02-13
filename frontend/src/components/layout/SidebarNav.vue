@@ -16,6 +16,7 @@ const navItems = [
   { name: 'Templates', path: '/templates', icon: '📄' },
   { name: 'Assets', path: '/assets', icon: '🖼️' },
   { name: 'Calendar', path: '/calendar', icon: '📅' },
+  { name: 'Wochenplaner', path: '/week-planner', icon: '🗓️' },
   { name: 'History', path: '/history', icon: '📋' },
   { name: 'Students', path: '/students', icon: '🎓' },
   { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
