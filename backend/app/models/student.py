@@ -28,6 +28,8 @@ class Student(Base):
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
     fun_facts: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array of strings
     status: Mapped[str] = mapped_column(String, default="active")  # active, completed, upcoming
+    # Personality preset - JSON with tone, humor_level, emoji_usage, perspective, catchphrases
+    personality_preset: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON object
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

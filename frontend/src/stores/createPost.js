@@ -58,6 +58,16 @@ export const useCreatePostStore = defineStore('createPost', () => {
   const generatedImageResult = ref(null)
   const aiImageError = ref('')
 
+  // Interactive Story Elements
+  const interactiveElements = ref([])
+
+  // Story-Arc / Episode fields (optional, shown when post is part of a story series)
+  const selectedArcId = ref(null)
+  const selectedEpisodeNumber = ref(1)
+  const episodePreviouslyText = ref('')
+  const episodeCliffhangerText = ref('')
+  const episodeNextHint = ref('')
+
   // Step 9: Export
   const exporting = ref(false)
   const savedPost = ref(null)
@@ -114,6 +124,12 @@ export const useCreatePostStore = defineStore('createPost', () => {
     exporting.value = false
     networkError.value = false
     lastSaveFunction.value = null
+    interactiveElements.value = []
+    selectedArcId.value = null
+    selectedEpisodeNumber.value = 1
+    episodePreviouslyText.value = ''
+    episodeCliffhangerText.value = ''
+    episodeNextHint.value = ''
     assets.value = []
     templates.value = []
     loadingTemplates.value = false
@@ -162,6 +178,14 @@ export const useCreatePostStore = defineStore('createPost', () => {
     ctaText,
     currentPreviewSlide,
     previewPlatform,
+    // Interactive Story Elements
+    interactiveElements,
+    // Story-Arc / Episode
+    selectedArcId,
+    selectedEpisodeNumber,
+    episodePreviouslyText,
+    episodeCliffhangerText,
+    episodeNextHint,
     // Step 8
     uploadingImage,
     assets,

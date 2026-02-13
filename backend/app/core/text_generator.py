@@ -371,7 +371,71 @@ CATEGORY_DISPLAY_NAMES = {
 }
 
 
-def _build_gemini_system_prompt(tone: str) -> str:
+def _build_personality_prompt_section(personality_preset: dict) -> str:
+    """Build a personality-specific prompt section from a student's personality preset.
+
+    Args:
+        personality_preset: dict with keys:
+            - tone (str): e.g. 'witzig', 'emotional', 'motivierend'
+            - humor_level (int): 1-5, where 1=kaum Humor, 5=sehr humorvoll
+            - emoji_usage (str): 'none', 'minimal', 'moderate', 'heavy'
+            - perspective (str): 'first_person' or 'third_person'
+            - catchphrases (list[str]): characteristic phrases to use
+
+    Returns:
+        A string to append to the system prompt for personality customization.
+    """
+    sections = []
+
+    # Tone override
+    tone = personality_preset.get("tone", "")
+    if tone:
+        sections.append(f"PERSOENLICHKEITS-TON: Schreibe im Stil '{tone}'.")
+
+    # Humor level
+    humor_level = personality_preset.get("humor_level", 3)
+    humor_descriptions = {
+        1: "Kaum Humor verwenden. Sachlich und ernst bleiben.",
+        2: "Gelegentlich leichten Humor einstreuen, aber hauptsaechlich sachlich.",
+        3: "Ausgewogener Mix aus Humor und Information.",
+        4: "Deutlich humorvoll schreiben. Witzige Vergleiche und Wortspiele nutzen.",
+        5: "Maximal humorvoll! Alles mit Humor und Witz wuerzen. Memes, uebertriebene Vergleiche, Pop-Kultur-Referenzen.",
+    }
+    humor_desc = humor_descriptions.get(humor_level, humor_descriptions[3])
+    sections.append(f"HUMOR-LEVEL ({humor_level}/5): {humor_desc}")
+
+    # Emoji usage
+    emoji_usage = personality_preset.get("emoji_usage", "moderate")
+    emoji_instructions = {
+        "none": "Verwende KEINE Emojis. Nur reinen Text.",
+        "minimal": "Verwende maximal 1-2 dezente Emojis pro Caption (z.B. Landesflagge).",
+        "moderate": "Verwende 3-5 passende Emojis pro Caption.",
+        "heavy": "Verwende viele Emojis (6-10 pro Caption). Emojis sollen den Text auflockern und Energie vermitteln.",
+    }
+    emoji_inst = emoji_instructions.get(emoji_usage, emoji_instructions["moderate"])
+    sections.append(f"EMOJI-NUTZUNG ({emoji_usage}): {emoji_inst}")
+
+    # Perspective
+    perspective = personality_preset.get("perspective", "first_person")
+    if perspective == "first_person":
+        sections.append("PERSPEKTIVE: Schreibe aus der Ich-Perspektive. Der Student erzaehlt selbst ('Ich habe erlebt...', 'Mein erster Tag...').")
+    else:
+        name = personality_preset.get("student_name", "der Student")
+        sections.append(f"PERSPEKTIVE: Schreibe in der dritten Person ueber {name}. ('{name} hat erlebt...', 'Sein/Ihr erster Tag...').")
+
+    # Catchphrases
+    catchphrases = personality_preset.get("catchphrases", [])
+    if catchphrases and isinstance(catchphrases, list):
+        phrases_str = ", ".join(f'"{p}"' for p in catchphrases[:5])
+        sections.append(
+            f"TYPISCHE PHRASEN: Baue folgende charakteristische Ausdruecke natuerlich in den Text ein: {phrases_str}. "
+            "Nicht alle auf einmal verwenden, aber mindestens 1-2 pro Post."
+        )
+
+    return "\n\n".join(sections)
+
+
+def _build_gemini_system_prompt(tone: str, personality_preset: dict | None = None) -> str:
     """Build the system prompt for Gemini with TREFF brand guidelines."""
     tone_instructions = {
         "serioess": (
@@ -462,7 +526,7 @@ def _build_gemini_system_prompt(tone: str) -> str:
 
     tone_instruction = tone_instructions.get(tone, tone_instructions["jugendlich"])
 
-    return f"""Du bist der Social-Media-Content-Ersteller fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland.
+    base_prompt = f"""Du bist der Social-Media-Content-Ersteller fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland.
 
 UNTERNEHMENSPROFIL:
 - TREFF Sprachreisen, gegruendet 1984 in Eningen u.A. / Pfullingen, Deutschland
@@ -500,6 +564,22 @@ WICHTIGE REGELN:
 - Body-Texte sollen informativ aber nicht zu lang sein (max 200 Zeichen pro Slide)
 - Die letzte Slide sollte immer einen Call-to-Action enthalten
 - Bullet Points (falls vorhanden) sollen konkrete Fakten oder Tipps enthalten"""
+
+    # Append personality preset section if provided
+    if personality_preset and isinstance(personality_preset, dict):
+        personality_section = _build_personality_prompt_section(personality_preset)
+        base_prompt += f"""
+
+═══════════════════════════════════════════
+PERSOENLICHKEITS-PRESET (WICHTIG - hat Vorrang vor allgemeiner Tonalitaet):
+═══════════════════════════════════════════
+{personality_section}
+
+HINWEIS: Die Persoenlichkeits-Einstellungen oben ueberschreiben die allgemeine Tonalitaet.
+Wenn das Preset z.B. humor_level=5 und perspective=first_person hat, dann schreibe
+sehr humorvoll aus der Ich-Perspektive, unabhaengig vom allgemeinen Ton."""
+
+    return base_prompt
 
 
 def _build_gemini_content_prompt(
@@ -569,12 +649,16 @@ def generate_text_with_gemini(
     tone: str = "jugendlich",
     platform: str = "instagram_feed",
     slide_count: int = 1,
+    personality_preset: Optional[dict] = None,
 ) -> Optional[dict]:
     """
     Generate text content using Gemini 2.5 Flash.
 
     Returns structured dict matching the same format as generate_text_content(),
     or None if generation fails.
+
+    If personality_preset is provided, it customizes the AI system prompt with
+    the student's personality (tone, humor_level, emoji_usage, perspective, catchphrases).
     """
     try:
         from google import genai
@@ -582,7 +666,7 @@ def generate_text_with_gemini(
 
         client = genai.Client(api_key=api_key)
 
-        system_prompt = _build_gemini_system_prompt(tone)
+        system_prompt = _build_gemini_system_prompt(tone, personality_preset=personality_preset)
         content_prompt = _build_gemini_content_prompt(
             category=category,
             country=country,
@@ -672,12 +756,16 @@ def generate_text_content(
     platform: str = "instagram_feed",
     slide_count: int = 1,
     api_key: Optional[str] = None,
+    personality_preset: Optional[dict] = None,
 ) -> dict:
     """
     Generate structured text content for a social media post.
 
     If an api_key is provided, attempts Gemini 2.5 Flash generation first.
     Falls back to rule-based templates if no API key or if Gemini fails.
+
+    If personality_preset is provided, it customizes the AI system prompt with
+    the student's personality (tone, humor_level, emoji_usage, perspective, catchphrases).
 
     Returns dict with:
     - slides: list of slide content objects
@@ -690,7 +778,7 @@ def generate_text_content(
     """
     # Try Gemini first if API key is available
     if api_key:
-        logger.info("Attempting Gemini text generation (category=%s, country=%s, tone=%s)", category, country, tone)
+        logger.info("Attempting Gemini text generation (category=%s, country=%s, tone=%s, has_personality=%s)", category, country, tone, personality_preset is not None)
         gemini_result = generate_text_with_gemini(
             api_key=api_key,
             category=category,
@@ -700,6 +788,7 @@ def generate_text_content(
             tone=tone,
             platform=platform,
             slide_count=slide_count,
+            personality_preset=personality_preset,
         )
         if gemini_result:
             return gemini_result
