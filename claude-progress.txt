@@ -1,5 +1,102 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #205: Multi-Plattform Synchron-Planung
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Enhanced multi-platform post creation with KI-Autoadaption toggle
+  - Added `adapt_content` parameter to POST /api/posts/multi-platform endpoint
+  - Rule-based content adaptation per platform: Story captions truncated to 100 chars with CTA, TikTok captions hook-focused and truncated to 150 chars, Story slide body_text shortened
+  - Added `adaptContent` ref and UI toggle in CreatePostView Step 3 (platform selection)
+  - Toggle appears automatically when 2+ platforms selected, checked by default
+  - Gradient-styled card with explanation of platform-specific adaptations
+- Added sync dialog UI in EditPostView for linked sibling posts
+  - "Synchronisieren" button in the sibling posts section
+  - Modal dialog showing target siblings with platform badges
+  - 8 selectable fields: Titel, Kategorie, Land, Tonalitaet, Datum, Uhrzeit, Call-to-Action, Slide-Inhalte
+  - Calls PUT /api/posts/sync-siblings to propagate selected fields
+- Enhanced cross-platform statistics panel in CalendarView lanes view
+  - Platform distribution bar (colored segments: pink=IG Feed, purple=IG Story, cyan=TikTok)
+  - Percentage labels for each platform
+  - Recommendations for underrepresented platforms
+  - Multi-platform coverage cards (linked groups, multi-platform count, all-3-platforms count)
+- Fixed FastAPI route ordering bug: moved PUT /sync-siblings before /{post_id} routes to prevent "sync-siblings" being parsed as integer post_id
+
+### Files changed:
+- backend/app/api/routes/posts.py (adapt_content in multi-platform endpoint, route reordering for sync-siblings)
+- frontend/src/views/CreatePostView.vue (adaptContent state, auto-adapt toggle UI, pass adapt_content/source_platform to API)
+- frontend/src/views/EditPostView.vue (sync dialog state/UI, syncToSiblings function, field checkboxes)
+- frontend/src/views/CalendarView.vue (detailedCrossStats, distribution bar, recommendations, coverage cards)
+
+### Verification:
+- API: Multi-platform creation with adapt_content=true creates 3 linked posts with adapted content
+- API: sync-siblings propagates title and CTA to 2 sibling posts
+- Browser: Calendar month view shows 3 posts on Feb 20 with correct platform icons
+- Browser: Lanes view shows platform rows with posts, cross-platform stats panel
+- Browser: Platform filter (All/IG Feed/IG Story/TikTok) works correctly
+- Browser: EditPostView shows sibling links and sync dialog with field checkboxes
+- Browser: CreatePostView shows auto-adapt toggle when multiple platforms selected
+- No console errors, no mock data in source code
+
+---
+
+## Session - Feature #184: Episoden-Ansicht im Post-Editor
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added full story-arc episode integration to EditPostView.vue (previously had none)
+  - Episode data loading from API (arc, episodes, linked episode)
+  - Episode text fields: Rueckblick (previously_text), Cliffhanger, Teaser (next_episode_hint)
+  - AI suggestion buttons (KI-Vorschlag) for all three episode text fields
+  - Save episode data alongside post save
+  - Live preview showing previously_text on first slide, cliffhanger and teaser on last slide
+  - Episode list showing all episodes in the arc with current episode highlighted
+- Added episode text rendering to canvas export in CreatePostView.vue
+  - previously_text rendered on first slide (subtle background, italic text)
+  - cliffhanger_text rendered on last slide (yellow bold italic)
+  - next_episode_hint rendered on last slide (blue tinted background)
+  - Applied to both renderSlideToCanvas and renderSlideToCanvasForPlatform
+- Added episode placeholder replacements to TemplatesView.vue
+  - {{previously_text}}, {{cliffhanger_text}}, {{next_episode_hint}}, {{episode_number}}
+- Fixed bug: story_arc_id and episode_number not saved in saveAndExport() and exportAllPlatforms() functions
+  - These functions had separate postData objects that were missing story_arc_id and episode_number
+  - Also added _saveOrUpdateEpisode() calls after post creation in both functions
+
+### Files changed:
+- frontend/src/views/EditPostView.vue (episode state, loadEpisodeData, suggestEpisodeText, saveEpisodeData, UI section, preview)
+- frontend/src/views/CreatePostView.vue (canvas rendering for episode texts, saveAndExport fix, exportAllPlatforms fix)
+- frontend/src/views/TemplatesView.vue (episode placeholder replacements)
+
+### Verification:
+- Browser automation: Created test student, story arc, episodes via API
+- Verified CreatePostView: Story-arc selection, episode fields, AI generation, preview, save
+- Verified EditPostView: Episode fields load correctly, display episode data, show preview
+- No console errors on either view
+
+---
+
+## Session - Feature #172: Video-Trimming im Browser
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added POST /api/assets/trim endpoint using ffmpeg (stream copy with re-encode fallback)
+- Created VideoTrimmer.vue component with interactive timeline slider (draggable start/end handles, playhead)
+- Integrated trimmer into AssetsView.vue with scissors button on video assets
+- Added progress bar during trim processing with simulated progress
+- Save-as-new option (default) or overwrite original
+- Fallback duration initialization from asset.duration_seconds when browser can't parse video metadata
+- Tested with 10s and 30s videos, verified trimmed output (15s clip from 30s source)
+
+### Files created:
+- frontend/src/components/assets/VideoTrimmer.vue (NEW ~628 lines) - Full trimming UI with timeline, handles, preview, progress bar
+
+### Files modified:
+- backend/app/api/routes/assets.py - Added trim_video endpoint (~130 lines), plus externally-added audio upload support
+- frontend/src/views/AssetsView.vue - Integrated VideoTrimmer component, added scissors button, trimmer modal
+
 ## Session - Feature #182: Story-Episode Datenmodell und Post-Verknuepfung
 **Date:** 2026-02-13
 **Status:** PASSING

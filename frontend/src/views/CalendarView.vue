@@ -81,6 +81,12 @@ const weekEndDate = ref(null)
 const queuePosts = ref([])
 const queueCount = ref(0)
 
+// Platform lanes view state
+const platformLanes = ref([])
+const crossPlatformStats = ref({})
+const detailedCrossStats = ref(null)
+const lanesLoading = ref(false)
+
 // German month names
 const monthNames = [
   'Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni',
@@ -640,6 +646,85 @@ async function fetchQueue() {
   }
 }
 
+// Fetch platform lanes data
+async function fetchPlatformLanes() {
+  lanesLoading.value = true
+  try {
+    const res = await fetch(`/api/calendar/platform-lanes?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    platformLanes.value = data.lanes || []
+    crossPlatformStats.value = data.cross_platform_stats || {}
+  } catch (err) {
+    console.error('Platform lanes fetch error:', err)
+    platformLanes.value = []
+  } finally {
+    lanesLoading.value = false
+  }
+}
+
+// Fetch cross-platform stats
+async function fetchCrossPlatformStats() {
+  try {
+    const res = await fetch(`/api/calendar/cross-platform-stats?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    detailedCrossStats.value = data
+  } catch (err) {
+    console.error('Cross-platform stats fetch error:', err)
+  }
+}
+
+// Computed: platform lanes calendar days (same as month grid but per platform)
+const lanesCalendarDays = computed(() => {
+  const year = currentYear.value
+  const month = currentMonth.value
+  const firstDayOfMonth = new Date(year, month - 1, 1)
+  let startDow = firstDayOfMonth.getDay()
+  startDow = startDow === 0 ? 6 : startDow - 1
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const prevMonth = month === 1 ? 12 : month - 1
+  const prevYear = month === 1 ? year - 1 : year
+  const daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate()
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const days = []
+
+  // Previous month's trailing days
+  for (let i = startDow - 1; i >= 0; i--) {
+    const day = daysInPrevMonth - i
+    const dateStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    days.push({ day, dateStr, isCurrentMonth: false, isToday: dateStr === todayStr })
+  }
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    days.push({ day: d, dateStr, isCurrentMonth: true, isToday: dateStr === todayStr })
+  }
+  // Fill remaining cells to complete full weeks
+  const nextMonth = month === 12 ? 1 : month + 1
+  const nextYear = month === 12 ? year + 1 : year
+  let nextDay = 1
+  while (days.length % 7 !== 0 || days.length < 35) {
+    const dateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`
+    days.push({ day: nextDay, dateStr, isCurrentMonth: false, isToday: dateStr === todayStr })
+    nextDay++
+    if (days.length >= 42) break
+  }
+
+  return days
+})
+
+// Get posts for a specific platform and date in lanes view
+function getLanePostsForDate(lane, dateStr) {
+  if (!lane || !lane.posts_by_date) return []
+  return lane.posts_by_date[dateStr] || []
+}
+
 // Unified fetch based on current view mode
 function fetchData() {
   fetchStats()
@@ -651,6 +736,9 @@ function fetchData() {
     fetchArcTimeline()
   } else if (viewMode.value === 'week') {
     fetchWeek()
+  } else if (viewMode.value === 'lanes') {
+    fetchPlatformLanes()
+    fetchCrossPlatformStats()
   } else if (viewMode.value === 'queue') {
     fetchQueue()
   }
@@ -941,7 +1029,7 @@ async function exportCalendarCSV() {
 
 // Prev/Next navigation that respects view mode
 function prevNav() {
-  if (viewMode.value === 'month') {
+  if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     prevMonthNav()
   } else {
     prevWeekNav()
@@ -949,7 +1037,7 @@ function prevNav() {
 }
 
 function nextNav() {
-  if (viewMode.value === 'month') {
+  if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     nextMonthNav()
   } else {
     nextWeekNav()
@@ -958,7 +1046,7 @@ function nextNav() {
 
 // Computed: navigation label
 const navLabel = computed(() => {
-  if (viewMode.value === 'month') {
+  if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     return currentMonthLabel.value
   }
   return weekLabel.value
@@ -990,6 +1078,8 @@ watch([currentMonth, currentYear], () => {
     fetchSeasonalMarkers()
     fetchRecyclingSuggestions()
     fetchArcTimeline()
+  } else if (viewMode.value === 'lanes') {
+    fetchPlatformLanes()
   }
 })
 
@@ -1061,6 +1151,15 @@ onMounted(() => {
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
           >
             Woche
+          </button>
+          <button
+            @click="setViewMode('lanes')"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="viewMode === 'lanes'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >
+            Lanes
           </button>
           <button
             @click="setViewMode('queue')"
@@ -1643,6 +1742,221 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- ==================== PLATFORM LANES VIEW ==================== -->
+    <div v-if="viewMode === 'lanes'" class="space-y-0">
+      <!-- Cross-Platform Stats Summary -->
+      <div v-if="crossPlatformStats && crossPlatformStats.total !== undefined" class="mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-lg">📊</span>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Cross-Platform Statistik</h3>
+          <span class="text-xs text-gray-500 dark:text-gray-400">{{ currentMonthLabel }}</span>
+        </div>
+        <!-- Platform count cards -->
+        <div class="grid grid-cols-4 gap-3">
+          <div class="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30">
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ crossPlatformStats.total || 0 }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Gesamt</div>
+          </div>
+          <div class="text-center p-3 rounded-lg bg-pink-50 dark:bg-pink-900/20">
+            <div class="text-2xl font-bold text-pink-600 dark:text-pink-400">{{ crossPlatformStats.instagram_feed || 0 }}</div>
+            <div class="text-xs text-pink-600 dark:text-pink-400 mt-0.5">📷 IG Feed</div>
+          </div>
+          <div class="text-center p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ crossPlatformStats.instagram_story || 0 }}</div>
+            <div class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">📱 IG Story</div>
+          </div>
+          <div class="text-center p-3 rounded-lg bg-cyan-50 dark:bg-cyan-900/20">
+            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{{ crossPlatformStats.tiktok || 0 }}</div>
+            <div class="text-xs text-cyan-600 dark:text-cyan-400 mt-0.5">🎵 TikTok</div>
+          </div>
+        </div>
+        <!-- Platform distribution bars -->
+        <div v-if="crossPlatformStats.total > 0" class="mt-3">
+          <div class="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+            <div
+              v-if="crossPlatformStats.instagram_feed"
+              class="bg-pink-500"
+              :style="{ width: Math.round((crossPlatformStats.instagram_feed / crossPlatformStats.total) * 100) + '%' }"
+              :title="`IG Feed: ${Math.round((crossPlatformStats.instagram_feed / crossPlatformStats.total) * 100)}%`"
+            ></div>
+            <div
+              v-if="crossPlatformStats.instagram_story"
+              class="bg-purple-500"
+              :style="{ width: Math.round((crossPlatformStats.instagram_story / crossPlatformStats.total) * 100) + '%' }"
+              :title="`IG Story: ${Math.round((crossPlatformStats.instagram_story / crossPlatformStats.total) * 100)}%`"
+            ></div>
+            <div
+              v-if="crossPlatformStats.tiktok"
+              class="bg-cyan-500"
+              :style="{ width: Math.round((crossPlatformStats.tiktok / crossPlatformStats.total) * 100) + '%' }"
+              :title="`TikTok: ${Math.round((crossPlatformStats.tiktok / crossPlatformStats.total) * 100)}%`"
+            ></div>
+          </div>
+          <div class="flex justify-between mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+            <span v-if="crossPlatformStats.instagram_feed">📷 {{ Math.round((crossPlatformStats.instagram_feed / crossPlatformStats.total) * 100) }}%</span>
+            <span v-if="crossPlatformStats.instagram_story">📱 {{ Math.round((crossPlatformStats.instagram_story / crossPlatformStats.total) * 100) }}%</span>
+            <span v-if="crossPlatformStats.tiktok">🎵 {{ Math.round((crossPlatformStats.tiktok / crossPlatformStats.total) * 100) }}%</span>
+          </div>
+        </div>
+        <!-- Linked groups info -->
+        <div v-if="crossPlatformStats.linked_groups > 0" class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
+            🔗 {{ crossPlatformStats.linked_groups }} verknuepfte Gruppen
+          </span>
+          <span>Posts werden parallel auf mehreren Plattformen geplant</span>
+        </div>
+        <!-- Recommendations -->
+        <div v-if="detailedCrossStats && detailedCrossStats.recommendations && detailedCrossStats.recommendations.length > 0" class="mt-3 space-y-1">
+          <div
+            v-for="(rec, rIdx) in detailedCrossStats.recommendations"
+            :key="'rec-' + rIdx"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 text-xs"
+          >
+            <span>⚠️</span>
+            <span>{{ rec.message }}</span>
+          </div>
+        </div>
+        <!-- Multi-platform coverage -->
+        <div v-if="detailedCrossStats && detailedCrossStats.multi_platform" class="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ detailedCrossStats.multi_platform.linked_groups || 0 }}</div>
+            <div class="text-[10px] text-blue-500 dark:text-blue-400">Verknuepfte Gruppen</div>
+          </div>
+          <div class="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
+            <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ detailedCrossStats.multi_platform.multi_platform_groups || 0 }}</div>
+            <div class="text-[10px] text-green-500 dark:text-green-400">Multi-Plattform</div>
+          </div>
+          <div class="p-2 rounded-lg bg-violet-50 dark:bg-violet-900/20">
+            <div class="text-lg font-bold text-violet-600 dark:text-violet-400">{{ detailedCrossStats.multi_platform.all_three_platforms || 0 }}</div>
+            <div class="text-[10px] text-violet-500 dark:text-violet-400">Alle 3 Plattformen</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Lanes Grid -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+        <!-- Day headers (same as month view) -->
+        <div class="grid grid-cols-[100px_repeat(7,1fr)] border-b border-gray-200 dark:border-gray-700">
+          <div class="py-2 px-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700">
+            Plattform
+          </div>
+          <div
+            v-for="(dayName, idx) in dayNames"
+            :key="'lane-header-' + idx"
+            class="py-2 px-1 text-center text-xs font-semibold uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+            :class="idx >= 5 ? 'text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50' : 'text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800'"
+          >
+            {{ dayName }}
+          </div>
+        </div>
+
+        <!-- One week at a time, with 3 platform rows per week -->
+        <div
+          v-for="weekIdx in Math.ceil(lanesCalendarDays.length / 7)"
+          :key="'lane-week-' + weekIdx"
+          class="border-b-2 border-gray-200 dark:border-gray-600 last:border-b-0"
+        >
+          <!-- Date number row -->
+          <div class="grid grid-cols-[100px_repeat(7,1fr)] border-b border-gray-100 dark:border-gray-700/50">
+            <div class="py-1 px-2 text-[10px] text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700 flex items-center justify-center font-medium">
+              KW
+            </div>
+            <div
+              v-for="(dayObj, dayIdx) in lanesCalendarDays.slice((weekIdx - 1) * 7, weekIdx * 7)"
+              :key="'lane-date-' + dayObj.dateStr"
+              class="py-1 px-1 text-center border-r border-gray-100 dark:border-gray-700/50 last:border-r-0"
+              :class="[
+                dayObj.isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50/50 dark:bg-gray-900/30',
+                dayObj.isToday ? 'bg-blue-50 dark:bg-blue-900/20' : '',
+              ]"
+            >
+              <span
+                class="text-xs font-medium"
+                :class="[
+                  dayObj.isToday ? 'bg-blue-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center' : '',
+                  dayObj.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600',
+                ]"
+              >{{ dayObj.day }}</span>
+            </div>
+          </div>
+
+          <!-- Platform rows (3 rows: IG Feed, IG Story, TikTok) -->
+          <div
+            v-for="(lane, laneIdx) in platformLanes"
+            :key="'lane-' + weekIdx + '-' + lane.platform"
+            class="grid grid-cols-[100px_repeat(7,1fr)] border-b border-gray-100 dark:border-gray-700/30 last:border-b-0"
+          >
+            <!-- Platform label -->
+            <div
+              class="py-1.5 px-2 text-xs font-medium border-r border-gray-200 dark:border-gray-700 flex items-center gap-1.5"
+              :class="[
+                laneIdx === 0 ? 'bg-pink-50 dark:bg-pink-900/10 text-pink-700 dark:text-pink-300' : '',
+                laneIdx === 1 ? 'bg-purple-50 dark:bg-purple-900/10 text-purple-700 dark:text-purple-300' : '',
+                laneIdx === 2 ? 'bg-cyan-50 dark:bg-cyan-900/10 text-cyan-700 dark:text-cyan-300' : '',
+              ]"
+            >
+              <span>{{ lane.icon }}</span>
+              <span class="truncate">{{ lane.label }}</span>
+              <span
+                v-if="lane.total > 0"
+                class="ml-auto text-[10px] font-bold px-1 py-0 rounded-full"
+                :class="[
+                  laneIdx === 0 ? 'bg-pink-200 dark:bg-pink-800 text-pink-700 dark:text-pink-300' : '',
+                  laneIdx === 1 ? 'bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300' : '',
+                  laneIdx === 2 ? 'bg-cyan-200 dark:bg-cyan-800 text-cyan-700 dark:text-cyan-300' : '',
+                ]"
+              >{{ lane.total }}</span>
+            </div>
+
+            <!-- Day cells for this platform -->
+            <div
+              v-for="(dayObj, dayIdx) in lanesCalendarDays.slice((weekIdx - 1) * 7, weekIdx * 7)"
+              :key="'lane-cell-' + lane.platform + '-' + dayObj.dateStr"
+              class="min-h-[40px] py-0.5 px-0.5 border-r border-gray-100 dark:border-gray-700/30 last:border-r-0"
+              :class="[
+                dayObj.isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50/30 dark:bg-gray-900/20',
+                dayObj.isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : '',
+                (dayIdx >= 5) ? 'bg-gray-50/20 dark:bg-gray-800/20' : '',
+              ]"
+            >
+              <div
+                v-for="post in getLanePostsForDate(lane, dayObj.dateStr)"
+                :key="'lane-post-' + post.id"
+                class="rounded px-1 py-0.5 text-[10px] cursor-pointer mb-0.5 border-l-2 truncate"
+                :class="[
+                  getCategoryStyle(post.category).bg,
+                  getCategoryStyle(post.category).text,
+                  getCategoryStyle(post.category).border,
+                ]"
+                :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' 🔗 Verknuepft' : ''}`"
+                @click="router.push(`/posts/${post.id}/edit`)"
+              >
+                <div class="flex items-center gap-0.5">
+                  <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+                  <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
+                  <span
+                    v-if="post.linked_post_group_id"
+                    class="flex-shrink-0 ml-auto text-[9px]"
+                    title="Verknuepfter Multi-Plattform Post"
+                  >🔗</span>
+                </div>
+                <div v-if="post.scheduled_time" class="opacity-70 text-[9px]">
+                  {{ post.scheduled_time }} {{ getStatusMeta(post.status).icon }}
+                </div>
+              </div>
+              <!-- Empty state dot for days without posts -->
+              <div
+                v-if="getLanePostsForDate(lane, dayObj.dateStr).length === 0 && dayObj.isCurrentMonth"
+                class="h-full flex items-center justify-center"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== QUEUE VIEW ==================== -->
     <div v-if="viewMode === 'queue'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
       <!-- Queue header -->
@@ -1829,7 +2143,7 @@ onMounted(() => {
 
     <!-- Empty state (not for queue view - it has its own) -->
     <div
-      v-if="!loading && !error && viewMode !== 'queue' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
+      v-if="!loading && !error && viewMode !== 'queue' && viewMode !== 'lanes' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
       class="mt-6 text-center py-8"
     >
       <div class="text-5xl mb-3">📅</div>

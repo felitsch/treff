@@ -1,10 +1,12 @@
 """Post routes."""
 
+import json
+import uuid
 from typing import Optional
 from datetime import datetime, date, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, or_, func, and_
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
@@ -35,6 +37,7 @@ def post_to_dict(post: Post) -> dict:
         "tone": post.tone,
         "story_arc_id": post.story_arc_id,
         "episode_number": post.episode_number,
+        "linked_post_group_id": post.linked_post_group_id,
         "scheduled_date": post.scheduled_date.isoformat() if post.scheduled_date else None,
         "scheduled_time": post.scheduled_time,
         "exported_at": post.exported_at.isoformat() if post.exported_at else None,
@@ -148,6 +151,64 @@ async def list_posts(
     result = await db.execute(query)
     posts = result.scalars().all()
     return [post_to_dict(p) for p in posts]
+
+
+@router.put("/sync-siblings")
+async def sync_sibling_posts(
+    data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Apply field changes from a source post to its sibling posts.
+
+    Must be declared before /{post_id} routes so FastAPI doesn't match
+    'sync-siblings' as a post_id path parameter.
+    """
+    source_post_id = data.get("source_post_id")
+    fields = data.get("fields", {})
+    sibling_ids = data.get("sibling_ids")
+
+    if not source_post_id or not fields:
+        raise HTTPException(status_code=400, detail="source_post_id and fields are required")
+
+    result = await db.execute(
+        select(Post).where(Post.id == source_post_id, Post.user_id == user_id)
+    )
+    source = result.scalar_one_or_none()
+    if not source or not source.linked_post_group_id:
+        raise HTTPException(status_code=404, detail="Source post not found or not part of a group")
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.linked_post_group_id == source.linked_post_group_id,
+        Post.id != source_post_id,
+    ]
+    if sibling_ids:
+        conditions.append(Post.id.in_(sibling_ids))
+
+    result = await db.execute(select(Post).where(and_(*conditions)))
+    siblings = result.scalars().all()
+
+    protected_fields = {"id", "user_id", "created_at", "platform", "linked_post_group_id"}
+    updated = []
+    for sibling in siblings:
+        for field, value in fields.items():
+            if field in protected_fields:
+                continue
+            if hasattr(sibling, field):
+                if field == "scheduled_date" and value and isinstance(value, str):
+                    try:
+                        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    except (ValueError, TypeError):
+                        try:
+                            value = datetime.strptime(value, "%Y-%m-%d")
+                        except (ValueError, TypeError):
+                            pass
+                setattr(sibling, field, value)
+        updated.append(post_to_dict(sibling))
+
+    await db.commit()
+    return {"updated": updated, "count": len(updated)}
 
 
 @router.get("/{post_id}")
@@ -383,3 +444,234 @@ async def update_post_status(
     response = post_to_dict(post)
     await db.commit()
     return response
+
+
+@router.post("/multi-platform", status_code=201)
+async def create_multi_platform_posts(
+    data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create linked posts for multiple platforms at once.
+
+    Body:
+    - post_data: dict - Base post fields (category, country, title, slide_data, tone, etc.)
+    - platforms: list[str] - List of platforms: instagram_feed, instagram_story, tiktok
+    - adapt_content: bool (optional) - Whether to flag for AI adaptation per platform
+
+    Returns: List of created posts with shared linked_post_group_id.
+    """
+    post_data = data.get("post_data", {})
+    platforms = data.get("platforms", [])
+
+    if not platforms or len(platforms) < 1:
+        raise HTTPException(status_code=400, detail="At least one platform is required")
+
+    valid_platforms = {"instagram_feed", "instagram_story", "tiktok"}
+    for p in platforms:
+        if p not in valid_platforms:
+            raise HTTPException(status_code=400, detail=f"Invalid platform: {p}. Must be one of: {', '.join(sorted(valid_platforms))}")
+
+    adapt_content = data.get("adapt_content", False)
+    source_platform = data.get("source_platform", platforms[0] if platforms else "instagram_feed")
+
+    # Generate a shared group ID to link all sibling posts
+    group_id = str(uuid.uuid4())
+
+    # Platform-specific text adaptation guidelines
+    platform_guidelines = {
+        "instagram_feed": {
+            "caption_style": "Laengere Captions (bis 2200 Zeichen), Storytelling, Hashtags am Ende, ausfuehrlicher CTA",
+            "max_caption_length": 2200,
+            "format_note": "Quadratisch (1:1) oder Hochformat (4:5)",
+        },
+        "instagram_story": {
+            "caption_style": "Kurz und knackig (max 100 Zeichen), CTA mit Swipe-Up/Link, 1-2 Emojis, Frage oder Poll",
+            "max_caption_length": 100,
+            "format_note": "Vollformat (9:16)",
+        },
+        "tiktok": {
+            "caption_style": "Hook-fokussiert (erste 3 Sekunden), kurz (max 150 Zeichen), trendige Sprache, Hashtags inline",
+            "max_caption_length": 150,
+            "format_note": "Hochformat (9:16), Video-orientiert",
+        },
+    }
+
+    created_posts = []
+    for platform in platforms:
+        # Parse scheduled_date string to datetime if provided
+        pd = dict(post_data)
+        if "scheduled_date" in pd and pd["scheduled_date"] and isinstance(pd["scheduled_date"], str):
+            try:
+                pd["scheduled_date"] = datetime.fromisoformat(pd["scheduled_date"].replace("Z", "+00:00"))
+            except (ValueError, TypeError):
+                try:
+                    pd["scheduled_date"] = datetime.strptime(pd["scheduled_date"], "%Y-%m-%d")
+                except (ValueError, TypeError):
+                    pass
+
+        # Remove platform from post_data if present (we set it explicitly)
+        pd.pop("platform", None)
+        pd.pop("linked_post_group_id", None)
+
+        # Auto-adapt captions for non-source platforms if adapt_content is True
+        if adapt_content and platform != source_platform:
+            guidelines = platform_guidelines.get(platform, {})
+            caption_style = guidelines.get("caption_style", "")
+            max_len = guidelines.get("max_caption_length", 2200)
+
+            # Adapt Instagram caption
+            source_caption = pd.get("caption_instagram", "") or ""
+            if source_caption and platform == "instagram_story":
+                # Shorten for stories
+                sentences = source_caption.split('. ')
+                adapted = '. '.join(sentences[:2]) + ('...' if len(sentences) > 2 else '')
+                if len(adapted) > max_len:
+                    adapted = adapted[:max_len - 3] + '...'
+                pd["caption_instagram"] = adapted
+
+            # Adapt TikTok caption
+            source_tiktok = pd.get("caption_tiktok", "") or ""
+            source_ig = pd.get("caption_instagram", "") or ""
+            if platform == "tiktok" and (source_ig or source_tiktok):
+                base_text = source_tiktok or source_ig
+                sentences = base_text.split('. ')
+                hook = sentences[0]
+                adapted = hook + (' ' + sentences[1] if len(sentences) > 1 else '')
+                if len(adapted) > max_len:
+                    adapted = adapted[:max_len - 3] + '...'
+                pd["caption_tiktok"] = adapted
+
+            # Adapt slide data for story format (shorter text)
+            if platform == "instagram_story" and pd.get("slide_data"):
+                try:
+                    slides = json.loads(pd["slide_data"]) if isinstance(pd["slide_data"], str) else pd["slide_data"]
+                    for slide in slides:
+                        if isinstance(slide, dict):
+                            # Shorten body text for stories
+                            body = slide.get("body_text", "")
+                            if body and len(body) > 80:
+                                slide["body_text"] = body[:77] + "..."
+                            # Add CTA for stories
+                            if not slide.get("cta_text"):
+                                slide["cta_text"] = "Mehr erfahren ↑"
+                    pd["slide_data"] = json.dumps(slides, ensure_ascii=False) if isinstance(post_data.get("slide_data"), str) else slides
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+        new_post = Post(
+            user_id=user_id,
+            platform=platform,
+            linked_post_group_id=group_id,
+            **pd,
+        )
+        db.add(new_post)
+        await db.flush()
+        await db.refresh(new_post)
+        created_posts.append(post_to_dict(new_post))
+
+    await db.commit()
+
+    return {
+        "posts": created_posts,
+        "linked_post_group_id": group_id,
+        "count": len(created_posts),
+        "adapted": adapt_content,
+    }
+
+
+@router.get("/{post_id}/siblings")
+async def get_sibling_posts(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all posts linked to the same multi-platform group as the given post."""
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if not post.linked_post_group_id:
+        return {"siblings": [], "linked_post_group_id": None}
+
+    result = await db.execute(
+        select(Post).where(
+            and_(
+                Post.user_id == user_id,
+                Post.linked_post_group_id == post.linked_post_group_id,
+                Post.id != post_id,
+            )
+        ).order_by(Post.platform.asc())
+    )
+    siblings = result.scalars().all()
+
+    return {
+        "siblings": [post_to_dict(s) for s in siblings],
+        "linked_post_group_id": post.linked_post_group_id,
+    }
+
+
+@router.post("/{post_id}/suggest-sibling-update")
+async def suggest_sibling_update(
+    post_id: int,
+    data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """When a linked post is edited, get suggestions for updating sibling posts."""
+    changed_fields = data.get("changed_fields", {})
+
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if not post.linked_post_group_id:
+        return {"suggestions": [], "siblings": []}
+
+    result = await db.execute(
+        select(Post).where(
+            and_(
+                Post.user_id == user_id,
+                Post.linked_post_group_id == post.linked_post_group_id,
+                Post.id != post_id,
+            )
+        ).order_by(Post.platform.asc())
+    )
+    siblings = result.scalars().all()
+
+    syncable_fields = {"title", "category", "country", "tone", "scheduled_date", "scheduled_time", "cta_text", "slide_data", "custom_colors", "custom_fonts", "story_arc_id", "episode_number"}
+    platform_specific = {"caption_instagram", "caption_tiktok", "hashtags_instagram", "hashtags_tiktok", "platform"}
+
+    suggestions = []
+    for field, value in changed_fields.items():
+        if field in syncable_fields:
+            suggestions.append({
+                "field": field,
+                "new_value": value,
+                "apply_to": [{"id": s.id, "platform": s.platform, "title": s.title} for s in siblings],
+                "auto_sync": True,
+            })
+        elif field in platform_specific:
+            suggestions.append({
+                "field": field,
+                "new_value": value,
+                "apply_to": [{"id": s.id, "platform": s.platform, "title": s.title} for s in siblings],
+                "auto_sync": False,
+                "note": "Plattform-spezifisch - manuell pruefen",
+            })
+
+    return {
+        "suggestions": suggestions,
+        "siblings": [post_to_dict(s) for s in siblings],
+        "source_post_id": post_id,
+        "source_platform": post.platform,
+    }
+
+
+    # sync-siblings route moved above /{post_id} routes for correct FastAPI routing
