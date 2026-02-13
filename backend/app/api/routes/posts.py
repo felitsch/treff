@@ -35,6 +35,7 @@ def post_to_dict(post: Post) -> dict:
         "custom_colors": post.custom_colors,
         "custom_fonts": post.custom_fonts,
         "tone": post.tone,
+        "student_id": post.student_id,
         "story_arc_id": post.story_arc_id,
         "episode_number": post.episode_number,
         "linked_post_group_id": post.linked_post_group_id,
@@ -57,6 +58,7 @@ async def list_posts(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     sort_by: Optional[str] = Query(default="created_at", pattern="^(created_at|updated_at|title|scheduled_date)$"),
+    student_id: Optional[int] = None,
     sort_direction: Optional[str] = Query(default="desc", pattern="^(asc|desc)$"),
     page: Optional[int] = Query(default=None, ge=1),
     limit: Optional[int] = Query(default=None, ge=1, le=100),
@@ -78,6 +80,8 @@ async def list_posts(
         base_where.append(Post.status == status)
     if country:
         base_where.append(Post.country == country)
+    if student_id:
+        base_where.append(Post.student_id == student_id)
     if search and search.strip():
         search_pattern = f"%{search.strip()}%"
         base_where.append(
@@ -339,6 +343,7 @@ async def duplicate_post(
         hashtags_tiktok=original.hashtags_tiktok,
         cta_text=original.cta_text,
         tone=original.tone,
+        student_id=original.student_id,
     )
     db.add(new_post)
     await db.flush()

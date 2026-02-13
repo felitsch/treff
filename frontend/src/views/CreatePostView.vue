@@ -1098,6 +1098,7 @@ async function saveDraft() {
       cta_text: ctaText.value,
       story_arc_id: selectedArcId.value || null,
       episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
+      student_id: selectedStudentId.value || null,
     }
 
     if (savedPost.value?.id) {

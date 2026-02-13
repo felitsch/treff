@@ -4,9 +4,11 @@ import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { useStudentStore } from '@/stores/students'
 
 const router = useRouter()
 const toast = useToast()
+const studentStore = useStudentStore()
 
 const loading = ref(true)
 const error = ref(null)
@@ -216,6 +218,13 @@ function formatDateShort(dateStr) {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+// Student helper
+function getStudentName(studentId) {
+  if (!studentId) return null
+  const student = studentStore.students.find(s => s.id === studentId)
+  return student ? student.name : null
 }
 
 // With server-side pagination, posts are already filtered - use directly
@@ -709,6 +718,7 @@ function createPost() {
 
 onMounted(() => {
   fetchPosts()
+  studentStore.fetchStudents()
 })
 
 onUnmounted(() => {
@@ -1053,6 +1063,14 @@ onUnmounted(() => {
                 <span class="inline-flex items-center gap-1">
                   <span>{{ countryFlag(post.country) }}</span>
                   <span>{{ countryLabel(post.country) }}</span>
+                </span>
+              </template>
+              <!-- Student -->
+              <template v-if="post.student_id && getStudentName(post.student_id)">
+                <span class="text-gray-300 dark:text-gray-600">|</span>
+                <span class="inline-flex items-center gap-1">
+                  <span>🎓</span>
+                  <span>{{ getStudentName(post.student_id) }}</span>
                 </span>
               </template>
               <span class="text-gray-300 dark:text-gray-600">|</span>

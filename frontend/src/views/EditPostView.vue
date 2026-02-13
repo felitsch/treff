@@ -8,10 +8,12 @@ import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import { useToast } from '@/composables/useToast'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
+import { useStudentStore } from '@/stores/students'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const studentStore = useStudentStore()
 
 const postId = computed(() => route.params.id)
 const loading = ref(true)
@@ -22,6 +24,7 @@ const post = ref(null)
 const notFound = ref(false)
 const slides = ref([])
 const currentPreviewSlide = ref(0)
+const selectedStudentId = ref(null)
 
 // Sibling posts (multi-platform linked posts)
 const siblingPosts = ref([])
@@ -343,6 +346,7 @@ async function loadPost() {
     hashtagsInstagram.value = response.data.hashtags_instagram || ''
     hashtagsTiktok.value = response.data.hashtags_tiktok || ''
     ctaText.value = response.data.cta_text || ''
+    selectedStudentId.value = response.data.student_id || null
 
     // Initialize undo/redo history with loaded state
     initFromState(getEditableState())
@@ -391,6 +395,7 @@ async function savePost() {
       hashtags_tiktok: hashtagsTiktok.value,
       cta_text: ctaText.value,
       title: cleanSlides[0]?.headline || post.value?.title || 'Post',
+      student_id: selectedStudentId.value || null,
     }
 
     await api.put(`/api/posts/${postId.value}`, updateData)
@@ -433,6 +438,7 @@ function handleCtrlS(e) {
 onMounted(() => {
   loadPost()
   startListening()
+  studentStore.fetchStudents()
   window.addEventListener('keydown', handleCtrlS, true)
 })
 
@@ -913,6 +919,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               class="ml-auto text-xs text-[#3B7AB1] hover:underline"
             >Farbe verwenden</button>
           </div>
+        </div>
+
+        <!-- Student-Verknuepfung -->
+        <div v-if="studentStore.students.length > 0" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">🎓 Student verknuepfen</label>
+          <select
+            v-model="selectedStudentId"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+          >
+            <option :value="null">— Kein Student —</option>
+            <option v-for="s in studentStore.students" :key="s.id" :value="s.id">
+              {{ s.name }} ({{ s.country }})
+            </option>
+          </select>
         </div>
 
         <!-- Captions editing -->

@@ -35,6 +35,7 @@ class Post(Base):
     scheduled_time: Mapped[str | None] = mapped_column(String, nullable=True)  # HH:MM
     story_arc_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("story_arcs.id"), nullable=True)  # Links teaser posts to story arcs
     episode_number: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Explicit episode ordering within a story arc (1-based)
+    student_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("students.id", ondelete="SET NULL"), nullable=True)  # Links post to a student profile
     linked_post_group_id: Mapped[str | None] = mapped_column(String, nullable=True)  # UUID grouping sibling posts across platforms
     exported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     posted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -49,6 +50,7 @@ class Post(Base):
 
     # Relationships
     user = relationship("User", back_populates="posts")
+    student = relationship("Student", foreign_keys=[student_id])
     story_arc = relationship("StoryArc", foreign_keys=[story_arc_id])
     story_episode = relationship("StoryEpisode", back_populates="post", uselist=False, foreign_keys="StoryEpisode.post_id")
     slides = relationship("PostSlide", back_populates="post", cascade="all, delete-orphan", order_by="PostSlide.slide_index")
