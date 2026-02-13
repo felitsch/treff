@@ -373,23 +373,94 @@ CATEGORY_DISPLAY_NAMES = {
 
 def _build_gemini_system_prompt(tone: str) -> str:
     """Build the system prompt for Gemini with TREFF brand guidelines."""
-    tone_instruction = ""
-    if tone == "serioess":
-        tone_instruction = (
+    tone_instructions = {
+        "serioess": (
             "Schreibe in einem serioesen, vertrauenswuerdigen Ton. "
             "Die Zielgruppe sind hier primaer die Eltern der Schueler. "
             "Verwende Sie-Anrede wo passend. Betone Sicherheit, Erfahrung seit 1984, "
             "und professionelle Betreuung. Kein Slang, keine uebertriebenen Emojis. "
             "Maximal 2-3 dezente Emojis pro Caption."
-        )
-    else:
-        tone_instruction = (
+        ),
+        "jugendlich": (
             "Schreibe in einem jugendlichen, aber nicht albernen Ton. "
             "Die Zielgruppe sind Teenager (14-18 Jahre), aber Eltern lesen mit. "
             "Verwende Du-Anrede. Sei begeisternd und motivierend, aber nicht unserioes. "
             "Verwende passende Emojis (3-5 pro Caption), z.B. Landesflaggen, "
             "Sterne, Herzen, Flugzeuge. Kein Slang wie 'digga' oder 'bruh'."
-        )
+        ),
+        "witzig": (
+            "Schreibe in einem witzigen, humorvollen Ton. "
+            "Nutze Wortspiele, uebertriebene Vergleiche und Self-Deprecating Humor. "
+            "Referenziere Pop-Kultur die 16-18 Jaehrige kennen (Memes, TikTok-Trends, Serien). "
+            "Verwende Du-Anrede. Humor soll sympathisch und einladend wirken, niemals verletzend. "
+            "Verwende lustige Emojis (4-6 pro Caption) wie 😂🤣💀🙈🎉. "
+            "Beispiel-Stil: 'Dein Koffer ist schwerer als deine Mathe-Note? Willkommen im Auslandsjahr-Modus! 😂'"
+        ),
+        "emotional": (
+            "Schreibe in einem emotionalen, beruehrenden Ton. "
+            "Erzaehle aus der Ich-Perspektive oder beschreibe Gefuehle konkret und bildhaft. "
+            "Nutze sensorische Sprache: Was sieht, hoert, fuehlt man? "
+            "Verwende Du-Anrede, schaffe Naehe und Intimaet. "
+            "Verwende gefuehlvolle Emojis (3-5 pro Caption) wie 🥺💙✨🌅🫂. "
+            "Ziel: Gaensehaut-Momente erzeugen, die zum Teilen und Speichern animieren. "
+            "Beispiel-Stil: 'Der Moment, wenn du zum ersten Mal deine Gastfamilie umarmst und weisst: Hier gehoere ich hin. 🥺💙'"
+        ),
+        "motivierend": (
+            "Schreibe in einem motivierenden, empowernden Ton. "
+            "Nutze kraftvolle Verben, kurze Saetze, Aufrufe zum Handeln. "
+            "Verwende Du-Anrede. Sprich direkt die Traeume und Ziele der Jugendlichen an. "
+            "Ueberwindung von Aengsten und Zweifeln ist ein Kernthema. "
+            "Verwende energiegeladene Emojis (4-6 pro Caption) wie 💪🔥🚀⭐🌍✨. "
+            "Beispiel-Stil: 'Dein Auslandsjahr wartet nicht. MACH den ersten Schritt. HEUTE. 🚀💪'"
+        ),
+        "informativ": (
+            "Schreibe in einem informativen, faktenbasierten Ton. "
+            "Praesentiere Zahlen, Fakten und konkrete Details. "
+            "Strukturiere Inhalte mit Listen, Vergleichen oder Schritt-fuer-Schritt-Anleitungen. "
+            "Verwende eine neutrale, aber zugaengliche Anrede (Mix aus Du/allgemein). "
+            "Verwende dezente Emojis (2-4 pro Caption) wie 📊📝✅ℹ️📌. "
+            "Sei sachlich und praezise, aber nicht trocken - die Informationen sollen nuetzlich und teilbar sein. "
+            "Beispiel-Stil: '📊 Highschool USA vs. Kanada: Kosten, Dauer, Voraussetzungen im Vergleich.'"
+        ),
+        "behind-the-scenes": (
+            "Schreibe in einem authentischen Behind-the-Scenes Ton. "
+            "Zeige den Blick hinter die Kulissen von TREFF Sprachreisen. "
+            "Erzaehle ehrlich und transparent vom Alltag, von der Vorbereitung, vom Team. "
+            "Verwende Du-Anrede, sei nahbar und ungefiltert (aber professionell). "
+            "Verwende lockere Emojis (3-5 pro Caption) wie 👀📸🎬🤫💬. "
+            "Ziel: Vertrauen durch Transparenz aufbauen, die Marke menschlich machen. "
+            "Beispiel-Stil: '👀 Was passiert eigentlich bei TREFF, bevor ihr in den Flieger steigt? Wir zeigen es euch!'"
+        ),
+        "storytelling": (
+            "Schreibe in einem erzaehlerischen Storytelling-Ton. "
+            "Baue eine kleine Geschichte auf mit Anfang, Mitte und Ende. "
+            "Nutze narrative Techniken: Spannungsaufbau, Details, Wendepunkte. "
+            "Verwende Du-Anrede oder erzaehle in der dritten Person. "
+            "Verwende stimmungsvolle Emojis (3-5 pro Caption) wie 📖✈️🌅🏫💫. "
+            "Jeder Post soll sich wie eine Mini-Geschichte anfuehlen, die man bis zum Ende lesen will. "
+            "Beispiel-Stil: 'Es war 6 Uhr morgens am Frankfurter Flughafen. Lena hielt ihr Boarding-Pass in der Hand und wusste: Ab jetzt wird alles anders. ✈️'"
+        ),
+        "provokant": (
+            "Schreibe in einem provokanten, mutigen Ton der zum Nachdenken anregt. "
+            "Stelle mutige Fragen, breche Erwartungen, nutze Hook-Saetze die zum Stoppen zwingen. "
+            "Verwende Du-Anrede. Sei frech aber nicht beleidigend, mutig aber nicht respektlos. "
+            "Hinterfrage gängige Annahmen ueber Auslandsaufenthalte und Schule. "
+            "Verwende aufmerksamkeitsstarke Emojis (3-5 pro Caption) wie ⚡👊🎤🔥💥. "
+            "Ziel: Scroll-Stopper erzeugen, Kommentare und Diskussionen provozieren. "
+            "Beispiel-Stil: '⚡ Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abitur-Zeugnis. Change my mind. 👊'"
+        ),
+        "wholesome": (
+            "Schreibe in einem herzlichen, wholesome Ton. "
+            "Betone Gemeinschaft, Zusammenhalt, Dankbarkeit und positive Erlebnisse. "
+            "Verwende Du-Anrede. Schaffe ein warmes, einladendes Gefuehl. "
+            "Feiere kleine Erfolge und besondere Momente des Auslandsaufenthalts. "
+            "Verwende warme Emojis (4-6 pro Caption) wie 🥰💛🏡🤗✨🌻. "
+            "Ziel: Positive Vibes verbreiten, Community-Gefuehl staerken, zum Laecheln bringen. "
+            "Beispiel-Stil: 'Wenn deine Gastmutter dir zum Geburtstag deinen Lieblingskuchen backt, obwohl du erst seit 3 Wochen da bist. 🥰🎂💛'"
+        ),
+    }
+
+    tone_instruction = tone_instructions.get(tone, tone_instructions["jugendlich"])
 
     return f"""Du bist der Social-Media-Content-Ersteller fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland.
 
@@ -774,14 +845,23 @@ def _generate_slide_body(category: str, country_data: dict, index: int, total: i
 
 
 def _generate_instagram_caption(headline: str, body: str, country_data: dict, category: str, tone: str) -> str:
-    """Generate an Instagram caption."""
+    """Generate an Instagram caption based on tone."""
     flag = country_data["flag"]
 
-    if tone == "serioess":
-        caption = f"{flag} {headline}\n\n{body[:200]}\n\nSeit 1984 begleitet TREFF Sprachreisen junge Menschen auf ihrem Weg ins Ausland. Vertrauen Sie auf 40 Jahre Erfahrung.\n\n📩 Kostenlose Beratung: Link in Bio"
-    else:
-        caption = f"{flag} {headline}\n\n{body[:200]}\n\n✨ Dein Abenteuer beginnt bei TREFF Sprachreisen!\n💙 Seit 1984 schicken wir Schueler in die Welt\n📩 Link in Bio fuer mehr Infos!"
+    tone_captions = {
+        "serioess": f"{flag} {headline}\n\n{body[:200]}\n\nSeit 1984 begleitet TREFF Sprachreisen junge Menschen auf ihrem Weg ins Ausland. Vertrauen Sie auf 40 Jahre Erfahrung.\n\n📩 Kostenlose Beratung: Link in Bio",
+        "jugendlich": f"{flag} {headline}\n\n{body[:200]}\n\n✨ Dein Abenteuer beginnt bei TREFF Sprachreisen!\n💙 Seit 1984 schicken wir Schueler in die Welt\n📩 Link in Bio fuer mehr Infos!",
+        "witzig": f"{flag} {headline}\n\n{body[:200]}\n\n😂 Plot Twist: Das wird die beste Entscheidung deines Lebens!\n🎉 TREFF Sprachreisen – seit 1984 Traeume wahr machen\n📩 Link in Bio!",
+        "emotional": f"{flag} {headline}\n\n{body[:200]}\n\n🥺 Manche Momente veraendern dein ganzes Leben.\n💙 TREFF Sprachreisen begleitet dich auf deinem Weg.\n📩 Link in Bio fuer deine Geschichte",
+        "motivierend": f"{flag} {headline}\n\n{body[:200]}\n\n💪 Trau dich! Dein Auslandsjahr wartet auf DICH!\n🔥 TREFF Sprachreisen – seit 1984 Mut belohnen\n📩 Starte jetzt: Link in Bio!",
+        "informativ": f"{flag} {headline}\n\n{body[:200]}\n\n📊 Alle Fakten & Details findest du bei TREFF Sprachreisen.\n✅ Seit 1984 – ueber 8.000 Schueler betreut\n📩 Mehr Infos: Link in Bio",
+        "behind-the-scenes": f"{flag} {headline}\n\n{body[:200]}\n\n👀 So sieht's hinter den Kulissen bei TREFF aus!\n📸 Echte Einblicke, echte Menschen, seit 1984\n📩 Link in Bio fuer mehr!",
+        "storytelling": f"{flag} {headline}\n\n{body[:200]}\n\n📖 Jede Reise beginnt mit einem ersten Schritt.\n✈️ TREFF Sprachreisen schreibt seit 1984 Geschichten.\n📩 Deine Geschichte beginnt hier: Link in Bio",
+        "provokant": f"{flag} {headline}\n\n{body[:200]}\n\n⚡ Bist du bereit, alles zu veraendern?\n🔥 TREFF Sprachreisen – seit 1984 Grenzen sprengen\n📩 Trau dich: Link in Bio!",
+        "wholesome": f"{flag} {headline}\n\n{body[:200]}\n\n🥰 Die schoensten Erinnerungen entstehen fernab von zuhause.\n💛 TREFF Sprachreisen – seit 1984 Familien verbinden\n📩 Link in Bio fuer mehr Liebe!",
+    }
 
+    caption = tone_captions.get(tone, tone_captions["jugendlich"])
     return caption
 
 

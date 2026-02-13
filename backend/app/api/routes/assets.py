@@ -1,6 +1,9 @@
 """Asset routes."""
 
+import json
+import logging
 import os
+import subprocess
 import uuid
 from typing import Optional
 from pathlib import Path
@@ -13,6 +16,8 @@ from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.asset import Asset
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 # Resolve uploads directory: __file__ is backend/app/api/routes/assets.py
@@ -20,6 +25,19 @@ router = APIRouter()
 APP_DIR = Path(__file__).resolve().parent.parent.parent
 ASSETS_UPLOAD_DIR = APP_DIR / "static" / "uploads" / "assets"
 ASSETS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Thumbnails directory for video thumbnails
+THUMBNAILS_DIR = APP_DIR / "static" / "uploads" / "thumbnails"
+THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Allowed file types
+ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
+ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"]
+ALLOWED_TYPES = ALLOWED_IMAGE_TYPES + ALLOWED_VIDEO_TYPES
+
+# Max upload sizes
+MAX_IMAGE_SIZE = 20 * 1024 * 1024  # 20 MB
+MAX_VIDEO_SIZE = 500 * 1024 * 1024  # 500 MB
 
 
 def asset_to_dict(asset: Asset) -> dict:
@@ -41,7 +59,103 @@ def asset_to_dict(asset: Asset) -> dict:
         "tags": asset.tags,
         "usage_count": asset.usage_count,
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
+        "duration_seconds": asset.duration_seconds,
+        "thumbnail_path": asset.thumbnail_path,
     }
+
+
+def is_video_type(content_type: str) -> bool:
+    """Check if a content type is a video type."""
+    return content_type in ALLOWED_VIDEO_TYPES
+
+
+def _extract_video_metadata(video_path: Path) -> dict:
+    """Extract video metadata (duration, width, height) using ffprobe.
+
+    Returns dict with keys: duration_seconds, width, height (any may be None).
+    """
+    metadata = {"duration_seconds": None, "width": None, "height": None}
+
+    try:
+        cmd = [
+            "ffprobe",
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_format",
+            "-show_streams",
+            str(video_path),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if proc.returncode != 0:
+            logger.warning(f"ffprobe failed for {video_path}: {proc.stderr}")
+            return metadata
+
+        data = json.loads(proc.stdout)
+
+        # Get duration from format
+        fmt = data.get("format", {})
+        if fmt.get("duration"):
+            metadata["duration_seconds"] = round(float(fmt["duration"]), 2)
+
+        # Get dimensions from first video stream
+        for stream in data.get("streams", []):
+            if stream.get("codec_type") == "video":
+                if stream.get("width"):
+                    metadata["width"] = int(stream["width"])
+                if stream.get("height"):
+                    metadata["height"] = int(stream["height"])
+                # Also try duration from stream if not in format
+                if metadata["duration_seconds"] is None and stream.get("duration"):
+                    metadata["duration_seconds"] = round(float(stream["duration"]), 2)
+                break
+
+    except FileNotFoundError:
+        logger.warning("ffprobe not found on system - video metadata extraction unavailable")
+    except subprocess.TimeoutExpired:
+        logger.warning(f"ffprobe timed out for {video_path}")
+    except Exception as e:
+        logger.warning(f"Error extracting video metadata: {e}")
+
+    return metadata
+
+
+def _generate_video_thumbnail(video_path: Path, thumbnail_filename: str) -> Optional[str]:
+    """Generate a thumbnail from the first frame of a video using ffmpeg.
+
+    Returns the relative path to the thumbnail (e.g., /uploads/thumbnails/xxx.jpg)
+    or None if generation failed.
+    """
+    thumbnail_path = THUMBNAILS_DIR / thumbnail_filename
+
+    try:
+        cmd = [
+            "ffmpeg",
+            "-i", str(video_path),
+            "-vf", "thumbnail,scale=480:-1",
+            "-frames:v", "1",
+            "-y",  # overwrite
+            str(thumbnail_path),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if proc.returncode != 0:
+            logger.warning(f"ffmpeg thumbnail generation failed: {proc.stderr[:500]}")
+            return None
+
+        if thumbnail_path.exists() and thumbnail_path.stat().st_size > 0:
+            return f"/uploads/thumbnails/{thumbnail_filename}"
+        else:
+            logger.warning("ffmpeg produced empty or missing thumbnail file")
+            return None
+
+    except FileNotFoundError:
+        logger.warning("ffmpeg not found on system - video thumbnail generation unavailable")
+        return None
+    except subprocess.TimeoutExpired:
+        logger.warning(f"ffmpeg thumbnail generation timed out for {video_path}")
+        return None
+    except Exception as e:
+        logger.warning(f"Error generating video thumbnail: {e}")
+        return None
 
 
 @router.get("")
@@ -50,6 +164,7 @@ async def list_assets(
     country: Optional[str] = None,
     source: Optional[str] = None,
     search: Optional[str] = None,
+    file_type: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -62,6 +177,14 @@ async def list_assets(
         query = query.where(Asset.country == country)
     if source:
         query = query.where(Asset.source == source)
+    if file_type:
+        # Support filtering by broad type: "image" or "video"
+        if file_type == "image":
+            query = query.where(Asset.file_type.in_(ALLOWED_IMAGE_TYPES))
+        elif file_type == "video":
+            query = query.where(Asset.file_type.in_(ALLOWED_VIDEO_TYPES))
+        else:
+            query = query.where(Asset.file_type == file_type)
     if search:
         query = query.where(
             (Asset.filename.ilike(f"%{search}%"))
@@ -83,17 +206,18 @@ async def upload_asset(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Upload an image file."""
+    """Upload an image or video file."""
     # Validate file type
-    allowed_types = ["image/jpeg", "image/png", "image/webp"]
-    if file.content_type not in allowed_types:
+    if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"File type {file.content_type} not allowed. Use: {', '.join(allowed_types)}",
+            detail=f"File type {file.content_type} not allowed. Allowed: {', '.join(ALLOWED_TYPES)}",
         )
 
+    is_video = is_video_type(file.content_type)
+
     # Generate unique filename
-    ext = os.path.splitext(file.filename or "image.jpg")[1] or ".jpg"
+    ext = os.path.splitext(file.filename or ("video.mp4" if is_video else "image.jpg"))[1] or (".mp4" if is_video else ".jpg")
     unique_filename = f"{uuid.uuid4()}{ext}"
     file_path = ASSETS_UPLOAD_DIR / unique_filename
 
@@ -101,19 +225,43 @@ async def upload_asset(
     content = await file.read()
     file_size = len(content)
 
+    # Validate file size based on type
+    max_size = MAX_VIDEO_SIZE if is_video else MAX_IMAGE_SIZE
+    max_size_label = "500 MB" if is_video else "20 MB"
+    if file_size > max_size:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Datei ist zu gross (max. {max_size_label})",
+        )
+
     with open(file_path, "wb") as f:
         f.write(content)
 
-    # Try to get image dimensions
+    # Extract metadata based on file type
     width = None
     height = None
-    try:
-        from PIL import Image
-        import io
-        img = Image.open(io.BytesIO(content))
-        width, height = img.size
-    except Exception:
-        pass  # Pillow not available or invalid image - skip dimensions
+    duration_seconds = None
+    thumbnail_path = None
+
+    if is_video:
+        # Extract video metadata using ffprobe
+        meta = _extract_video_metadata(file_path)
+        width = meta["width"]
+        height = meta["height"]
+        duration_seconds = meta["duration_seconds"]
+
+        # Generate thumbnail from first frame
+        thumb_filename = f"{uuid.uuid4()}.jpg"
+        thumbnail_path = _generate_video_thumbnail(file_path, thumb_filename)
+    else:
+        # Try to get image dimensions
+        try:
+            from PIL import Image
+            import io
+            img = Image.open(io.BytesIO(content))
+            width, height = img.size
+        except Exception:
+            pass  # Pillow not available or invalid image - skip dimensions
 
     # Create asset record
     asset = Asset(
@@ -129,6 +277,8 @@ async def upload_asset(
         category=category,
         country=country,
         tags=tags,
+        duration_seconds=duration_seconds,
+        thumbnail_path=thumbnail_path,
     )
     db.add(asset)
     await db.flush()
@@ -151,13 +301,23 @@ async def delete_asset(
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
 
-    # Delete file from disk
+    # Delete main file from disk
     try:
         disk_path = ASSETS_UPLOAD_DIR / asset.filename
         if disk_path.exists():
             disk_path.unlink()
     except Exception:
         pass  # File already gone or permission issue
+
+    # Delete thumbnail from disk if it exists
+    if asset.thumbnail_path:
+        try:
+            thumb_filename = os.path.basename(asset.thumbnail_path)
+            thumb_path = THUMBNAILS_DIR / thumb_filename
+            if thumb_path.exists():
+                thumb_path.unlink()
+        except Exception:
+            pass
 
     await db.delete(asset)
     return {"message": "Asset deleted"}

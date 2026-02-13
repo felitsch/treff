@@ -56,6 +56,9 @@ const {
   lastSaveFunction,
   regeneratingField,
   validationMessage,
+  humorFormats,
+  selectedHumorFormat,
+  loadingHumorFormats,
 } = storeToRefs(store)
 
 const totalSteps = 9
@@ -94,6 +97,22 @@ const countries = [
   { id: 'newzealand', label: 'Neuseeland', flag: '🇳🇿' },
   { id: 'ireland', label: 'Irland', flag: '🇮🇪' },
 ]
+
+// Step 4: Tone options (static data)
+const toneOptions = [
+  { id: 'jugendlich', label: 'Jugendlich', icon: '🎯', desc: 'Locker, Gen-Z-freundlich', example: '"Hey, dein Abenteuer wartet!"' },
+  { id: 'serioess', label: 'Serioes', icon: '🏛️', desc: 'Fuer Eltern & Entscheider', example: '"Vertrauen Sie auf 40 Jahre Erfahrung."' },
+  { id: 'witzig', label: 'Witzig', icon: '😂', desc: 'Humor & Wortspiele', example: '"Dein Koffer ist schwerer als deine Mathe-Note?"' },
+  { id: 'emotional', label: 'Emotional', icon: '🥺', desc: 'Beruehrend & persoenlich', example: '"Der Moment, wenn du ankommst und weisst: Hier gehoere ich hin."' },
+  { id: 'motivierend', label: 'Motivierend', icon: '💪', desc: 'Empowernd & aktivierend', example: '"Trau dich! Dein Auslandsjahr wartet auf DICH!"' },
+  { id: 'informativ', label: 'Informativ', icon: '📊', desc: 'Fakten & Details', example: '"Highschool USA vs. Kanada: Kosten im Vergleich."' },
+  { id: 'behind-the-scenes', label: 'Behind the Scenes', icon: '👀', desc: 'Authentisch & transparent', example: '"Was passiert bei TREFF, bevor ihr in den Flieger steigt?"' },
+  { id: 'storytelling', label: 'Storytelling', icon: '📖', desc: 'Erzaehlerisch & narrativ', example: '"Es war 6 Uhr morgens am Frankfurter Flughafen..."' },
+  { id: 'provokant', label: 'Provokant', icon: '⚡', desc: 'Mutig & scroll-stoppend', example: '"Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abi."' },
+  { id: 'wholesome', label: 'Wholesome', icon: '🥰', desc: 'Herzlich & warmherzig', example: '"Wenn deine Gastmutter dir deinen Lieblingskuchen backt..."' },
+]
+
+const selectedToneObj = computed(() => toneOptions.find(t => t.id === tone.value))
 
 // Step 8: Prompt suggestions (static data)
 const promptSuggestions = [
@@ -259,6 +278,87 @@ async function loadTemplates() {
     templates.value = []
   } finally {
     loadingTemplates.value = false
+  }
+}
+
+async function loadHumorFormats() {
+  if (humorFormats.value.length > 0) return // Already loaded
+  loadingHumorFormats.value = true
+  try {
+    const response = await api.get('/api/ai/humor-formats')
+    humorFormats.value = response.data.humor_formats || []
+  } catch (e) {
+    console.error('Failed to load humor formats:', e)
+    humorFormats.value = []
+  } finally {
+    loadingHumorFormats.value = false
+  }
+}
+
+function selectHumorFormat(format) {
+  if (selectedHumorFormat.value?.id === format.id) {
+    selectedHumorFormat.value = null // Toggle off
+  } else {
+    selectedHumorFormat.value = format
+    // Pre-fill topic from format example if topic is empty
+    if (!topic.value && format.example_text?.topic) {
+      topic.value = format.example_text.topic
+    }
+  }
+}
+
+async function generateHumorContent() {
+  if (generatingText.value) return
+  generatingText.value = true
+  error.value = ''
+
+  const requestId = ++generationRequestCounter
+  const stateBeforeGeneration = slides.value.length > 0 ? JSON.stringify(slides.value) : null
+
+  try {
+    const response = await api.post('/api/ai/generate-humor', {
+      format_id: selectedHumorFormat.value.id,
+      topic: topic.value.trim() || 'Auslandsjahr',
+      country: country.value || null,
+      tone: tone.value,
+    })
+
+    if (requestId !== generationRequestCounter) return
+
+    const currentState = slides.value.length > 0 ? JSON.stringify(slides.value) : null
+    const userEditedDuringGeneration = stateBeforeGeneration !== null && currentState !== stateBeforeGeneration
+
+    // Transform humor response to match the standard content format
+    const humorData = response.data
+    const transformedData = {
+      slides: humorData.slides || [],
+      caption_instagram: humorData.caption || '',
+      caption_tiktok: humorData.caption || '',
+      hashtags_instagram: Array.isArray(humorData.hashtags) ? humorData.hashtags.join(' ') : (humorData.hashtags || ''),
+      hashtags_tiktok: Array.isArray(humorData.hashtags) ? humorData.hashtags.join(' ') : (humorData.hashtags || ''),
+      cta_text: humorData.slides?.[0]?.cta_text || '',
+      source: humorData.source || 'rule_based',
+      humor_format: humorData.format_name,
+    }
+
+    if (userEditedDuringGeneration) {
+      pendingGenerationData.value = transformedData
+      showOverwriteDialog.value = true
+      toast.info('Humor-Generierung abgeschlossen. Deine manuellen Aenderungen werden beibehalten.')
+    } else {
+      applyGeneratedContent(transformedData)
+    }
+  } catch (e) {
+    console.error('Humor generation failed:', e)
+    const status = e.response?.status
+    const detail = e.response?.data?.detail || ''
+    if (status === 429) {
+      error.value = detail || 'Zu viele Anfragen. Bitte warte einen Moment.'
+    } else {
+      error.value = 'Humor-Generierung fehlgeschlagen: ' + (detail || e.message)
+    }
+  } finally {
+    generatingText.value = false
   }
 }
 
@@ -1244,6 +1344,10 @@ watch(currentStep, (newStep, oldStep) => {
   if (newStep >= 6 && oldStep < 6 && slides.value.length > 0) {
     initFromState(getEditableState())
   }
+  // Auto-load humor formats when reaching Step 4
+  if (newStep === 4 && humorFormats.value.length === 0) {
+    loadHumorFormats()
+  }
 })
 
 // On mount: reload data if returning to an in-progress workflow,
@@ -1540,27 +1644,95 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <!-- Tone -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tonalitaet</label>
-          <div class="flex gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             <button
-              @click="tone = 'jugendlich'"
-              class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
-              :class="tone === 'jugendlich'
-                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
+              v-for="t in toneOptions"
+              :key="t.id"
+              @click="tone = t.id"
+              class="px-3 py-3 rounded-lg border-2 transition-all text-sm text-left"
+              :class="tone === t.id
+                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 ring-1 ring-[#3B7AB1]/30'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'"
             >
-              <div class="font-semibold text-gray-900 dark:text-white">🎯 Jugendlich</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Locker, Gen-Z-freundlich</div>
+              <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ t.icon }} {{ t.label }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">{{ t.desc }}</div>
+            </button>
+          </div>
+          <!-- Example sentence for selected tone -->
+          <div v-if="selectedToneObj" class="mt-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-xs text-gray-500 dark:text-gray-400 italic">
+            Beispiel: {{ selectedToneObj.example }}
+          </div>
+        </div>
+
+        <!-- Humor Format Gallery (Optional) -->
+        <div class="mb-6" data-testid="humor-format-section">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Humor-Format (optional)
+            </label>
+            <button
+              v-if="humorFormats.length === 0 && !loadingHumorFormats"
+              @click="loadHumorFormats"
+              class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors"
+              data-testid="load-humor-formats-btn"
+            >
+              Humor-Formate laden
             </button>
             <button
-              @click="tone = 'serioess'"
-              class="flex-1 px-4 py-3 rounded-lg border-2 transition-all text-sm"
-              :class="tone === 'serioess'
-                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
+              v-if="selectedHumorFormat"
+              @click="selectedHumorFormat = null"
+              class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors"
+              data-testid="clear-humor-format-btn"
             >
-              <div class="font-semibold text-gray-900 dark:text-white">🏛️ Serioes</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Fuer Eltern & Entscheider</div>
+              Format abwaehlen
             </button>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Waehle ein Humor-Format fuer virale Meme-Inhalte auf Instagram und TikTok.
+          </p>
+
+          <!-- Loading spinner -->
+          <div v-if="loadingHumorFormats" class="flex items-center justify-center py-6">
+            <div class="animate-spin h-6 w-6 border-3 border-[#3B7AB1] border-t-transparent rounded-full"></div>
+          </div>
+
+          <!-- Humor Format Grid -->
+          <div v-else-if="humorFormats.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" data-testid="humor-format-gallery">
+            <button
+              v-for="fmt in humorFormats"
+              :key="fmt.id"
+              @click="selectHumorFormat(fmt)"
+              class="p-3 rounded-xl border-2 transition-all text-left hover:shadow-md"
+              :class="selectedHumorFormat?.id === fmt.id
+                ? 'border-[#FDD000] bg-yellow-50 dark:bg-yellow-900/20 shadow-md ring-1 ring-[#FDD000]/30'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+              :data-testid="'humor-format-' + fmt.id"
+            >
+              <div class="text-xl mb-1">{{ fmt.icon }}</div>
+              <div class="font-semibold text-gray-900 dark:text-white text-xs leading-tight">{{ fmt.name }}</div>
+              <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">
+                {{ fmt.platform_fit === 'both' ? 'IG + TT' : fmt.platform_fit === 'instagram' ? 'Instagram' : 'TikTok' }}
+              </div>
+            </button>
+          </div>
+
+          <!-- Selected humor format detail -->
+          <div v-if="selectedHumorFormat" class="mt-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-[#FDD000]/40 rounded-xl" data-testid="humor-format-detail">
+            <div class="flex items-start gap-3">
+              <span class="text-2xl">{{ selectedHumorFormat.icon }}</span>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-gray-900 dark:text-white text-sm">{{ selectedHumorFormat.name }}</h4>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ selectedHumorFormat.description }}</p>
+                <div class="mt-2 flex flex-wrap gap-1">
+                  <span class="px-2 py-0.5 bg-[#3B7AB1]/10 text-[#3B7AB1] text-[10px] font-medium rounded-full">
+                    {{ selectedHumorFormat.platform_fit === 'both' ? 'Instagram & TikTok' : selectedHumorFormat.platform_fit === 'instagram' ? 'Instagram' : 'TikTok' }}
+                  </span>
+                  <span class="px-2 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 text-[10px] font-medium rounded-full">
+                    Humor-Template
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1573,10 +1745,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 5: Inhalt generieren</h2>
 
       <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
-        <div class="text-5xl mb-4">&#x2728;</div>
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">KI-Textgenerierung</h3>
+        <div class="text-5xl mb-4">{{ selectedHumorFormat ? selectedHumorFormat.icon : '&#x2728;' }}</div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          {{ selectedHumorFormat ? 'Humor-Content generieren' : 'KI-Textgenerierung' }}
+        </h3>
         <p class="text-gray-500 dark:text-gray-400 mb-6">
-          Texte, Captions und Hashtags werden basierend auf deiner Auswahl generiert.
+          {{ selectedHumorFormat
+            ? `"${selectedHumorFormat.name}" - Humor-Format mit KI-gestuetzten Textvorschlaegen.`
+            : 'Texte, Captions und Hashtags werden basierend auf deiner Auswahl generiert.' }}
         </p>
 
         <!-- Summary of selections -->
@@ -1587,30 +1763,40 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
           <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
           <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
-          <div><strong>Tonalitaet:</strong> {{ tone === 'jugendlich' ? '🎯 Jugendlich' : '🏛️ Serioes' }}</div>
+          <div><strong>Tonalitaet:</strong> {{ selectedToneObj?.icon }} {{ selectedToneObj?.label || tone }}</div>
+          <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
+            <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
+            <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
+          </div>
         </div>
 
         <button
-          @click="generateText"
+          @click="selectedHumorFormat ? generateHumorContent() : generateText()"
           :disabled="generatingText"
-          class="px-8 py-4 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
+          class="px-8 py-4 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
+          :class="selectedHumorFormat
+            ? 'bg-gradient-to-r from-[#FDD000] to-[#FFB800] hover:from-[#E8C300] hover:to-[#EBA800] text-gray-900 disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-700 dark:disabled:to-gray-700 disabled:text-gray-500'
+            : 'bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700'"
+          data-testid="generate-content-btn"
         >
-          <span v-if="generatingText" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-          <span v-else>&#x2728;</span>
-          {{ generatingText ? 'Generiere...' : 'Inhalt generieren' }}
+          <span v-if="generatingText" class="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full"></span>
+          <span v-else>{{ selectedHumorFormat ? selectedHumorFormat.icon : '&#x2728;' }}</span>
+          {{ generatingText ? 'Generiere...' : (selectedHumorFormat ? 'Humor-Content generieren' : 'Inhalt generieren') }}
         </button>
 
         <!-- Generated content summary -->
         <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-left">
           <div class="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3">
             <span class="text-lg">&#10003;</span>
-            <span class="font-bold">Inhalt generiert!</span>
+            <span class="font-bold">{{ generatedContent.humor_format ? 'Humor-Content generiert!' : 'Inhalt generiert!' }}</span>
           </div>
           <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
             <li>{{ slides.length }} Slide(s) mit Texten</li>
             <li>Instagram Caption erstellt</li>
             <li>TikTok Caption erstellt</li>
             <li>Hashtags generiert</li>
+            <li v-if="generatedContent.humor_format">Humor-Format: {{ generatedContent.humor_format }}</li>
+            <li v-if="generatedContent.source">Quelle: {{ generatedContent.source === 'gemini' ? 'KI (Gemini)' : 'Vorlage' }}</li>
           </ul>
         </div>
       </div>

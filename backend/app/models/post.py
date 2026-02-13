@@ -30,7 +30,7 @@ class Post(Base):
     cta_text: Mapped[str | None] = mapped_column(String, nullable=True)
     custom_colors: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
     custom_fonts: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
-    tone: Mapped[str] = mapped_column(String, default="jugendlich")  # jugendlich, serioess
+    tone: Mapped[str] = mapped_column(String, default="jugendlich")  # jugendlich, serioess, witzig, emotional, motivierend, informativ, behind-the-scenes, storytelling, provokant, wholesome
     scheduled_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     scheduled_time: Mapped[str | None] = mapped_column(String, nullable=True)  # HH:MM
     exported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

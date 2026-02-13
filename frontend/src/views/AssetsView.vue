@@ -22,6 +22,9 @@ const showDeleteConfirm = ref(null)
 const showCropModal = ref(false)
 const cropAsset = ref(null)
 
+// Video preview state
+const videoPreviewAsset = ref(null)
+
 // Stock photo state
 const stockSearchQuery = ref('')
 const stockSource = ref('unsplash')
@@ -63,6 +66,7 @@ const categoryOptions = [
   { value: 'photo', label: 'Foto' },
   { value: 'icon', label: 'Icon' },
   { value: 'country', label: 'Laenderbild' },
+  { value: 'video', label: 'Video' },
 ]
 
 const countryOptions = [
@@ -85,11 +89,38 @@ function countryLabel(value) {
   return opt ? opt.label : value
 }
 
+// Check if an asset is a video
+function isVideoAsset(asset) {
+  return asset.file_type && asset.file_type.startsWith('video/')
+}
+
+// Format video duration
+function formatDuration(seconds) {
+  if (!seconds && seconds !== 0) return ''
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+// Open video preview modal
+function openVideoPreview(asset) {
+  videoPreviewAsset.value = asset
+}
+
+// Close video preview modal
+function closeVideoPreview() {
+  videoPreviewAsset.value = null
+}
+
 // Computed
 const filteredAssets = computed(() => {
   let filtered = assets.value
   if (selectedFilter.value !== 'all') {
-    filtered = filtered.filter(a => a.file_type === `image/${selectedFilter.value}`)
+    if (selectedFilter.value === 'video') {
+      filtered = filtered.filter(a => a.file_type && a.file_type.startsWith('video/'))
+    } else {
+      filtered = filtered.filter(a => a.file_type === `image/${selectedFilter.value}`)
+    }
   }
   if (selectedCategory.value !== 'all') {
     filtered = filtered.filter(a => a.category === selectedCategory.value)
@@ -131,15 +162,22 @@ async function fetchAssets() {
 // Upload file
 async function uploadFile(file) {
   // Validate file type
-  const allowed = ['image/jpeg', 'image/png', 'image/webp']
+  const allowedImages = ['image/jpeg', 'image/png', 'image/webp']
+  const allowedVideos = ['video/mp4', 'video/quicktime', 'video/webm']
+  const allowed = [...allowedImages, ...allowedVideos]
+
   if (!allowed.includes(file.type)) {
-    uploadError.value = `Dateityp ${file.type} nicht erlaubt. Erlaubt: JPG, PNG, WebP`
+    uploadError.value = `Dateityp ${file.type || 'unbekannt'} nicht erlaubt. Erlaubt: JPG, PNG, WebP, MP4, MOV, WebM`
     return
   }
 
-  // Validate file size (max 20MB)
-  if (file.size > 20 * 1024 * 1024) {
-    uploadError.value = 'Datei ist zu gross (max. 20 MB)'
+  const isVideo = allowedVideos.includes(file.type)
+
+  // Validate file size (max 20MB for images, 500MB for videos)
+  const maxSize = isVideo ? 500 * 1024 * 1024 : 20 * 1024 * 1024
+  const maxLabel = isVideo ? '500 MB' : '20 MB'
+  if (file.size > maxSize) {
+    uploadError.value = `Datei ist zu gross (max. ${maxLabel})`
     return
   }
 
@@ -266,6 +304,9 @@ function formatDate(dateStr) {
 // Get file type label
 function fileTypeLabel(type) {
   if (!type) return '\u2014'
+  if (type === 'video/mp4') return 'MP4'
+  if (type === 'video/quicktime') return 'MOV'
+  if (type === 'video/webm') return 'WebM'
   return type.replace('image/', '').toUpperCase()
 }
 
@@ -340,7 +381,7 @@ onMounted(fetchAssets)
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Asset-Bibliothek</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Bilder hochladen und verwalten
+          Bilder und Videos hochladen und verwalten
         </p>
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -409,7 +450,7 @@ onMounted(fetchAssets)
         <input
           ref="fileInput"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
           class="hidden"
           @change="onFileSelect"
         />
@@ -444,11 +485,11 @@ onMounted(fetchAssets)
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
             <span v-if="isDragOver" class="text-blue-600 dark:text-blue-400">Datei hier ablegen</span>
             <span v-else>
-              Bild hierher ziehen oder <span class="text-blue-600 dark:text-blue-400 underline">durchsuchen</span>
+              Bild oder Video hierher ziehen oder <span class="text-blue-600 dark:text-blue-400 underline">durchsuchen</span>
             </span>
           </p>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            JPG, PNG oder WebP &middot; max. 20 MB
+            JPG, PNG, WebP (max. 20 MB) &middot; MP4, MOV, WebM (max. 500 MB)
           </p>
         </div>
       </div>
@@ -492,7 +533,7 @@ onMounted(fetchAssets)
       <!-- Upload error -->
       <div v-if="uploadError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2" role="alert">
         <span class="text-red-500">&#9888;&#65039;</span>
-        <p class="text-sm text-red-700 dark:text-red-400">{{ uploadError }}</p>
+        <p class="text-sm text-red-700 dark:text-red-400" data-testid="upload-error">{{ uploadError }}</p>
         <button @click="uploadError = null" class="ml-auto text-red-500 hover:text-red-700">&#10005;</button>
       </div>
 
@@ -534,6 +575,7 @@ onMounted(fetchAssets)
           <option value="jpeg">JPG</option>
           <option value="png">PNG</option>
           <option value="webp">WebP</option>
+          <option value="video">Video</option>
         </select>
         <button
           v-if="hasActiveFilters"
@@ -557,7 +599,7 @@ onMounted(fetchAssets)
           <button @click="selectedCountry = 'all'" class="hover:text-green-900 dark:hover:text-green-100">&times;</button>
         </span>
         <span v-if="selectedFilter !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-          {{ selectedFilter.toUpperCase() }}
+          {{ selectedFilter === 'video' ? 'Video' : selectedFilter.toUpperCase() }}
           <button @click="selectedFilter = 'all'" class="hover:text-purple-900 dark:hover:text-purple-100">&times;</button>
         </span>
         <span v-if="searchQuery.trim()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
@@ -587,7 +629,7 @@ onMounted(fetchAssets)
           {{ assets.length === 0 ? 'Noch keine Assets' : 'Keine Treffer' }}
         </h3>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          {{ assets.length === 0 ? 'Lade dein erstes Bild hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
+          {{ assets.length === 0 ? 'Lade dein erstes Bild oder Video hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
         </p>
         <button
           v-if="hasActiveFilters"
@@ -607,15 +649,46 @@ onMounted(fetchAssets)
           class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
           :data-testid="`asset-${asset.id}`"
         >
-          <!-- Image thumbnail -->
-          <div class="aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
-            <img
-              :src="asset.file_path"
-              :alt="asset.original_filename || asset.filename"
-              class="w-full h-full object-cover"
-              loading="lazy"
-              @error="(e) => e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/%3E%3C/svg%3E'"
-            />
+          <!-- Image/Video thumbnail -->
+          <div class="aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden relative" @click.stop="isVideoAsset(asset) ? openVideoPreview(asset) : null" :class="{ 'cursor-pointer': isVideoAsset(asset) }">
+            <!-- Video thumbnail with play icon overlay -->
+            <template v-if="isVideoAsset(asset)">
+              <img
+                v-if="asset.thumbnail_path"
+                :src="asset.thumbnail_path"
+                :alt="asset.original_filename || asset.filename"
+                class="w-full h-full object-cover"
+                loading="lazy"
+                @error="(e) => e.target.style.display = 'none'"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-600">
+                <svg class="h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+              <!-- Play button overlay -->
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="bg-black/50 rounded-full p-2">
+                  <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+              <!-- Duration badge -->
+              <div v-if="asset.duration_seconds" class="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] font-medium px-1.5 py-0.5 rounded" data-testid="video-duration">
+                {{ formatDuration(asset.duration_seconds) }}
+              </div>
+            </template>
+            <!-- Image thumbnail -->
+            <template v-else>
+              <img
+                :src="asset.file_path"
+                :alt="asset.original_filename || asset.filename"
+                class="w-full h-full object-cover"
+                loading="lazy"
+                @error="(e) => e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/%3E%3C/svg%3E'"
+              />
+            </template>
           </div>
 
           <!-- Asset info -->
@@ -627,7 +700,7 @@ onMounted(fetchAssets)
               <span class="text-xs text-gray-500 dark:text-gray-400">
                 {{ formatSize(asset.file_size) }}
               </span>
-              <span class="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              <span class="text-xs font-medium px-1.5 py-0.5 rounded" :class="isVideoAsset(asset) ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
                 {{ fileTypeLabel(asset.file_type) }}
               </span>
             </div>
@@ -658,14 +731,16 @@ onMounted(fetchAssets)
             </div>
             <p v-if="asset.width && asset.height" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               {{ asset.width }}&times;{{ asset.height }}px
+              <span v-if="asset.duration_seconds"> &middot; {{ formatDuration(asset.duration_seconds) }}</span>
             </p>
           </div>
 
           <!-- Hover overlay with crop and delete buttons -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-start justify-end p-2 pointer-events-none">
             <div class="flex gap-1">
-              <!-- Crop button -->
+              <!-- Crop button (only for images) -->
               <button
+                v-if="!isVideoAsset(asset)"
                 @click.stop="openCropTool(asset)"
                 class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
                 title="Bild zuschneiden"
@@ -674,6 +749,19 @@ onMounted(fetchAssets)
               >
                 <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+              <!-- Play button (only for videos) -->
+              <button
+                v-if="isVideoAsset(asset)"
+                @click.stop="openVideoPreview(asset)"
+                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                title="Video abspielen"
+                aria-label="Video abspielen"
+                :data-testid="`play-btn-${asset.id}`"
+              >
+                <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
                 </svg>
               </button>
               <!-- Delete button -->
@@ -867,5 +955,43 @@ onMounted(fetchAssets)
       @close="showCropModal = false; cropAsset = null"
       @cropped="onCropped"
     />
+
+    <!-- Video Preview Modal -->
+    <teleport to="body">
+      <div v-if="videoPreviewAsset" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="closeVideoPreview" data-testid="video-preview-modal">
+        <div class="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden">
+          <!-- Modal header -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate" data-testid="video-preview-title">
+                {{ videoPreviewAsset.original_filename || videoPreviewAsset.filename }}
+              </h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ fileTypeLabel(videoPreviewAsset.file_type) }} &middot; {{ formatSize(videoPreviewAsset.file_size) }}
+                <span v-if="videoPreviewAsset.width && videoPreviewAsset.height"> &middot; {{ videoPreviewAsset.width }}&times;{{ videoPreviewAsset.height }}px</span>
+                <span v-if="videoPreviewAsset.duration_seconds"> &middot; {{ formatDuration(videoPreviewAsset.duration_seconds) }}</span>
+              </p>
+            </div>
+            <button @click="closeVideoPreview" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-testid="video-preview-close">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- Video player -->
+          <div class="bg-black">
+            <video
+              :src="videoPreviewAsset.file_path"
+              controls
+              autoplay
+              class="w-full max-h-[70vh]"
+              data-testid="video-player"
+            >
+              Dein Browser unterstuetzt dieses Videoformat nicht.
+            </video>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>

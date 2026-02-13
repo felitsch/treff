@@ -1,7 +1,7 @@
 """Asset model."""
 
 from datetime import datetime, timezone
-from sqlalchemy import Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Integer, String, Text, DateTime, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -15,19 +15,23 @@ class Asset(Base):
     filename: Mapped[str] = mapped_column(String, nullable=False)
     original_filename: Mapped[str | None] = mapped_column(String, nullable=True)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
-    file_type: Mapped[str] = mapped_column(String, nullable=False)  # image/jpeg, image/png, image/webp
+    file_type: Mapped[str] = mapped_column(String, nullable=False)  # image/jpeg, image/png, image/webp, video/mp4, video/quicktime, video/webm
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     width: Mapped[int | None] = mapped_column(Integer, nullable=True)
     height: Mapped[int | None] = mapped_column(Integer, nullable=True)
     source: Mapped[str] = mapped_column(String, default="upload")  # upload, ai_generated, stock_unsplash, stock_pexels, system
     ai_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
-    category: Mapped[str | None] = mapped_column(String, nullable=True)  # country, logo, background, photo, icon
+    category: Mapped[str | None] = mapped_column(String, nullable=True)  # country, logo, background, photo, icon, video
     country: Mapped[str | None] = mapped_column(String, nullable=True)
     tags: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+    # Video-specific fields
+    duration_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    thumbnail_path: Mapped[str | None] = mapped_column(String, nullable=True)  # path to auto-generated thumbnail from first frame
 
     # Relationships
     user = relationship("User", back_populates="assets")
