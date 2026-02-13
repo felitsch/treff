@@ -1,5 +1,101 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #191: Running Gags und wiederkehrende Formate
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was implemented:
+1. **RecurringFormat Model** (`backend/app/models/recurring_format.py`) - SQLAlchemy model with:
+   - name, description, frequency (daily/weekly/biweekly/monthly)
+   - preferred_day, preferred_time, tone, template_id
+   - hashtags (JSON array stored as TEXT), icon, category
+   - is_active, is_default, user_id, created_at, updated_at
+
+2. **5 Default Seeded Formats** (`backend/app/core/seed_recurring_formats.py`):
+   - Motivation Monday (Montag 07:30, motivierend, Tipps & Tricks)
+   - Wusstest-du-Mittwoch (Mittwoch 12:00, informativ, Laender-Spotlight)
+   - Throwback Thursday (Donnerstag 18:00, emotional, Erfahrungsberichte)
+   - TREFF Freitags-Fail (Freitag 17:00, witzig, FAQ / Fun Facts)
+   - Sonntags-Sehnsucht (Sonntag 19:00, emotional, Erfahrungsberichte)
+
+3. **CRUD API** (`backend/app/api/routes/recurring_formats.py`):
+   - GET /api/recurring-formats (list with frequency/is_active filters)
+   - GET /api/recurring-formats/{id}
+   - POST /api/recurring-formats (create custom format)
+   - PUT /api/recurring-formats/{id} (update)
+   - DELETE /api/recurring-formats/{id} (system defaults can't be deleted, only deactivated)
+
+4. **Calendar Integration** (`backend/app/api/routes/calendar.py`):
+   - GET /api/calendar/recurring-placeholders?month=&year=
+   - Generates placeholder dates based on frequency and preferred_day
+   - Supports weekly, biweekly, monthly frequencies
+   - Checks existing posts to mark has_existing_post and category_match
+
+5. **AI Text Generation** (`backend/app/api/routes/ai.py`):
+   - POST /api/ai/generate-recurring-format-text
+   - Format-specific system prompts for each of the 5 default formats
+   - Gemini API integration with JSON response parsing
+   - Rule-based fallback with format-specific caption templates
+   - Returns title, caption, hashtags, topic_used, format_name, format_icon, source
+
+6. **Weekly Planner DB Integration** (`backend/app/api/routes/ai.py`):
+   - Replaced hardcoded RECURRING_FORMATS constant with DB-backed formats
+   - Queries active formats for current user and system defaults
+   - Maps preferred_day to day index for slot assignment
+
+7. **RecurringFormatsView.vue** (`frontend/src/views/RecurringFormatsView.vue`):
+   - Cards grid with icon, name, frequency, day, time, tone, category, hashtags
+   - Create form with name, icon selector (12 emojis), description, frequency/day/time/tone/category
+   - Filter by frequency and active status
+   - Toggle active/inactive per format
+   - Delete for custom formats (with confirm dialog)
+   - AI text generation modal with topic input, country selector, result display
+   - Info section explaining how formats work
+   - Toast notifications for all actions
+
+8. **CalendarView Integration** (`frontend/src/views/CalendarView.vue`):
+   - Recurring format placeholders shown as indigo pills on correct weekdays
+   - "Formate" toggle button in toolbar with count badge
+   - Clickable placeholders link to /create-post
+
+### Verification steps completed:
+1. RecurringFormat model created with all required fields - PASS
+2. 5 default formats seeded correctly - PASS
+3. CRUD API works (create, read, update, delete) - PASS
+4. Calendar shows recurring placeholders on correct weekdays (24 for Feb 2026) - PASS
+5. AI text generation returns format-specific content - PASS (rule-based fallback)
+6. RecurringFormatsView.vue shows all formats with proper UI - PASS
+7. Create custom format works (toast + counter update) - PASS
+8. Deactivate/Activate toggle works - PASS
+9. Delete custom format works (toast + counter update) - PASS
+10. System defaults can't be deleted (no delete button shown) - PASS
+11. Server restart persistence verified (all formats survive restart) - PASS
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] Zero mock data patterns in all new files
+- [x] Server restart persistence verified
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+
+### Files created/modified:
+- backend/app/models/recurring_format.py (NEW) - RecurringFormat SQLAlchemy model (~33 lines)
+- backend/app/core/seed_recurring_formats.py (NEW) - 5 default format seeds (~116 lines)
+- backend/app/api/routes/recurring_formats.py (NEW) - Full CRUD API (~237 lines)
+- backend/app/api/routes/ai.py (modified) - DB-backed weekly planner + AI text generation endpoint
+- backend/app/api/routes/calendar.py (modified) - Recurring placeholders endpoint
+- frontend/src/views/RecurringFormatsView.vue (NEW) - Full management UI (~612 lines)
+- frontend/src/views/CalendarView.vue (modified) - Recurring format calendar integration
+- frontend/src/components/layout/SidebarNav.vue (modified) - Added "Formate" nav item
+- frontend/src/router/index.js (modified) - Added /recurring-formats route
+
+### Git commit: 4575e90
+
+### Current state:
+- Feature #191 marked as PASSING
+
+---
+
 ## Session - Feature #188: Cross-Post Verknuepfung zwischen Feed und Stories
 **Date:** 2026-02-13
 **Status:** PASSING
