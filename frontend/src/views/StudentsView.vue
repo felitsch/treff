@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStudentStore } from '@/stores/students'
 import { useToast } from '@/composables/useToast'
+import PersonalityEditor from '@/components/students/PersonalityEditor.vue'
 
+const router = useRouter()
 const store = useStudentStore()
 const toast = useToast()
 
@@ -60,6 +63,7 @@ function getEmptyForm() {
     bio: '',
     fun_facts: '',
     status: 'active',
+    personality_preset: null,
   }
 }
 
@@ -92,6 +96,7 @@ function openEditForm(student) {
     bio: student.bio || '',
     fun_facts: student.fun_facts || '',
     status: student.status,
+    personality_preset: student.personality_preset || null,
   }
   showForm.value = true
 }
@@ -117,6 +122,7 @@ async function submitForm() {
   if (!data.end_date) data.end_date = null
   if (!data.bio) data.bio = null
   if (!data.fun_facts) data.fun_facts = null
+  if (!data.personality_preset) data.personality_preset = null
 
   if (editingStudent.value) {
     const result = await store.updateStudent(editingStudent.value.id, data)
@@ -163,6 +169,33 @@ function getCountryLabel(value) {
 function getStatusLabel(value) {
   const s = statuses.find(s => s.value === value)
   return s ? s.label : value
+}
+
+const toneIcons = {
+  witzig: '😂',
+  emotional: '🥺',
+  motivierend: '💪',
+  jugendlich: '✨',
+  serioess: '📋',
+  storytelling: '📖',
+  'behind-the-scenes': '🎬',
+  provokant: '⚡',
+  wholesome: '🥰',
+  informativ: '📊',
+}
+
+function getPersonalityBadge(student) {
+  if (!student.personality_preset) return null
+  try {
+    const preset = typeof student.personality_preset === 'string'
+      ? JSON.parse(student.personality_preset)
+      : student.personality_preset
+    if (!preset || !preset.tone) return null
+    const icon = toneIcons[preset.tone] || '🎭'
+    return `${icon} ${preset.tone} (H${preset.humor_level || 3}/5)`
+  } catch {
+    return null
+  }
 }
 
 onMounted(() => {
@@ -243,23 +276,30 @@ onMounted(() => {
       <div
         v-for="student in filteredStudents"
         :key="student.id"
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow cursor-pointer"
+        @click="router.push(`/students/${student.id}`)"
       >
-        <!-- Header row -->
+        <!-- Header row with profile image -->
         <div class="flex items-start justify-between mb-3">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-treff-blue/10 flex items-center justify-center text-xl">
-              {{ countryFlags[student.country] || '🌍' }}
+            <div class="w-14 h-14 rounded-full bg-treff-blue/10 flex items-center justify-center text-xl overflow-hidden flex-shrink-0">
+              <img
+                v-if="student.profile_image_url"
+                :src="student.profile_image_url"
+                :alt="student.name"
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-2xl">{{ countryFlags[student.country] || '🌍' }}</span>
             </div>
             <div>
               <h3 class="font-semibold text-gray-900 dark:text-white">{{ student.name }}</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ getCountryLabel(student.country) }}
+                {{ countryFlags[student.country] }} {{ getCountryLabel(student.country) }}
                 <span v-if="student.city"> &middot; {{ student.city }}</span>
               </p>
             </div>
           </div>
-          <span :class="['text-xs font-medium px-2 py-1 rounded-full', statusColors[student.status]]">
+          <span :class="['text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap', statusColors[student.status]]">
             {{ getStatusLabel(student.status) }}
           </span>
         </div>
@@ -279,19 +319,31 @@ onMounted(() => {
           <p v-if="student.bio" class="line-clamp-2">
             {{ student.bio }}
           </p>
+          <p v-if="getPersonalityBadge(student)">
+            <span class="text-gray-400">Persoenlichkeit:</span>
+            <span class="inline-block ml-1 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+              {{ getPersonalityBadge(student) }}
+            </span>
+          </p>
         </div>
 
         <!-- Actions -->
         <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
           <button
             class="flex-1 text-sm text-treff-blue hover:bg-treff-blue/10 rounded-lg py-1.5 transition-colors"
-            @click="openEditForm(student)"
+            @click.stop="router.push(`/students/${student.id}`)"
+          >
+            Details
+          </button>
+          <button
+            class="flex-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg py-1.5 transition-colors"
+            @click.stop="openEditForm(student)"
           >
             Bearbeiten
           </button>
           <button
             class="flex-1 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg py-1.5 transition-colors"
-            @click="confirmDelete(student)"
+            @click.stop="confirmDelete(student)"
           >
             Loeschen
           </button>
@@ -423,6 +475,11 @@ onMounted(() => {
               placeholder='z.B. ["Spielt Eishockey", "Liebt Poutine"]'
               class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
             ></textarea>
+          </div>
+
+          <!-- Personality Preset -->
+          <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+            <PersonalityEditor v-model="formData.personality_preset" />
           </div>
 
           <!-- Buttons -->

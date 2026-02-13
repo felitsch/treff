@@ -74,6 +74,11 @@ const routes = [
         component: () => import('@/views/StudentsView.vue'),
       },
       {
+        path: 'students/:id',
+        name: 'StudentDetail',
+        component: () => import('@/views/StudentDetailView.vue'),
+      },
+      {
         path: 'thumbnail-generator',
         name: 'ThumbnailGenerator',
         component: () => import('@/views/ThumbnailGeneratorView.vue'),
@@ -92,6 +97,11 @@ const routes = [
         path: 'video-composer',
         name: 'VideoComposer',
         component: () => import('@/views/VideoComposerView.vue'),
+      },
+      {
+        path: 'video-templates',
+        name: 'VideoTemplates',
+        component: () => import('@/views/VideoTemplatesView.vue'),
       },
     ],
   },

@@ -1,17 +1,20 @@
 """Student CRUD routes."""
 
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, or_
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.student import Student
 from app.models.asset import Asset
+from app.models.story_arc import StoryArc
+from app.models.post import Post
+from app.models.story_episode import StoryEpisode
 
 router = APIRouter()
 
@@ -30,6 +33,7 @@ class StudentCreate(BaseModel):
     bio: Optional[str] = None
     fun_facts: Optional[str] = None  # JSON array as string
     status: str = Field(default="active", pattern="^(active|completed|upcoming)$")
+    personality_preset: Optional[str] = None  # JSON object as string
 
 
 class StudentUpdate(BaseModel):
@@ -44,6 +48,7 @@ class StudentUpdate(BaseModel):
     bio: Optional[str] = None
     fun_facts: Optional[str] = None
     status: Optional[str] = Field(None, pattern="^(active|completed|upcoming)$")
+    personality_preset: Optional[str] = None  # JSON object as string
 
 
 # --- Helper ---
@@ -65,6 +70,7 @@ def student_to_dict(student: Student, profile_image_url: Optional[str] = None) -
         "bio": student.bio,
         "fun_facts": student.fun_facts,
         "status": student.status,
+        "personality_preset": student.personality_preset,
         "created_at": student.created_at.isoformat() if student.created_at else None,
         "updated_at": student.updated_at.isoformat() if student.updated_at else None,
     }
@@ -176,6 +182,7 @@ async def create_student(
         bio=data.bio,
         fun_facts=data.fun_facts,
         status=data.status,
+        personality_preset=data.personality_preset,
     )
     db.add(student)
     await db.flush()
@@ -222,6 +229,118 @@ async def update_student(
 
     img_url = await _get_profile_image_url(db, student.profile_image_id)
     return student_to_dict(student, img_url)
+
+
+@router.get("/{student_id}/dashboard")
+async def get_student_dashboard(
+    student_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get student detail dashboard with stats, story arcs, and related posts."""
+    # Fetch student
+    result = await db.execute(
+        select(Student).where(
+            and_(Student.id == student_id, Student.user_id == user_id)
+        )
+    )
+    student = result.scalar_one_or_none()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    img_url = await _get_profile_image_url(db, student.profile_image_id)
+    student_data = student_to_dict(student, img_url)
+
+    # Fetch story arcs for this student
+    arcs_result = await db.execute(
+        select(StoryArc).where(
+            and_(StoryArc.student_id == student_id, StoryArc.user_id == user_id)
+        ).order_by(StoryArc.created_at.desc())
+    )
+    arcs = arcs_result.scalars().all()
+    arcs_data = []
+    for arc in arcs:
+        arcs_data.append({
+            "id": arc.id,
+            "title": arc.title,
+            "subtitle": arc.subtitle,
+            "description": arc.description,
+            "country": arc.country,
+            "status": arc.status,
+            "planned_episodes": arc.planned_episodes,
+            "current_episode": arc.current_episode,
+            "tone": arc.tone,
+            "created_at": arc.created_at.isoformat() if arc.created_at else None,
+        })
+
+    # Fetch all posts linked to this student (via student_id FK OR via story arcs)
+    arc_ids = [a.id for a in arcs]
+    posts_data = []
+    total_posts = 0
+    posted_count = 0
+    scheduled_count = 0
+
+    # Build OR condition: posts with student_id=this student OR posts in their story arcs
+    post_conditions = [Post.user_id == user_id]
+    or_clauses = [Post.student_id == student_id]
+    if arc_ids:
+        or_clauses.append(Post.story_arc_id.in_(arc_ids))
+    post_conditions.append(or_(*or_clauses))
+
+    posts_result = await db.execute(
+        select(Post).where(and_(*post_conditions)).order_by(Post.created_at.desc())
+    )
+    posts = posts_result.scalars().all()
+    seen_ids = set()
+    for p in posts:
+        if p.id in seen_ids:
+            continue
+        seen_ids.add(p.id)
+        total_posts += 1
+        if p.status == "posted":
+            posted_count += 1
+        elif p.status == "scheduled":
+            scheduled_count += 1
+        posts_data.append({
+            "id": p.id,
+            "title": p.title,
+            "category": p.category,
+            "platform": p.platform,
+            "status": p.status,
+            "country": p.country,
+            "story_arc_id": p.story_arc_id,
+            "episode_number": p.episode_number,
+            "student_id": p.student_id,
+            "scheduled_date": p.scheduled_date.isoformat() if p.scheduled_date else None,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        })
+
+    # Count episodes
+    episode_count = 0
+    if arc_ids:
+        ep_result = await db.execute(
+            select(func.count(StoryEpisode.id)).where(
+                StoryEpisode.arc_id.in_(arc_ids)
+            )
+        )
+        episode_count = ep_result.scalar() or 0
+
+    # Build stats
+    stats = {
+        "total_posts": total_posts,
+        "posted_count": posted_count,
+        "scheduled_count": scheduled_count,
+        "draft_count": total_posts - posted_count - scheduled_count,
+        "story_arcs_count": len(arcs),
+        "episodes_count": episode_count,
+    }
+
+    return {
+        "student": student_data,
+        "story_arcs": arcs_data,
+        "posts": posts_data,
+        "stats": stats,
+    }
 
 
 @router.delete("/{student_id}")
