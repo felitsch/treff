@@ -48,6 +48,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
 
   // Step 8: AI Image Generation
   const aiImagePrompt = ref('')
+  const aiImageAspectRatio = ref('')  // '' = auto from platform, or manual override like '1:1', '9:16', '16:9'
   const generatingImage = ref(false)
   const generatedImageResult = ref(null)
   const aiImageError = ref('')
@@ -98,6 +99,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     regeneratingField.value = ''
     uploadingImage.value = false
     aiImagePrompt.value = ''
+    aiImageAspectRatio.value = ''
     generatingImage.value = false
     generatedImageResult.value = null
     aiImageError.value = ''
@@ -153,6 +155,7 @@ export const useCreatePostStore = defineStore('createPost', () => {
     uploadingImage,
     assets,
     aiImagePrompt,
+    aiImageAspectRatio,
     generatingImage,
     generatedImageResult,
     aiImageError,

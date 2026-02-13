@@ -44,6 +44,7 @@ const {
   uploadingImage,
   assets,
   aiImagePrompt,
+  aiImageAspectRatio,
   generatingImage,
   generatedImageResult,
   aiImageError,
@@ -155,6 +156,35 @@ const effectivePreviewPlatformObj = computed(() => platforms.find(p => p.id === 
 watch(selectedPlatform, (val) => {
   if (!previewPlatform.value) previewPlatform.value = val
 })
+
+// ── Platform-specific aspect ratio for image generation ──────────────
+const platformAspectRatioMap = {
+  instagram_feed: '1:1',
+  instagram_story: '9:16',
+  tiktok: '9:16',
+}
+
+const aspectRatioOptions = [
+  { value: '1:1', label: '1:1 (Quadrat)' },
+  { value: '9:16', label: '9:16 (Hochformat)' },
+  { value: '16:9', label: '16:9 (Querformat)' },
+  { value: '4:5', label: '4:5 (Instagram)' },
+]
+
+const platformDefaultAspectRatio = computed(() =>
+  platformAspectRatioMap[selectedPlatform.value] || '1:1'
+)
+
+const platformAspectRatioLabel = computed(() => {
+  const ratio = platformAspectRatioMap[selectedPlatform.value]
+  if (!ratio) return '1:1'
+  const option = aspectRatioOptions.find(o => o.value === ratio)
+  return option ? option.label : ratio
+})
+
+const effectiveAspectRatio = computed(() =>
+  aiImageAspectRatio.value || platformDefaultAspectRatio.value
+)
 
 // ── Methods ──────────────────────────────────────────────────────────
 
@@ -517,13 +547,18 @@ async function generateAiImage() {
   generatedImageResult.value = null
 
   try {
-    const response = await api.post('/api/ai/generate-image', {
+    // Build request with platform-specific aspect ratio
+    const imagePayload = {
       prompt: aiImagePrompt.value.trim(),
-      width: 1024,
-      height: 1024,
+      platform: selectedPlatform.value || 'instagram_feed',
       category: 'ai_generated',
       country: country.value || null,
-    })
+    }
+    // If user manually selected an aspect ratio override, include it (takes precedence over platform)
+    if (aiImageAspectRatio.value) {
+      imagePayload.aspect_ratio = aiImageAspectRatio.value
+    }
+    const response = await api.post('/api/ai/generate-image', imagePayload)
 
     generatedImageResult.value = response.data
 
@@ -2145,6 +2180,35 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
             </div>
 
+            <!-- Aspect Ratio Selection -->
+            <div class="mb-4">
+              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-2">Seitenverhaeltnis</label>
+              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <span>Plattform: {{ selectedPlatformObj?.label || 'Nicht gewaehlt' }}</span>
+                <span class="text-purple-500 font-medium">({{ platformAspectRatioLabel }})</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="ar in aspectRatioOptions"
+                  :key="ar.value"
+                  @click="aiImageAspectRatio = aiImageAspectRatio === ar.value ? '' : ar.value"
+                  :class="[
+                    'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+                    (aiImageAspectRatio === ar.value || (!aiImageAspectRatio && ar.value === platformDefaultAspectRatio))
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-purple-400'
+                  ]"
+                  :disabled="generatingImage"
+                >
+                  {{ ar.label }}
+                  <span v-if="ar.value === platformDefaultAspectRatio && !aiImageAspectRatio" class="ml-1 opacity-75">(Auto)</span>
+                </button>
+              </div>
+              <p v-if="aiImageAspectRatio && aiImageAspectRatio !== platformDefaultAspectRatio" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                Manuell ueberschrieben (Standard fuer {{ selectedPlatformObj?.label }}: {{ platformDefaultAspectRatio }})
+              </p>
+            </div>
+
             <!-- Generate Button -->
             <button
               @click="generateAiImage"
@@ -2155,7 +2219,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                 Bild wird generiert...
               </span>
-              <span v-else>🎨 Bild generieren</span>
+              <span v-else>🎨 Bild generieren ({{ effectiveAspectRatio }})</span>
             </button>
 
             <!-- AI Error -->
@@ -2169,9 +2233,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <span class="text-green-600">✓</span>
                 <span class="text-sm font-medium text-green-700 dark:text-green-300">{{ generatedImageResult.message }}</span>
               </div>
-              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                 <span>Quelle: {{ generatedImageResult.source === 'gemini' ? 'Gemini AI' : 'Lokale Generierung' }}</span>
                 <span v-if="generatedImageResult.asset">| {{ generatedImageResult.asset.width }}x{{ generatedImageResult.asset.height }}px</span>
+                <span v-if="generatedImageResult.aspect_ratio">| Verhaeltnis: {{ generatedImageResult.aspect_ratio }}</span>
+                <span v-if="generatedImageResult.platform">| Plattform: {{ generatedImageResult.platform }}</span>
               </div>
             </div>
           </div>
