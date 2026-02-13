@@ -30,6 +30,22 @@ const postsPerWeek = ref('3')
 const postsPerMonth = ref('12')
 const preferredPostingTime = ref('10:00')
 const preferredPlatform = ref('instagram_feed')
+const minEpisodeGapDays = ref('1')
+
+// ── Target Content-Mix state ──
+const targetMixCategories = ref({})
+const targetMixPlatforms = ref({
+  instagram_feed: 40,
+  instagram_story: 30,
+  tiktok: 30,
+})
+const targetMixCountries = ref({
+  usa: 30,
+  canada: 20,
+  australia: 20,
+  newzealand: 15,
+  ireland: 15,
+})
 
 // ── Hashtag Manager state ──
 const hashtagSets = ref([])
@@ -188,6 +204,18 @@ async function fetchSettings() {
     if (settings.posts_per_month) postsPerMonth.value = settings.posts_per_month
     if (settings.preferred_posting_time) preferredPostingTime.value = settings.preferred_posting_time
     if (settings.preferred_platform) preferredPlatform.value = settings.preferred_platform
+    if (settings.min_episode_gap_days !== undefined) minEpisodeGapDays.value = settings.min_episode_gap_days
+
+    // Load target-mix settings (JSON stored as strings)
+    if (settings.target_mix_platforms) {
+      try { targetMixPlatforms.value = JSON.parse(settings.target_mix_platforms) } catch (e) { /* ignore */ }
+    }
+    if (settings.target_mix_countries) {
+      try { targetMixCountries.value = JSON.parse(settings.target_mix_countries) } catch (e) { /* ignore */ }
+    }
+    if (settings.target_mix_categories) {
+      try { targetMixCategories.value = JSON.parse(settings.target_mix_categories) } catch (e) { /* ignore */ }
+    }
 
     // Fetch hashtag sets
     await fetchHashtagSets()
@@ -225,6 +253,10 @@ async function saveSettings() {
       posts_per_month: postsPerMonth.value,
       preferred_posting_time: preferredPostingTime.value,
       preferred_platform: preferredPlatform.value,
+      min_episode_gap_days: minEpisodeGapDays.value,
+      target_mix_platforms: JSON.stringify(targetMixPlatforms.value),
+      target_mix_countries: JSON.stringify(targetMixCountries.value),
+      target_mix_categories: JSON.stringify(targetMixCategories.value),
     })
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false }, 3000)
@@ -559,6 +591,78 @@ onMounted(() => {
               <option value="instagram_story">Instagram Story</option>
               <option value="tiktok">TikTok</option>
             </select>
+          </div>
+
+          <!-- Min episode gap (Series/Story-Arc) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mindestabstand zwischen Episoden</label>
+            <select
+              v-model="minEpisodeGapDays"
+              aria-label="Mindestabstand zwischen Episoden"
+              class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
+              data-testid="min-episode-gap"
+            >
+              <option value="0">Kein Mindestabstand</option>
+              <option value="1">1 Tag</option>
+              <option value="2">2 Tage</option>
+              <option value="3">3 Tage</option>
+              <option value="5">5 Tage</option>
+              <option value="7">7 Tage (1 Woche)</option>
+            </select>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Warnhinweis bei zu kleinem Abstand zwischen Story-Arc-Episoden im Kalender.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================== -->
+      <!-- SECTION 4b: Target Content-Mix -->
+      <!-- ======================== -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="target-mix-section">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>📊</span> Ziel Content-Mix
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Definiere die ideale Verteilung deiner Posts (in Prozent)</p>
+        </div>
+        <div class="p-5 space-y-5">
+          <!-- Platform mix -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Plattform-Verteilung</h3>
+            <div class="space-y-3">
+              <div v-for="(label, key) in { instagram_feed: 'Instagram Feed', instagram_story: 'Instagram Story', tiktok: 'TikTok' }" :key="'tmix-plat-' + key" class="flex items-center gap-3">
+                <span class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">{{ label }}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  v-model.number="targetMixPlatforms[key]"
+                  class="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  :aria-label="'Ziel ' + label + ' Anteil'"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-10 text-right">{{ targetMixPlatforms[key] || 0 }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Country mix -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laender-Verteilung</h3>
+            <div class="space-y-3">
+              <div v-for="(label, key) in { usa: 'USA', canada: 'Kanada', australia: 'Australien', newzealand: 'Neuseeland', ireland: 'Irland' }" :key="'tmix-cntry-' + key" class="flex items-center gap-3">
+                <span class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">{{ label }}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  v-model.number="targetMixCountries[key]"
+                  class="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  :aria-label="'Ziel ' + label + ' Anteil'"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-10 text-right">{{ targetMixCountries[key] || 0 }}%</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
