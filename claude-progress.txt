@@ -1,5 +1,68 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #169: Implement AI content suggestion endpoint with Gemini 2.5 Flash
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Replaced placeholder `/api/ai/suggest-content` endpoint with full Gemini-powered implementation
+- Backend: New `suggest_content()` endpoint in ai.py with:
+  - Context-aware prompt building: current date, season, TREFF Fristen-Kalender, recent posts
+  - Gemini 2.5 Flash integration for intelligent content suggestions
+  - Rule-based fallback when no API key configured
+  - Saves 3-5 ContentSuggestion records to SQLite database
+  - Each suggestion has: suggestion_type, title, description, suggested_category, suggested_country, suggested_date, reason
+- Backend: TREFF_SEASONAL_CALENDAR constant with all annual deadlines (Bewerbungsfristen, Abflugzeiten, etc.)
+- Backend: `_get_upcoming_deadlines()` helper for next-N-days deadline lookups
+- Backend: `_generate_suggestions_rule_based()` with seasonal, country rotation, category balance logic
+- Backend: `_generate_suggestions_with_gemini()` with structured JSON output and validation
+- Backend: Also implemented `suggest-weekly-plan` endpoint (Gemini + rule-based fallback)
+- Frontend: Added "Generieren" button to Dashboard Content-Vorschlaege section
+- Frontend: Added `generateSuggestions()` function calling POST /api/ai/suggest-content
+- Frontend: Updated empty state with "Vorschlaege generieren" call-to-action button
+
+### Verification steps completed:
+1. POST /api/ai/suggest-content endpoint implemented - PASS
+   - Endpoint accepts empty request body, returns 3-5 suggestions
+   - Both Gemini and rule-based paths tested
+2. Prompt includes current date, season, TREFF Fristen-Kalender, recent posts - PASS
+   - System prompt contains all TREFF brand guidelines
+   - Content prompt includes today's date, season, upcoming deadlines, recent post categories/countries
+3. Gemini 2.5 Flash generates 3-5 suggestions - PASS
+   - First call: 5 suggestions (source: gemini)
+   - Second call: 5 more suggestions (source: gemini)
+4. Response format correct - PASS
+   - Each suggestion has: suggestion_type, title, description, suggested_category, suggested_country, suggested_date, reason
+   - Types include: seasonal, country_rotation, category_balance, gap_fill
+5. Saisonale Vorschlaege verified - PASS
+   - "Countdown USA Classic: Nur noch 46 Tage!" (references Bewerbungsfrist 31.03.2026)
+   - "JuBi Messe Fruehling: Wir sind dabei!" (references JuBi Messe 01.03.2026)
+   - "USA Classic: Deine Chance laeuft ab!" (references same deadline)
+6. Vorschlaege appear on Dashboard - PASS
+   - 5 suggestions shown after first generation
+   - 10 suggestions after second generation
+   - Data persists after page refresh
+   - Accept/Dismiss buttons functional
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] Data persists in SQLite (verified with sqlite3 query - 10 suggestions in content_suggestions table)
+- [x] Data survives page refresh (dashboard shows suggestions from database)
+- [x] Authentication required (JWT protected endpoint)
+- [x] Screenshots captured:
+  - feature169-step1-dashboard-suggestions.png (dashboard with stats and calendar)
+  - feature169-step2-suggestions-visible.png (suggestions section with cards)
+  - feature169-step3-suggestions-after-refresh.png (suggestions persist after page refresh)
+
+### Files modified:
+- backend/app/api/routes/ai.py - Replaced placeholder with full implementation + weekly plan endpoint
+- frontend/src/views/DashboardView.vue - Added generate button, generateSuggestions() function, updated empty state
+
+### Current state:
+- Feature #169 marked as PASSING
+- 166/170 features passing (97.6%)
+
 ## Session - Feature #168: AI-powered single field regeneration with Gemini 2.5 Flash
 **Date:** 2026-02-13
 **Status:** PASSING
