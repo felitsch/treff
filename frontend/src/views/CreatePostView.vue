@@ -15,6 +15,7 @@ import InteractiveElementPreview from '@/components/interactive/InteractiveEleme
 import InteractiveElementEditor from '@/components/interactive/InteractiveElementEditor.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import { useStudentStore } from '@/stores/students'
+import { useStoryArcStore } from '@/stores/storyArc'
 
 const router = useRouter()
 const route = useRoute()
@@ -66,9 +67,17 @@ const {
   selectedHumorFormat,
   loadingHumorFormats,
   interactiveElements,
+  selectedArcId,
+  selectedEpisodeNumber,
+  episodePreviouslyText,
+  episodeCliffhangerText,
+  episodeNextHint,
 } = storeToRefs(store)
 
 const totalSteps = 9
+
+// ── Multi-Platform Auto-Adapt state ─────────────────────────────────────
+const adaptContent = ref(true) // Auto-adapt content for each platform
 
 // ── Hook / Attention-Grabber state ──────────────────────────────────────
 const selectedHook = ref(null)
@@ -181,6 +190,115 @@ const toneOptions = [
 ]
 
 const selectedToneObj = computed(() => toneOptions.find(t => t.id === tone.value))
+
+// Story-Arc / Episode integration
+const storyArcStore = useStoryArcStore()
+const arcEpisodes = ref([])
+const loadingArcEpisodes = ref(false)
+const suggestingEpisodeField = ref('')
+
+async function loadStoryArcs() {
+  try {
+    await storyArcStore.fetchStoryArcs()
+  } catch { /* ignore */ }
+}
+
+async function loadArcEpisodes(arcId) {
+  if (!arcId) { arcEpisodes.value = []; return }
+  loadingArcEpisodes.value = true
+  try {
+    const response = await api.get(`/api/story-arcs/${arcId}/episodes`)
+    arcEpisodes.value = response.data || []
+    // Auto-set episode number to next available
+    const maxEp = arcEpisodes.value.reduce((max, ep) => Math.max(max, ep.episode_number || 0), 0)
+    selectedEpisodeNumber.value = maxEp + 1
+  } catch {
+    arcEpisodes.value = []
+  } finally {
+    loadingArcEpisodes.value = false
+  }
+}
+
+function selectArc(arcId) {
+  if (selectedArcId.value === arcId) {
+    selectedArcId.value = null
+    arcEpisodes.value = []
+    episodePreviouslyText.value = ''
+    episodeCliffhangerText.value = ''
+    episodeNextHint.value = ''
+    selectedEpisodeNumber.value = 1
+    return
+  }
+  selectedArcId.value = arcId
+  loadArcEpisodes(arcId)
+  // Set country from arc if not already set
+  const arc = storyArcStore.storyArcs.find(a => a.id === arcId)
+  if (arc) {
+    if (arc.country && !country.value) country.value = arc.country
+    if (arc.tone) tone.value = arc.tone
+  }
+}
+
+async function suggestEpisodeText(field) {
+  if (suggestingEpisodeField.value) return
+  suggestingEpisodeField.value = field
+  try {
+    const response = await api.post('/api/ai/suggest-episode-text', {
+      arc_id: selectedArcId.value,
+      episode_number: selectedEpisodeNumber.value,
+      field,
+      topic: topic.value || '',
+      tone: tone.value || 'jugendlich',
+    })
+    if (response.data?.suggestion) {
+      if (field === 'previously_text') episodePreviouslyText.value = response.data.suggestion
+      else if (field === 'cliffhanger_text') episodeCliffhangerText.value = response.data.suggestion
+      else if (field === 'next_episode_hint') episodeNextHint.value = response.data.suggestion
+      toast.success('Vorschlag generiert!', 2000)
+    }
+  } catch (err) {
+    toast.error('Vorschlag fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 4000)
+  } finally {
+    suggestingEpisodeField.value = ''
+  }
+}
+
+// Episode save helper: create or update episode when saving a post linked to an arc
+const savedEpisodeId = ref(null)
+async function _saveOrUpdateEpisode(postId) {
+  if (!selectedArcId.value || !postId) return
+  try {
+    const episodeData = {
+      episode_title: topic.value || slides.value[0]?.headline || `Episode ${selectedEpisodeNumber.value}`,
+      post_id: postId,
+      episode_number: selectedEpisodeNumber.value,
+      previously_text: episodePreviouslyText.value || null,
+      cliffhanger_text: episodeCliffhangerText.value || null,
+      next_episode_hint: episodeNextHint.value || null,
+      status: 'draft',
+    }
+    if (savedEpisodeId.value) {
+      // Update existing episode
+      await api.put(`/api/story-arcs/${selectedArcId.value}/episodes/${savedEpisodeId.value}`, episodeData)
+    } else {
+      // Check if an episode for this post already exists
+      const existing = arcEpisodes.value.find(ep => ep.post_id === postId)
+      if (existing) {
+        savedEpisodeId.value = existing.id
+        await api.put(`/api/story-arcs/${selectedArcId.value}/episodes/${existing.id}`, episodeData)
+      } else {
+        // Create new episode
+        const response = await api.post(`/api/story-arcs/${selectedArcId.value}/episodes`, episodeData)
+        savedEpisodeId.value = response.data.id
+        // Refresh episodes list
+        await loadArcEpisodes(selectedArcId.value)
+      }
+    }
+  } catch (err) {
+    console.error('Episode save failed:', err)
+    toast.error('Episode-Daten konnten nicht gespeichert werden: ' + (err.response?.data?.detail || err.message), 4000)
+  }
+}
 
 // Student/Personality integration
 const studentStore = useStudentStore()
@@ -876,10 +994,17 @@ async function saveAndExport() {
       hashtags_instagram: hashtagsInstagram.value,
       hashtags_tiktok: hashtagsTiktok.value,
       cta_text: ctaText.value,
+      story_arc_id: selectedArcId.value || null,
+      episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
     }
 
     const response = await api.post('/api/posts', postData)
     savedPost.value = response.data
+
+    // Save/update episode if arc is selected
+    if (selectedArcId.value) {
+      await _saveOrUpdateEpisode(savedPost.value.id)
+    }
 
     // Save interactive elements if any exist
     if (interactiveElements.value.length > 0) {
@@ -971,16 +1096,40 @@ async function saveDraft() {
       hashtags_instagram: hashtagsInstagram.value,
       hashtags_tiktok: hashtagsTiktok.value,
       cta_text: ctaText.value,
+      story_arc_id: selectedArcId.value || null,
+      episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
     }
 
     if (savedPost.value?.id) {
       // Update existing saved post
       await api.put(`/api/posts/${savedPost.value.id}`, postData)
+      // Update/create episode if arc is selected
+      if (selectedArcId.value) {
+        await _saveOrUpdateEpisode(savedPost.value.id)
+      }
       toast.success('Entwurf gespeichert!', 3000)
+    } else if (selectedPlatforms.value.length > 1) {
+      // Create linked sibling posts for multiple platforms
+      const response = await api.post('/api/posts/multi-platform', {
+        post_data: {
+          ...postData,
+          platform: undefined, // removed, set per-platform by backend
+        },
+        platforms: selectedPlatforms.value,
+        adapt_content: adaptContent.value,
+        source_platform: selectedPlatform.value,
+      })
+      // Save the first post as the "main" savedPost for further edits
+      savedPost.value = response.data.posts[0]
+      if (selectedArcId.value) await _saveOrUpdateEpisode(savedPost.value.id)
+      const count = response.data.count
+      const adaptedNote = response.data.adapted ? ' (KI-adaptiert)' : ''
+      toast.success(`Entwurf fuer ${count} Plattformen gespeichert!${adaptedNote}`, 4000)
     } else {
-      // Create new draft
+      // Create new draft (single platform)
       const response = await api.post('/api/posts', postData)
       savedPost.value = response.data
+      if (selectedArcId.value) await _saveOrUpdateEpisode(savedPost.value.id)
       toast.success('Entwurf gespeichert!', 3000)
     }
   } catch (e) {
@@ -1078,6 +1227,41 @@ function renderSlideToCanvas(slideIndex) {
     wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
   }
 
+  // Episode: Previously text on first slide
+  if (selectedArcId.value && episodePreviouslyText.value && slideIndex === 0) {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    roundRect(ctx, 60, 600, dims.w - 120, 60, 8)
+    ctx.fill()
+    ctx.fillStyle = '#D1D5DB'
+    ctx.font = 'italic 18px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodePreviouslyText.value, dims.w / 2, 632, dims.w - 180, 22)
+  }
+
+  // Episode: Cliffhanger on last slide
+  if (selectedArcId.value && episodeCliffhangerText.value && slideIndex === slides.value.length - 1) {
+    const chY = dims.h - 300
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    roundRect(ctx, 60, chY, dims.w - 120, 52, 8)
+    ctx.fill()
+    ctx.fillStyle = '#FDD000'
+    ctx.font = 'bold italic 18px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodeCliffhangerText.value, dims.w / 2, chY + 30, dims.w - 180, 22)
+  }
+
+  // Episode: Next episode hint on last slide
+  if (selectedArcId.value && episodeNextHint.value && slideIndex === slides.value.length - 1) {
+    const nhY = dims.h - 240
+    ctx.fillStyle = 'rgba(59,122,177,0.2)'
+    roundRect(ctx, 60, nhY, dims.w - 120, 46, 8)
+    ctx.fill()
+    ctx.fillStyle = '#93C5FD'
+    ctx.font = '16px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodeNextHint.value, dims.w / 2, nhY + 28, dims.w - 180, 20)
+  }
+
   // CTA
   if (slide.cta_text) {
     const ctaY = dims.h - 180
@@ -1152,6 +1336,41 @@ function renderSlideToCanvasForPlatform(slideIndex, platform) {
     wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
   }
 
+  // Episode: Previously text on first slide
+  if (selectedArcId.value && episodePreviouslyText.value && slideIndex === 0) {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    roundRect(ctx, 60, 600, dims.w - 120, 60, 8)
+    ctx.fill()
+    ctx.fillStyle = '#D1D5DB'
+    ctx.font = 'italic 18px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodePreviouslyText.value, dims.w / 2, 632, dims.w - 180, 22)
+  }
+
+  // Episode: Cliffhanger on last slide
+  if (selectedArcId.value && episodeCliffhangerText.value && slideIndex === slides.value.length - 1) {
+    const chY = dims.h - 300
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    roundRect(ctx, 60, chY, dims.w - 120, 52, 8)
+    ctx.fill()
+    ctx.fillStyle = '#FDD000'
+    ctx.font = 'bold italic 18px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodeCliffhangerText.value, dims.w / 2, chY + 30, dims.w - 180, 22)
+  }
+
+  // Episode: Next episode hint on last slide
+  if (selectedArcId.value && episodeNextHint.value && slideIndex === slides.value.length - 1) {
+    const nhY = dims.h - 240
+    ctx.fillStyle = 'rgba(59,122,177,0.2)'
+    roundRect(ctx, 60, nhY, dims.w - 120, 46, 8)
+    ctx.fill()
+    ctx.fillStyle = '#93C5FD'
+    ctx.font = '16px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    wrapText(ctx, episodeNextHint.value, dims.w / 2, nhY + 28, dims.w - 180, 20)
+  }
+
   // CTA
   if (slide.cta_text) {
     const ctaY = dims.h - 180
@@ -1209,12 +1428,11 @@ async function exportAllPlatforms() {
   lastSaveFunction.value = null
 
   try {
-    // Step 1: Save the post to database
+    // Step 1: Save linked posts for all selected platforms
     const cleanSlides = slides.value.map(({ dragId, ...rest }) => rest)
-    const postData = {
+    const basePostData = {
       category: selectedCategory.value,
       country: country.value || null,
-      platform: selectedPlatforms.value.join(','),
       template_id: selectedTemplate.value?.id || null,
       title: cleanSlides[0]?.headline || 'Neuer Post',
       status: 'draft',
@@ -1225,16 +1443,31 @@ async function exportAllPlatforms() {
       hashtags_instagram: hashtagsInstagram.value,
       hashtags_tiktok: hashtagsTiktok.value,
       cta_text: ctaText.value,
+      story_arc_id: selectedArcId.value || null,
+      episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
     }
 
-    const response = await api.post('/api/posts', postData)
-    savedPost.value = response.data
+    // Use multi-platform endpoint to create linked sibling posts
+    const mpResponse = await api.post('/api/posts/multi-platform', {
+      post_data: basePostData,
+      platforms: selectedPlatforms.value,
+      adapt_content: adaptContent.value,
+      source_platform: selectedPlatform.value,
+    })
+    savedPost.value = mpResponse.data.posts[0]
+    const createdPosts = mpResponse.data.posts
 
-    // Step 2: Record export for each platform
+    // Save/update episode if arc is selected
+    if (selectedArcId.value) {
+      await _saveOrUpdateEpisode(savedPost.value.id)
+    }
+
+    // Step 2: Record export for each platform (use first matching post)
     for (const platform of selectedPlatforms.value) {
+      const matchingPost = createdPosts.find(p => p.platform === platform) || savedPost.value
       const exportEndpoint = slides.value.length > 1 ? '/api/export/render-carousel' : '/api/export/render'
       await api.post(exportEndpoint, {
-        post_id: response.data.id,
+        post_id: matchingPost.id,
         platform: platform,
         resolution: exportQuality.value,
         slide_count: slides.value.length,
@@ -1267,8 +1500,8 @@ async function exportAllPlatforms() {
     exportComplete.value = true
     networkError.value = false
     lastSaveFunction.value = null
-    successMsg.value = `Post fuer ${selectedPlatforms.value.length} Plattformen gespeichert und exportiert!`
-    toast.success(`Post erfolgreich fuer ${selectedPlatforms.value.length} Plattformen erstellt!`, 5000)
+    successMsg.value = `${selectedPlatforms.value.length} verknuepfte Posts fuer alle Plattformen gespeichert und exportiert!`
+    toast.success(`${selectedPlatforms.value.length} verknuepfte Posts erfolgreich erstellt! (Multi-Plattform)`, 5000)
   } catch (e) {
     if (isNetworkError(e)) {
       error.value = 'Netzwerkfehler beim Speichern. Bitte pruefe deine Internetverbindung.'
@@ -1512,6 +1745,8 @@ watch(currentStep, (newStep, oldStep) => {
 onMounted(() => {
   // Load students for personality preset selection in step 4
   studentStore.fetchStudents()
+  // Load story arcs for episode integration in step 4
+  loadStoryArcs()
 
   // Check if navigated from an accepted suggestion (query params from dashboard)
   const suggestionCategory = route.query.category
@@ -1748,8 +1983,31 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ p.format }}</div>
         </button>
       </div>
-      <div v-if="selectedPlatforms.length > 1" class="mt-4 text-sm text-[#3B7AB1] font-medium">
-        {{ selectedPlatforms.length }} Plattformen ausgewaehlt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
+      <div v-if="selectedPlatforms.length > 1" class="mt-4 space-y-3">
+        <div class="text-sm text-[#3B7AB1] font-medium">
+          {{ selectedPlatforms.length }} Plattformen ausgewaehlt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
+        </div>
+        <!-- Auto-Adapt Toggle -->
+        <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              v-model="adaptContent"
+              class="mt-1 h-5 w-5 rounded border-gray-300 text-[#3B7AB1] focus:ring-[#3B7AB1] cursor-pointer"
+            />
+            <div>
+              <div class="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                <span>&#x2728;</span> KI-Autoadaption aktivieren
+              </div>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Texte werden automatisch an jede Plattform angepasst:
+                <strong>Story</strong> = kurz + CTA,
+                <strong>Feed</strong> = laenger + Hashtags,
+                <strong>TikTok</strong> = Hook-fokussiert.
+              </p>
+            </div>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -1813,6 +2071,133 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </button>
           </div>
           <div v-if="selectedStudentPreset" class="mt-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-xs text-purple-700 dark:text-purple-300"><span class="font-medium">Aktives Preset:</span> {{ toneIcons[selectedStudentPreset.tone] || '🎭' }} {{ selectedStudentPreset.tone }} · Humor {{ selectedStudentPreset.humor_level || 3 }}/5 · Emoji: {{ selectedStudentPreset.emoji_usage || 'moderate' }} · {{ selectedStudentPreset.perspective === 'first_person' ? 'Ich-Perspektive' : 'Dritte Person' }}</div>
+        </div>
+
+        <!-- Story-Arc / Episode (optional) -->
+        <div v-if="storyArcStore.storyArcs.length > 0" class="mb-6" data-testid="story-arc-section">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📖 Story-Arc (optional)</label>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Ist dieser Post Teil einer Story-Serie? Waehle einen Arc, um Episoden-Felder anzuzeigen.</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="arc in storyArcStore.storyArcs"
+              :key="arc.id"
+              @click="selectArc(arc.id)"
+              class="px-3 py-2 rounded-lg border-2 transition-all text-sm text-left"
+              :class="selectedArcId === arc.id
+                ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 ring-1 ring-[#3B7AB1]/30'
+                : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'"
+              :data-testid="'arc-btn-' + arc.id"
+            >
+              <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ arc.title }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ arc.status }} · {{ arc.current_episode }}/{{ arc.planned_episodes }} Episoden
+              </div>
+            </button>
+          </div>
+
+          <!-- Episode fields (shown when an arc is selected) -->
+          <div v-if="selectedArcId" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl space-y-4" data-testid="episode-fields">
+            <h4 class="font-bold text-[#3B7AB1] text-sm flex items-center gap-2">
+              📖 Episoden-Details
+              <span v-if="loadingArcEpisodes" class="animate-spin h-4 w-4 border-2 border-[#3B7AB1] border-t-transparent rounded-full"></span>
+            </h4>
+
+            <!-- Episode Number -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Episode-Nummer</label>
+              <input
+                v-model.number="selectedEpisodeNumber"
+                type="number"
+                min="1"
+                class="w-24 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+                data-testid="episode-number-input"
+              />
+              <span class="ml-2 text-xs text-gray-500">
+                ({{ arcEpisodes.length }} bestehende Episoden)
+              </span>
+            </div>
+
+            <!-- Previously Text (Rueckblick) -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Rueckblick ("Bisher bei...")</label>
+                <button
+                  @click="suggestEpisodeText('previously_text')"
+                  :disabled="suggestingEpisodeField === 'previously_text'"
+                  class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                  data-testid="suggest-previously-btn"
+                >
+                  <span v-if="suggestingEpisodeField === 'previously_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                  ✨ KI-Vorschlag
+                </button>
+              </div>
+              <textarea
+                v-model="episodePreviouslyText"
+                rows="2"
+                placeholder="z.B. Bisher bei Jonathan: Nach der Ankunft in Seattle hat Jonathan seine Gastfamilie kennengelernt..."
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+                data-testid="previously-text-input"
+              ></textarea>
+            </div>
+
+            <!-- Cliffhanger Text -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Cliffhanger (Ende der Episode)</label>
+                <button
+                  @click="suggestEpisodeText('cliffhanger_text')"
+                  :disabled="suggestingEpisodeField === 'cliffhanger_text'"
+                  class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                  data-testid="suggest-cliffhanger-btn"
+                >
+                  <span v-if="suggestingEpisodeField === 'cliffhanger_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                  ✨ KI-Vorschlag
+                </button>
+              </div>
+              <textarea
+                v-model="episodeCliffhangerText"
+                rows="2"
+                placeholder="z.B. Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet..."
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+                data-testid="cliffhanger-text-input"
+              ></textarea>
+            </div>
+
+            <!-- Next Episode Hint (Teaser) -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (naechste Episode)</label>
+                <button
+                  @click="suggestEpisodeText('next_episode_hint')"
+                  :disabled="suggestingEpisodeField === 'next_episode_hint'"
+                  class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                  data-testid="suggest-nexthint-btn"
+                >
+                  <span v-if="suggestingEpisodeField === 'next_episode_hint'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                  ✨ KI-Vorschlag
+                </button>
+              </div>
+              <textarea
+                v-model="episodeNextHint"
+                rows="2"
+                placeholder="z.B. Naechste Episode: Jonathan entdeckt eine voellig neue Seite von Amerika!"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+                data-testid="nexthint-text-input"
+              ></textarea>
+            </div>
+
+            <!-- Existing episodes list -->
+            <div v-if="arcEpisodes.length > 0">
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bestehende Episoden:</label>
+              <div class="space-y-1">
+                <div v-for="ep in arcEpisodes" :key="ep.id" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                  <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#3B7AB1]/20 text-[#3B7AB1] font-bold text-[10px]">{{ ep.episode_number }}</span>
+                  <span>{{ ep.episode_title }}</span>
+                  <span class="text-gray-400">({{ ep.status }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Tone -->
@@ -1943,6 +2328,10 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
             <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
           </div>
+          <div v-if="selectedArcId" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
+            <strong>📖 Story-Arc:</strong> {{ storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.title || 'Arc #' + selectedArcId }}
+            <span class="ml-1 text-xs text-[#3B7AB1]">Episode {{ selectedEpisodeNumber }}</span>
+          </div>
         </div>
 
         <button
@@ -2036,10 +2425,16 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             }"
           >
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-6 flex flex-col justify-between">
-              <!-- TREFF logo -->
+              <!-- TREFF logo + Episode badge -->
               <div class="flex items-center gap-2">
                 <div class="bg-[#3B7AB1] rounded-lg px-3 py-1"><span class="text-white text-sm font-bold">TREFF</span></div>
                 <span class="text-gray-400 text-xs">Sprachreisen</span>
+                <span v-if="selectedArcId" class="ml-auto bg-[#FDD000] text-[#1A1A2E] px-2 py-0.5 rounded-full text-[10px] font-bold" data-testid="episode-badge">E{{ selectedEpisodeNumber }}</span>
+              </div>
+
+              <!-- Previously text (Rueckblick) - shown on first slide -->
+              <div v-if="selectedArcId && episodePreviouslyText && currentPreviewSlide === 0" class="mt-1 px-2 py-1 bg-white/10 rounded text-gray-300 text-[10px] italic leading-tight line-clamp-2" data-testid="preview-previously">
+                {{ episodePreviouslyText }}
               </div>
 
               <!-- Content -->
@@ -2065,6 +2460,16 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                     <span>{{ bp }}</span>
                   </li>
                 </ul>
+              </div>
+
+              <!-- Cliffhanger text - shown on last slide -->
+              <div v-if="selectedArcId && episodeCliffhangerText && currentPreviewSlide === slides.length - 1" class="mb-2 px-2 py-1 bg-white/10 rounded text-[#FDD000] text-[10px] font-semibold italic leading-tight line-clamp-2" data-testid="preview-cliffhanger">
+                {{ episodeCliffhangerText }}
+              </div>
+
+              <!-- Next episode hint - shown on last slide -->
+              <div v-if="selectedArcId && episodeNextHint && currentPreviewSlide === slides.length - 1" class="mb-2 px-2 py-1 bg-[#3B7AB1]/20 rounded text-blue-300 text-[10px] leading-tight line-clamp-2" data-testid="preview-nexthint">
+                {{ episodeNextHint }}
               </div>
 
               <!-- CTA -->
@@ -2497,6 +2902,47 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             @remove="removeInteractiveElement"
             @edit="editInteractiveElement"
           />
+
+          <!-- Episode Fields (shown when post is part of a Story-Arc) -->
+          <div v-if="selectedArcId" class="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 space-y-3" data-testid="episode-edit-fields">
+            <h4 class="text-sm font-bold text-[#3B7AB1] flex items-center gap-2">
+              📖 Episoden-Texte
+              <span class="text-xs font-normal text-gray-500">Episode {{ selectedEpisodeNumber }}</span>
+            </h4>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Rueckblick</label>
+                <button
+                  @click="suggestEpisodeText('previously_text')"
+                  :disabled="!!suggestingEpisodeField"
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
+                >✨ KI</button>
+              </div>
+              <textarea v-model="episodePreviouslyText" rows="2" placeholder="Bisher bei..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Cliffhanger</label>
+                <button
+                  @click="suggestEpisodeText('cliffhanger_text')"
+                  :disabled="!!suggestingEpisodeField"
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
+                >✨ KI</button>
+              </div>
+              <textarea v-model="episodeCliffhangerText" rows="2" placeholder="Cliffhanger am Ende..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Teaser naechste Episode</label>
+                <button
+                  @click="suggestEpisodeText('next_episode_hint')"
+                  :disabled="!!suggestingEpisodeField"
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
+                >✨ KI</button>
+              </div>
+              <textarea v-model="episodeNextHint" rows="2" placeholder="Naechste Episode..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
+            </div>
+          </div>
         </div>
 
         <!-- Mini live preview (sticky) -->
@@ -2537,12 +2983,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div v-if="slides[currentPreviewSlide]" class="absolute inset-0 p-5 flex flex-col justify-between">
               <div class="flex items-center gap-1.5">
                 <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
+                <span v-if="selectedArcId" class="ml-auto bg-[#FDD000] text-[#1A1A2E] px-1.5 py-0.5 rounded-full text-[8px] font-bold">E{{ selectedEpisodeNumber }}</span>
               </div>
+              <div v-if="selectedArcId && episodePreviouslyText && currentPreviewSlide === 0" class="mt-1 px-1.5 py-0.5 bg-white/10 rounded text-gray-300 text-[8px] italic leading-tight line-clamp-1">{{ episodePreviouslyText }}</div>
               <div class="flex-1 flex flex-col justify-center py-3">
                 <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
                 <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
                 <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-200 text-[10px] leading-relaxed line-clamp-4 drop-shadow" data-testid="preview-body">{{ slides[currentPreviewSlide].body_text }}</p>
               </div>
+              <div v-if="selectedArcId && episodeCliffhangerText && currentPreviewSlide === slides.length - 1" class="mb-1 px-1.5 py-0.5 bg-white/10 rounded text-[#FDD000] text-[8px] font-semibold italic line-clamp-1">{{ episodeCliffhangerText }}</div>
               <div v-if="slides[currentPreviewSlide].cta_text">
                 <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[11px]">{{ slides[currentPreviewSlide].cta_text }}</div>
               </div>

@@ -103,6 +103,10 @@ const editorPreviewHtml = computed(() => {
   html = html.replace(/\{\{quote_text\}\}/g, escapeHtml(c.bodyText))
   html = html.replace(/\{\{quote_author\}\}/g, escapeHtml('Max M., Austauschschueler'))
   html = html.replace(/\{\{bullet_points\}\}/g, escapeHtml('Punkt 1, Punkt 2, Punkt 3'))
+  html = html.replace(/\{\{previously_text\}\}/g, escapeHtml('Bisher bei Jonathan: Nach der Ankunft in Seattle hat er seine Gastfamilie kennengelernt...'))
+  html = html.replace(/\{\{cliffhanger_text\}\}/g, escapeHtml('Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet...'))
+  html = html.replace(/\{\{next_episode_hint\}\}/g, escapeHtml('Naechste Episode: Jonathan entdeckt eine neue Seite von Amerika!'))
+  html = html.replace(/\{\{episode_number\}\}/g, escapeHtml('3'))
   // Remove any remaining unmatched placeholders
   html = html.replace(/\{\{image\}\}/g, '')
   html = html.replace(/\{\{[^}]+\}\}/g, '')

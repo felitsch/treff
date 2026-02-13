@@ -5,11 +5,13 @@ import draggable from 'vuedraggable'
 import api from '@/utils/api'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+import { useToast } from '@/composables/useToast'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
 const postId = computed(() => route.params.id)
 const loading = ref(true)
@@ -21,12 +23,150 @@ const notFound = ref(false)
 const slides = ref([])
 const currentPreviewSlide = ref(0)
 
+// Sibling posts (multi-platform linked posts)
+const siblingPosts = ref([])
+const linkedGroupId = ref(null)
+const showSyncDialog = ref(false)
+const syncingToSiblings = ref(false)
+const syncFields = ref({
+  title: true,
+  category: true,
+  country: true,
+  tone: true,
+  scheduled_date: true,
+  scheduled_time: true,
+  cta_text: true,
+  slide_data: true,
+})
+const syncableFieldLabels = {
+  title: 'Titel',
+  category: 'Kategorie',
+  country: 'Land',
+  tone: 'Tonalitaet',
+  scheduled_date: 'Datum',
+  scheduled_time: 'Uhrzeit',
+  cta_text: 'Call-to-Action',
+  slide_data: 'Slide-Inhalte',
+}
+
+async function syncToSiblings() {
+  if (!post.value || siblingPosts.value.length === 0) return
+  syncingToSiblings.value = true
+  try {
+    const fieldsToSync = {}
+    for (const [field, selected] of Object.entries(syncFields.value)) {
+      if (selected && post.value[field] !== undefined) {
+        fieldsToSync[field] = post.value[field]
+      }
+    }
+    if (fieldsToSync.slide_data) {
+      fieldsToSync.slide_data = JSON.stringify(slides.value.map(({ dragId, ...rest }) => rest))
+    }
+    if (fieldsToSync.cta_text !== undefined) fieldsToSync.cta_text = ctaText.value
+    if (fieldsToSync.title !== undefined) fieldsToSync.title = slides.value[0]?.headline || post.value.title
+
+    await api.put('/api/posts/sync-siblings', {
+      source_post_id: Number(postId.value),
+      fields: fieldsToSync,
+    })
+    toast.success(`Aenderungen auf ${siblingPosts.value.length} Schwester-Post(s) uebertragen!`, 3000)
+    showSyncDialog.value = false
+  } catch (e) {
+    toast.error('Sync fehlgeschlagen: ' + (e.response?.data?.detail || e.message), 4000)
+  } finally {
+    syncingToSiblings.value = false
+  }
+}
+
 // Editable caption/hashtag fields
 const captionInstagram = ref('')
 const captionTiktok = ref('')
 const hashtagsInstagram = ref('')
 const hashtagsTiktok = ref('')
 const ctaText = ref('')
+
+// ── Story-Arc / Episode integration ─────────────────────────────────────
+const episodeData = ref(null) // The loaded StoryEpisode object
+const storyArc = ref(null) // The parent StoryArc
+const arcEpisodes = ref([]) // All episodes in the arc
+const episodePreviouslyText = ref('')
+const episodeCliffhangerText = ref('')
+const episodeNextHint = ref('')
+const suggestingEpisodeField = ref('')
+const loadingEpisode = ref(false)
+
+// Computed: whether this post is part of a story arc
+const isEpisodePost = computed(() => !!post.value?.story_arc_id)
+
+async function loadEpisodeData() {
+  if (!post.value?.story_arc_id) return
+  loadingEpisode.value = true
+  try {
+    // Load the story arc
+    const arcRes = await api.get(`/api/story-arcs/${post.value.story_arc_id}`)
+    storyArc.value = arcRes.data
+
+    // Load all episodes in this arc
+    const epsRes = await api.get(`/api/story-arcs/${post.value.story_arc_id}/episodes`)
+    arcEpisodes.value = epsRes.data || []
+
+    // Find the episode linked to this post
+    const ep = arcEpisodes.value.find(e => e.post_id === Number(postId.value))
+    if (ep) {
+      episodeData.value = ep
+      episodePreviouslyText.value = ep.previously_text || ''
+      episodeCliffhangerText.value = ep.cliffhanger_text || ''
+      episodeNextHint.value = ep.next_episode_hint || ''
+    }
+  } catch (err) {
+    console.error('Failed to load episode data:', err)
+  } finally {
+    loadingEpisode.value = false
+  }
+}
+
+async function suggestEpisodeText(field) {
+  if (suggestingEpisodeField.value) return
+  suggestingEpisodeField.value = field
+  try {
+    const response = await api.post('/api/ai/suggest-episode-text', {
+      arc_id: post.value.story_arc_id,
+      episode_number: episodeData.value?.episode_number || post.value.episode_number || 1,
+      field,
+      topic: post.value?.title || '',
+      tone: post.value?.tone || 'jugendlich',
+    })
+    if (response.data?.suggestion) {
+      if (field === 'previously_text') episodePreviouslyText.value = response.data.suggestion
+      else if (field === 'cliffhanger_text') episodeCliffhangerText.value = response.data.suggestion
+      else if (field === 'next_episode_hint') episodeNextHint.value = response.data.suggestion
+      toast.success('Vorschlag generiert!', 2000)
+    }
+  } catch (err) {
+    toast.error('Vorschlag fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 4000)
+  } finally {
+    suggestingEpisodeField.value = ''
+  }
+}
+
+async function saveEpisodeData() {
+  if (!episodeData.value || !post.value?.story_arc_id) return
+  try {
+    const updateData = {
+      episode_title: episodeData.value.episode_title,
+      post_id: Number(postId.value),
+      episode_number: episodeData.value.episode_number,
+      previously_text: episodePreviouslyText.value || null,
+      cliffhanger_text: episodeCliffhangerText.value || null,
+      next_episode_hint: episodeNextHint.value || null,
+      status: episodeData.value.status,
+    }
+    await api.put(`/api/story-arcs/${post.value.story_arc_id}/episodes/${episodeData.value.id}`, updateData)
+  } catch (err) {
+    console.error('Episode save failed:', err)
+    toast.error('Episode-Daten konnten nicht gespeichert werden', 4000)
+  }
+}
 
 // Categories for display
 const categories = [
@@ -209,6 +349,22 @@ async function loadPost() {
 
     // Capture initial state for unsaved changes detection (without dragId)
     initialStateSnapshot.value = getCleanState()
+
+    // Fetch sibling posts if part of a linked group
+    if (response.data.linked_post_group_id) {
+      linkedGroupId.value = response.data.linked_post_group_id
+      try {
+        const sibRes = await api.get(`/api/posts/${postId.value}/siblings`)
+        siblingPosts.value = sibRes.data.siblings || []
+      } catch {
+        siblingPosts.value = []
+      }
+    }
+
+    // Load episode data if post is part of a story arc
+    if (response.data.story_arc_id) {
+      await loadEpisodeData()
+    }
   } catch (e) {
     if (e.response?.status === 404 || e.response?.status === 422) {
       notFound.value = true
@@ -238,6 +394,11 @@ async function savePost() {
     }
 
     await api.put(`/api/posts/${postId.value}`, updateData)
+
+    // Save episode data if post is part of a story arc
+    if (isEpisodePost.value && episodeData.value) {
+      await saveEpisodeData()
+    }
 
     // Update initial state snapshot (form is now clean after save)
     initialStateSnapshot.value = getCleanState()
@@ -386,6 +547,216 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           >{{ post.status }}</span>
         </div>
 
+        <!-- Linked sibling posts (multi-platform) -->
+        <div v-if="siblingPosts.length > 0" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🔗</span>
+              <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Verknuepfte Plattform-Posts</span>
+            </div>
+            <button
+              @click="showSyncDialog = true"
+              class="px-3 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1.5"
+              data-testid="sync-siblings-btn"
+            >
+              &#x1F504; Synchronisieren
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <router-link
+              v-for="sib in siblingPosts"
+              :key="sib.id"
+              :to="`/posts/${sib.id}/edit`"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              :class="{
+                'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-200 dark:hover:bg-pink-900/50': sib.platform === 'instagram_feed',
+                'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50': sib.platform === 'instagram_story',
+                'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-900/50': sib.platform === 'tiktok',
+              }"
+            >
+              <span v-if="sib.platform === 'instagram_feed'">📷</span>
+              <span v-else-if="sib.platform === 'instagram_story'">📱</span>
+              <span v-else-if="sib.platform === 'tiktok'">🎵</span>
+              {{ sib.platform === 'instagram_feed' ? 'IG Feed' : sib.platform === 'instagram_story' ? 'IG Story' : 'TikTok' }}
+              <span class="opacity-60">#{{ sib.id }}</span>
+            </router-link>
+          </div>
+          <p class="mt-1.5 text-[10px] text-blue-500 dark:text-blue-400">
+            Aenderungen an diesem Post koennen auf die Schwester-Posts synchronisiert werden.
+          </p>
+        </div>
+
+        <!-- Sync to Siblings Dialog (Overlay) -->
+        <div v-if="showSyncDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showSyncDialog = false">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-xl">🔄</span>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Aenderungen synchronisieren</h3>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Waehle aus, welche Felder auf die <strong>{{ siblingPosts.length }} Schwester-Post(s)</strong> uebertragen werden sollen:
+            </p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span
+                v-for="sib in siblingPosts"
+                :key="'sync-target-' + sib.id"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium"
+                :class="{
+                  'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300': sib.platform === 'instagram_feed',
+                  'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300': sib.platform === 'instagram_story',
+                  'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300': sib.platform === 'tiktok',
+                }"
+              >
+                {{ sib.platform === 'instagram_feed' ? '📷 IG Feed' : sib.platform === 'instagram_story' ? '📱 IG Story' : '🎵 TikTok' }}
+                #{{ sib.id }}
+              </span>
+            </div>
+            <div class="space-y-2 mb-5">
+              <label
+                v-for="(label, field) in syncableFieldLabels"
+                :key="'sync-field-' + field"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  v-model="syncFields[field]"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ label }}</span>
+              </label>
+            </div>
+            <div class="flex gap-3">
+              <button
+                @click="showSyncDialog = false"
+                class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                @click="syncToSiblings"
+                :disabled="syncingToSiblings || !Object.values(syncFields).some(v => v)"
+                class="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 rounded-lg transition-colors flex items-center justify-center gap-2"
+                data-testid="confirm-sync-btn"
+              >
+                <span v-if="syncingToSiblings" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                {{ syncingToSiblings ? 'Synchronisiere...' : 'Synchronisieren' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story-Arc / Episode fields (shown when post is part of a series) -->
+        <div v-if="isEpisodePost" class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl space-y-4" data-testid="episode-fields">
+          <h4 class="font-bold text-[#3B7AB1] text-sm flex items-center gap-2">
+            &#128214; Episoden-Details
+            <span v-if="loadingEpisode" class="animate-spin h-4 w-4 border-2 border-[#3B7AB1] border-t-transparent rounded-full"></span>
+            <span v-if="storyArc" class="text-xs font-normal text-gray-500 dark:text-gray-400">
+              &mdash; {{ storyArc.title }}
+            </span>
+          </h4>
+
+          <!-- Episode info -->
+          <div v-if="episodeData" class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#3B7AB1] text-white font-bold text-xs">
+              E{{ episodeData.episode_number }}
+            </span>
+            <span>{{ episodeData.episode_title }}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-medium"
+              :class="{
+                'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300': episodeData.status === 'planned',
+                'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300': episodeData.status === 'draft',
+                'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300': episodeData.status === 'published',
+              }"
+            >{{ episodeData.status }}</span>
+          </div>
+
+          <!-- Previously Text (Rueckblick) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Rueckblick ("Bisher bei...")</label>
+              <button
+                @click="suggestEpisodeText('previously_text')"
+                :disabled="suggestingEpisodeField === 'previously_text'"
+                class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                data-testid="suggest-previously-btn"
+              >
+                <span v-if="suggestingEpisodeField === 'previously_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                &#10024; KI-Vorschlag
+              </button>
+            </div>
+            <textarea
+              v-model="episodePreviouslyText"
+              rows="2"
+              placeholder="z.B. Bisher bei Jonathan: Nach der Ankunft in Seattle hat Jonathan seine Gastfamilie kennengelernt..."
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+              data-testid="previously-text-input"
+            ></textarea>
+          </div>
+
+          <!-- Cliffhanger Text -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Cliffhanger (Ende der Episode)</label>
+              <button
+                @click="suggestEpisodeText('cliffhanger_text')"
+                :disabled="suggestingEpisodeField === 'cliffhanger_text'"
+                class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                data-testid="suggest-cliffhanger-btn"
+              >
+                <span v-if="suggestingEpisodeField === 'cliffhanger_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                &#10024; KI-Vorschlag
+              </button>
+            </div>
+            <textarea
+              v-model="episodeCliffhangerText"
+              rows="2"
+              placeholder="z.B. Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet..."
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+              data-testid="cliffhanger-text-input"
+            ></textarea>
+          </div>
+
+          <!-- Next Episode Hint (Teaser) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (naechste Episode)</label>
+              <button
+                @click="suggestEpisodeText('next_episode_hint')"
+                :disabled="suggestingEpisodeField === 'next_episode_hint'"
+                class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors disabled:opacity-50"
+                data-testid="suggest-nexthint-btn"
+              >
+                <span v-if="suggestingEpisodeField === 'next_episode_hint'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
+                &#10024; KI-Vorschlag
+              </button>
+            </div>
+            <textarea
+              v-model="episodeNextHint"
+              rows="2"
+              placeholder="z.B. Naechste Episode: Jonathan entdeckt eine voellig neue Seite von Amerika!"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
+              data-testid="nexthint-text-input"
+            ></textarea>
+          </div>
+
+          <!-- Other episodes in arc -->
+          <div v-if="arcEpisodes.length > 1">
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Alle Episoden in "{{ storyArc?.title }}":</label>
+            <div class="space-y-1">
+              <div v-for="ep in arcEpisodes" :key="ep.id" class="text-xs flex items-center gap-2"
+                :class="ep.post_id === Number(postId) ? 'text-[#3B7AB1] font-semibold' : 'text-gray-500 dark:text-gray-400'"
+              >
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+                  :class="ep.post_id === Number(postId) ? 'bg-[#3B7AB1] text-white' : 'bg-[#3B7AB1]/20 text-[#3B7AB1]'"
+                >{{ ep.episode_number }}</span>
+                <span>{{ ep.episode_title }}</span>
+                <span v-if="ep.post_id === Number(postId)" class="text-[10px]">(dieser Post)</span>
+                <router-link v-else-if="ep.post_id" :to="`/posts/${ep.post_id}/edit`" class="text-[10px] text-[#3B7AB1] hover:underline">bearbeiten</router-link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Slide tabs with drag-and-drop reordering + Add/Remove -->
         <div v-if="slides.length >= 1" class="mb-1">
           <div class="flex items-center justify-between mb-2">
@@ -492,7 +863,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <span class="text-xs" :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].body_text?.length || 0 }}/200</span>
             </div>
           </div>
-          <div v-if="slides[currentPreviewSlide].cta_text !== undefined">
+          <div v-if="slides[currentPreviewSlide]?.cta_text !== undefined">
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">CTA-Bibliothek</label>
             <CtaPicker
               v-model="slides[currentPreviewSlide].cta_text"
@@ -586,7 +957,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           :style="{
             maxWidth: '320px',
             background: slides[currentPreviewSlide]?.background_type === 'image'
-              ? `url(${slides[currentPreviewSlide].background_value}) center/cover`
+              ? `url(${slides[currentPreviewSlide]?.background_value}) center/cover`
               : slides[currentPreviewSlide]?.background_value || 'linear-gradient(135deg, #1A1A2E, #2a2a4e)',
           }"
           data-testid="live-preview-container"
@@ -596,9 +967,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
             </div>
             <div class="flex-1 flex flex-col justify-center py-3">
+              <!-- Previously text (Rueckblick) - shown on first slide -->
+              <div v-if="isEpisodePost && episodePreviouslyText && currentPreviewSlide === 0" class="mb-2 px-2 py-1 bg-white/10 rounded text-gray-300 text-[10px] italic leading-tight line-clamp-2" data-testid="preview-previously">
+                {{ episodePreviouslyText }}
+              </div>
               <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
               <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
               <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-200 text-[10px] leading-relaxed line-clamp-4 drop-shadow" data-testid="preview-body">{{ slides[currentPreviewSlide].body_text }}</p>
+            </div>
+            <!-- Cliffhanger text - shown on last slide -->
+            <div v-if="isEpisodePost && episodeCliffhangerText && currentPreviewSlide === slides.length - 1" class="mb-2 px-2 py-1 bg-white/10 rounded text-[#FDD000] text-[10px] font-semibold italic leading-tight line-clamp-2" data-testid="preview-cliffhanger">
+              {{ episodeCliffhangerText }}
+            </div>
+            <!-- Next episode hint - shown on last slide -->
+            <div v-if="isEpisodePost && episodeNextHint && currentPreviewSlide === slides.length - 1" class="mb-2 px-2 py-1 bg-[#3B7AB1]/20 rounded text-blue-300 text-[10px] leading-tight line-clamp-2" data-testid="preview-nexthint">
+              {{ episodeNextHint }}
             </div>
             <div v-if="slides[currentPreviewSlide].cta_text">
               <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[11px]">{{ slides[currentPreviewSlide].cta_text }}</div>
