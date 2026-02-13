@@ -6,6 +6,7 @@ import api from '@/utils/api'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
+import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,6 +42,25 @@ const categories = [
 ]
 
 const categoryObj = computed(() => categories.find(c => c.id === post.value?.category))
+
+// ── Engagement Boost Panel ────────────────────────────────────────────
+const engagementBoostPostContent = computed(() => ({
+  slides: slides.value,
+  caption_instagram: captionInstagram.value,
+  caption_tiktok: captionTiktok.value,
+  hashtags_instagram: hashtagsInstagram.value,
+  hashtags_tiktok: hashtagsTiktok.value,
+  cta_text: ctaText.value,
+  category: post.value?.category || '',
+  country: post.value?.country || '',
+  tone: post.value?.tone || '',
+}))
+
+function onApplyEngagementSuggestion(suggestion) {
+  // Show feedback with the suggestion - user can manually apply it
+  successMsg.value = `Vorschlag: ${suggestion.action_text} — ${suggestion.suggestion.slice(0, 80)}...`
+  setTimeout(() => { successMsg.value = '' }, 5000)
+}
 
 // ── Undo / Redo ────────────────────────────────────────────────────────
 function getEditableState() {
@@ -607,6 +627,17 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
             Naechste &#8594;
           </button>
+        </div>
+
+        <!-- Engagement Boost Panel -->
+        <div class="mt-4">
+          <EngagementBoostPanel
+            :post-content="engagementBoostPostContent"
+            :platform="post?.platform || 'instagram_feed'"
+            :format="post?.platform || 'instagram_feed'"
+            :posting-time="''"
+            @apply-suggestion="onApplyEngagementSuggestion"
+          />
         </div>
       </div>
     </div>
