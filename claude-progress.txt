@@ -1,5 +1,59 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #168: AI-powered single field regeneration with Gemini 2.5 Flash
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Verified complete AI-powered single field regeneration with Gemini 2.5 Flash
+- No code changes needed - all functionality was already fully implemented:
+  - Backend: `_regenerate_field_with_gemini()` in text_generator.py (lines 799-879)
+  - Backend: `regenerate_single_field()` tries Gemini first, falls back to rule-based (lines 882-1002)
+  - Backend: POST /api/ai/regenerate-field endpoint in ai.py (lines 423-492)
+  - Frontend: CreatePostView.vue `regenerateField()` function with race condition protection
+  - Context passing: current_headline, current_body, topic included in Gemini prompt
+
+### Verification steps completed:
+1. New function regenerate_field_with_gemini() exists in text_generator.py - PASS
+   - Located at lines 799-879, uses google.genai Client with gemini-2.5-flash model
+2. Context of existing fields passed as part of prompt - PASS
+   - current_headline, current_body, and topic are built into the content_prompt
+   - System prompt includes TREFF branding guidelines via _build_gemini_system_prompt()
+3. Gemini 2.5 Flash called with instruction to regenerate only requested field - PASS
+   - model="gemini-2.5-flash" confirmed at line 855
+   - Prompt says "Antworte NUR mit dem generierten Text" (respond ONLY with generated text)
+4. Fallback to rule-based regeneration when no API key or error - PASS
+   - regenerate_single_field() at line 917 checks api_key, tries Gemini, falls back to templates
+5. POST /api/ai/regenerate-field with field_name='headline' tested - PASS
+   - API test: {"field":"headline","value":"USA: Dein High School Traum wird wahr!","source":"gemini"}
+   - API test (cta_text): {"field":"cta_text","value":"Dein USA-Abenteuer wartet! Jetzt Infos!","source":"gemini"}
+   - API test (body_text, different category/country): contextually relevant body about Vancouver
+6. Regenerated field fits context of other fields - PASS
+   - Browser UI: Generated content about USA Highschool, then regenerated headline
+   - Original headline: "Dein High School Traum in den USA!" -> Regenerated to "USA: Dein High School Film wird Realitaet!"
+   - Regenerated subheadline: "Dein US-Highschool-Jahr: Zwischen Football, Prom & Freiheit!" - contextually fits
+   - Toast "Feld neu generiert!" shown, live preview updated instantly
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoint)
+- [x] Rate limiting applied (15 requests/60 seconds for regenerate-field)
+- [x] Screenshots captured:
+  - feature168-step1-edit-view-before-regen.png (edit step with regenerate buttons visible)
+  - feature168-step2-headline-regenerated.png (headline regenerated with Gemini, toast shown)
+
+### No code changes needed:
+- _regenerate_field_with_gemini() already uses Gemini 2.5 Flash with context
+- regenerate_single_field() already has Gemini-first + rule-based fallback
+- /api/ai/regenerate-field endpoint already passes api_key from user settings
+- Frontend CreatePostView.vue already has regenerate buttons with race condition protection
+
+### Current state:
+- Feature #168 marked as PASSING
+- 165/170 features passing (97.1%)
+
 ## Session - Feature #163: Keyboard shortcut Ctrl+S saves current work
 **Date:** 2026-02-13
 **Status:** PASSING
