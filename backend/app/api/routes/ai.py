@@ -16,6 +16,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.core.text_generator import generate_text_content, regenerate_single_field
 from app.core.config import settings
+from app.core.rate_limiter import ai_rate_limiter
 from app.models.asset import Asset
 from app.models.setting import Setting
 
@@ -383,6 +384,9 @@ async def generate_text(
     Returns structured content for all slides, captions, and hashtags.
     Includes 'source' field: "gemini" or "rule_based".
     """
+    # Rate limit check (raises 429 if exceeded)
+    ai_rate_limiter.check_rate_limit(user_id, "generate-text")
+
     try:
         category = request.get("category", "laender_spotlight")
         country = request.get("country")
@@ -444,6 +448,9 @@ async def regenerate_field(
     - field: name of the regenerated field
     - value: new value for that field
     """
+    # Rate limit check (raises 429 if exceeded)
+    ai_rate_limiter.check_rate_limit(user_id, "regenerate-field")
+
     try:
         field = request.get("field")
         if not field:
@@ -510,6 +517,9 @@ async def generate_image(
     - asset: Full asset object stored in the library
     - source: "gemini" or "local_generated"
     """
+    # Rate limit check (raises 429 if exceeded)
+    ai_rate_limiter.check_rate_limit(user_id, "generate-image")
+
     prompt = request.get("prompt", "").strip()
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt darf nicht leer sein.")

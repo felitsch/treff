@@ -71,6 +71,11 @@ api.interceptors.response.use(
       } else if (typeof detail === 'string' && error.response?.status !== 500) {
         // Non-500 detail strings are often user-friendly (e.g. validation errors in German)
         message = detail
+      } else if (error.response?.status === 429) {
+        // Rate limit - use backend detail (already German) or fallback
+        message = (typeof detail === 'string' && detail)
+          ? detail
+          : 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.'
       } else if (error.response?.status === 404) {
         message = 'Die angeforderte Ressource wurde nicht gefunden.'
       } else if (error.response?.status === 500) {
