@@ -1,5 +1,40 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #207: Tour-Neustart-Button auf jeder Seite
+**Date:** 2026-02-13
+**Feature ID:** #207
+**Status:** PASSING
+
+### What was accomplished:
+- Added tour restart button to TopBar component, visible on ALL authenticated pages
+- Button shows a question mark icon (?) that starts the page-specific guided tour on click
+- Tooltip "Seiten-Tour starten" appears on hover (pages with tours)
+- Pulse animation (animate-ping) triggers on first visit to unseen tour pages, stops after 5s
+- Button is disabled/dimmed on pages without tours (e.g., Video-Overlays, Video-Composer) with tooltip "Keine Tour fuer diese Seite"
+- Route-to-tourKey mapping covers 15 pages with tours
+- Cross-component communication via useTour composable's requestTourStart() mechanism
+
+### Files modified:
+- frontend/src/components/layout/TopBar.vue (modified) - Added tour button with tooltip, pulse, disabled state, route mapping
+
+### Verification steps completed:
+1. Dashboard: Tour button visible with ? icon in TopBar - PASS
+2. Dashboard: Hover shows tooltip "Seiten-Tour starten" - PASS (screenshot captured)
+3. Dashboard: Click restarts Dashboard Tour (8 steps) - PASS (screenshot captured)
+4. Templates: Tour button works, starts Vorlagen Tour (5 steps) - PASS
+5. Video-Overlays (no tour): Button visible but disabled, label "Keine Tour fuer diese Seite" - PASS (screenshot captured)
+6. Mobile view (375x812): Button visible and functional - PASS (screenshot captured)
+7. Console: Zero JavaScript errors - PASS
+8. Mock data grep: No mock/dummy/fake patterns found - PASS
+
+### Git commit: d26d903
+
+### Current state:
+- Feature #207 marked as PASSING
+- 212/225 features passing (94.2%)
+
+---
+
 ## Session - Feature #206: Erweitertes Tour-System mit Page-Level-Tours
 **Date:** 2026-02-13
 **Feature ID:** #206
