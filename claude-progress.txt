@@ -1,5 +1,63 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #166: Support platform-specific aspect ratios in image generation
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented platform-specific aspect ratio selection in the AI image generation UI
+- Backend already had PLATFORM_ASPECT_RATIOS and PLATFORM_DIMENSIONS from feature #170 commit
+- Added frontend UI for aspect ratio selection with platform auto-detection and manual override
+
+### Implementation details:
+**Frontend (CreatePostView.vue):**
+- Added "Seitenverhaeltnis" (Aspect Ratio) section in Step 8 (Bild)
+- Shows current platform and its default aspect ratio (e.g., "Plattform: Instagram Feed (1:1 (Quadrat))")
+- Four aspect ratio buttons: 1:1 (Quadrat), 9:16 (Hochformat), 16:9 (Querformat), 4:5 (Instagram)
+- Auto-highlights the platform's default ratio with "(Auto)" label
+- When manually overriding, shows amber warning: "Manuell ueberschrieben (Standard fuer Instagram Feed: 1:1)"
+- Generate button shows effective ratio: "🎨 Bild generieren (1:1)" or "🎨 Bild generieren (9:16)"
+- Result display shows aspect_ratio and platform info after generation
+- Sends platform and optional aspect_ratio override to backend API
+
+**Frontend (createPost.js store):**
+- Added `aiImageAspectRatio` ref for manual override state
+- Reset on workflow clear
+
+**Backend (ai.py) - already committed in feature #170:**
+- PLATFORM_ASPECT_RATIOS: instagram_feed->1:1, instagram_story->9:16, tiktok->9:16, youtube->16:9
+- PLATFORM_DIMENSIONS: platform-specific width/height defaults
+- platform parameter in /generate-image endpoint
+- aspect_ratio takes precedence over platform when both provided
+- Response includes aspect_ratio and platform fields
+
+### Verification steps completed:
+1. Platform auto-detection: Instagram Feed correctly shows 1:1 as default - PASS
+2. Aspect ratio buttons visible with correct labels - PASS
+3. Manual override: clicking 9:16 shows warning and changes generate button - PASS
+4. Generated image for instagram_feed: 2048x2048px, aspect_ratio 1:1, source Gemini AI - PASS
+5. Generated image with 9:16 override: 1536x2752px, aspect_ratio 9:16, source Gemini AI - PASS
+6. aspect_ratio has precedence over platform mapping - PASS (verified with manual override)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT-protected endpoint)
+- [x] Screenshots captured:
+  - feature166-step1-aspect-ratio-ui-instagram-feed.png (UI showing aspect ratio selector)
+  - feature166-step2-instagram-feed-1x1-generated.png (1:1 image generated successfully)
+  - feature166-step3-manual-override-9x16.png (manual override to 9:16 with warning)
+  - feature166-step4-9x16-generated-with-override.png (9:16 portrait image generated)
+
+### Files modified:
+- frontend/src/views/CreatePostView.vue - Added aspect ratio selector UI, platform-aware generation
+- frontend/src/stores/createPost.js - Added aiImageAspectRatio state
+
+### Current state:
+- Feature #166 marked as PASSING
+- 168/170 features passing (98.8%)
+
 ## Session - Feature #170: Implement AI weekly plan suggestion with Gemini 2.5 Flash
 **Date:** 2026-02-13
 **Status:** PASSING
