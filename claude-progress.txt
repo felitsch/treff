@@ -9184,3 +9184,27 @@ Complete video export pipeline for social media formats with smart cropping, com
 
 ### Current state:
 - Feature #187 marked as PASSING
+
+---
+
+## Session: Feature #222 - Kontext-sensitive Hilfe-Tooltips
+Date: 2026-02-13
+
+### What was done:
+- Created HelpTooltip.vue component with auto-positioning (top/bottom/left/right based on viewport)
+- Supports hover and click interactions, dark mode, accessibility (role="tooltip", aria-label)
+- Created central tooltipTexts.js file (i18n-ready, organized by view)
+- Added ~39 tooltips across 7 views:
+  - CreatePostView: 16 tooltips (all 9 step headers + field labels)
+  - CalendarView: 4 tooltips (gaps, deadlines, arcs, content mix)
+  - DashboardView: 6 tooltips (stats, calendar, posts, suggestions)
+  - SettingsView: 8 tooltips (colors, API keys, posting goals)
+  - VideoExportView: 3 tooltips (aspect ratio, focus point, quality)
+  - StoryArcsView: 1 tooltip (arc overview)
+  - RecurringFormatsView: 1 tooltip (recurring formats)
+- Browser verification: all tooltips visible and functional
+- No mock data, no console.log statements in new code
+- Git commit: 23c11de
+
+### Current state:
+- Feature #222 marked as PASSING
