@@ -1,5 +1,48 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #182: Story-Episode Datenmodell und Post-Verknuepfung
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Created StoryEpisode SQLAlchemy model as a dedicated entity for episodes within Story Arcs
+- Full CRUD API at /api/story-arcs/{arc_id}/episodes with all operations
+- Automatic episode_number assignment (next free number in arc)
+- Post linkage: when a post_id is assigned to an episode, the post's story_arc_id and episode_number are updated
+- Deletion cleanup: when an episode is deleted, its linked post's story_arc_id and episode_number are cleared
+
+### Files created:
+- backend/app/models/story_episode.py (NEW) - SQLAlchemy model with id, arc_id, post_id, episode_number, episode_title, teaser_text, cliffhanger_text, previously_text, next_episode_hint, status, timestamps
+- backend/app/api/routes/story_episodes.py (NEW) - Full CRUD endpoints (~281 lines)
+
+### Files modified:
+- backend/app/models/story_arc.py - Added episodes relationship (cascade delete-orphan)
+- backend/app/models/post.py - Added story_episode back-reference relationship
+- backend/app/models/__init__.py - Added StoryEpisode import/export
+- backend/app/main.py - Registered story_episodes router
+
+### Verification completed:
+1. Create episode with auto-numbering (episode 1 gets #1, episode 2 gets #2) - PASS
+2. Create episode linked to post (post_id=474 links to arc 9, episode #2) - PASS
+3. List episodes sorted by episode_number - PASS
+4. Get single episode by ID - PASS
+5. Update episode (title, status, cliffhanger_text) - PASS
+6. Delete episode - PASS
+7. Post linkage: post 474 has story_arc_id=9 and episode_number=2 after episode creation - PASS
+8. Validation: missing title returns 400, invalid status returns 400, non-existent arc returns 404 - PASS
+9. Auth: unauthenticated requests blocked - PASS
+10. Server restart persistence: episodes survive full backend restart - PASS
+11. Mock data grep: zero matches for mock/fake/dummy patterns - PASS
+12. Console errors: 0 JavaScript errors - PASS
+13. OpenAPI schema: all 4 episode endpoints registered - PASS
+
+### Screenshots:
+- feature182-step1-dashboard.png (dashboard showing EP182 Post 1)
+- feature182-step2-swagger-docs.png (API docs page)
+- feature182-step3-dashboard-after-restart.png (dashboard after server restart)
+
+### Git commit: 895cefe
+
 ## Session - Feature #201: Content-Mix Visualisierung
 **Date:** 2026-02-13
 **Status:** PASSING
@@ -8181,3 +8224,68 @@
 
 ### Current state:
 - Feature #202 marked as PASSING
+
+## Session - Feature #204: Wochen-Content-Planer mit KI
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Built a complete AI-powered weekly content planner with series awareness
+- Backend: New POST /api/ai/weekly-planner endpoint that:
+  - Fetches active story arcs and determines next episode numbers
+  - Considers recurring formats (Motivation Monday, Freitags-Fail, Throwback Thursday, etc.)
+  - Checks for existing posts in the target week to avoid double-scheduling
+  - Balances country distribution and category mix
+  - Returns 7 day slots with suggestions and existing post info
+- Backend: New POST /api/ai/weekly-planner/adopt endpoint that:
+  - Creates draft posts in bulk from selected plan items
+  - Sets scheduled dates, times, categories, countries, platforms
+  - Supports story_arc_id and episode_number for series episodes
+- Frontend: New WeekPlannerView.vue with:
+  - 7-day grid layout showing Mon-Sun columns
+  - Drag-and-drop to rearrange suggestions between days
+  - Remove button (x) on each suggestion card
+  - Color-coded category cards with platform icons, country flags, posting times
+  - Existing posts shown with pin icon (not draggable)
+  - One-click "Plan uebernehmen" button that creates all posts and navigates to calendar
+  - Week navigation (prev/next) with date picker
+  - Posts/week selector (2-7)
+  - Toggles for recurring formats and story series
+  - Legend section with card type explanations
+- Added /week-planner route and "Wochenplaner" sidebar navigation entry
+
+### Verification steps completed:
+1. Navigate to Wochenplaner page - PASS (sidebar link works, page loads with controls)
+2. Generate plan with 5 posts/week - PASS (5 suggestions across Mon-Fri with diverse content)
+3. Remove suggestion (click x on Wednesday) - PASS (card removed, count decremented 5->4)
+4. Drag and drop (Monday card to Saturday) - PASS (card moved, toast "Verschoben nach Samstag")
+5. One-click plan adoption - PASS (4 posts created, navigated to calendar, toast "4 Posts uebernommen")
+6. Calendar shows adopted posts - PASS (4 Posts in Februar 2026, correct dates and titles)
+7. Re-generate plan for same week - PASS (shows existing posts with pin, only 3 new suggestions for empty days)
+8. Server restart persistence - PASS (all 4 posts persist across restart, dashboard shows "4 geplante Posts")
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in new files)
+- [x] Server restart persistence verified
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+- [x] Screenshots captured:
+  - feature204-step1-empty-planner.png (empty state with controls)
+  - feature204-step2-plan-generated.png (5 suggestions on Mon-Fri grid)
+  - feature204-step3-after-remove.png (Wednesday suggestion removed)
+  - feature204-step4-drag-drop.png (Monday card dragged to Saturday)
+  - feature204-step5-calendar-adopted.png (calendar with 4 adopted posts)
+  - feature204-step6-calendar-posts-visible.png (calendar month view)
+  - feature204-step7-series-aware.png (re-generated plan showing existing posts + new suggestions)
+
+### Files created/modified:
+- backend/app/api/routes/ai.py (modified) - Added StoryArc import, RECURRING_FORMATS constant, /weekly-planner endpoint (~220 lines), /weekly-planner/adopt endpoint (~60 lines)
+- frontend/src/views/WeekPlannerView.vue (NEW) - Complete weekly planner view (~538 lines)
+- frontend/src/router/index.js (modified) - Added /week-planner route
+- frontend/src/components/layout/SidebarNav.vue (modified) - Added Wochenplaner nav item
+
+### Git commit: 34f9f0e
+
+### Current state:
+- Feature #204 marked as PASSING
