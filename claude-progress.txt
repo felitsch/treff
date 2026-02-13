@@ -1,5 +1,79 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #181: Story-Arc Datenmodell
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented complete Story-Arc data model for multi-part story series about students/themes
+- Created SQLAlchemy StoryArc model with all required fields:
+  - id, title, subtitle, description, student_id (FK to students), country, status (draft/active/paused/completed)
+  - planned_episodes, current_episode, cover_image_id (FK to assets), tone (jugendlich/serioess)
+  - created_at, updated_at with auto-timestamp management
+  - Indexes on user_id, student_id, country, status for query performance
+- Added back_populates relationships to User and Student models
+- Registered model in __init__.py and main.py route registration
+
+### CRUD Endpoints (backend/app/api/routes/story_arcs.py):
+- POST /api/story-arcs - Create with validation (title required, valid status/tone)
+- GET /api/story-arcs - List with filters: student_id, country, status
+- GET /api/story-arcs/{arc_id} - Get single arc by ID
+- PUT /api/story-arcs/{arc_id} - Update with field validation
+- DELETE /api/story-arcs/{arc_id} - Delete arc
+- All endpoints require JWT authentication and scope to user_id
+
+### Frontend (frontend/src/stores/storyArc.js):
+- Pinia storyArcStore with reactive state (storyArcs, currentArc, loading, error)
+- Computed getters: draftArcs, activeArcs, pausedArcs, completedArcs
+- Actions: fetchStoryArcs(filters), fetchStoryArc(id), createStoryArc, updateStoryArc, deleteStoryArc
+- German error messages for user-facing errors
+
+### Additional fixes:
+- Fixed CSS focus:ring-treff-blue @apply error in main.css (replaced with --tw-ring-color variable)
+- Created StudentsView.vue placeholder (later replaced by another agent with full implementation)
+
+### Verification steps completed:
+1. SQLAlchemy Model StoryArc created - PASS (all fields, indexes, relationships)
+2. Model registered in __init__.py - PASS (imported and in __all__)
+3. CRUD endpoints POST/GET/PUT/DELETE - PASS (all 5 endpoints work via curl)
+4. GET /api/story-arcs with filters - PASS (student_id, country, status all filter correctly)
+5. Pinia store storyArcStore created - PASS (all actions, getters, state management)
+6. CRUD and filtering tested - PASS:
+   - Created 3 story arcs with different countries/statuses
+   - Filtered by status=draft (2 results), status=active (1 result), country=usa (1 result)
+   - Updated arc 1: status draft->active, current_episode 0->5, subtitle changed
+   - Deleted arc 3: confirmed 404 on re-fetch
+   - GET by ID returns correct single arc
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in new files)
+- [x] Server restart persistence: data persists across full backend restart
+- [x] Authentication: 401 for unauthenticated requests
+- [x] Validation: 400 for invalid status, missing title
+- [x] 404 for non-existent or deleted arcs
+- [x] Swagger UI shows all 5 Story Arcs endpoints
+- [x] Screenshots captured:
+  - feature181-step1-dashboard-loaded.png
+  - feature181-step2-dashboard-after-restart.png
+  - feature181-step3-swagger-story-arcs.png
+
+### Files created:
+- backend/app/models/story_arc.py - StoryArc SQLAlchemy model
+- backend/app/api/routes/story_arcs.py - CRUD endpoints with filtering
+- frontend/src/stores/storyArc.js - Pinia store
+
+### Files modified:
+- backend/app/models/__init__.py - Added StoryArc import
+- backend/app/models/user.py - Added story_arcs relationship
+- backend/app/models/student.py - Added story_arcs relationship
+- backend/app/main.py - Registered story_arcs router
+- frontend/src/assets/main.css - Fixed focus-ring CSS @apply error
+
+### Current state:
+- Feature #181 marked as PASSING
+- 171/205 features passing (83.4%)
+
 ## Session - Feature #166: Support platform-specific aspect ratios in image generation
 **Date:** 2026-02-13
 **Status:** PASSING
