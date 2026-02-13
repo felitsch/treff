@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -335,13 +336,15 @@ onMounted(() => {
             </div>
 
             <!-- No videos -->
-            <div v-else-if="videoAssets.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500">
-              <p class="text-sm">Keine Videos vorhanden.</p>
-              <p class="text-xs mt-1">Lade Videos im Assets-Bereich hoch.</p>
-              <router-link to="/assets" class="inline-block mt-3 text-xs text-blue-600 hover:underline">
-                Zu Assets &rarr;
-              </router-link>
-            </div>
+            <EmptyState
+              v-else-if="videoAssets.length === 0"
+              icon="✂️"
+              title="Keine Videos vorhanden"
+              description="Lade zuerst Videos in der Asset-Bibliothek hoch, um sie hier zu schneiden."
+              actionLabel="Zu Assets"
+              actionTo="/assets"
+              :compact="true"
+            />
 
             <!-- Video list -->
             <div
@@ -434,11 +437,13 @@ onMounted(() => {
           </div>
 
           <!-- Empty state -->
-          <div v-if="clips.length === 0" class="p-8 text-center text-gray-400 dark:text-gray-500" data-testid="timeline-empty">
-            <div class="text-4xl mb-3">🎬</div>
-            <p class="text-sm font-medium">Keine Clips in der Timeline</p>
-            <p class="text-xs mt-1">Klicke auf Videos in der Bibliothek, um sie hinzuzufuegen</p>
-          </div>
+          <EmptyState
+            v-if="clips.length === 0"
+            icon="🎬"
+            title="Keine Clips in der Timeline"
+            description="Klicke auf Videos in der Bibliothek links, um sie zur Timeline hinzuzufuegen und zu einem Video zusammenzuschneiden."
+            :compact="true"
+          />
 
           <!-- Draggable clips -->
           <draggable

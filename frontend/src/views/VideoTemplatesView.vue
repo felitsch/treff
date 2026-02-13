@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const { addToast } = useToast()
 
@@ -443,9 +444,15 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="!loading && filteredTemplates.length === 0" class="text-center py-12 text-gray-500">
-          Keine Templates gefunden. Passe die Filter an oder erstelle ein neues Template.
-        </div>
+        <EmptyState
+          v-if="!loading && filteredTemplates.length === 0"
+          icon="🏷️"
+          title="Keine Video-Templates gefunden"
+          description="Passe die Filter an oder erstelle ein neues Video-Branding-Template."
+          actionLabel="Filter zuruecksetzen"
+          @action="selectedCategory = ''"
+          :compact="true"
+        />
       </div>
 
       <!-- Right: Apply Panel (1/3) -->
@@ -468,7 +475,8 @@ onMounted(() => {
               </option>
             </select>
             <p v-if="videoAssets.length === 0" class="text-xs text-amber-500 mt-1">
-              Keine Videos vorhanden. Lade ein Video in der Assets-Seite hoch.
+              Keine Videos vorhanden.
+              <router-link to="/assets" class="text-blue-500 hover:underline">Jetzt in Assets hochladen</router-link>
             </p>
           </div>
 

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/utils/api'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -486,14 +487,14 @@ onUnmounted(() => {
       <div v-if="!selectedAsset" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Video auswaehlen</h2>
 
-        <div v-if="videoAssets.length === 0" class="text-center py-12 text-gray-500">
-          <div class="text-4xl mb-3">🎥</div>
-          <p class="font-medium">Keine Videos vorhanden</p>
-          <p class="text-sm mt-1">Lade zuerst ein Video in der Asset-Verwaltung hoch.</p>
-          <button @click="router.push('/assets')" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-            Zu Assets
-          </button>
-        </div>
+        <EmptyState
+          v-if="videoAssets.length === 0"
+          icon="🎞️"
+          title="Keine Videos vorhanden"
+          description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Overlays und Text-Layer hinzuzufuegen."
+          actionLabel="Zu Assets"
+          actionTo="/assets"
+        />
 
         <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <button

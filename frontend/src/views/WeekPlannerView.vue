@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -22,6 +24,7 @@ const season = ref('')
 const planGenerated = ref(false)
 const dragItem = ref(null)
 const dragSourceDay = ref(null)
+const tourRef = ref(null)
 
 // Category display helpers
 const categoryColors = {
@@ -261,17 +264,26 @@ onMounted(() => {
 <template>
   <div class="p-4 md:p-6 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>📅</span> Wochen-Content-Planer
-      </h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">
-        KI-gestuetzter Wochenplaner mit Serien-Awareness, wiederkehrenden Formaten und ausgewogenem Content-Mix
-      </p>
+    <div class="flex items-start justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <span>📅</span> Wochen-Content-Planer
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+          KI-gestuetzter Wochenplaner mit Serien-Awareness, wiederkehrenden Formaten und ausgewogenem Content-Mix
+        </p>
+      </div>
+      <button
+        @click="tourRef?.startTour()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        title="Seiten-Tour starten"
+      >
+        &#10067; Tour
+      </button>
     </div>
 
     <!-- Controls -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div data-tour="wp-controls" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div class="flex flex-wrap items-end gap-4">
         <!-- Week Picker -->
         <div class="flex-1 min-w-[180px]">
@@ -361,7 +373,7 @@ onMounted(() => {
     </div>
 
     <!-- Weekly Plan Grid -->
-    <div v-if="planGenerated" class="mb-6">
+    <div v-if="planGenerated" data-tour="wp-grid" class="mb-6">
       <!-- Week Header -->
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -487,20 +499,14 @@ onMounted(() => {
     </div>
 
     <!-- Empty State (before plan generation) -->
-    <div v-if="!planGenerated && !loading" class="text-center py-16">
-      <div class="text-6xl mb-4">🗓️</div>
-      <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Wochenplan erstellen</h3>
-      <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-        Waehle eine Woche und die Anzahl der Posts aus. Die KI generiert einen ausgewogenen Content-Plan
-        mit wiederkehrenden Formaten, Story-Serien und optimalen Posting-Zeiten.
-      </p>
-      <button
-        @click="generatePlan"
-        class="px-6 py-3 bg-treff-blue text-white rounded-xl font-medium hover:bg-treff-blue/90 transition-colors inline-flex items-center gap-2"
-      >
-        <span>✨</span> Jetzt Plan generieren
-      </button>
-    </div>
+    <EmptyState
+      v-if="!planGenerated && !loading"
+      icon="🗓️"
+      title="Wochenplan erstellen"
+      description="Waehle oben eine Woche und die Anzahl der Posts aus. Die KI generiert einen ausgewogenen Content-Plan mit wiederkehrenden Formaten, Story-Serien und optimalen Posting-Zeiten."
+      actionLabel="Jetzt Plan generieren"
+      @action="generatePlan"
+    />
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-16">
@@ -534,5 +540,7 @@ onMounted(() => {
         💡 Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan uebernehmen" erstellt alle Vorschlaege als geplante Posts im Kalender.
       </p>
     </div>
+
+    <TourSystem ref="tourRef" page-key="week-planner" />
   </div>
 </template>

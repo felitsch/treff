@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const toast = useToast()
 
@@ -42,6 +44,7 @@ const mixing = ref(false)
 const mixProgress = ref(0)
 const mixResult = ref(null)
 const mixError = ref(null)
+const tourRef = ref(null)
 
 // ---- Computed ----
 const filteredTracks = computed(() => {
@@ -291,13 +294,22 @@ onMounted(async () => {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span>🎵</span> Musik- und Audio-Layer
-        </h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Hintergrundmusik und Audio-Effekte zu Videos hinzufuegen. Lautstaerke-Kontrolle fuer Original-Audio vs. Musik.
-        </p>
+      <div data-tour="am-header" class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>🎵</span> Musik- und Audio-Layer
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Hintergrundmusik und Audio-Effekte zu Videos hinzufuegen. Lautstaerke-Kontrolle fuer Original-Audio vs. Musik.
+          </p>
+        </div>
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -316,11 +328,15 @@ onMounted(async () => {
               <p class="text-sm">Videos laden...</p>
             </div>
 
-            <div v-else-if="videoAssets.length === 0" class="text-center py-8 text-gray-400">
-              <p class="text-4xl mb-2">📹</p>
-              <p class="text-sm">Keine Videos vorhanden.</p>
-              <p class="text-xs mt-1">Lade zuerst ein Video in der Assets-Seite hoch.</p>
-            </div>
+            <EmptyState
+              v-else-if="videoAssets.length === 0"
+              icon="🎵"
+              title="Keine Videos vorhanden"
+              description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Musik und Audio hinzuzufuegen."
+              actionLabel="Zu Assets"
+              actionTo="/assets"
+              :compact="true"
+            />
 
             <div v-else class="space-y-2 max-h-64 overflow-y-auto">
               <button
@@ -430,9 +446,13 @@ onMounted(async () => {
                 <div class="animate-spin inline-block w-5 h-5 border-2 border-treff-blue border-t-transparent rounded-full"></div>
               </div>
 
-              <div v-else-if="filteredTracks.length === 0" class="text-center py-6 text-gray-400">
-                <p class="text-sm">Keine Tracks gefunden.</p>
-              </div>
+              <EmptyState
+                v-else-if="filteredTracks.length === 0"
+                icon="🎶"
+                title="Keine Tracks gefunden"
+                description="Versuche eine andere Kategorie oder warte, bis Musik-Tracks verfuegbar sind."
+                :compact="true"
+              />
 
               <div v-else class="space-y-1.5 max-h-72 overflow-y-auto">
                 <button
@@ -904,5 +924,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <TourSystem ref="tourRef" page-key="audio-mixer" />
   </div>
 </template>

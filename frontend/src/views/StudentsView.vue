@@ -225,20 +225,29 @@ onMounted(() => {
 <template>
   <div class="p-6 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6" data-tour="students-header">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Studenten</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
           Verwalte Studentenprofile fuer Content-Serien
         </p>
       </div>
-      <button
-        class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-        @click="openCreateForm"
-      >
-        <span>+</span>
-        <span>Student hinzufuegen</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
+          class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          @click="openCreateForm"
+        >
+          <span>+</span>
+          <span>Student hinzufuegen</span>
+        </button>
+      </div>
     </div>
 
     <!-- Workflow Hint: Story-Arcs -->
@@ -299,7 +308,7 @@ onMounted(() => {
     />
 
     <!-- Student list -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="students-list">
       <div
         v-for="student in filteredStudents"
         :key="student.id"
