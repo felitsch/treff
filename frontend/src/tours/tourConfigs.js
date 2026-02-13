@@ -264,28 +264,71 @@ const tourConfigs = {
 
   // ─── Calendar ────────────────────────────────────────────
   calendar: {
-    title: 'Kalender Tour',
+    title: 'Kalender Tour – Content-Planung',
     steps: [
+      // Tour-Step 1: Ueberblick Kalender als zentrales Planungstool
       {
         target: '[data-tour="cal-toolbar"]',
-        title: 'Kalender-Navigation',
+        title: 'Willkommen im Content-Kalender!',
         description:
-          'Navigiere zwischen Monaten, wechsle zwischen Monats-, Wochen- und Warteschlangen-Ansicht, und filtere nach Plattform.',
+          'Der Kalender ist dein zentrales Planungstool: Hier siehst du alle geplanten und ungeplanten Posts auf einen Blick, erkennst Content-Luecken und behaltst den Ueberblick ueber Fristen, Serien und wiederkehrende Formate. Von der Monatsansicht bis zur Warteschlange — alles an einem Ort. Lass uns die wichtigsten Funktionen kennenlernen!',
         position: 'bottom',
       },
+      // Tour-Step 2: Ansichten erklaeren (Monat/Woche/Lanes/Queue)
+      {
+        target: '[data-tour="cal-views"]',
+        title: 'Ansichten: Monat, Woche, Lanes & Queue',
+        description:
+          'Der Kalender bietet vier Ansichten fuer verschiedene Planungsbeduerfnisse: "Monat" zeigt den klassischen Monatsueberblick mit allen Features (Luecken, Fristen, Arcs). "Woche" zeigt eine detaillierte Wochenansicht mit Zeitslots von 06:00 bis 23:00 Uhr. "Lanes" trennt Posts nach Plattform (Instagram Feed, Stories, TikTok) in separate Spalten. "Warteschlange" listet alle geplanten Posts chronologisch auf — ideal zum schnellen Ueberpruefen.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: Drag-and-Drop Scheduling erklaeren
       {
         target: '[data-tour="cal-grid"]',
-        title: 'Kalender-Uebersicht',
+        title: 'Drag & Drop: Posts per Maus planen',
         description:
-          'Ziehe unveroffentlichte Posts per Drag & Drop auf einen Tag, um sie zu planen. Luecken werden automatisch hervorgehoben.',
+          'Plane deine Posts einfach per Drag & Drop: Ziehe einen Entwurf aus der linken Seitenleiste auf ein Datum im Kalender. Es oeffnet sich ein Dialog zur Uhrzeitauswahl. Bei Serien-Posts (Story-Arcs) wird automatisch geprueft, ob die Episoden-Reihenfolge stimmt — und du wirst gewarnt, falls nicht. Bereits geplante Posts kannst du durch erneutes Ziehen auf ein anderes Datum verschieben.',
         position: 'top',
       },
+      // Tour-Step 4: Entwuerfe-Sidebar erklaeren
       {
         target: '[data-tour="cal-sidebar"]',
-        title: 'Unveroffentlichte Entwuerfe',
+        title: 'Entwuerfe-Sidebar: Ungeplante Posts',
         description:
-          'Hier siehst du alle Entwuerfe, die noch keinem Datum zugeordnet sind. Ziehe sie einfach in den Kalender.',
-        position: 'left',
+          'In der linken Seitenleiste findest du alle Posts, die noch kein Datum haben. Jede Karte zeigt Kategorie, Plattform und Status auf einen Blick. Ziehe eine Karte einfach auf ein Datum im Kalender, um den Post zu planen. Wenn alle Posts terminiert sind, erscheint hier ein "Alle Posts geplant!"-Hinweis. Die Sidebar laesst sich einklappen, um mehr Platz fuer den Kalender zu schaffen.',
+        position: 'right',
+      },
+      // Tour-Step 5: Luecken-Erkennung erklaeren
+      {
+        target: '[data-tour="cal-gaps"]',
+        title: 'Luecken-Erkennung: Nie wieder Posting-Pausen',
+        description:
+          'Aktiviere die Luecken-Erkennung, um Tage ohne geplanten Content orange hervorzuheben. WARUM? Regelmaessiges Posten ist entscheidend fuer den Instagram-Algorithmus — jede Luecke kostet Reichweite! Der Badge zeigt die Anzahl der Luecken-Tage an. Tipp: Nutze den KI-Wochenplaner, um Luecken schnell mit passenden Vorschlaegen zu fuellen.',
+        position: 'bottom',
+      },
+      // Tour-Step 6: Saisonale Marker erklaeren
+      {
+        target: '[data-tour="cal-seasonal"]',
+        title: 'Saisonale Marker: Fristen im Blick',
+        description:
+          'Aktiviere die saisonalen Marker, um wichtige Termine direkt im Kalender zu sehen: Bewerbungsfristen fuer Highschool-Programme, Abflugzeiten, Schuljahresstart in den Ziellaendern und weitere relevante Daten. WARUM? Content rund um diese Termine erzeugt hohe Relevanz und Dringlichkeit — ideal fuer Fristen-CTAs und Countdown-Posts. Die Marker sind farblich nach Kategorie kodiert.',
+        position: 'bottom',
+      },
+      // Tour-Step 7: Content-Mix Panel erklaeren
+      {
+        target: '[data-tour="cal-mix"]',
+        title: 'Content-Mix: Ausgewogene Kategorien',
+        description:
+          'Das Content-Mix-Panel analysiert die Verteilung deiner Posts nach Kategorie, Plattform und Land. WARUM? Ein ausgewogener Content-Mix sorgt dafuer, dass du nicht nur Laender-Spotlights postest, sondern auch Erfahrungsberichte, FAQ, Tipps und CTAs abwechselst. So sprichst du verschiedene Zielgruppen an und haltst deinen Feed abwechslungsreich. Das Panel zeigt Prozentwerte und Balkendiagramme fuer den aktuellen Monat.',
+        position: 'bottom',
+      },
+      // Tour-Step 8: Story-Arc Timeline erklaeren
+      {
+        target: '[data-tour="cal-arcs"]',
+        title: 'Story-Arc Timeline: Serien visualisieren',
+        description:
+          'Die Story-Arc-Timeline zeigt deine mehrteiligen Content-Serien als farbige Balken oberhalb des Kalenders. Jeder Balken repraesentiert eine Serie mit Episoden-Punkten an den geplanten Terminen. WARUM? So erkennst du auf einen Blick, ob alle Episoden terminiert sind, ob die Reihenfolge stimmt und ob genuegend Abstand zwischen den Teilen liegt. Klicke auf einen Episoden-Punkt, um direkt zum Post-Editor zu springen.',
+        position: 'bottom',
       },
     ],
   },
@@ -348,62 +391,156 @@ const tourConfigs = {
 
   // ─── Students ────────────────────────────────────────────
   students: {
-    title: 'Schueler Tour',
+    title: 'Schueler Tour – Deine Schueler-Datenbank',
     steps: [
+      // Tour-Step 1: Warum eine Schueler-Datenbank (echte Geschichten = bester Content)
       {
         target: '[data-tour="students-header"]',
-        title: 'Schueler-Verwaltung',
+        title: 'Warum eine Schueler-Datenbank?',
         description:
-          'Erstelle und verwalte Schueler-Profile. Jeder Schueler kann einem Post zugeordnet werden und bekommt ein eigenes Persoenlichkeits-Preset fuer die KI-Textgenerierung.',
+          'Echte Geschichten von echten Austausch-Schuelern sind der beste Content fuer Social Media! Die Schueler-Datenbank ist das Herzstuck deiner Content-Strategie: Hier sammelst du alle Infos ueber deine Teilnehmer — Name, Land, Schule, Gastfamilie, Bio und Fun-Facts. Diese Daten fliessen automatisch in die KI-Textgenerierung ein, sodass jeder Post authentisch und persoenlich klingt. Statt generischer Werbung erstellst du so echte Erfahrungsberichte, die Teenager und Eltern gleichermassen ansprechen.',
         position: 'bottom',
       },
+      // Tour-Step 2: Schueler anlegen erklaeren (Name, Land, Bio, Fun-Facts)
+      {
+        target: '[data-tour="students-add-btn"]',
+        title: 'Schueler anlegen: Name, Land, Bio & Fun-Facts',
+        description:
+          'Klicke auf "Student hinzufuegen", um ein neues Profil zu erstellen. Pflichtfelder sind Name und Land — alles andere ist optional, macht den Content aber deutlich besser! Stadt und Schule geben Kontext ("Kitsilano Secondary in Vancouver"), die Gastfamilie personalisiert Stories, und Fun-Facts ("Spielt Eishockey", "Liebt Poutine") machen Posts nahbar und unterhaltsam. Je mehr Details du eintraegst, desto authentischer und vielfaeltiger werden die KI-generierten Texte.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: Persoenlichkeits-Presets erklaeren
+      {
+        target: '[data-tour="students-personality"]',
+        title: 'Persoenlichkeits-Presets: Tonalitaet steuern',
+        description:
+          'Jeder Schueler bekommt ein Persoenlichkeits-Preset, das die KI-Textgenerierung steuert. Waehle einen Ton (z.B. witzig 😂, emotional 🥺, motivierend 💪, jugendlich ✨, storytelling 📖) und einen Humor-Level (1-5). WARUM? So klingt jeder Schueler in Posts anders und authentisch — ein witziger Schueler schreibt locker, ein emotionaler teilt Heimweh-Geschichten. Das Preset wird automatisch an die KI uebergeben, wenn du Posts fuer diesen Schueler erstellst.',
+        position: 'top',
+      },
+      // Tour-Step 4: Zusammenhang mit Story-Arcs erklaeren (Schueler sind Hauptfiguren)
+      {
+        target: '[data-tour="students-story-arc-hint"]',
+        title: 'Story-Arcs: Schueler als Hauptfiguren',
+        description:
+          'Schueler sind die Hauptfiguren deiner Content-Serien (Story-Arcs)! Ein Story-Arc erzaehlt die Geschichte eines Schuelers ueber mehrere Posts hinweg — z.B. "Lisas erstes Semester in Neuseeland" mit Episoden wie Ankunft, erster Schultag, Gastfamilien-Alltag und Abschied. Jeder Arc wird einem Schueler zugeordnet und nutzt dessen Profil-Daten und Persoenlichkeits-Preset. Gehe nach dem Anlegen von Schuelern zu "Story-Arcs", um mehrteilige Serien zu erstellen!',
+        position: 'bottom',
+      },
+      // Tour-Step 5: Wie Schueler-Daten in Posts einfliessen
       {
         target: '[data-tour="students-list"]',
-        title: 'Schueler-Karten',
+        title: 'Wie Schueler-Daten in Posts einfliessen',
         description:
-          'Klicke auf einen Schueler, um sein Profil und verknuepfte Posts zu sehen. Bearbeite Name, Land, Schule und Persoenlichkeit.',
+          'Wenn du im Post-Wizard einen Schueler auswaehlst, passiert Folgendes: Die KI erhaelt automatisch Name, Land, Stadt, Schule, Bio, Fun-Facts und das Persoenlichkeits-Preset als Kontext. Daraus generiert sie personalisierte Texte wie "Jonathan erzaehlt von seinem Alltag an der Kitsilano Secondary in Vancouver" statt generischem "Ein Schueler berichtet...". Je mehr Schueler mit detaillierten Profilen du hier anlegst, desto abwechslungsreicher und authentischer wird dein gesamter Content-Feed!',
         position: 'top',
       },
     ],
   },
 
-  // ─── Story Arcs ──────────────────────────────────────────
+  // ─── Story Arcs (6-Step Detailed Tour) ──────────────────
   'story-arcs': {
-    title: 'Story-Arcs Tour',
+    title: 'Story-Arcs Tour – Serien-Content',
     steps: [
+      // Tour-Step 1: Was sind Story-Arcs und warum sind sie wichtig (Follower kommen zurueck)
       {
         target: '[data-tour="arcs-header"]',
-        title: 'Serien-Management',
+        title: 'Was sind Story-Arcs? (Und warum sie Gold wert sind)',
         description:
-          'Story-Arcs sind mehrteilige Content-Serien. Erstelle zusammenhaengende Episoden, die eine Geschichte ueber mehrere Posts erzaehlen.',
+          'Story-Arcs sind mehrteilige Content-Serien, z.B. "Lenas Abenteuer in Kanada" als 8-teilige Serie. WARUM? Serien-Content ist der staerkste Hebel fuer Follower-Bindung: Wer Teil 1 sieht, will Teil 2 sehen — und kommt aktiv zurueck! Das steigert die Verweildauer, die Algorithmus-Reichweite und baut eine emotionale Verbindung auf. Jede Serie erzaehlt die echte Geschichte eines TREFF-Teilnehmers.',
         position: 'bottom',
       },
+      // Tour-Step 2: Story-Arc-Uebersicht erklaeren (Status, Fortschritt)
+      {
+        target: '[data-tour="arcs-stats"]',
+        title: 'Story-Arc-Uebersicht: Status & Fortschritt',
+        description:
+          'Diese Statistik-Karten zeigen dir auf einen Blick den Stand aller Serien: Wie viele sind aktiv (laufen gerade), pausiert (temporaer gestoppt), als Entwurf (noch in Planung) oder bereits abgeschlossen. So behaelst du den Ueberblick, welche Serien Aufmerksamkeit brauchen und wo neue Episoden faellig sind.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: Story-Arc-Wizard erklaeren (Schueler waehlen, Episoden planen)
+      {
+        target: '[data-tour="arcs-wizard-btn"]',
+        title: 'Story-Arc-Wizard: Neue Serie erstellen',
+        description:
+          'Klicke hier, um eine neue Serie zu erstellen. Der Wizard fuehrt dich Schritt fuer Schritt: Waehle einen Schueler als Protagonisten, lege Titel und Handlungsbogen fest, plane die Anzahl der Episoden, weise ein Zielland zu und definiere den Erzaehlton (emotional, informativ, humorvoll). Jede Serie bekommt automatisch eine Fortschrittsanzeige und Episoden-Nummerierung.',
+        position: 'bottom',
+      },
+      // Tour-Step 4: Episoden-Management erklaeren
       {
         target: '[data-tour="arcs-list"]',
-        title: 'Deine Serien',
+        title: 'Episoden-Management: Deine Serien im Ueberblick',
         description:
-          'Hier siehst du alle Serien mit Fortschrittsanzeige, Episoden-Anzahl und Status. Klicke auf eine Serie fuer Details.',
+          'Jede Karte zeigt eine Serie mit Cover-Bild, Status-Badge, Laender-Flagge, Schueler-Name und Fortschrittsbalken (z.B. 3/8 Episoden). Klicke auf eine Karte, um die Detail-Ansicht zu oeffnen — dort kannst du einzelne Episoden verwalten, den Status aendern (aktiv/pausiert/abgeschlossen) und die Reihenfolge anpassen. Neue Episoden erstellst du direkt als Posts im Post-Wizard.',
         position: 'top',
+      },
+      // Tour-Step 5: Zusammenhang mit Kalender erklaeren (Episoden werden eingeplant)
+      {
+        target: '[data-tour="arcs-filters"]',
+        title: 'Zusammenhang mit Kalender: Episoden einplanen',
+        description:
+          'Die Filter helfen dir, Serien nach Status, Land oder Schueler zu finden. Der wichtigste Zusammenhang: Jede Episode einer Serie wird als regulaerer Post im Kalender eingeplant! Nutze den Wochenplaner, um Episoden auf bestimmte Tage zu terminieren — er beruecksichtigt automatisch, welche Episoden als naechstes faellig sind. So verpasst du keine Fortsetzung und haelst deine Follower bei der Stange.',
+        position: 'bottom',
+      },
+      // Tour-Step 6: Zusammenhang mit Students erklaeren
+      {
+        target: '[data-tour="arcs-students-hint"]',
+        title: 'Zusammenhang mit Schuelern: Persoenliche Geschichten',
+        description:
+          'Jede Story-Serie ist mit einem Schueler-Profil verknuepft (z.B. "Lena, 16, USA"). Das Profil liefert automatisch den Namen, das Zielland, die Schule und die Persoenlichkeit fuer die KI-Textgenerierung. So klingen alle Episoden einer Serie konsistent und authentisch. Tipp: Lege zuerst Schueler-Profile unter "Schueler" an, damit du sie hier als Protagonisten auswaehlen kannst!',
+        position: 'bottom',
       },
     ],
   },
 
   // ─── Week Planner ────────────────────────────────────────
   'week-planner': {
-    title: 'Wochenplaner Tour',
+    title: 'Wochenplaner Tour – KI-gestuetzter Content-Planer',
     steps: [
+      // Tour-Step 1: Was ist der Wochenplaner
       {
-        target: '[data-tour="wp-controls"]',
-        title: 'Planungs-Optionen',
+        target: '[data-tour="wp-header"]',
+        title: 'Was ist der Wochenplaner?',
         description:
-          'Waehle die Woche, Anzahl Posts pro Woche, und ob wiederkehrende Formate und Story-Serien beruecksichtigt werden sollen.',
+          'Der Wochenplaner ist dein KI-gestuetzter Content-Assistent: Er analysiert deine bisherigen Posts, aktive Story-Serien, wiederkehrende Formate und saisonale Themen — und generiert daraus automatisch einen ausgewogenen Wochenplan mit optimalen Posting-Zeiten. Statt stundenlang zu planen, erhaelst du in Sekunden einen kompletten Plan fuer die ganze Woche!',
         position: 'bottom',
       },
+      // Tour-Step 2: Filter erklaeren (Saison, Land, Kategorie)
+      {
+        target: '[data-tour="wp-filters"]',
+        title: 'Filter: Saison, Land & Formate',
+        description:
+          'Hier steuerst du, was die KI beruecksichtigen soll: Waehle die Woche per Datumspicker oder Pfeil-Buttons, bestimme die Anzahl der Posts (2-7 pro Woche) und aktiviere die Checkboxen fuer "Wiederkehrende Formate" (z.B. Motivation Monday, Freitags-Fail) und "Story-Serien" (laufende mehrteilige Serien). Die KI beruecksichtigt automatisch die aktuelle Saison und rotiert Laender gleichmaessig.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: AI-Generierung starten erklaeren
+      {
+        target: '[data-tour="wp-generate"]',
+        title: 'KI-Generierung starten',
+        description:
+          'Klicke auf "Plan generieren", um die KI loszuschicken! Sie prueft bereits geplante Posts fuer die gewaehlte Woche (damit nichts doppelt wird), beruecksichtigt aktive Story-Arcs und deren naechste faellige Episoden, schlaegt wiederkehrende Formate am richtigen Wochentag vor und fuellt die restlichen Slots mit einem ausgewogenen Mix aus Kategorien und Laendern. Das Ergebnis: Ein 7-Tage-Raster mit konkreten Vorschlaegen.',
+        position: 'bottom',
+      },
+      // Tour-Step 4: Drag-and-Drop Tages-Slots erklaeren
       {
         target: '[data-tour="wp-grid"]',
-        title: 'Wochen-Raster',
+        title: 'Drag & Drop: Tages-Slots anpassen',
         description:
-          'Die KI schlaegt Posts fuer jeden Tag vor. Verschiebe sie per Drag & Drop, entferne ungewollte, und uebernimm den Plan mit einem Klick.',
+          'Jede Spalte steht fuer einen Wochentag (Montag bis Sonntag). Die farbigen Karten sind Content-Vorschlaege mit Kategorie, Plattform, Land und Uhrzeit. Du kannst sie frei per Drag & Drop zwischen den Tagen verschieben — z.B. einen Post von Montag auf Mittwoch ziehen. Klicke das X auf einer Karte, um einen Vorschlag zu entfernen. Bereits geplante Posts (mit Pin-Icon) werden angezeigt, sind aber nicht verschiebbar.',
+        position: 'top',
+      },
+      // Tour-Step 5: 'In Kalender uebernehmen' erklaeren
+      {
+        target: '[data-tour="wp-adopt"]',
+        title: 'Plan in den Kalender uebernehmen',
+        description:
+          'Wenn du mit dem Plan zufrieden bist, klicke "Plan uebernehmen" — alle Vorschlaege werden als geplante Entwuerfe im Content-Kalender erstellt. Die Posts erhalten automatisch das richtige Datum, die Uhrzeit, Kategorie, Land und Plattform. Serien-Episoden werden mit der korrekten Story-Arc-ID und Episodennummer verknuepft. Nach der Uebernahme wirst du direkt zum Kalender weitergeleitet, wo du die Posts weiter bearbeiten kannst.',
+        position: 'bottom',
+      },
+      // Tour-Step 6: Zusammenhang mit Kalender und Recurring Formats erklaeren
+      {
+        target: '[data-tour="wp-legend"]',
+        title: 'Zusammenspiel: Kalender & Formate',
+        description:
+          'Der Wochenplaner arbeitet Hand in Hand mit dem Content-Kalender und den Wiederkehrenden Formaten: Formate wie "Motivation Monday" werden automatisch am passenden Wochentag vorgeschlagen, Story-Serien-Episoden erscheinen in der richtigen Reihenfolge, und der Kalender zeigt dir nach der Uebernahme sofort die Luecken-Erkennung und den Content-Mix. Tipp: Erstelle zuerst deine wiederkehrenden Formate unter "Wiederkehrende Formate" — der Wochenplaner nutzt sie dann automatisch!',
         position: 'top',
       },
     ],
@@ -413,11 +550,44 @@ const tourConfigs = {
   'recurring-formats': {
     title: 'Wiederkehrende Formate Tour',
     steps: [
+      // Tour-Step 1: Was sind wiederkehrende Formate (regelmaessige Rubriken)
       {
         target: '[data-tour="formats-header"]',
-        title: 'Running Gags & Formate',
+        title: 'Was sind wiederkehrende Formate?',
         description:
-          'Definiere wiederkehrende Content-Formate wie "Motivation Monday" oder "Freitags-Fail", die automatisch im Wochenplaner vorgeschlagen werden.',
+          'Wiederkehrende Formate sind regelmaessige Content-Rubriken fuer deine Social-Media-Kanaele — wie "Motivation Monday", "Freitags-Fail" oder "Throwback Thursday". WARUM? Feste Rubriken schaffen Wiedererkennungswert bei deinem Publikum und geben dir eine klare Struktur fuer die Woche. Follower wissen, was sie erwarten koennen, und kommen gezielt zurueck. Hier verwaltest du alle deine Formate zentral.',
+        position: 'bottom',
+      },
+      // Tour-Step 2: Format erstellen erklaeren (Name, Frequenz, Ton, Hashtags)
+      {
+        target: '[data-tour="formats-create"]',
+        title: 'Format erstellen: Name, Frequenz & Ton',
+        description:
+          'Klicke auf "+ Neues Format", um ein eigenes Format anzulegen. Vergib einen einpraegsamen Namen (z.B. "Wusstest-du-Mittwoch"), waehle die Haeufigkeit (taeglich, woechentlich, alle 2 Wochen, monatlich), lege den bevorzugten Wochentag und die Uhrzeit fest, und bestimme die Tonalitaet (jugendlich, witzig, emotional, motivierend, informativ, serioess). Eigene Hashtags werden automatisch bei jedem Post dieses Formats vorgeschlagen — so bleibt dein Branding konsistent.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: AI-Preview erklaeren
+      {
+        target: '[data-tour="formats-ai-preview"]',
+        title: 'KI-Textvorschlag: AI-Preview',
+        description:
+          'Der "KI-Text"-Button oeffnet die KI-Textgenerierung fuer dieses Format. Gib optional ein Thema (z.B. "Trinkgeld-Kultur in den USA") und ein Zielland ein — die KI generiert dann einen passenden Titel, Caption-Text und Hashtags im Stil des Formats. WARUM? So bekommst du in Sekunden Content-Ideen, die zum Ton und Thema deines Formats passen. Die Vorschlaege lassen sich direkt im Post-Editor weiterverwenden.',
+        position: 'top',
+      },
+      // Tour-Step 4: Zusammenhang mit Kalender und Wochenplaner erklaeren
+      {
+        target: '[data-tour="formats-info"]',
+        title: 'Kalender & Wochenplaner: Automatische Integration',
+        description:
+          'Aktive Formate werden automatisch im Content-Kalender als Platzhalter am bevorzugten Wochentag angezeigt. Der KI-Wochenplaner beruecksichtigt deine Formate und schlaegt passende Posts fuer die richtigen Tage vor — z.B. einen "Motivation Monday"-Post am Montag. WARUM? So musst du nicht jede Woche neu ueberlegen, welchen Content du wann postest. Die Formate bilden das Geruest deiner Content-Strategie und fuellen automatisch Luecken im Kalender.',
+        position: 'top',
+      },
+      // Tour-Step 5: Best Practices erklaeren (nicht zu viele, 2-3 pro Woche ideal)
+      {
+        target: '[data-tour="formats-list"]',
+        title: 'Best Practices: Die richtige Balance',
+        description:
+          'Tipp: Starte mit 2-3 wiederkehrenden Formaten pro Woche — das ist ideal fuer Konsistenz ohne Ueberbelastung. Zu viele Formate fuehlen sich fuer Follower repetitiv an und schraenken deine Flexibilitaet fuer aktuelle Themen ein. Beispiel-Woche: Montag = "Motivation Monday" (motivierend), Mittwoch = "Wusstest-du-Mittwoch" (informativ), Freitag = "Freitags-Fail" (witzig). Deaktiviere Formate voruebergehend statt sie zu loeschen — so kannst du sie spaeter einfach reaktivieren.',
         position: 'bottom',
       },
     ],

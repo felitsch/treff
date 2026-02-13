@@ -1193,7 +1193,7 @@ onMounted(() => {
         </div>
 
         <!-- View mode toggle -->
-        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+        <div data-tour="cal-views" class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
           <button
             @click="setViewMode('month')"
             class="px-3 py-1.5 text-sm font-medium transition-colors"
@@ -1243,6 +1243,7 @@ onMounted(() => {
 
         <!-- Gap detection toggle (only in month view) -->
         <button
+          data-tour="cal-gaps"
           v-if="viewMode === 'month'"
           @click="showGaps = !showGaps"
           class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
@@ -1262,6 +1263,7 @@ onMounted(() => {
 
         <!-- Seasonal markers toggle (only in month view) -->
         <button
+          data-tour="cal-seasonal"
           v-if="viewMode === 'month'"
           @click="showSeasonalMarkers = !showSeasonalMarkers"
           class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
@@ -1281,6 +1283,7 @@ onMounted(() => {
 
         <!-- Story Arc Timeline toggle (only in month view) -->
         <button
+          data-tour="cal-arcs"
           v-if="viewMode === 'month'"
           @click="showArcTimeline = !showArcTimeline; if (showArcTimeline) fetchArcTimeline()"
           class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
@@ -1318,6 +1321,7 @@ onMounted(() => {
 
         <!-- Content-Mix toggle -->
         <button
+          data-tour="cal-mix"
           @click="mixPanelCollapsed = !mixPanelCollapsed"
           class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
           :class="!mixPanelCollapsed
