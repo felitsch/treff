@@ -1,5 +1,60 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #206: Erweitertes Tour-System mit Page-Level-Tours
+**Date:** 2026-02-13
+**Feature ID:** #206
+**Status:** PASSING
+
+### What was implemented:
+Extended the existing OnboardingTour component into a full page-level tour system where each page gets its own guided tour with page-specific steps, auto-triggered on first visit, with manual restart via "Tour starten" button, and tour progress persisted per page in user settings.
+
+### New Files Created:
+- `frontend/src/composables/useTour.js` — Composable managing per-page tour state with backend persistence via `tour_progress` JSON key in settings API
+- `frontend/src/tours/tourConfigs.js` — Tour configurations for 15 pages (dashboard, create-post, templates, assets, calendar, history, analytics, settings, students, story-arcs, week-planner, recurring-formats, video-export, audio-mixer, thumbnail-generator)
+- `frontend/src/components/common/TourSystem.vue` — Reusable page-level tour component with backdrop overlay, highlight ring, positioned tooltip, step navigation, auto-start on first visit, viewport-clamped positioning
+
+### Modified Files:
+- `frontend/src/views/DashboardView.vue` — Replaced OnboardingTour with TourSystem, added Tour button, welcome flow integration preserved
+- `frontend/src/views/TemplatesView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/AssetsView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/CalendarView.vue` — Added TourSystem, data-tour attributes
+- `frontend/src/views/HistoryView.vue` — Added TourSystem, data-tour attributes
+- `frontend/src/views/AnalyticsView.vue` — Added TourSystem, data-tour attributes
+- `frontend/src/views/StudentsView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/StoryArcsView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/WeekPlannerView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/RecurringFormatsView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/CreatePostView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/VideoExportView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/AudioMixerView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/ThumbnailGeneratorView.vue` — Added TourSystem, Tour button, data-tour attributes
+- `frontend/src/views/SettingsView.vue` — Added Tour-Einstellungen section with per-page status grid, individual reset, and "Alle Tours zuruecksetzen" button
+
+### Key Features:
+- Auto-triggers tour on first visit to each page (600ms delay for DOM settle)
+- Persists tour progress via `tour_progress` JSON in backend settings API
+- Manual "Tour starten" button on every page to re-trigger tour
+- Tour-Einstellungen in Settings page: see which tours are seen/unseen, reset individual tours, reset all
+- Viewport clamping: tooltip and highlight positions are clamped to stay within the visible area
+- Graceful fallback: if target element not found, skips to next step
+- Backdrop overlay with highlight ring around target element
+- Arrow-pointed tooltip with step dots, prev/next/skip navigation
+- Uses Teleport to body for correct z-index stacking
+
+### Verified (Browser Automation):
+- Dashboard Tour auto-triggers for new user (5 steps, all correct)
+- Templates Tour auto-triggers on first visit
+- Dashboard Tour does NOT re-trigger on revisit (persistence works)
+- Manual "Tour starten" button works on Dashboard (starts tour from step 1)
+- Settings Tour auto-triggers on first visit (1 step)
+- Tour-Einstellungen shows correct seen/unseen status for all 15 pages
+- Individual "Zuruecksetzen" resets a tour to "Noch nicht gesehen"
+- After reset, navigating to Dashboard re-triggers the tour
+- Zero console JavaScript errors
+- Build passes (vite build in 2.7s)
+
+---
+
 ## Session - Feature #221: App-Konzept Erklaerungsseite (Willkommens-Flow)
 **Date:** 2026-02-13
 **Feature ID:** #221
