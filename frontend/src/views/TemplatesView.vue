@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import api from '@/utils/api'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+
+const tourRef = ref(null)
 
 const loading = ref(true)
 const error = ref(null)
@@ -630,20 +634,29 @@ onMounted(() => {
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-6 flex items-start justify-between">
+    <div class="mb-6 flex items-start justify-between" data-tour="tpl-header">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
           Waehle ein Template fuer deinen naechsten Post. Alle Templates sind fuer TREFF Sprachreisen optimiert.
         </p>
       </div>
-      <button
-        @click="openCreateModal"
-        class="flex items-center gap-2 px-4 py-2.5 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm whitespace-nowrap"
-      >
-        <span class="text-lg leading-none">+</span>
-        Neues Template erstellen
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
+          @click="openCreateModal"
+          class="flex items-center gap-2 px-4 py-2.5 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm whitespace-nowrap"
+        >
+          <span class="text-lg leading-none">+</span>
+          Neues Template erstellen
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -678,7 +691,7 @@ onMounted(() => {
     <!-- Content -->
     <div v-else class="space-y-6">
       <!-- Filter Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4" data-tour="tpl-filters">
         <div class="flex flex-wrap items-center gap-3">
           <!-- Category Filter -->
           <div class="flex items-center gap-2">
@@ -727,22 +740,25 @@ onMounted(() => {
       </div>
 
       <!-- Empty state -->
-      <div v-if="filteredTemplates.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">\u{1F4C4}</div>
-        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Keine Templates gefunden</p>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-          Versuche andere Filter oder setze sie zurueck.
-        </p>
-        <button
-          @click="clearFilters"
-          class="mt-4 px-4 py-2 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Filter zuruecksetzen
-        </button>
-      </div>
+      <EmptyState
+        v-if="filteredTemplates.length === 0 && templates.length === 0"
+        icon="📄"
+        title="Keine Templates vorhanden"
+        description="Templates sind die Basis fuer deine Posts. Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
+        actionLabel="Post erstellen"
+        actionTo="/create-post"
+      />
+      <EmptyState
+        v-else-if="filteredTemplates.length === 0"
+        icon="🔍"
+        title="Keine Templates gefunden"
+        description="Keine Templates passen zu deinen aktuellen Filtern. Versuche andere Filter oder setze sie zurueck."
+        actionLabel="Filter zuruecksetzen"
+        @action="clearFilters"
+      />
 
       <!-- Template Grid grouped by category -->
-      <div v-for="(catTemplates, category) in groupedTemplates" :key="category" class="space-y-3">
+      <div v-for="(catTemplates, category) in groupedTemplates" :key="category" class="space-y-3" data-tour="tpl-grid">
         <!-- Category Header -->
         <div class="flex items-center gap-2">
           <span class="text-xl">{{ getCategoryInfo(category).icon }}</span>
@@ -1500,5 +1516,8 @@ onMounted(() => {
         </div>
       </div>
     </Teleport>
+
+    <!-- Page-specific guided tour -->
+    <TourSystem ref="tourRef" page-key="templates" />
   </div>
 </template>

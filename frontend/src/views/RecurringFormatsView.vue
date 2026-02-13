@@ -300,7 +300,7 @@ onMounted(fetchFormats)
     </div>
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="formats-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Wiederkehrende Formate <HelpTooltip :text="tooltipTexts.storyArcs.recurringFormats" /></h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
@@ -308,12 +308,21 @@ onMounted(fetchFormats)
           <span class="font-medium">{{ activeCount }}/{{ totalCount }} aktiv</span>
         </p>
       </div>
-      <button
-        @click="showCreateForm = !showCreateForm"
-        class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-      >
-        <span>{{ showCreateForm ? '✕ Abbrechen' : '+ Neues Format' }}</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
+          @click="showCreateForm = !showCreateForm"
+          class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <span>{{ showCreateForm ? '✕ Abbrechen' : '+ Neues Format' }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Create Form -->
@@ -614,5 +623,7 @@ onMounted(fetchFormats)
         <li>Erstelle eigene Formate fuer deine individuelle Content-Strategie!</li>
       </ul>
     </div>
+
+    <TourSystem ref="tourRef" page-key="recurring-formats" />
   </div>
 </template>

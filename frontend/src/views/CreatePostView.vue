@@ -1827,6 +1827,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <div class="flex items-center gap-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">Schritt {{ currentStep }} von {{ totalSteps }}</span>
         <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
           @click="resetWorkflow"
           class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
@@ -1854,7 +1861,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     />
 
     <!-- Breadcrumb Navigation -->
-    <nav aria-label="Breadcrumb" class="mb-4">
+    <nav data-tour="cp-stepper" aria-label="Breadcrumb" class="mb-4">
       <ol class="flex items-center flex-wrap gap-1 text-sm">
         <li class="flex items-center">
           <button
@@ -1882,7 +1889,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     </nav>
 
     <!-- Step Indicator -->
-    <div class="mb-8">
+    <div data-tour="cp-content" class="mb-8">
       <div class="flex items-center justify-between">
         <template v-for="(label, idx) in stepLabels" :key="idx">
           <button
@@ -3545,6 +3552,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </div>
       </div>
     </Teleport>
+
+    <TourSystem ref="tourRef" page-key="create-post" />
   </div>
 </template>
 

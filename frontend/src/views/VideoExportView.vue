@@ -300,7 +300,7 @@ onMounted(() => {
 <template>
   <div class="max-w-7xl mx-auto px-4 py-6" data-testid="video-export-page">
     <!-- Page Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="ve-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <span class="text-2xl">📤</span>
@@ -311,6 +311,13 @@ onMounted(() => {
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
         <button
           @click="batchMode = !batchMode"
           :class="[
@@ -345,12 +352,15 @@ onMounted(() => {
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </div>
-            <div v-else-if="videoAssets.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500">
-              <p class="text-sm">Keine Videos vorhanden.</p>
-              <router-link to="/assets" class="inline-block mt-3 text-xs text-blue-600 hover:underline">
-                Zu Assets &rarr;
-              </router-link>
-            </div>
+            <EmptyState
+              v-else-if="videoAssets.length === 0"
+              icon="📤"
+              title="Keine Videos vorhanden"
+              description="Lade zuerst Videos in der Asset-Bibliothek hoch, um sie hier zu exportieren."
+              actionLabel="Zu Assets"
+              actionTo="/assets"
+              :compact="true"
+            />
             <div
               v-for="asset in videoAssets"
               :key="asset.id"
@@ -823,5 +833,7 @@ onMounted(() => {
         </template>
       </div>
     </div>
+
+    <TourSystem ref="tourRef" page-key="video-export" />
   </div>
 </template>

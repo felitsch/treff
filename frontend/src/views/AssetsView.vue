@@ -3,6 +3,10 @@ import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
 import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 import VideoTrimmer from '@/components/assets/VideoTrimmer.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+
+const tourRef = ref(null)
 
 // Tab state
 const activeTab = ref('library') // 'library' or 'stock'
@@ -340,6 +344,9 @@ function fileTypeLabel(type) {
   if (type === 'video/mp4') return 'MP4'
   if (type === 'video/quicktime') return 'MOV'
   if (type === 'video/webm') return 'WebM'
+  if (type === 'audio/mpeg' || type === 'audio/mp3') return 'MP3'
+  if (type === 'audio/wav' || type === 'audio/x-wav') return 'WAV'
+  if (type === 'audio/aac' || type === 'audio/x-aac') return 'AAC'
   return type.replace('image/', '').toUpperCase()
 }
 
@@ -417,13 +424,22 @@ onMounted(fetchAssets)
           Bilder und Videos hochladen und verwalten
         </p>
       </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        {{ assets.length }} Asset{{ assets.length !== 1 ? 's' : '' }}
+      <div class="flex items-center gap-3">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          {{ assets.length }} Asset{{ assets.length !== 1 ? 's' : '' }}
+        </div>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="border-b border-gray-200 dark:border-gray-700" data-testid="asset-tabs">
+    <div class="border-b border-gray-200 dark:border-gray-700" data-testid="asset-tabs" data-tour="assets-tabs">
       <nav class="flex gap-4 -mb-px">
         <button
           @click="activeTab = 'library'"
@@ -466,6 +482,7 @@ onMounted(fetchAssets)
     <template v-if="activeTab === 'library'">
       <!-- Upload Drop Zone -->
       <div
+        data-tour="assets-upload"
         class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer"
         :class="[
           isDragOver
@@ -571,7 +588,7 @@ onMounted(fetchAssets)
       </div>
 
       <!-- Filters and Search -->
-      <div class="flex flex-col sm:flex-row gap-3" data-testid="filter-bar">
+      <div class="flex flex-col sm:flex-row gap-3" data-testid="filter-bar" data-tour="assets-filters">
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
@@ -656,24 +673,25 @@ onMounted(fetchAssets)
         </button>
       </div>
 
-      <!-- Empty state -->
-      <div v-else-if="filteredAssets.length === 0 && !loading" class="text-center py-12">
-        <div class="text-4xl mb-3">&#128444;&#65039;</div>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
-          {{ assets.length === 0 ? 'Noch keine Assets' : 'Keine Treffer' }}
-        </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          {{ assets.length === 0 ? 'Lade dein erstes Bild oder Video hoch, um loszulegen.' : 'Versuche einen anderen Suchbegriff oder Filter.' }}
-        </p>
-        <button
-          v-if="hasActiveFilters"
-          @click="clearFilters"
-          class="mt-3 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-700"
-          data-testid="empty-clear-filters-btn"
-        >
-          Filter zuruecksetzen
-        </button>
-      </div>
+      <!-- Empty state: no assets at all -->
+      <EmptyState
+        v-else-if="filteredAssets.length === 0 && !loading && assets.length === 0"
+        icon="🖼️"
+        title="Noch keine Assets hochgeladen"
+        description="Lade deine ersten Bilder und Videos hoch, um sie in Posts zu verwenden. Du kannst JPG, PNG, GIF und MP4 Dateien nutzen."
+        actionLabel="Dateien hochladen"
+        @action="$refs.fileInput?.click()"
+      />
+
+      <!-- Empty state: filters active, no matches -->
+      <EmptyState
+        v-else-if="filteredAssets.length === 0 && !loading"
+        icon="🔍"
+        title="Keine Treffer"
+        description="Versuche einen anderen Suchbegriff oder setze die Filter zurueck."
+        actionLabel="Filter zuruecksetzen"
+        @action="clearFilters"
+      />
 
       <!-- Asset Grid -->
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="asset-grid">
@@ -683,10 +701,26 @@ onMounted(fetchAssets)
           class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
           :data-testid="`asset-${asset.id}`"
         >
-          <!-- Image/Video thumbnail -->
+          <!-- Image/Video/Audio thumbnail -->
           <div class="aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden relative" @click.stop="isVideoAsset(asset) ? openVideoPreview(asset) : null" :class="{ 'cursor-pointer': isVideoAsset(asset) }">
+            <!-- Audio asset display -->
+            <template v-if="isAudioAsset(asset)">
+              <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30">
+                <svg class="h-12 w-12 text-indigo-500 dark:text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <!-- Mini waveform visualization -->
+                <div class="flex items-end gap-[2px] h-4">
+                  <div v-for="i in 12" :key="i" class="w-1 bg-indigo-400 dark:bg-indigo-500 rounded-full" :style="{ height: (4 + Math.sin(i * 0.8) * 8 + Math.cos(i * 1.3) * 4) + 'px' }"></div>
+                </div>
+              </div>
+              <!-- Duration badge -->
+              <div v-if="asset.duration_seconds" class="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] font-medium px-1.5 py-0.5 rounded" data-testid="audio-duration">
+                {{ formatDuration(asset.duration_seconds) }}
+              </div>
+            </template>
             <!-- Video thumbnail with play icon overlay -->
-            <template v-if="isVideoAsset(asset)">
+            <template v-else-if="isVideoAsset(asset)">
               <img
                 v-if="asset.thumbnail_path"
                 :src="asset.thumbnail_path"
@@ -734,7 +768,7 @@ onMounted(fetchAssets)
               <span class="text-xs text-gray-500 dark:text-gray-400">
                 {{ formatSize(asset.file_size) }}
               </span>
-              <span class="text-xs font-medium px-1.5 py-0.5 rounded" :class="isVideoAsset(asset) ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
+              <span class="text-xs font-medium px-1.5 py-0.5 rounded" :class="isVideoAsset(asset) ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : isAudioAsset(asset) ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
                 {{ fileTypeLabel(asset.file_type) }}
               </span>
             </div>
@@ -763,18 +797,18 @@ onMounted(fetchAssets)
                 {{ tag }}
               </span>
             </div>
-            <p v-if="asset.width && asset.height" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {{ asset.width }}&times;{{ asset.height }}px
-              <span v-if="asset.duration_seconds"> &middot; {{ formatDuration(asset.duration_seconds) }}</span>
+            <p v-if="(asset.width && asset.height) || (isAudioAsset(asset) && asset.duration_seconds)" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <span v-if="asset.width && asset.height">{{ asset.width }}&times;{{ asset.height }}px</span>
+              <span v-if="asset.duration_seconds"><span v-if="asset.width && asset.height"> &middot; </span>{{ formatDuration(asset.duration_seconds) }}</span>
             </p>
           </div>
 
           <!-- Hover overlay with crop and delete buttons -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-start justify-end p-2 pointer-events-none">
             <div class="flex gap-1">
-              <!-- Crop button (only for images) -->
+              <!-- Crop button (only for images, not video/audio) -->
               <button
-                v-if="!isVideoAsset(asset)"
+                v-if="!isVideoAsset(asset) && !isAudioAsset(asset)"
                 @click.stop="openCropTool(asset)"
                 class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
                 title="Bild zuschneiden"
@@ -785,7 +819,7 @@ onMounted(fetchAssets)
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
               </button>
-              <!-- Video buttons: Play + Trim -->
+              <!-- Video buttons: Play + Trim + Audio Mix -->
               <template v-if="isVideoAsset(asset)">
                 <button
                   @click.stop="openVideoPreview(asset)"
@@ -807,6 +841,17 @@ onMounted(fetchAssets)
                 >
                   <svg class="h-3.5 w-3.5 text-gray-500 hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                  </svg>
+                </button>
+                <button
+                  @click.stop="openAudioMixer(asset)"
+                  class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                  title="Audio mixen"
+                  aria-label="Audio mixen"
+                  :data-testid="`audio-mix-btn-${asset.id}`"
+                >
+                  <svg class="h-3.5 w-3.5 text-gray-500 hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                   </svg>
                 </button>
               </template>
@@ -1060,5 +1105,8 @@ onMounted(fetchAssets)
         </div>
       </div>
     </teleport>
+
+    <!-- Page-specific guided tour -->
+    <TourSystem ref="tourRef" page-key="assets" />
   </div>
 </template>

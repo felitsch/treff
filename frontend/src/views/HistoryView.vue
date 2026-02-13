@@ -5,6 +5,8 @@ import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import { useStudentStore } from '@/stores/students'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -13,6 +15,7 @@ const studentStore = useStudentStore()
 const loading = ref(true)
 const error = ref(null)
 const posts = ref([])
+const tourRef = ref(null)
 
 // Pagination
 const currentPage = ref(1)
@@ -738,6 +741,13 @@ onUnmounted(() => {
       </div>
       <div class="flex items-center gap-2">
         <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
           @click="toggleSelectionMode"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm"
           :class="selectionMode
@@ -788,7 +798,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div data-tour="history-filters" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div class="flex flex-wrap items-center gap-3">
         <!-- Search -->
         <div class="flex-1 min-w-[200px]">
@@ -968,35 +978,30 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Empty state -->
-    <div v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus && !filterCountry" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-      <div class="text-5xl mb-4">📝</div>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Noch keine Posts erstellt</h3>
-      <p class="text-gray-500 dark:text-gray-400 mb-6">Erstelle deinen ersten Social-Media-Post fuer TREFF!</p>
-      <button
-        @click="createPost"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
-      >
-        <span>+</span>
-        <span>Ersten Post erstellen</span>
-      </button>
-    </div>
+    <!-- Empty state - no posts at all -->
+    <EmptyState
+      v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus && !filterCountry"
+      icon="📝"
+      title="Noch keine Posts erstellt"
+      description="Erstelle deinen ersten Social-Media-Post fuer TREFF! Waehle ein Template, schreibe Texte mit KI-Unterstuetzung und plane den Post im Kalender."
+      actionLabel="Ersten Post erstellen"
+      actionTo="/create-post"
+      secondaryLabel="Zum Wochenplaner"
+      secondaryTo="/week-planner"
+    />
 
     <!-- No results for filter -->
-    <div v-else-if="totalPosts === 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-      <div class="text-5xl mb-4">🔍</div>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keine Posts gefunden</h3>
-      <p class="text-gray-500 dark:text-gray-400 mb-4">Keine Posts passen zu deinen Filtern.</p>
-      <button
-        @click="clearFilters(); fetchPosts()"
-        class="text-[#3B7AB1] hover:text-[#2E6A9E] text-sm"
-      >
-        Filter zuruecksetzen
-      </button>
-    </div>
+    <EmptyState
+      v-else-if="totalPosts === 0"
+      icon="🔍"
+      title="Keine Posts gefunden"
+      description="Keine Posts passen zu deinen aktuellen Filtern. Setze die Filter zurueck, um alle Posts anzuzeigen."
+      actionLabel="Filter zuruecksetzen"
+      @action="clearFilters(); fetchPosts()"
+    />
 
     <!-- Posts list -->
-    <div v-else class="space-y-3">
+    <div v-else data-tour="history-list" class="space-y-3">
       <!-- Results count -->
       <div class="flex items-center justify-between mb-2">
         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -1295,5 +1300,6 @@ onUnmounted(() => {
         </div>
       </div>
     </Teleport>
+    <TourSystem ref="tourRef" page-key="history" />
   </div>
 </template>
