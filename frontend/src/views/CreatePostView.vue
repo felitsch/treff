@@ -13,6 +13,7 @@ import CtaPicker from '@/components/posts/CtaPicker.vue'
 import HookSelector from '@/components/posts/HookSelector.vue'
 import InteractiveElementPreview from '@/components/interactive/InteractiveElementPreview.vue'
 import InteractiveElementEditor from '@/components/interactive/InteractiveElementEditor.vue'
+import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import { useStudentStore } from '@/stores/students'
 
 const router = useRouter()
@@ -81,6 +82,23 @@ function onHookSelected(hook) {
       firstSlide.subheadline = hook.hook_text
     }
   }
+}
+
+// ── Engagement Boost Panel ────────────────────────────────────────────
+const engagementBoostPostContent = computed(() => ({
+  slides: slides.value,
+  caption_instagram: captionInstagram.value,
+  caption_tiktok: captionTiktok.value,
+  hashtags_instagram: hashtagsInstagram.value,
+  hashtags_tiktok: hashtagsTiktok.value,
+  cta_text: ctaText.value,
+  category: selectedCategory.value,
+  country: country.value,
+  tone: tone.value,
+}))
+
+function onApplyEngagementSuggestion(suggestion) {
+  toast.info(`Vorschlag: ${suggestion.action_text} — ${suggestion.suggestion.slice(0, 80)}...`)
 }
 
 // ── Hashtag Auto-Suggest state ──────────────────────────────────────────
@@ -2113,6 +2131,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📢 Call-to-Action</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ ctaText }}</p>
           </div>
+          <!-- Engagement Boost Panel -->
+          <EngagementBoostPanel
+            :post-content="engagementBoostPostContent"
+            :platform="effectivePreviewPlatform"
+            :format="effectivePreviewPlatform"
+            :posting-time="''"
+            @apply-suggestion="onApplyEngagementSuggestion"
+          />
+
           <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400" data-testid="preview-platform-info">
             {{ effectivePreviewPlatformObj?.icon }} {{ effectivePreviewPlatformObj?.label }}
             <span v-if="effectivePreviewPlatform !== selectedPlatform" class="text-[#3B7AB1] font-medium">(Vorschau)</span>
