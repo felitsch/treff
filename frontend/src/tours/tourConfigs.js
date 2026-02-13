@@ -15,62 +15,157 @@
 const tourConfigs = {
   // ─── Dashboard ───────────────────────────────────────────
   dashboard: {
-    title: 'Dashboard Tour',
+    title: 'Dashboard Tour – Deine Content-Zentrale',
     steps: [
       {
-        target: '[data-tour="sidebar"]',
-        title: 'Navigation',
-        description:
-          'Hier findest du alle Bereiche der App: Dashboard, Posts erstellen, Vorlagen, Assets, Kalender und mehr.',
-        position: 'right',
-      },
-      {
-        target: '[data-tour="create-post"]',
-        title: 'Post erstellen',
-        description:
-          'Erstelle neue Social-Media-Posts mit KI-gestuetzter Textgenerierung und professionellen Vorlagen.',
-        position: 'right',
-      },
-      {
-        target: '[data-tour="templates"]',
-        title: 'Vorlagen',
-        description:
-          'Waehle aus vorgefertigten Templates fuer Instagram und TikTok, die du individuell anpassen kannst.',
-        position: 'right',
-      },
-      {
         target: '[data-tour="dashboard-stats"]',
-        title: 'Dein Dashboard',
+        title: 'Willkommen im Dashboard!',
         description:
-          'Behalte den Ueberblick ueber deine Posts, geplante Inhalte und Assets auf einen Blick.',
+          'Das Dashboard ist deine Zentrale fuer alles rund um Social-Media-Content. Von hier aus startest du alle Workflows: Posts erstellen, planen, analysieren und optimieren. Lass uns die einzelnen Bereiche kennenlernen!',
         position: 'bottom',
       },
       {
-        target: '[data-tour="quick-actions"]',
-        title: 'Schnellzugriff',
+        target: '[data-tour="dashboard-stats"]',
+        title: 'Quick-Stats: Dein Ueberblick',
         description:
-          'Starte direkt mit dem Erstellen eines Posts oder oeffne den Kalender fuer die Planung.',
+          'Diese Karten zeigen dir auf einen Blick: "Posts diese Woche" zaehlt alle Posts der aktuellen Woche, "Geplante Posts" zeigt vorbereitete Inhalte im Kalender, und "Gesamt Assets" zaehlt deine hochgeladenen Bilder und Videos.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="dashboard-calendar"]',
+        title: 'Mini-Kalender: Naechste 7 Tage',
+        description:
+          'Der Mini-Kalender zeigt die kommende Woche mit blauen Punkten fuer geplante Posts. So erkennst du auf einen Blick, an welchen Tagen Content ansteht – und wo noch Luecken sind. Fuer die volle Kalender-Ansicht nutze den Kalender-Button.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="dashboard-recent-posts"]',
+        title: 'Letzte Posts',
+        description:
+          'Hier siehst du deine neuesten Posts mit Plattform-Icon, Titel, Kategorie und Status (Entwurf, Geplant, Veroeffentlicht). Klicke auf einen Post, um ihn direkt zu bearbeiten. "Alle anzeigen" fuehrt zum vollstaendigen Post-Verlauf.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="dashboard-suggestions"]',
+        title: 'KI Content-Vorschlaege',
+        description:
+          'Die KI analysiert deinen bisherigen Content und schlaegt passende neue Themen vor – basierend auf Saison, Laender-Rotation, Kategorie-Balance und Content-Luecken. Klicke "Annehmen" um einen Vorschlag direkt als Post zu erstellen, oder "Generieren" fuer neue Ideen.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="dashboard-recycling"]',
+        title: 'Content-Recycling',
+        description:
+          'Posts aelter als 90 Tage erscheinen hier als Recycling-Vorschlaege. Statt neuen Content zu erstellen, kannst du erfolgreiche alte Posts auffrischen und wiederverwenden. Evergreen-Posts eignen sich besonders gut dafuer.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="dashboard-series-status"]',
+        title: 'Serien-Status',
+        description:
+          'Verfolge den Fortschritt deiner Story-Arcs (mehrteilige Content-Serien). Du siehst den Status jeder Serie, die aktuelle Episode, einen Fortschrittsbalken und wann die naechste Episode faellig ist. So verpasst du keine Fortsetzung!',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="quick-actions"]',
+        title: 'Quick-Actions: Deine Shortcuts',
+        description:
+          'Mit diesen Buttons startest du direkt die wichtigsten Aktionen: "Post erstellen" fuehrt zum Post-Editor mit KI-Unterstuetzung, "Kalender anzeigen" oeffnet die volle Kalender-Ansicht zum Planen und Terminieren. Das Dashboard ist dein Startpunkt fuer jeden Workflow!',
         position: 'bottom',
       },
     ],
   },
 
-  // ─── Create Post ─────────────────────────────────────────
+  // ─── Create Post (Ausfuehrliche Wizard-Tour) ─────────────
   'create-post': {
-    title: 'Post erstellen Tour',
+    title: 'Post-Wizard Tour',
     steps: [
-      {
-        target: '[data-tour="cp-stepper"]',
-        title: 'Schritt-fuer-Schritt',
-        description:
-          'Der Post-Ersteller fuehrt dich in 8 Schritten durch den Prozess: Typ, Land, Vorlage, Text, Bild, Vorschau, Bearbeiten und Veroeffentlichen.',
-        position: 'bottom',
-      },
+      // Tour-Step 1: Ueberblick ueber den 9-Schritt-Wizard
       {
         target: '[data-tour="cp-content"]',
-        title: 'Inhalt bearbeiten',
+        title: 'Willkommen im Post-Wizard!',
         description:
-          'In jedem Schritt kannst du Inhalte auswaehlen und anpassen. Die Live-Vorschau zeigt dir sofort, wie dein Post aussehen wird.',
+          'Der Post-Ersteller fuehrt dich in 9 Schritten durch den kompletten Prozess: Von der Kategorie-Auswahl ueber KI-Textgenerierung bis zum fertigen Export. Jeder Schritt baut auf dem vorherigen auf — so entsteht in Minuten ein professioneller Social-Media-Post mit konsistentem TREFF-Branding. Die Schritt-Anzeige oben hilft dir, den Ueberblick zu behalten.',
+        position: 'bottom',
+      },
+      // Tour-Step 2: Kategorie-Auswahl erklaeren
+      {
+        target: '[data-tour="cp-step-1"]',
+        title: 'Schritt 1: Kategorie waehlen',
+        description:
+          'Im ersten Schritt waehlst du die Art deines Posts: Laender-Spotlight fuer Zielland-Infos, Erfahrungsberichte fuer Alumni-Stories, Tipps & Tricks fuer praktische Ratschlaege, Fristen & CTA fuer Bewerbungsfristen, oder FAQ fuer haeufige Fragen. WARUM? Die Kategorie bestimmt, welche Templates und KI-Texte vorgeschlagen werden — so passt alles perfekt zusammen und dein Content-Mix bleibt ausgewogen.',
+        position: 'bottom',
+      },
+      // Tour-Step 3: Template-Auswahl erklaeren
+      {
+        target: '[data-tour="cp-step-2"]',
+        title: 'Schritt 2: Template waehlen',
+        description:
+          'Templates sind vorgefertigte Design-Vorlagen mit TREFF-Branding. Jedes Template hat ein festes Layout (Headline, Body, CTA-Button) und bestimmt, wie viele Slides dein Post hat. WARUM? Unterschiedliche Templates betonen verschiedene Aspekte — ein "Laender-Spotlight" zeigt Fakten mit Flagge, ein "Erfahrungsbericht" betont den Schueler-Stil. Die richtige Vorlage spart Design-Arbeit und schafft Wiedererkennungswert.',
+        position: 'bottom',
+      },
+      // Tour-Step 4: AI Textgenerierung erklaeren — was Gemini macht und wie man Ergebnisse anpassen kann
+      {
+        target: '[data-tour="cp-step-5"]',
+        title: 'Schritt 5: KI-Textgenerierung (Gemini AI)',
+        description:
+          'Hier generiert Google Gemini AI automatisch alle Texte: Headlines, Body-Texte, Captions und Hashtags — basierend auf Kategorie, Land, Thema und Tonalitaet. WARUM KI? Du sparst Stunden an Copywriting und erhaelst sofort professionelle Texte im richtigen Stil. Ergebnisse anpassen: In Schritt 7 kannst du jedes einzelne Feld manuell bearbeiten oder per "Neu generieren"-Button von der KI ueberarbeiten lassen.',
+        position: 'bottom',
+      },
+      // Tour-Step 5: Slide-Editor erklaeren (Drag-and-Drop, Bilder einfuegen, Text anpassen)
+      {
+        target: '[data-tour="cp-step-7"]',
+        title: 'Schritt 7: Slide-Editor (Drag & Drop)',
+        description:
+          'Der Slide-Editor ist das Herzstuck des Wizards: Ordne deine Slides per Drag & Drop in die optimale Reihenfolge, bearbeite Headlines, Subheadlines und Body-Texte direkt, und fuege neue Slides hinzu oder entferne sie. WARUM? Die Reihenfolge der Slides bestimmt die Story deines Posts — der erste Slide muss fesseln (Hook), der letzte soll zum Handeln auffordern (CTA). Jedes Textfeld hat ein Zeichenlimit mit farbiger Warnung.',
+        position: 'bottom',
+      },
+      // Tour-Step 6: Caption und Hashtags erklaeren (warum wichtig fuer Reichweite)
+      {
+        target: '[data-tour="cp-step-6"]',
+        title: 'Captions & Hashtags (Reichweiten-Turbo)',
+        description:
+          'In Schritt 7 bearbeitest du Instagram- und TikTok-Captions getrennt voneinander, denn jede Plattform hat eigene Regeln (Instagram: max 2.200 Zeichen, TikTok: kuerzer und knackiger). WARUM? Gute Captions und Hashtags steigern die Reichweite enorm — der Algorithmus zeigt deinen Post mehr Menschen. Nutze den gruenen Sparkle-Button fuer KI-optimierte Hashtag-Vorschlaege und die Emoji-Strategie-Engine.',
+        position: 'bottom',
+      },
+      // Tour-Step 7: CTA erklaeren (Call-to-Action fuer mehr Interaktion)
+      {
+        target: '[data-tour="cp-step-8"]',
+        title: 'CTA: Call-to-Action (Warum unverzichtbar)',
+        description:
+          'Ein Call-to-Action fordert den Betrachter zum Handeln auf — z.B. "Jetzt bewerben!", "Link in Bio" oder "Speichern fuer spaeter". WARUM? Ohne CTA scrollen Nutzer einfach weiter, MIT CTA steigt die Interaktionsrate um bis zu 300%! In Schritt 7 findest du die CTA-Bibliothek mit 35 vorgefertigten CTAs in 4 Kategorien (Engagement, Conversion, Awareness, Traffic) — kontextbasiert vorgeschlagen fuer maximale Wirkung.',
+        position: 'bottom',
+      },
+      // Tour-Step 8: Hook erklaeren (erster Satz/Slide der Aufmerksamkeit erregt)
+      {
+        target: '[data-tour="cp-step-9"]',
+        title: 'Hook: Die ersten 2 Sekunden entscheiden',
+        description:
+          'Der Hook ist der allererste Satz oder die erste Slide deines Posts — er entscheidet in 1-2 Sekunden, ob jemand weiterliest oder weiterscrollt! WARUM? Instagram und TikTok zeigen deinen Post zunaechst nur kurz — nur ein fesselnder Hook stoppt den Daumen. Beispiele: "Wusstest du, dass...?", "Die 3 groessten Fehler beim Auslandsjahr" oder "Unpopular Opinion:...". Den Hook-Selector findest du in Schritt 5 nach der Textgenerierung.',
+        position: 'bottom',
+      },
+      // Tour-Step 9: Interaktive Elemente und Engagement-Boost erklaeren
+      {
+        target: '[data-tour="cp-navigation"]',
+        title: 'Interaktive Elemente & Engagement-Boost',
+        description:
+          'Interaktive Sticker wie Umfragen, Quizze, Slider und Frage-Sticker machen deine Instagram Stories lebendig. WARUM? Sie steigern die Verweildauer und werden vom Algorithmus bevorzugt — dein Post wird MEHR Menschen gezeigt! Der Engagement-Boost-Panel in der Vorschau analysiert deinen Post und schlaegt konkrete Verbesserungen vor: z.B. eine Frage am Ende, einen kontroversen Aufhaenger oder einen Countdown fuer Bewerbungsfristen.',
+        position: 'top',
+      },
+      // Tour-Step 10: Multi-Plattform Anpassung erklaeren (Instagram vs TikTok)
+      {
+        target: '[data-tour="cp-step-3"]',
+        title: 'Multi-Plattform: Instagram vs TikTok',
+        description:
+          'In Schritt 3 waehlst du eine oder mehrere Plattformen gleichzeitig. WARUM Multi-Plattform? Instagram Feed nutzt 1:1 oder 4:5-Format, Instagram Stories und TikTok nutzen 9:16 (Hochformat). Captions, Hashtags und Bild-Formate werden automatisch fuer jede Plattform angepasst — beim Export erhaelst du separate, optimierte Dateien. So erreichst du mit einem Workflow Teenager auf TikTok UND Eltern auf Instagram!',
+        position: 'bottom',
+      },
+      // Tour-Step 11: Preview und Export erklaeren
+      {
+        target: '[data-tour="cp-tour-btn"]',
+        title: 'Vorschau, Export & Speichern',
+        description:
+          'In Schritt 6 siehst du eine Live-Vorschau deines Posts mit Plattform-Wechsel. In Schritt 8 waehlst du optional ein Hintergrundbild aus der Asset-Bibliothek oder laesst die KI eines generieren. In Schritt 9 exportierst du den fertigen Post als PNG oder ZIP (bei Multi-Slides), speicherst ihn als Entwurf oder planst ihn direkt im Kalender. Tipp: Du kannst diese Tour jederzeit ueber diesen Button erneut starten!',
         position: 'bottom',
       },
     ],
@@ -82,23 +177,37 @@ const tourConfigs = {
     steps: [
       {
         target: '[data-tour="tpl-header"]',
-        title: 'Template-Uebersicht',
+        title: 'Was sind Templates?',
         description:
-          'Hier siehst du alle verfuegbaren Vorlagen. Filtere nach Kategorie oder Plattform, um schnell die passende Vorlage zu finden.',
+          'Templates sind vorgefertigte Design-Vorlagen fuer deine Social-Media-Posts. Sie sorgen fuer ein konsistentes TREFF-Branding und sparen dir Zeit bei der Erstellung — jeder Post sieht professionell aus, ohne dass du jedes Mal bei null anfangen musst.',
         position: 'bottom',
       },
       {
         target: '[data-tour="tpl-filters"]',
-        title: 'Filter & Suche',
+        title: 'Template-Galerie filtern',
         description:
-          'Nutze die Filter, um Vorlagen nach Kategorie (z.B. Laender, FAQs, Motivation) oder Plattform (Instagram Feed, Story, TikTok) einzugrenzen.',
+          'Nutze die Filter, um Vorlagen nach Kategorie (z.B. Laender-Spotlight, FAQ, Erfahrungsberichte) oder Plattform-Format (Instagram Feed, Story, TikTok) einzugrenzen. Die Galerie zeigt dir die Anzahl der Treffer und gruppiert Templates nach Kategorie.',
         position: 'bottom',
       },
       {
         target: '[data-tour="tpl-grid"]',
-        title: 'Vorlagen-Galerie',
+        title: 'Live-Preview-Editor',
         description:
-          'Klicke auf eine Vorlage, um sie in der Vorschau zu oeffnen, anzupassen oder als Basis fuer einen neuen Post zu verwenden.',
+          'Klicke auf ein Template, um den Live-Preview-Editor zu oeffnen. Dort siehst du in Echtzeit, wie dein Post mit dem gewaehlten Template aussehen wird. Du kannst Texte, Farben und Schriftarten direkt anpassen — jede Aenderung wird sofort in der Vorschau sichtbar.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="tpl-create-btn"]',
+        title: 'Farben, Fonts & Brand-Identitaet',
+        description:
+          'Im Anpassungs-Panel des Editors kannst du Primaer-, Sekundaer- und Hintergrundfarben aendern, Ueberschrift- und Fliesstext-Schriftarten waehlen und alle Texte bearbeiten. Erstelle mit dem "+"-Button auch komplett eigene Templates mit eigenem HTML/CSS-Code.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="tpl-video-hint"]',
+        title: 'Video-Templates',
+        description:
+          'Neben Post-Templates gibt es auch spezielle Video-Templates fuer Reels und TikToks. Diese findest du auf einer separaten Seite unter "Video-Branding" in der Seitenleiste — dort kannst du Intros, Outros, Lower Thirds und Overlay-Vorlagen verwalten.',
         position: 'top',
       },
     ],
@@ -106,28 +215,49 @@ const tourConfigs = {
 
   // ─── Assets ──────────────────────────────────────────────
   assets: {
-    title: 'Assets Tour',
+    title: 'Assets Tour – Deine Medienverwaltung',
     steps: [
       {
-        target: '[data-tour="assets-tabs"]',
-        title: 'Bibliothek & Stockfotos',
+        target: '[data-tour="assets-header"]',
+        title: 'Willkommen in der Asset-Bibliothek!',
         description:
-          'Wechsle zwischen deiner eigenen Medienbibliothek und der Stockfoto-Suche (Unsplash/Pexels).',
+          'Die Asset-Bibliothek ist deine zentrale Medienverwaltung. Hier lagerst du alle Bilder, Videos und Audio-Dateien, die du fuer deine Social-Media-Posts brauchst. Von hier aus kannst du Dateien hochladen, organisieren, bearbeiten und in Posts einbinden.',
         position: 'bottom',
       },
       {
         target: '[data-tour="assets-upload"]',
-        title: 'Dateien hochladen',
+        title: 'Dateien hochladen – Drag & Drop',
         description:
-          'Ziehe Bilder oder Videos per Drag & Drop hierher, oder klicke zum Auswaehlen. Unterstuetzte Formate: JPG, PNG, GIF, MP4, WebM.',
+          'Ziehe Bilder, Videos oder Audio-Dateien einfach per Drag & Drop in diesen Bereich — oder klicke zum Auswaehlen. Unterstuetzte Formate: JPG, PNG, WebP (bis 20 MB), MP4, MOV, WebM (bis 500 MB) und MP3, WAV, AAC (bis 50 MB). Unter dem Upload-Bereich kannst du direkt Kategorie, Land und Tags vergeben.',
         position: 'bottom',
       },
       {
-        target: '[data-tour="assets-filters"]',
-        title: 'Filter & Suche',
+        target: '[data-tour="assets-grid"]',
+        title: 'Crop-Tool & Video-Trimmer',
         description:
-          'Durchsuche deine Assets nach Name, filtere nach Typ (Bild/Video), Kategorie oder Land.',
+          'Bewege die Maus ueber ein Asset, um die Bearbeitungs-Buttons zu sehen: Bei Bildern erscheint ein Crop-Button zum Zuschneiden (z.B. auf Instagram-Formate 1:1, 4:5, 9:16). Bei Videos gibt es einen Trim-Button zum Kuerzen und einen Audio-Mix-Button. So bereitest du Medien direkt hier fuer Social Media vor — ohne externe Tools.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="assets-filters"]',
+        title: 'Kategorisierung, Tagging & Suche',
+        description:
+          'Nutze die Filter, um deine Assets schnell zu finden: Suche nach Dateiname oder Tags, filtere nach Kategorie (Logo, Hintergrund, Foto, Icon, Laenderbild, Video), nach Land (USA, Kanada, Australien, Neuseeland, Irland) oder nach Dateityp (JPG, PNG, WebP, Video, Audio). Aktive Filter werden als Chips angezeigt und lassen sich einzeln entfernen.',
         position: 'bottom',
+      },
+      {
+        target: '[data-tour="assets-tabs"]',
+        title: 'Stock-Foto-Integration (Unsplash & Pexels)',
+        description:
+          'Klicke auf den Tab "Stock Fotos", um kostenlose Stock-Fotos von Unsplash oder Pexels zu durchsuchen. Gib einen englischen Suchbegriff ein (z.B. "highschool campus", "australia landscape") und importiere passende Fotos direkt in deine Bibliothek. So findest du schnell professionelle Bilder fuer deine Posts.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="assets-usage-hint"]',
+        title: 'Assets in Posts & Videos verwenden',
+        description:
+          'Deine Assets werden automatisch im Post-Editor (Schritt 5: Bild) zur Auswahl angeboten. Auch im Video-Composer, Video-Export und Thumbnail-Generator kannst du auf deine Bibliothek zugreifen. Tipp: Tagge deine Assets mit dem passenden Land und der Kategorie — so werden sie beim Erstellen eines Posts automatisch vorgefiltert!',
+        position: 'top',
       },
     ],
   },
