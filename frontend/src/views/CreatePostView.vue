@@ -14,6 +14,7 @@ import HookSelector from '@/components/posts/HookSelector.vue'
 import InteractiveElementPreview from '@/components/interactive/InteractiveElementPreview.vue'
 import InteractiveElementEditor from '@/components/interactive/InteractiveElementEditor.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
+import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
 
@@ -262,6 +263,17 @@ async function suggestEpisodeText(field) {
   } finally {
     suggestingEpisodeField.value = ''
   }
+}
+
+// Cliffhanger generation callback - update episode texts when AI generates them
+function onCliffhangerGenerated(data) {
+  if (data.cliffhanger_text) {
+    episodeCliffhangerText.value = data.cliffhanger_text
+  }
+  if (data.teaser_text) {
+    episodeNextHint.value = data.teaser_text
+  }
+  toast.success('Cliffhanger & Teaser generiert!', 2500)
 }
 
 // Episode save helper: create or update episode when saving a post linked to an arc
@@ -2945,6 +2957,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <textarea v-model="episodeNextHint" rows="2" placeholder="Naechste Episode..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
             </div>
           </div>
+
+          <!-- Cliffhanger & Teaser System (when post is part of a Story-Arc and not the last episode) -->
+          <CliffhangerPanel
+            v-if="selectedArcId"
+            :arc-id="selectedArcId"
+            :episode-number="selectedEpisodeNumber"
+            :planned-episodes="storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.planned_episodes || 8"
+            :episode-content="topic || slides[0]?.headline || ''"
+            :initial-cliffhanger="episodeCliffhangerText"
+            :initial-teaser="episodeNextHint"
+            @update:cliffhanger="episodeCliffhangerText = $event"
+            @update:teaser="episodeNextHint = $event"
+            @generated="onCliffhangerGenerated"
+          />
         </div>
 
         <!-- Mini live preview (sticky) -->
