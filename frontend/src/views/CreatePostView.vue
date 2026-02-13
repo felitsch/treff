@@ -15,8 +15,12 @@ import InteractiveElementPreview from '@/components/interactive/InteractiveEleme
 import InteractiveElementEditor from '@/components/interactive/InteractiveElementEditor.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -76,6 +80,11 @@ const {
 } = storeToRefs(store)
 
 const totalSteps = 9
+const tourRef = ref(null)
+
+// ── Workflow Hints ───────────────────────────────────────────────────────
+const showAssetsHint = computed(() => currentStep.value === 8 && assets.value.length === 0 && !uploadingImage.value)
+const showTemplatesHint = computed(() => currentStep.value === 2 && templates.value.length === 0 && !loadingTemplates.value)
 
 // ── Multi-Platform Auto-Adapt state ─────────────────────────────────────
 const adaptContent = ref(true) // Auto-adapt content for each platform
@@ -1826,6 +1835,24 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       </div>
     </div>
 
+    <!-- Workflow Hints -->
+    <WorkflowHint
+      hint-id="create-post-no-assets"
+      message="Kein passendes Bild? Lade Bilder in die Asset-Bibliothek hoch, um sie hier zu verwenden."
+      link-text="Asset-Bibliothek"
+      link-to="/assets"
+      icon="🖼️"
+      :show="showAssetsHint"
+    />
+    <WorkflowHint
+      hint-id="create-post-no-templates"
+      message="Keine Templates gefunden? Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
+      link-text="Templates verwalten"
+      link-to="/templates"
+      icon="📄"
+      :show="showTemplatesHint"
+    />
+
     <!-- Breadcrumb Navigation -->
     <nav aria-label="Breadcrumb" class="mb-4">
       <ol class="flex items-center flex-wrap gap-1 text-sm">
@@ -1921,7 +1948,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 1: Category Selection -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 1">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 1: Waehle eine Post-Kategorie</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 1: Waehle eine Post-Kategorie <HelpTooltip :text="tooltipTexts.createPost.stepCategory" /></h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <button
           v-for="cat in categories"
@@ -1943,7 +1970,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 2: Template Selection -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 2">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 2: Waehle ein Template</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 2: Waehle ein Template <HelpTooltip :text="tooltipTexts.createPost.stepTemplate" /></h2>
       <div v-if="loadingTemplates" class="flex items-center justify-center py-12">
         <div class="animate-spin h-8 w-8 border-4 border-[#3B7AB1] border-t-transparent rounded-full"></div>
       </div>
@@ -1977,7 +2004,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 3: Platform Selection (Multi-Select) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 3">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 3: Waehle die Zielplattform(en)</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 3: Waehle die Zielplattform(en) <HelpTooltip :text="tooltipTexts.createPost.stepPlatform" /></h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Du kannst mehrere Plattformen waehlen — beim Export werden separate Dateien fuer jede Plattform erstellt.</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <button
@@ -2011,7 +2038,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             />
             <div>
               <div class="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                <span>&#x2728;</span> KI-Autoadaption aktivieren
+                <span>&#x2728;</span> KI-Autoadaption aktivieren <HelpTooltip :text="tooltipTexts.createPost.multiPlatform" size="sm" />
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 Texte werden automatisch an jede Plattform angepasst:
@@ -2030,11 +2057,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 4">
       <div class="max-w-2xl">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 4: Thema & Stichpunkte</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 4: Thema & Stichpunkte <HelpTooltip :text="tooltipTexts.createPost.stepTopic" /></h2>
 
         <!-- Country -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Land (optional)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Land (optional) <HelpTooltip :text="tooltipTexts.createPost.stepCountry" size="sm" /></label>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="c in countries"
@@ -2052,7 +2079,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Topic -->
         <div class="mb-6">
-          <label for="topic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Thema / Titel</label>
+          <label for="topic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Thema / Titel <HelpTooltip :text="tooltipTexts.createPost.stepTopic" size="sm" /></label>
           <input
             id="topic"
             v-model="topic"
@@ -2064,7 +2091,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Key Points -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stichpunkte (optional)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Stichpunkte (optional) <HelpTooltip :text="tooltipTexts.createPost.stepKeyPoints" size="sm" /></label>
           <textarea
             v-model="keyPoints"
             rows="3"
@@ -2075,7 +2102,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Student / Personality Preset (optional) -->
         <div v-if="studentStore.students.length > 0" class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎭 Studenten-Persoenlichkeit (optional)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">🎭 Studenten-Persoenlichkeit (optional) <HelpTooltip :text="tooltipTexts.createPost.studentSelector" size="sm" /></label>
           <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Waehle einen Studenten, um dessen Persoenlichkeits-Preset fuer die KI-Textgenerierung zu verwenden.</p>
           <div class="flex flex-wrap gap-2">
             <button v-for="student in studentStore.students" :key="student.id" type="button" @click="selectStudent(student.id)" class="px-3 py-2 rounded-lg border-2 transition-all text-sm text-left" :class="selectedStudentId === student.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-500/30' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'">
@@ -2089,7 +2116,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Story-Arc / Episode (optional) -->
         <div v-if="storyArcStore.storyArcs.length > 0" class="mb-6" data-testid="story-arc-section">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📖 Story-Arc (optional)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">📖 Story-Arc (optional) <HelpTooltip :text="tooltipTexts.createPost.storyArcSelector" size="sm" /></label>
           <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Ist dieser Post Teil einer Story-Serie? Waehle einen Arc, um Episoden-Felder anzuzeigen.</p>
           <div class="flex flex-wrap gap-2">
             <button
@@ -2216,7 +2243,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Tone -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tonalitaet</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Tonalitaet <HelpTooltip :text="tooltipTexts.createPost.stepTone" size="sm" /></label>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             <button
               v-for="t in toneOptions"
@@ -2315,7 +2342,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 5: AI Text Generation -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 5">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 5: Inhalt generieren</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 5: Inhalt generieren <HelpTooltip :text="tooltipTexts.createPost.stepGenerate" /></h2>
 
       <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
         <div class="text-5xl mb-4">{{ selectedHumorFormat ? selectedHumorFormat.icon : '&#x2728;' }}</div>
@@ -2408,7 +2435,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 6: Live Preview -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 6">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 6: Live-Vorschau</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 6: Live-Vorschau <HelpTooltip :text="tooltipTexts.createPost.stepPreview" /></h2>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Preview -->
         <div class="flex flex-col items-center">
@@ -2574,7 +2601,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 7">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Schritt 7: Inhalt bearbeiten</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">Schritt 7: Inhalt bearbeiten <HelpTooltip :text="tooltipTexts.createPost.stepEdit" /></h2>
         <!-- Undo / Redo buttons -->
         <div class="flex gap-2">
           <button
@@ -2747,7 +2774,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
             <div v-if="slides[currentPreviewSlide].cta_text !== undefined">
               <div class="flex items-center justify-between mb-1">
-                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">CTA-Bibliothek</label>
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">CTA-Bibliothek <HelpTooltip :text="tooltipTexts.createPost.ctaLibrary" size="sm" /></label>
                 <button
                   @click="regenerateField('cta_text', currentPreviewSlide)"
                   :disabled="!!regeneratingField"
@@ -2812,7 +2839,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300">&#x1F4F7; Instagram Caption</label>
+                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">&#x1F4F7; Instagram Caption <HelpTooltip :text="tooltipTexts.createPost.captionInstagram" size="sm" /></label>
                 <button
                   @click="regenerateField('caption_instagram')"
                   :disabled="!!regeneratingField"
@@ -2836,7 +2863,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300"># Instagram Hashtags</label>
+                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1"># Instagram Hashtags <HelpTooltip :text="tooltipTexts.createPost.hashtagsInstagram" size="sm" /></label>
                 <div class="flex items-center gap-1.5">
                   <button
                     @click="suggestHashtags"
@@ -2882,7 +2909,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300">&#x1F3B5; TikTok Hashtags</label>
+                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">&#x1F3B5; TikTok Hashtags <HelpTooltip :text="tooltipTexts.createPost.hashtagsTiktok" size="sm" /></label>
                 <button
                   @click="regenerateField('hashtags_tiktok')"
                   :disabled="!!regeneratingField"
@@ -3043,7 +3070,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 8: Background Image Upload / AI Generation (Optional) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 8">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 8: Hintergrundbild (optional)</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 8: Hintergrundbild (optional) <HelpTooltip :text="tooltipTexts.createPost.stepBackground" /></h2>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="space-y-6">
 
@@ -3224,7 +3251,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 9: Export / Save -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 9">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Schritt 9: Exportieren & Speichern</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 9: Exportieren & Speichern <HelpTooltip :text="tooltipTexts.createPost.stepExport" /></h2>
 
       <!-- Pre-export summary -->
       <div v-if="!exportComplete" class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">

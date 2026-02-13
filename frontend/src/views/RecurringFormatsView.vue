@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const auth = useAuthStore()
 
@@ -16,6 +20,7 @@ const aiLoading = ref(false)
 const aiResult = ref(null)
 const aiTopic = ref('')
 const aiCountry = ref('')
+const tourRef = ref(null)
 
 // Toast
 const toastMessage = ref('')
@@ -297,7 +302,7 @@ onMounted(fetchFormats)
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Wiederkehrende Formate</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Wiederkehrende Formate <HelpTooltip :text="tooltipTexts.storyArcs.recurringFormats" /></h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
           Running Gags und regelmaessige Content-Formate verwalten.
           <span class="font-medium">{{ activeCount }}/{{ totalCount }} aktiv</span>
@@ -522,13 +527,14 @@ onMounted(fetchFormats)
     </div>
 
     <!-- Empty state -->
-    <div v-if="!loading && filteredFormats.length === 0" class="text-center py-16">
-      <p class="text-4xl mb-3">🔄</p>
-      <p class="text-gray-500 dark:text-gray-400">Keine wiederkehrenden Formate gefunden.</p>
-      <button @click="showCreateForm = true" class="mt-4 text-treff-blue hover:underline text-sm">
-        Erstes Format erstellen
-      </button>
-    </div>
+    <EmptyState
+      v-if="!loading && filteredFormats.length === 0"
+      icon="🔄"
+      title="Keine wiederkehrenden Formate"
+      description="Erstelle dein erstes wiederkehrendes Format wie 'Motivation Monday' oder 'Freitags-Fail'. Formate sorgen fuer konsistenten Content und hoeheres Engagement."
+      actionLabel="Format erstellen"
+      @action="showCreateForm = true"
+    />
 
     <!-- AI Preview Modal -->
     <div v-if="aiPreviewFormat" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closeAIPreview">

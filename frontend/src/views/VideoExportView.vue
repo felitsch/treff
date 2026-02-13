@@ -3,6 +3,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -36,6 +40,7 @@ const batchResults = ref(null)
 // Export history
 const exportHistory = ref([])
 const loadingHistory = ref(false)
+const tourRef = ref(null)
 
 // Available formats
 const aspectRatios = {
@@ -437,7 +442,7 @@ onMounted(() => {
           <!-- Aspect Ratio Selection -->
           <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="aspect-ratio-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>📐</span> Seitenverhaeltnis
+              <span>📐</span> Seitenverhaeltnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
             </h3>
             <div class="grid grid-cols-3 gap-3 mb-4">
               <button
@@ -494,7 +499,7 @@ onMounted(() => {
           <!-- Focus Point (Smart Cropping) -->
           <div v-if="cropInfo?.needs_crop" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="focus-point-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>🎯</span> Fokus-Punkt (Smart Cropping)
+              <span>🎯</span> Fokus-Punkt (Smart Cropping) <HelpTooltip :text="tooltipTexts.video.focusPoint" size="sm" />
             </h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
               Bestimme den Mittelpunkt des Ausschnitts. Der sichtbare Bereich wird um diesen Punkt zentriert.
@@ -580,7 +585,7 @@ onMounted(() => {
           <!-- Quality Slider -->
           <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="quality-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>🎚️</span> Kompression: Qualitaet vs. Dateigroesse
+              <span>🎚️</span> Kompression: Qualitaet vs. Dateigroesse <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
             </h3>
             <div class="flex items-center gap-4">
               <span class="text-xs text-gray-400 shrink-0">Klein</span>

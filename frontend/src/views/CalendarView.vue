@@ -3,6 +3,11 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import ContentMixPanel from '@/components/calendar/ContentMixPanel.vue'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -40,6 +45,8 @@ const platformFilter = ref(null)
 // Gap detection: days without scheduled posts
 const gapDates = ref(new Set())
 const showGaps = ref(true)
+
+const tourRef = ref(null)
 
 // Weekly/monthly goal stats
 const goalStats = ref({
@@ -1123,9 +1130,27 @@ watch(scheduleTargetDate, async (newDate) => {
   }
 })
 
+// Workflow hints
+const recurringFormatsCount = ref(-1)
+async function checkRecurringFormats() {
+  try {
+    const { data } = await fetch('/api/recurring-formats', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+    }).then(r => r.json())
+    recurringFormatsCount.value = Array.isArray(data) ? data.length : 0
+  } catch { recurringFormatsCount.value = 0 }
+}
+const showRecurringFormatsHint = computed(() => {
+  return !loading.value && recurringFormatsCount.value === 0
+})
+const showWeekPlannerHint = computed(() => {
+  return !loading.value && totalPosts.value === 0
+})
+
 onMounted(() => {
   fetchData()
   fetchUnscheduled()
+  checkRecurringFormats()
 })
 </script>
 
@@ -1133,15 +1158,24 @@ onMounted(() => {
   <div class="max-w-full overflow-hidden">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Content-Kalender</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {{ subtitleText }}
-        </p>
+      <div class="flex items-center gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Content-Kalender</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {{ subtitleText }}
+          </p>
+        </div>
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
       </div>
 
       <!-- Controls: platform filter + view toggle + navigation -->
-      <div class="flex items-center gap-3 flex-wrap max-w-full">
+      <div data-tour="cal-toolbar" class="flex items-center gap-3 flex-wrap max-w-full">
         <!-- Platform filter -->
         <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-x-auto max-w-full">
           <button
@@ -1220,6 +1254,7 @@ onMounted(() => {
         >
           <span v-if="showGaps">&#9888;&#65039;</span><span v-else>&#128065;&#65039;</span>
           Luecken
+          <HelpTooltip :text="tooltipTexts.calendar.gapDetection" size="sm" />
           <span v-if="showGaps && gapCount > 0" class="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ gapCount }}
           </span>
@@ -1238,6 +1273,7 @@ onMounted(() => {
         >
           <span v-if="showSeasonalMarkers">📋</span><span v-else>📅</span>
           Fristen
+          <HelpTooltip :text="tooltipTexts.calendar.seasonalMarkers" size="sm" />
           <span v-if="showSeasonalMarkers && seasonalMarkers.length > 0" class="bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ seasonalMarkers.length }}
           </span>
@@ -1256,6 +1292,7 @@ onMounted(() => {
         >
           <span v-if="showArcTimeline">📖</span><span v-else>📕</span>
           Arcs
+          <HelpTooltip :text="tooltipTexts.calendar.storyArcTimeline" size="sm" />
           <span v-if="showArcTimeline && arcTimelineData.length > 0" class="bg-violet-200 dark:bg-violet-800 text-violet-800 dark:text-violet-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ arcTimelineData.length }}
           </span>
@@ -1291,6 +1328,7 @@ onMounted(() => {
         >
           <span>📊</span>
           Mix
+          <HelpTooltip :text="tooltipTexts.calendar.contentMix" size="sm" />
         </button>
 
         <!-- Export Calendar as CSV button -->
@@ -1378,6 +1416,24 @@ onMounted(() => {
       {{ error }}
     </div>
 
+    <!-- Workflow Hints -->
+    <WorkflowHint
+      hint-id="calendar-recurring-formats"
+      message="Keine wiederkehrenden Formate eingerichtet? Richte Formate ein, um deinen Kalender automatisch zu fuellen."
+      link-text="Formate einrichten"
+      link-to="/recurring-formats"
+      icon="🔄"
+      :show="showRecurringFormatsHint"
+    />
+    <WorkflowHint
+      hint-id="calendar-week-planner"
+      message="Dein Kalender ist noch leer. Nutze den KI-Wochenplaner, um schnell eine ganze Woche zu planen."
+      link-text="Wochenplaner"
+      link-to="/week-planner"
+      icon="🗓️"
+      :show="showWeekPlannerHint"
+    />
+
     <!-- Loading state -->
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1388,6 +1444,7 @@ onMounted(() => {
     <div v-else class="flex flex-col md:flex-row gap-4">
       <!-- Unscheduled drafts sidebar -->
       <div
+        data-tour="cal-sidebar"
         class="flex-shrink-0 transition-all duration-300"
         :class="[
           sidebarCollapsed ? 'w-10' : 'w-full md:w-64',
@@ -1479,7 +1536,7 @@ onMounted(() => {
       </div>
 
       <!-- Calendar content area -->
-      <div class="flex-1 min-w-0">
+      <div data-tour="cal-grid" class="flex-1 min-w-0">
 
     <!-- ==================== MONTHLY VIEW ==================== -->
     <div v-if="viewMode === 'month'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
@@ -2200,27 +2257,17 @@ onMounted(() => {
     </div>
 
     <!-- Empty state (not for queue view - it has its own) -->
-    <div
+    <EmptyState
       v-if="!loading && !error && viewMode !== 'queue' && viewMode !== 'lanes' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
-      class="mt-6 text-center py-8"
-    >
-      <div class="text-5xl mb-3">📅</div>
-      <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
-        Keine geplanten Posts
-      </h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        Erstelle Posts und plane sie ein, um sie im Kalender zu sehen.
-      </p>
-      <router-link
-        to="/create-post"
-        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-      >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Post erstellen
-      </router-link>
-    </div>
+      class="mt-6"
+      icon="📅"
+      title="Dein Kalender ist noch leer"
+      description="Nutze den KI-Wochenplaner, um automatisch Content fuer eine ganze Woche zu planen. Oder erstelle einzelne Posts und plane sie manuell ein."
+      actionLabel="Zum Wochenplaner"
+      actionTo="/week-planner"
+      secondaryLabel="Post erstellen"
+      secondaryTo="/create-post"
+    />
 
       </div><!-- end flex-1 calendar content area -->
 
@@ -2407,5 +2454,6 @@ onMounted(() => {
         </div>
       </div>
     </Teleport>
+    <TourSystem ref="tourRef" page-key="calendar" />
   </div>
 </template>

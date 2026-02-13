@@ -2,15 +2,25 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
-import OnboardingTour from '@/components/common/OnboardingTour.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
+import WelcomeFlow from '@/components/common/WelcomeFlow.vue'
 import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
 import SeriesStatusWidget from '@/components/dashboard/SeriesStatusWidget.vue'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const router = useRouter()
 
 const loading = ref(true)
 const error = ref(null)
-const showOnboardingTour = ref(false)
+const tourRef = ref(null)
+const showWelcomeFlow = ref(false)
+const welcomeCheckDone = ref(false)
+
+// Workflow hint: missing API keys
+const apiKeysMissing = ref(false)
 
 // Dashboard data
 const stats = ref({
@@ -240,55 +250,87 @@ async function fetchDashboardData() {
   }
 }
 
-async function checkOnboardingStatus() {
+async function checkWelcomeStatus() {
   try {
     const res = await api.get('/api/settings')
     const settings = res.data
-    if (!settings.onboarding_completed || settings.onboarding_completed === 'false') {
-      // First time user - show tour after a short delay for DOM to settle
-      setTimeout(() => {
-        showOnboardingTour.value = true
-      }, 500)
+    // Check welcome flow first (shows before page-specific tour)
+    if (!settings.welcome_completed || settings.welcome_completed === 'false') {
+      // First time user - show welcome flow immediately
+      showWelcomeFlow.value = true
+    }
+    // Check if API keys are configured (for workflow hint)
+    if (!settings.gemini_api_key && !settings.openai_api_key) {
+      apiKeysMissing.value = true
     }
   } catch (err) {
-    // If settings fail, don't show tour (safe default)
-    console.error('Failed to check onboarding status:', err)
+    console.error('Failed to check welcome status:', err)
+  } finally {
+    // Mark check as done so TourSystem can conditionally render
+    welcomeCheckDone.value = true
   }
 }
 
-async function handleTourComplete() {
-  showOnboardingTour.value = false
+async function handleWelcomeComplete() {
+  showWelcomeFlow.value = false
   try {
-    await api.put('/api/settings', { onboarding_completed: 'true' })
+    await api.put('/api/settings', { welcome_completed: 'true' })
   } catch (err) {
-    console.error('Failed to save onboarding status:', err)
+    console.error('Failed to save welcome status:', err)
   }
+  // After welcome flow, start the page-specific tour
+  setTimeout(() => {
+    tourRef.value?.startTour()
+  }, 400)
 }
 
-async function handleTourSkip() {
-  showOnboardingTour.value = false
+async function handleWelcomeSkip() {
+  showWelcomeFlow.value = false
   try {
-    await api.put('/api/settings', { onboarding_completed: 'true' })
+    await api.put('/api/settings', { welcome_completed: 'true' })
   } catch (err) {
-    console.error('Failed to save onboarding status:', err)
+    console.error('Failed to save welcome status:', err)
   }
+  // After skipping welcome, start the page-specific tour
+  setTimeout(() => {
+    tourRef.value?.startTour()
+  }, 400)
 }
 
 onMounted(() => {
   fetchDashboardData()
-  checkOnboardingStatus()
+  checkWelcomeStatus()
 })
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">
-        Willkommen zurueck! Hier ist dein Content-Ueberblick.
-      </p>
+    <div class="mb-8 flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          Willkommen zurueck! Hier ist dein Content-Ueberblick.
+        </p>
+      </div>
+      <button
+        @click="tourRef?.startTour()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        title="Seiten-Tour starten"
+      >
+        &#10067; Tour starten
+      </button>
     </div>
+
+    <!-- Workflow Hint: Missing API Keys -->
+    <WorkflowHint
+      hint-id="dashboard-api-keys"
+      message="Keine API-Keys konfiguriert. Hinterlege deinen Gemini- oder OpenAI-Key, um KI-Funktionen zu nutzen."
+      link-text="Einstellungen"
+      link-to="/settings"
+      icon="🔑"
+      :show="apiKeysMissing"
+    />
 
     <!-- Loading State -->
     <div v-if="loading" class="space-y-6">
@@ -325,7 +367,7 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Posts diese Woche</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Posts diese Woche <HelpTooltip :text="tooltipTexts.dashboard.postsThisWeek" size="sm" /></p>
               <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.posts_this_week }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -338,7 +380,7 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Geplante Posts</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Geplante Posts <HelpTooltip :text="tooltipTexts.dashboard.scheduledPosts" size="sm" /></p>
               <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.scheduled_posts }}</p>
             </div>
             <div class="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
@@ -351,7 +393,7 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Gesamt Assets</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Gesamt Assets <HelpTooltip :text="tooltipTexts.dashboard.totalAssets" size="sm" /></p>
               <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.total_assets }}</p>
             </div>
             <div class="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -385,7 +427,7 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div class="p-5 border-b border-gray-100 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📅</span> Naechste 7 Tage
+              <span>📅</span> Naechste 7 Tage <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
             </h2>
           </div>
           <div class="p-5">
@@ -436,7 +478,7 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📋</span> Letzte Posts
+              <span>📋</span> Letzte Posts <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
             </h2>
             <button
               v-if="recentPosts.length > 0"
@@ -448,19 +490,17 @@ onMounted(() => {
           </div>
           <div class="p-5">
             <!-- Empty state -->
-            <div v-if="recentPosts.length === 0" class="text-center py-8">
-              <div class="text-4xl mb-3">📝</div>
-              <p class="text-gray-500 dark:text-gray-400 font-medium">Noch keine Posts erstellt</p>
-              <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                Erstelle deinen ersten Post, um loszulegen!
-              </p>
-              <button
-                @click="router.push('/create-post')"
-                class="mt-4 px-4 py-2 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Ersten Post erstellen
-              </button>
-            </div>
+            <EmptyState
+              v-if="recentPosts.length === 0"
+              icon="📝"
+              title="Noch keine Posts erstellt"
+              description="Erstelle deinen ersten Social-Media-Post fuer TREFF und starte mit deinem Content-Plan!"
+              actionLabel="Ersten Post erstellen"
+              actionTo="/create-post"
+              secondaryLabel="Einstellungen pruefen"
+              secondaryTo="/settings"
+              :compact="true"
+            />
 
             <!-- Posts list -->
             <div v-else class="space-y-3">
@@ -510,7 +550,7 @@ onMounted(() => {
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>💡</span> Content-Vorschlaege
+            <span>💡</span> Content-Vorschlaege <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />
           </h2>
           <div class="flex items-center gap-2">
             <span
@@ -533,23 +573,15 @@ onMounted(() => {
         </div>
         <div class="p-5">
           <!-- Empty state -->
-          <div v-if="suggestions.length === 0" class="text-center py-8">
-            <div class="text-4xl mb-3">💡</div>
-            <p class="text-gray-500 dark:text-gray-400 font-medium">Keine Vorschlaege vorhanden</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1 mb-4">
-              Klicke auf "Generieren" um KI-gestuetzte Content-Vorschlaege zu erhalten.
-            </p>
-            <button
-              @click="generateSuggestions"
-              :disabled="generatingSuggestions"
-              data-testid="generate-suggestions-empty-btn"
-              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
-              <span v-else>✨</span>
-              {{ generatingSuggestions ? 'Vorschlaege werden generiert...' : 'Vorschlaege generieren' }}
-            </button>
-          </div>
+          <EmptyState
+            v-if="suggestions.length === 0"
+            icon="💡"
+            title="Keine Vorschlaege vorhanden"
+            description="Klicke auf 'Generieren' um KI-gestuetzte Content-Vorschlaege fuer deine naechsten Posts zu erhalten."
+            actionLabel="Vorschlaege generieren"
+            :compact="true"
+            @action="generateSuggestions"
+          />
 
           <!-- Suggestions list -->
           <div v-else class="space-y-4">
@@ -638,11 +670,14 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Onboarding Tour for first-time users -->
-    <OnboardingTour
-      :show="showOnboardingTour"
-      @complete="handleTourComplete"
-      @skip="handleTourSkip"
+    <!-- Welcome Flow for first-time users (before page tours) -->
+    <WelcomeFlow
+      :show="showWelcomeFlow"
+      @complete="handleWelcomeComplete"
+      @skip="handleWelcomeSkip"
     />
+
+    <!-- Page-specific guided tour: only mounts after welcome check, suppresses auto-start if welcome was shown -->
+    <TourSystem v-if="welcomeCheckDone" ref="tourRef" page-key="dashboard" :auto-start="!showWelcomeFlow" />
   </div>
 </template>

@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const auth = useAuthStore()
 
@@ -380,7 +382,7 @@ onMounted(() => {
         <div class="p-5 space-y-4">
           <!-- Primary Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primaerfarbe</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Primaerfarbe <HelpTooltip :text="tooltipTexts.settings.primaryColor" size="sm" /></label>
             <div class="flex items-center gap-3">
               <input
                 type="color"
@@ -401,7 +403,7 @@ onMounted(() => {
 
           <!-- Secondary Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sekundaerfarbe</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Sekundaerfarbe <HelpTooltip :text="tooltipTexts.settings.secondaryColor" size="sm" /></label>
             <div class="flex items-center gap-3">
               <input
                 type="color"
@@ -422,7 +424,7 @@ onMounted(() => {
 
           <!-- Accent Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Akzentfarbe</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Akzentfarbe <HelpTooltip :text="tooltipTexts.settings.accentColor" size="sm" /></label>
             <div class="flex items-center gap-3">
               <input
                 type="color"
@@ -478,7 +480,7 @@ onMounted(() => {
         <div class="p-5 space-y-4">
           <!-- Gemini API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Google Gemini API-Schluessel</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Google Gemini API-Schluessel <HelpTooltip :text="tooltipTexts.settings.geminiApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="geminiApiKey"
@@ -492,7 +494,7 @@ onMounted(() => {
 
           <!-- OpenAI API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">OpenAI API-Schluessel (Optional)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">OpenAI API-Schluessel (Optional) <HelpTooltip :text="tooltipTexts.settings.openaiApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="openaiApiKey"
@@ -506,7 +508,7 @@ onMounted(() => {
 
           <!-- Unsplash API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unsplash API-Schluessel (Optional)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Unsplash API-Schluessel (Optional) <HelpTooltip :text="tooltipTexts.settings.unsplashApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="unsplashApiKey"
@@ -533,7 +535,7 @@ onMounted(() => {
         <div class="p-5 space-y-4">
           <!-- Posts per week -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts pro Woche</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Posts pro Woche <HelpTooltip :text="tooltipTexts.settings.postsPerWeek" size="sm" /></label>
             <select
               v-model="postsPerWeek"
               aria-label="Posts pro Woche"
@@ -551,7 +553,7 @@ onMounted(() => {
 
           <!-- Posts per month -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posts pro Monat</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Posts pro Monat <HelpTooltip :text="tooltipTexts.settings.postsPerMonth" size="sm" /></label>
             <select
               v-model="postsPerMonth"
               aria-label="Posts pro Monat"

@@ -3,12 +3,18 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import HelpTooltip from '@/components/common/HelpTooltip.vue'
+import { tooltipTexts } from '@/utils/tooltipTexts'
+import TourSystem from '@/components/common/TourSystem.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
 const toast = useToast()
 
 const arcs = ref([])
 const loading = ref(true)
+const tourRef = ref(null)
 
 // Filters
 const filterStatus = ref('')
@@ -104,6 +110,11 @@ function openWizard() {
   router.push('/story-arc-wizard')
 }
 
+// Workflow hint: suggest creating students when none exist
+const showStudentsHint = computed(() => {
+  return !loading.value && students.value.length === 0
+})
+
 onMounted(() => {
   fetchArcs()
   fetchStudents()
@@ -115,7 +126,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Story-Arcs</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Story-Arcs <HelpTooltip :text="tooltipTexts.storyArcs.arcOverview" /></h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
           Verwalte deine mehrteiligen Story-Serien
         </p>
@@ -128,6 +139,16 @@ onMounted(() => {
         <span>Neue Story-Serie</span>
       </button>
     </div>
+
+    <!-- Workflow Hint: No students -->
+    <WorkflowHint
+      hint-id="story-arcs-no-students"
+      message="Lege zuerst Studentenprofile an, um personalisierte Story-Serien zu erstellen."
+      link-text="Studenten verwalten"
+      link-to="/students"
+      icon="🎓"
+      :show="showStudentsHint"
+    />
 
     <!-- Stats cards -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
@@ -194,22 +215,16 @@ onMounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredArcs.length === 0"
-      class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
-    >
-      <p class="text-5xl mb-4">📖</p>
-      <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">Keine Story-Arcs gefunden</p>
-      <p class="text-gray-400 dark:text-gray-500 text-sm mt-1 mb-6">
-        Erstelle deine erste Story-Serie mit dem Wizard.
-      </p>
-      <button
-        class="bg-treff-blue text-white px-5 py-2.5 rounded-lg hover:bg-blue-600 transition-colors"
-        @click="openWizard"
-      >
-        + Neue Story-Serie erstellen
-      </button>
-    </div>
+      icon="📖"
+      title="Noch keine Story-Arcs erstellt"
+      description="Erstelle deine erste Story-Serie mit dem Wizard. Lege vorher Schueler-Profile an, um personalisierte Serien zu erstellen."
+      actionLabel="Story-Serie erstellen"
+      @action="openWizard"
+      secondaryLabel="Schueler anlegen"
+      secondaryTo="/students"
+    />
 
     <!-- Arc Cards Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
