@@ -496,6 +496,27 @@ async def regenerate_field(
         raise HTTPException(status_code=500, detail=f"Field regeneration failed: {str(e)}")
 
 
+# Platform-to-aspect-ratio mapping for automatic ratio selection
+PLATFORM_ASPECT_RATIOS = {
+    "instagram_feed": "1:1",
+    "instagram_story": "9:16",
+    "instagram_stories": "9:16",
+    "instagram_reels": "9:16",
+    "tiktok": "9:16",
+    "youtube": "16:9",
+}
+
+# Platform-to-dimension mapping for placeholder image generation
+PLATFORM_DIMENSIONS = {
+    "instagram_feed": (1024, 1024),
+    "instagram_story": (1024, 1820),
+    "instagram_stories": (1024, 1820),
+    "instagram_reels": (1024, 1820),
+    "tiktok": (1024, 1820),
+    "youtube": (1920, 1080),
+}
+
+
 @router.post("/generate-image")
 async def generate_image(
     request: dict,
@@ -506,10 +527,13 @@ async def generate_image(
 
     Expects:
     - prompt (str): Image description / prompt
-    - width (int, optional): Image width in pixels (default: 1024)
-    - height (int, optional): Image height in pixels (default: 1024)
-    - aspect_ratio (str, optional): Aspect ratio for Nano Banana Pro
-      (e.g. '1:1', '9:16', '16:9', '3:4', '4:3'). Default: auto from width/height.
+    - platform (str, optional): Target platform for automatic aspect ratio.
+      Supported: instagram_feed (1:1), instagram_story (9:16), instagram_stories (9:16),
+      instagram_reels (9:16), tiktok (9:16), youtube (16:9).
+    - aspect_ratio (str, optional): Manual aspect ratio override. Takes precedence
+      over platform if both are provided. (e.g. '1:1', '9:16', '16:9', '3:4', '4:3')
+    - width (int, optional): Image width in pixels (default: based on platform or 1024)
+    - height (int, optional): Image height in pixels (default: based on platform or 1024)
     - image_size (str, optional): Output resolution for Nano Banana Pro
       ('1K', '2K', '4K'). Default: '2K'.
     - category (str, optional): Asset category for library
@@ -520,6 +544,8 @@ async def generate_image(
     - image_url: URL to access the generated image
     - asset: Full asset object stored in the library
     - source: "gemini" or "local_generated"
+    - aspect_ratio: The aspect ratio used for generation
+    - platform: The platform used (if provided)
     """
     # Rate limit check (raises 429 if exceeded)
     ai_rate_limiter.check_rate_limit(user_id, "generate-image")
@@ -531,12 +557,25 @@ async def generate_image(
     if len(prompt) > 500:
         raise HTTPException(status_code=400, detail="Prompt darf maximal 500 Zeichen lang sein.")
 
-    req_width = min(max(request.get("width", 1024), 256), 4096)
-    req_height = min(max(request.get("height", 1024), 256), 4096)
+    platform = request.get("platform")  # e.g. "instagram_feed", "tiktok"
     aspect_ratio = request.get("aspect_ratio")  # e.g. "1:1", "9:16", "16:9"
     image_size = request.get("image_size")  # e.g. "1K", "2K", "4K"
     category = request.get("category", "ai_generated")
     country = request.get("country")
+
+    # Determine aspect ratio: explicit aspect_ratio > platform mapping > default
+    if not aspect_ratio and platform and platform in PLATFORM_ASPECT_RATIOS:
+        aspect_ratio = PLATFORM_ASPECT_RATIOS[platform]
+        logger.info(f"Auto-selected aspect_ratio={aspect_ratio} for platform={platform}")
+
+    # Determine dimensions based on platform or explicit values
+    if platform and platform in PLATFORM_DIMENSIONS:
+        default_w, default_h = PLATFORM_DIMENSIONS[platform]
+    else:
+        default_w, default_h = 1024, 1024
+
+    req_width = min(max(request.get("width", default_w), 256), 4096)
+    req_height = min(max(request.get("height", default_h), 256), 4096)
 
     image_bytes = None
     source = "local_generated"
@@ -600,6 +639,8 @@ async def generate_image(
             "image_url": f"/api/uploads/assets/{unique_filename}",
             "asset": asset_data,
             "source": source,
+            "aspect_ratio": aspect_ratio or "1:1",
+            "platform": platform,
             "message": "Bild erfolgreich generiert!" if source == "gemini" else "Bild generiert (lokale Vorschau - fuer KI-Bilder Gemini API-Key in Einstellungen hinterlegen)",
         }
     except OSError as e:
