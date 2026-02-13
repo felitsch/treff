@@ -1,5 +1,58 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #213: Wochenplaner Tour
+**Date:** 2026-02-13
+**Feature ID:** #213
+**Status:** PASSING
+
+### What was implemented:
+Expanded the Wochenplaner (Week Planner) tour from 2 basic steps to 6 comprehensive steps covering all aspects of the AI-powered weekly content planner.
+
+### Tour Steps (6 total):
+1. **Was ist der Wochenplaner?** (wp-header) - Introduction explaining the AI content assistant concept
+2. **Filter: Saison, Land & Formate** (wp-filters) - Posts/week selector, recurring formats & story series toggles
+3. **KI-Generierung starten** (wp-generate) - The "Plan generieren" button and what the AI does
+4. **Drag & Drop: Tages-Slots anpassen** (wp-grid) - 7-column day grid with draggable suggestion cards
+5. **Plan in den Kalender uebernehmen** (wp-adopt) - One-click "Plan uebernehmen" button
+6. **Zusammenspiel: Kalender & Formate** (wp-legend) - How week planner integrates with Calendar and Recurring Formats
+
+### data-tour attributes added to WeekPlannerView.vue:
+- `wp-header` on page header section
+- `wp-filters` on posts-per-week dropdown + recurring/series toggles
+- `wp-generate` on "Plan generieren" button
+- `wp-grid` already existed (from previous implementation)
+- `wp-adopt` on "Plan uebernehmen" button
+- `wp-legend` on "Legende & Tipps" section
+
+### Notes on conditional elements:
+- Steps 4-6 target elements behind `v-if="planGenerated"` - TourSystem gracefully skips missing targets
+- When plan IS generated, all 6 steps show correctly
+- Tour auto-starts on first visit, restartable via header "? Tour" button and TopBar "Seiten-Tour starten" button
+
+### Verification completed:
+- Browser: Tour auto-starts at Step 1/6 on page load (PASS)
+- Browser: Step 1 highlights header with correct title and description (PASS)
+- Browser: Step 2 highlights filter section (Posts/Woche + toggles) (PASS)
+- Browser: Step 3 highlights "Plan generieren" button (PASS)
+- Browser: After plan generation, all 6 steps traverse correctly (PASS)
+- Browser: Step 4 highlights weekly grid with 7 day columns (PASS)
+- Browser: Step 5 highlights "Plan uebernehmen" button (PASS)
+- Browser: Step 6 highlights "Legende & Tipps" section with "Tour beenden" button (PASS)
+- Browser: In-page "? Tour" button restarts tour (PASS)
+- Browser: TopBar "Seiten-Tour starten" button restarts tour (PASS)
+- Console: 0 errors, 0 warnings (PASS)
+- Mock data grep: zero matches in tourConfigs.js and WeekPlannerView.vue (PASS)
+
+### Files modified:
+- frontend/src/tours/tourConfigs.js - Expanded week-planner config from 2 to 6 detailed steps with descriptive titles
+- frontend/src/views/WeekPlannerView.vue - Added data-tour attributes (wp-header, wp-filters, wp-generate, wp-adopt, wp-legend)
+
+### Current state:
+- Feature #213 marked as PASSING
+- 217/225 features passing (96.4%)
+
+---
+
 ## Session - Feature #215: Story-Arcs Tour - Serien-Content
 **Date:** 2026-02-13
 **Feature ID:** #215
