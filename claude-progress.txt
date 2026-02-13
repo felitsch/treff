@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #186: Cliffhanger- und Teaser-System
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was implemented:
+1. **AI Cliffhanger Generation Endpoint** (`backend/app/api/routes/ai.py`):
+   - POST /api/ai/generate-cliffhanger - Generates cliffhanger text and 3 teaser variants
+   - GET /api/ai/teaser-variants - Returns available teaser variant types
+   - POST /api/ai/auto-cliffhanger-slide - Auto-generates a cliffhanger PostSlide for arc posts
+   - Uses Gemini 2.5 Flash for AI generation with rule-based fallback
+   - 3 teaser variants: Countdown ("Noch X Tage..."), Question ("Was passiert wenn...?"), Spoiler ("Naechstes Mal:")
+   - Detects last episode and adjusts messaging (Finale vs. continuation)
+   - Fetches next episode info from calendar for linking
+
+2. **CliffhangerPanel Vue Component** (`frontend/src/components/posts/CliffhangerPanel.vue`):
+   - 280-line Vue 3 Composition API component with amber/orange gradient styling
+   - Cliffhanger text textarea with character count
+   - 3-card teaser variant selector (countdown, question, spoiler) with visual icons
+   - Days-until-next input for countdown variant
+   - Teaser text textarea
+   - All-variants display after generation
+   - Next episode link section
+   - Visual preview card with "Fortsetzung folgt..." design and TREFF branding
+   - Uses shared api utility for authenticated requests
+
+3. **CreatePostView Integration** (`frontend/src/views/CreatePostView.vue`):
+   - CliffhangerPanel rendered in Step 7 when post is part of a story arc
+   - Auto-syncs generated cliffhanger/teaser to episodeCliffhangerText and episodeNextHint store refs
+   - Bound to selectedArcId, selectedEpisodeNumber, and episode content
+
+4. **EditPostView Integration** (`frontend/src/views/EditPostView.vue`):
+   - CliffhangerPanel rendered after episode fields when editing arc posts
+   - Bound to post.story_arc_id and episode data refs
+
+### Key decisions:
+- Used shared `@/utils/api` axios instance (not custom) to match app-wide `access_token` auth
+- Cliffhanger slides marked with `_cliffhanger_slide: True` in custom_css_overrides for identification
+- Leverages existing "Serien-Cliffhanger" template from seed_templates.py
+- AI prompt generates German text with TREFF-specific context (Sprachreisen, Highschool-Aufenthalte)
+
+### Verification:
+- API endpoint tested via curl - Gemini AI returns proper cliffhanger + 3 variants
+- Browser automation verified CliffhangerPanel renders on Step 7 with 0 console errors
+- Full end-to-end: AI generation populates all fields, visual preview shows correctly
+- No mock/hardcoded data patterns in source files
+
+---
+
 ## Session - Feature #191: Running Gags und wiederkehrende Formate
 **Date:** 2026-02-13
 **Status:** PASSING
