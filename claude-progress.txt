@@ -1,5 +1,73 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #175: Video-Templates mit TREFF-Branding (Intro/Outro)
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented branded intro/outro video template system for TREFF videos
+- Created VideoTemplate SQLAlchemy model with fields for name, type (intro/outro), country, duration, dimensions, branding_config (JSON), style, colors, social handles, CTA, etc.
+- Seeded 11 default templates: 5 intros (Classic, Modern, Bold, USA, Kanada) + 6 outros (Classic, Follow-CTA, Elegant, Minimal, USA, Australien)
+- Country-specific templates include flag_emoji and country branding
+- Built full CRUD API at /api/video-templates with filtering by type, country, style
+- Implemented ffmpeg-based video generation: color source + drawtext filters for branded clips
+- Implemented xfade concatenation: [intro] + content + [outro] with smooth transitions
+- Added /apply endpoint for full pipeline and /preview endpoint for metadata preview
+- Created VideoTemplatesView.vue (~450 lines) with:
+  - Two-column layout: template grid + apply panel
+  - Tab filters: Alle/Intros/Outros with count badges
+  - Country and style dropdown filters
+  - Template cards with gradient previews, type badges, style icons, country flags
+  - Click-to-select intro/outro with checkmark indicators
+  - Apply panel: video selector, output format buttons, segment summary, progress bar
+  - Custom template creation form
+  - Custom template deletion (system defaults protected)
+  - Result modal with video player and download link
+- Added sidebar nav item "Video-Branding" with icon
+- Added "Intro/Outro Branding" link in VideoComposerView header
+- Also committed audio mixer and video export infrastructure
+
+### Verification steps completed:
+1. Templates loaded (11 total) - PASS
+2. Tab filtering (Alle=11, Intros=5, Outros=6) - PASS
+3. Country filter dropdown populated and working - PASS
+4. Style filter dropdown populated and working - PASS
+5. Template selection with checkmarks (tested Classic Intro + Classic Outro) - PASS
+6. Custom template creation (TEST_175 Custom Intro) - PASS
+7. Custom template deletion - PASS
+8. Video-Schnitt page has "Intro/Outro Branding" link - PASS
+9. Zero JavaScript console errors - PASS
+10. Mock data grep checks clean (0 matches in all new files) - PASS
+11. Data persists in SQLite (verified via API) - PASS
+
+### Files created:
+- backend/app/models/video_template.py - VideoTemplate SQLAlchemy model
+- backend/app/core/seed_video_templates.py - 11 default template seeds
+- backend/app/api/routes/video_templates.py - Full CRUD + apply/preview endpoints (~500 lines)
+- frontend/src/views/VideoTemplatesView.vue - Template management UI (~450 lines)
+- backend/app/models/music_track.py - MusicTrack model (audio infrastructure)
+- backend/app/core/seed_music_tracks.py - Music track seeds
+- backend/app/api/routes/audio_mixer.py - Audio mixer API
+- backend/app/models/video_export.py - VideoExport model
+- backend/app/api/routes/video_export.py - Video export API
+- frontend/src/views/VideoExportView.vue - Video export UI
+
+### Files modified:
+- backend/app/main.py - Added imports, seed calls, route registrations
+- backend/app/models/__init__.py - Added VideoTemplate, MusicTrack, VideoExport
+- frontend/src/components/layout/SidebarNav.vue - Added Video-Branding + Video-Export nav items
+- frontend/src/router/index.js - Added video-templates and video-export routes
+- frontend/src/views/VideoComposerView.vue - Added branding link in header
+
+### Bug fixed:
+- VideoTemplatesView initially used raw `axios` instead of `api` utility (which has auth token interceptor), causing 0 templates to load. Fixed by importing from `@/utils/api`.
+
+### Current state:
+- Feature #175 marked as PASSING
+- Git commit: 1cc6069
+
+---
+
 ## Session - Feature #179: Student-Profil UI mit Dashboard
 **Date:** 2026-02-13
 **Status:** PASSING
