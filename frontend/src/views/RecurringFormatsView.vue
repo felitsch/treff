@@ -317,6 +317,7 @@ onMounted(fetchFormats)
           &#10067; Tour
         </button>
         <button
+          data-tour="formats-create"
           @click="showCreateForm = !showCreateForm"
           class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
@@ -441,7 +442,7 @@ onMounted(fetchFormats)
     </div>
 
     <!-- Formats List -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div data-tour="formats-list" v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
         v-for="fmt in filteredFormats"
         :key="fmt.id"
@@ -523,6 +524,7 @@ onMounted(fetchFormats)
 
           <button
             @click="generateAIPreview(fmt)"
+            data-tour="formats-ai-preview"
             class="text-xs px-2.5 py-1 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 transition-colors"
           >KI-Text</button>
 
@@ -613,7 +615,7 @@ onMounted(fetchFormats)
     </div>
 
     <!-- Info Section -->
-    <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+    <div data-tour="formats-info" class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
       <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Wie funktionieren wiederkehrende Formate?</h3>
       <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1.5">
         <li>Aktive Formate erscheinen als Platzhalter im <strong>Kalender</strong> am bevorzugten Wochentag.</li>

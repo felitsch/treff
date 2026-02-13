@@ -486,7 +486,7 @@ const tourConfigs = {
         title: 'Zusammenhang mit Schuelern: Persoenliche Geschichten',
         description:
           'Jede Story-Serie ist mit einem Schueler-Profil verknuepft (z.B. "Lena, 16, USA"). Das Profil liefert automatisch den Namen, das Zielland, die Schule und die Persoenlichkeit fuer die KI-Textgenerierung. So klingen alle Episoden einer Serie konsistent und authentisch. Tipp: Lege zuerst Schueler-Profile unter "Schueler" an, damit du sie hier als Protagonisten auswaehlen kannst!',
-        position: 'bottom',
+        position: 'top',
       },
     ],
   },
