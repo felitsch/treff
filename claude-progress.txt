@@ -1,5 +1,35 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #215: Story-Arcs Tour - Serien-Content
+**Date:** 2026-02-13
+**Feature ID:** #215
+**Status:** PASSING
+
+### What was implemented:
+Expanded the Story-Arcs page tour from 2 generic steps to a comprehensive 6-step educational tour covering:
+1. What Story-Arcs are and why series content drives follower retention
+2. Status & progress overview (stats cards)
+3. Story-Arc Wizard for creating new series (protagonist, episodes, tone)
+4. Episode management in the card grid (gracefully skipped when no arcs exist)
+5. Calendar connection for scheduling episodes
+6. Student profile connection for personalized, authentic content
+
+### Files modified:
+- `frontend/src/tours/tourConfigs.js` — Replaced 2-step tour with detailed 6-step config under key `'story-arcs'`
+- `frontend/src/views/StoryArcsView.vue` — Added `data-tour` attributes (`arcs-stats`, `arcs-wizard-btn`, `arcs-filters`, `arcs-students-hint`) and new students connection hint section
+
+### Key decisions:
+- Step 4 (arcs-list) gracefully skips when no story arcs exist (EmptyState shown instead)
+- Step 6 uses `position: 'top'` to avoid tooltip going below viewport
+- Added a permanent "Schueler-Profile als Protagonisten" info box to serve as Step 6 anchor
+
+### Verification:
+- All 6 steps verified via Playwright browser automation
+- Tour restart via in-page button and TopBar button both work
+- Zero console errors
+
+---
+
 ## Session - Feature #214: Students Tour - Schueler-Datenbank
 **Date:** 2026-02-13
 **Feature ID:** #214
