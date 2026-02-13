@@ -83,6 +83,16 @@ const routes = [
         name: 'WeekPlanner',
         component: () => import('@/views/WeekPlannerView.vue'),
       },
+      {
+        path: 'video-overlays',
+        name: 'VideoOverlays',
+        component: () => import('@/views/VideoOverlayEditorView.vue'),
+      },
+      {
+        path: 'video-composer',
+        name: 'VideoComposer',
+        component: () => import('@/views/VideoComposerView.vue'),
+      },
     ],
   },
   {

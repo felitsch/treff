@@ -18,7 +18,8 @@ from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays
+from app.core.seed_music_tracks import seed_music_tracks
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Failed to seed CTAs: {e}")
 
+    # Seed default music tracks for audio library
+    async with async_session() as session:
+        try:
+            count = await seed_music_tracks(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default music tracks")
+        except Exception as e:
+            logger.error(f"Failed to seed music tracks: {e}")
+
     yield
 
     # Shutdown
@@ -225,6 +235,8 @@ app.include_router(interactive_elements.router, prefix="/api/posts", tags=["Inte
 app.include_router(recycling.router, prefix="/api/recycling", tags=["Content Recycling"])
 app.include_router(series_reminders.router, prefix="/api/series-reminders", tags=["Series Reminders"])
 app.include_router(video_overlays.router, prefix="/api/video-overlays", tags=["Video Overlays"])
+app.include_router(audio_mixer.router, prefix="/api/audio", tags=["Audio Mixer"])
+app.include_router(video_composer.router, prefix="/api/video-composer", tags=["Video Composer"])
 
 
 if __name__ == "__main__":
