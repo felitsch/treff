@@ -1,6 +1,8 @@
 """Story Arc routes - CRUD for multi-part story series."""
 
+import logging
 from typing import Optional
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -8,8 +10,11 @@ from sqlalchemy import select, func
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.models.story_arc import StoryArc
+from app.models.content_suggestion import ContentSuggestion
+from app.models.student import Student
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def story_arc_to_dict(arc: StoryArc) -> dict:
@@ -29,6 +34,55 @@ def story_arc_to_dict(arc: StoryArc) -> dict:
         "tone": arc.tone,
         "created_at": arc.created_at.isoformat() if arc.created_at else None,
         "updated_at": arc.updated_at.isoformat() if arc.updated_at else None,
+    }
+
+
+async def _auto_suggest_story_teaser(arc: StoryArc, db: AsyncSession) -> Optional[dict]:
+    """Auto-generate a content suggestion for a feed teaser when a story arc becomes active.
+
+    Creates a 'story_teaser' type suggestion pointing users to create a feed post
+    that promotes the new story series in their Instagram Stories.
+    """
+    # Look up student name if linked
+    student_name = None
+    if arc.student_id:
+        result = await db.execute(
+            select(Student).where(Student.id == arc.student_id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_name = student.name
+
+    # Build suggestion title and description
+    title_parts = [f"Story-Teaser: {arc.title}"]
+    if student_name:
+        title_parts.append(f"mit {student_name}")
+    suggestion_title = " ".join(title_parts)
+
+    desc_parts = [
+        f"Neue Story-Serie '{arc.title}' startet!",
+    ]
+    if student_name:
+        desc_parts.append(f"Erstelle einen Feed-Teaser-Post fuer {student_name}s Abenteuer.")
+    else:
+        desc_parts.append("Erstelle einen Feed-Teaser-Post, der auf die Story-Serie hinweist.")
+    desc_parts.append("Schau in unsere Stories! Verwende das Story-Teaser Template.")
+
+    suggestion = ContentSuggestion(
+        suggestion_type="story_teaser",
+        title=suggestion_title,
+        description=" ".join(desc_parts),
+        suggested_category="story_teaser",
+        suggested_country=arc.country,
+        suggested_date=date.today(),
+        reason=f"Story-Arc '{arc.title}' wurde aktiviert - Feed-Teaser empfohlen",
+        status="pending",
+    )
+    db.add(suggestion)
+    logger.info(f"Auto-suggested story teaser for arc '{arc.title}' (id={arc.id})")
+    return {
+        "suggestion_created": True,
+        "suggestion_title": suggestion_title,
     }
 
 
@@ -119,7 +173,17 @@ async def create_story_arc(
     await db.flush()
     await db.refresh(arc)
     response = story_arc_to_dict(arc)
+
+    # Auto-suggest feed teaser when arc is created with status "active"
+    suggestion_info = None
+    if arc.status == "active":
+        suggestion_info = await _auto_suggest_story_teaser(arc, db)
+
     await db.commit()
+
+    if suggestion_info:
+        response["teaser_suggestion"] = suggestion_info
+
     return response
 
 
@@ -156,6 +220,9 @@ async def update_story_arc(
                 detail=f"Invalid tone. Must be one of: {', '.join(sorted(valid_tones))}"
             )
 
+    # Track previous status for auto-suggestion
+    previous_status = arc.status
+
     # Update allowed fields
     allowed_fields = {
         "title", "subtitle", "description", "student_id", "country",
@@ -168,7 +235,17 @@ async def update_story_arc(
     await db.flush()
     await db.refresh(arc)
     response = story_arc_to_dict(arc)
+
+    # Auto-suggest feed teaser when arc transitions to "active"
+    suggestion_info = None
+    if arc.status == "active" and previous_status != "active":
+        suggestion_info = await _auto_suggest_story_teaser(arc, db)
+
     await db.commit()
+
+    if suggestion_info:
+        response["teaser_suggestion"] = suggestion_info
+
     return response
 
 

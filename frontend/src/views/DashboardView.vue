@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import OnboardingTour from '@/components/common/OnboardingTour.vue'
+import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
 
 const router = useRouter()
 
@@ -119,6 +120,8 @@ function suggestionTypeIcon(type) {
       return '📅'
     case 'weekly_plan':
       return '📋'
+    case 'story_teaser':
+      return '👉'
     default:
       return '💡'
   }
@@ -132,6 +135,7 @@ function suggestionTypeLabel(type) {
     category_balance: 'Kategorie-Balance',
     gap_fill: 'Luecke fuellen',
     weekly_plan: 'Wochenplan',
+    story_teaser: 'Story-Teaser',
   }
   return labels[type] || type
 }
@@ -149,6 +153,8 @@ function suggestionTypeBadge(type) {
       return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
     case 'weekly_plan':
       return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+    case 'story_teaser':
+      return 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300'
     default:
       return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
   }
@@ -492,6 +498,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- Content Recycling Panel -->
+      <RecyclingPanel />
 
       <!-- Content Suggestions Section -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">

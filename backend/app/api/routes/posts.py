@@ -33,6 +33,7 @@ def post_to_dict(post: Post) -> dict:
         "custom_colors": post.custom_colors,
         "custom_fonts": post.custom_fonts,
         "tone": post.tone,
+        "story_arc_id": post.story_arc_id,
         "scheduled_date": post.scheduled_date.isoformat() if post.scheduled_date else None,
         "scheduled_time": post.scheduled_time,
         "exported_at": post.exported_at.isoformat() if post.exported_at else None,

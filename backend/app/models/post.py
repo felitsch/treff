@@ -33,6 +33,7 @@ class Post(Base):
     tone: Mapped[str] = mapped_column(String, default="jugendlich")  # jugendlich, serioess, witzig, emotional, motivierend, informativ, behind-the-scenes, storytelling, provokant, wholesome
     scheduled_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     scheduled_time: Mapped[str | None] = mapped_column(String, nullable=True)  # HH:MM
+    story_arc_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("story_arcs.id"), nullable=True)  # Links teaser posts to story arcs
     exported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     posted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -46,6 +47,8 @@ class Post(Base):
 
     # Relationships
     user = relationship("User", back_populates="posts")
+    story_arc = relationship("StoryArc", foreign_keys=[story_arc_id])
     slides = relationship("PostSlide", back_populates="post", cascade="all, delete-orphan", order_by="PostSlide.slide_index")
     calendar_entries = relationship("CalendarEntry", back_populates="post", cascade="all, delete-orphan")
     export_records = relationship("ExportHistory", back_populates="post", cascade="all, delete-orphan")
+    interactive_elements = relationship("PostInteractiveElement", back_populates="post", cascade="all, delete-orphan")

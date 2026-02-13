@@ -1,5 +1,103 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #198: Engagement-Boost Vorschlaege durch KI
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Built EngagementBoostPanel.vue component with full analysis UI:
+  - "Post analysieren" button with loading spinner
+  - Engagement score bar (0-100) with color coding (green/amber/red)
+  - Priority summary dots (high/medium/low counts)
+  - Suggestion cards with: priority badge, category icon+label, estimated boost percentage, suggestion text, "Anwenden" button
+  - Collapsible header with suggestion count badge
+  - Source indicator (KI/Smart-Analyse)
+- Integrated panel into CreatePostView.vue Step 6 (Live Preview sidebar)
+  - Passes post content, platform, format, and posting time as props
+  - Shows toast notification when "Anwenden" is clicked
+- Integrated panel into EditPostView.vue (preview column below slide navigation)
+  - Shows success message when suggestions are applied
+- Backend endpoint POST /api/ai/engagement-boost was already implemented by another agent
+  - Verified: Gemini AI analysis with rule-based fallback
+  - Analyzes: hook strength, CTA presence, caption length, hashtag quality, posting time, format choice, emotion, interaction
+
+### Files created/modified:
+- frontend/src/components/posts/EngagementBoostPanel.vue (NEW) - Full engagement analysis panel (~271 lines)
+- frontend/src/views/CreatePostView.vue (modified) - Added import, computed postContent, handler, and template integration
+- frontend/src/views/EditPostView.vue (modified) - Added import, computed postContent, handler, and template integration
+
+### Verification steps completed:
+1. POST /api/ai/engagement-boost endpoint works - PASS (returns 200 with suggestions)
+2. KI analyzes hook strength, CTA, length, hashtags, timing, format - PASS (all categories covered)
+3. Response has priority (high/medium/low), category, suggestion text, estimated_boost, action_text - PASS
+4. Frontend EngagementBoostPanel.vue renders as sidebar in post editor - PASS (integrated in Step 6 + EditPostView)
+5. Suggestion cards with "Anwenden" button - PASS (each card has button with action_text)
+6. Estimated engagement boost shown per suggestion - PASS (e.g., "+25%", "+15%", "+10%")
+7. Different post types produce different suggestions - PASS:
+   - Minimal post (no CTA, no caption, no hashtags, bad time): 6 suggestions, 4 high priority
+   - Well-formed post (CTA, hashtags, caption with question, carousel): 2 suggestions, low priority
+   - TikTok post: Correctly identifies missing CTA and suggests hook improvement
+
+### Additional verification:
+- Authentication required: 401 without token - PASS
+- Rate limiting applied - PASS
+- Mock data grep checks: zero matches in EngagementBoostPanel.vue and ai.py - PASS
+- No 500 errors in API responses - PASS
+- Frontend compiles without errors (Vite 200 for all changed files) - PASS
+
+### Current state:
+- Feature #198 marked as PASSING
+- Git commits: 72de70a (CreatePostView integration), 9aca486 (EngagementBoostPanel + EditPostView)
+
+---
+
+## Session - Feature #178: Student-Datenmodell und CRUD-API
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Created SQLAlchemy Student model with all required fields (name, country, city, school_name, host_family_name, start_date, end_date, profile_image_id FK, bio, fun_facts, status)
+- Status enum: active/completed/upcoming
+- Database indexes on user_id, country, status for query performance
+- Full CRUD API routes: POST/GET/PUT/DELETE /api/students
+- List endpoint with filters: country, status, start_date_from, start_date_to, search (ILIKE on name/city/school/host_family/bio)
+- All endpoints protected with JWT auth (get_current_user_id)
+- Pinia store (useStudentStore) with full CRUD operations, computed filters (activeStudents, completedStudents, upcomingStudents)
+- Complete Vue.js UI with card grid, country flags, status badges, modal create/edit forms, delete confirmation dialog
+- Added Students nav item to sidebar (🎓 icon)
+- Added /students route to Vue Router
+
+### Files created/modified:
+- backend/app/models/student.py (NEW) - SQLAlchemy Student model
+- backend/app/api/routes/students.py (NEW) - Full CRUD API with Pydantic schemas
+- frontend/src/stores/students.js (NEW) - Pinia store with CRUD operations
+- backend/app/models/__init__.py (modified) - Added Student import
+- backend/app/models/user.py (modified) - Added students relationship
+- backend/app/main.py (modified) - Registered students router
+- frontend/src/views/StudentsView.vue (overwritten) - Full CRUD UI (~478 lines)
+- frontend/src/components/layout/SidebarNav.vue (modified) - Added Students nav
+- frontend/src/router/index.js (modified) - Added /students route
+
+### Verification steps completed:
+1. API CRUD via Python urllib script - PASS (create, list, update, delete all working)
+2. Auth protection (401 for unauthenticated) - PASS
+3. Browser UI create student via Playwright - PASS
+4. Browser UI edit student via Playwright - PASS
+5. Browser UI delete student with confirmation - PASS
+6. Server restart persistence (SQLite data survives) - PASS
+7. Zero mock data grep matches - PASS
+8. Zero JavaScript console errors - PASS
+9. Students visible in sidebar nav - PASS
+10. Filter/search functionality in API - PASS
+
+### Git commit:
+- 206ba2b feat: implement Student CRUD API, Pinia store, and UI (feature #178)
+- 5 files changed, 855 insertions
+
+### Current state:
+- Feature #178 marked as PASSING
+- All CRUD operations verified via API and browser
+
 ## Session - Feature #189: Erweiterte Tone-Palette (8 Toene statt 2)
 **Date:** 2026-02-13
 **Status:** PASSING
@@ -7605,3 +7703,133 @@
 ### Current state:
 - Feature #142 marked as PASSING
 - 145/170 features passing (85.3%)
+
+---
+
+## Session - Feature #192: Persoenlichkeits-Presets pro Student/Serie
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Added `personality_preset` TEXT column to Student model (JSON object stored as string)
+- Added migration in main.py lifespan startup (ALTER TABLE students ADD COLUMN personality_preset TEXT)
+- Updated StudentCreate/StudentUpdate Pydantic schemas with personality_preset field
+- Updated student_to_dict helper to include personality_preset in API responses
+- Created `_build_personality_prompt_section()` function in text_generator.py that converts preset fields into German-language prompt instructions
+- Modified `_build_gemini_system_prompt()` to accept and append personality preset section
+- Modified `generate_text_with_gemini()` and `generate_text_content()` to accept personality_preset parameter
+- Updated AI route's generate_text endpoint to accept student_id, look up student personality preset from DB, and pass to text generation
+- Created PersonalityEditor.vue component with tone selector (10 options), humor level slider (1-5), emoji usage buttons (4 options), perspective toggle (first/third person), catchphrase management (add/remove, max 5), and preview summary
+- Integrated PersonalityEditor into StudentsView.vue create/edit forms
+- Added personality badge display on student cards in StudentsView
+- Added student selector to CreatePostView.vue Step 4 (AI text generation step)
+- Added student_id to generate-text API call so AI uses student's personality preset
+
+### Verification steps completed:
+1. Student CRUD with personality_preset via API - PASS (create, read, update all work)
+2. Text generation with student_id=2 (Jonathan, witzig/humor5/heavy emoji/first person) produces humorous content with catchphrases - PASS
+3. Text generation with student_id=3 (Laura, emotional/humor2/minimal emoji/third person) produces emotional content with catchphrases - PASS
+4. Different student presets produce distinctly different AI outputs - PASS
+5. Mock data grep checks: zero matches in frontend/src and backend/app - PASS
+6. Data persistence verified in SQLite database - PASS
+
+### Files created/modified:
+- backend/app/models/student.py (modified) - Added personality_preset TEXT column
+- backend/app/main.py (modified) - Added ALTER TABLE migration for personality_preset
+- backend/app/api/routes/students.py (modified) - Added personality_preset to schemas, create endpoint, and dict helper
+- backend/app/api/routes/ai.py (modified) - Added student_id lookup and personality_preset pass-through
+- backend/app/core/text_generator.py (modified) - Added _build_personality_prompt_section(), updated system prompt builder and generation functions
+- frontend/src/components/students/PersonalityEditor.vue (NEW) - Full personality editor component (~250 lines)
+- frontend/src/views/StudentsView.vue (modified) - Integrated PersonalityEditor, added personality badges
+- frontend/src/views/CreatePostView.vue (modified) - Added student selector in Step 4, student_id in API call
+
+### Current state:
+- Feature #192 marked as PASSING
+
+---
+
+## Session - Feature #195: CTA-Bibliothek mit vorgefertigten Call-to-Actions
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Created CTA database model (id, text, category, platform, format, emoji, performance_score, usage_count, is_default, created_at)
+- Seeded 35 professional German CTAs across 4 categories: Engagement (10), Conversion (10), Awareness (7), Traffic (8)
+- Full CRUD API: GET/POST/PUT/DELETE /api/ctas with category/platform/format filters
+- POST /api/ctas/{id}/use - Usage tracking endpoint (increments usage_count)
+- POST /api/ctas/suggest - AI auto-suggest based on post category/platform/format/topic
+  - Maps post categories to CTA categories (laender_spotlight->awareness, fristen_cta->conversion, etc.)
+  - Scores by category match (100pts) + usage popularity + performance score
+  - Returns top 5 suggestions
+- Built CtaPicker.vue component with:
+  - Text input with character counter (0/25)
+  - Library toggle button (book emoji)
+  - Dropdown with "Vorgeschlagene CTAs" section (context-aware suggestions)
+  - Category filter tabs (Alle/Engagement/Conversion/Awareness/Traffic)
+  - Full CTA list with emoji, text, category badge, and usage count
+  - Outside-click-to-close and close button
+- Integrated CtaPicker into CreatePostView.vue and EditPostView.vue (Step 7: Bearbeiten)
+
+### Files created/modified:
+- backend/app/models/cta.py (NEW) - SQLAlchemy CTA model
+- backend/app/core/seed_ctas.py (NEW) - 35 default CTAs seed data
+- backend/app/api/routes/ctas.py (NEW) - Full CRUD + suggest + usage tracking
+- frontend/src/components/posts/CtaPicker.vue (NEW) - CTA picker component (~204 lines)
+- backend/app/models/__init__.py (modified) - Added CTA import
+- backend/app/main.py (modified) - Added seed_ctas call and route registration
+- frontend/src/views/CreatePostView.vue (modified) - Replaced CTA input with CtaPicker
+- frontend/src/views/EditPostView.vue (modified) - Replaced CTA input with CtaPicker
+
+### Verification completed:
+- Browser: CTA library opens with 35 CTAs, category filtering works, suggestions context-aware
+- Browser: Selecting CTA populates input and live preview
+- API: All CRUD operations tested (create, read, update, delete)
+- API: Usage count increments correctly (verified 1->2 after use)
+- API: Suggest endpoint returns 5 awareness CTAs for laender_spotlight
+- Console: 0 JavaScript errors
+- Mock data: No mock/dummy/fake data found in any CTA files
+- Git commit: 434b129
+
+### Current state:
+- Feature #195 marked as PASSING
+
+---
+
+## Session - Feature #194: Emoji- und Hashtag-Strategie-Engine
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was implemented:
+1. **HashtagSet Model** - SQLAlchemy model with id, user_id, name, hashtags (JSON), category, country, performance_score, is_default, created_at, updated_at
+2. **Seed Data** - 17 predefined hashtag sets covering TREFF Brand Basics, Engagement Booster, Eltern & Vertrauen, country-specific sets (USA x3, Kanada x2, Australien x2, Neuseeland x2, Irland x2), FAQ, Tipps & Tricks, Infografiken
+3. **CRUD API** - Full REST endpoints at /api/hashtag-sets (GET list with filters, GET by id, POST create, PUT update, DELETE) with user ownership and system default protection
+4. **AI Hashtag Suggestions** - POST /api/ai/suggest-hashtags using Gemini 2.5 Flash with rule-based fallback from DB sets, returns hashtags + emoji suggestions
+5. **Emoji Rules Engine** - EMOJI_RULES dict mapping 10 tones to emoji preferences, count ranges, country-specific emojis, and style descriptions. GET /api/ai/emoji-rules endpoint
+6. **Hashtag Manager UI** - Full management section in SettingsView.vue with create form, edit inline, delete, country/category filter dropdowns, tag pills display, score badges
+7. **Auto-Suggest in Post Editor** - Green sparkle button in CreatePostView.vue step 7 that calls AI suggest endpoint and populates Instagram/TikTok hashtag fields + clickable emoji chips
+
+### Files created/modified:
+- backend/app/models/hashtag_set.py (NEW) - SQLAlchemy HashtagSet model
+- backend/app/core/seed_hashtag_sets.py (NEW) - 17 predefined hashtag sets seed data
+- backend/app/api/routes/hashtag_sets.py (NEW) - Full CRUD API routes (~233 lines)
+- backend/app/api/routes/ai.py (modified) - Added EMOJI_RULES, suggest-hashtags endpoint, emoji-rules endpoint (~439 lines added)
+- backend/app/main.py (modified) - Added seed_hashtag_sets call and route registration
+- frontend/src/views/SettingsView.vue (modified) - Added Hashtag Manager section (~341 lines added)
+- frontend/src/views/CreatePostView.vue (modified) - Added Auto-Suggest button and emoji chips
+
+### Verification completed:
+- API: 17 seeded default sets loaded correctly, ordered by performance_score
+- API: CRUD operations work (create 201, update 200, delete 200)
+- API: Country filtering returns correct subsets (USA=3 sets)
+- API: AI suggest-hashtags returns 10 Gemini-generated tags with emoji suggestions
+- API: Emoji rules return tone-appropriate emojis with correct count ranges
+- Browser: Settings page shows all 17 hashtag sets with tag pills, scores, country badges
+- Browser: Country filter correctly narrows to 3 USA sets
+- Browser: Custom set creation works (fills form, saves, shows with edit/delete buttons)
+- Browser: Custom set deletion works (removes from list, count decrements)
+- Mock data: No mock/dummy/fake/TODO/FIXME found in any new files
+- Persistence: Backend restart preserves all seeded data
+- Git commit: fe91131
+
+### Current state:
+- Feature #194 marked as PASSING

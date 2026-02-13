@@ -361,6 +361,7 @@ const categories = {
   foto_posts: { label: 'Foto-Posts', icon: '\u{1F4F8}', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
   reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '\u{1F3AC}', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
   story_posts: { label: 'Story-Posts', icon: '\u{1F4F1}', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
+  story_teaser: { label: 'Story-Teaser', icon: '\u{1F449}', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
 }
 
 // Platform format labels

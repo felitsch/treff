@@ -38,6 +38,74 @@ COUNTRY_THEMES = {
 }
 
 
+def _make_story_teaser_html(variant: str) -> str:
+    """Generate HTML for story-teaser feed templates with Story-Frame mockup and arrow icons."""
+    d = {"w": 1080, "h": 1080}  # Feed square for teaser posts
+
+    # Different headlines based on variant
+    variant_labels = {
+        "neue_serie": "NEUE SERIE",
+        "fortsetzung": "FORTSETZUNG",
+        "finale": "FINALE EPISODE",
+    }
+    badge_label = variant_labels.get(variant, "STORIES")
+
+    return f"""<div class="template-wrapper story-teaser" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
+  <div class="template-bg" style="position:absolute;inset:0;background:linear-gradient(135deg, {TREFF_DARK} 0%, #2A2A4E 60%, {TREFF_BLUE} 100%);"></div>
+  <div class="template-content" style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:60px;">
+    <div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+      <div class="template-logo" style="width:120px;height:40px;background:{TREFF_BLUE};border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">TREFF</div>
+      <div class="stories-badge" style="background:linear-gradient(45deg, #F58529, #DD2A7B, #8134AF, #515BD4);padding:8px 20px;border-radius:20px;color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;">{badge_label}</div>
+    </div>
+    <div class="template-body" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
+      <div class="story-frame-mockup" style="width:280px;height:380px;border-radius:20px;border:4px solid;border-image:linear-gradient(45deg, #F58529, #DD2A7B, #8134AF) 1;background:rgba(255,255,255,0.05);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;">
+        <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.15);margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:28px;">{{{{student_photo}}}}</div>
+        <div style="color:#fff;font-weight:700;font-size:16px;text-align:center;">{{{{student_name}}}}</div>
+        <div style="color:{TREFF_YELLOW};font-size:13px;margin-top:4px;text-align:center;">{{{{episode_preview}}}}</div>
+      </div>
+      <h1 class="template-headline" style="font-size:42px;font-weight:800;color:#FFFFFF;line-height:1.1;text-align:center;">{{{{arc_title}}}}</h1>
+      <div class="arrow-cta" style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <span style="color:{TREFF_YELLOW};font-size:22px;font-weight:700;">{{{{cta_text}}}}</span>
+        <span class="arrow-icon" style="font-size:32px;color:{TREFF_YELLOW};animation:bounce 1s infinite;">&#10145;</span>
+      </div>
+    </div>
+    <div class="template-footer" style="margin-top:auto;text-align:center;">
+      <span style="color:#9CA3AF;font-size:14px;">@treff_sprachreisen</span>
+    </div>
+  </div>
+</div>"""
+
+
+def _make_story_teaser_css() -> str:
+    """Generate CSS for story-teaser templates with arrow animation."""
+    return """
+.template-wrapper.story-teaser {
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+.template-wrapper.story-teaser * {
+  box-sizing: border-box;
+}
+.template-headline {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.stories-badge {
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.story-frame-mockup {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.arrow-icon {
+  display: inline-block;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
+}
+"""
+
+
 def _make_html(category: str, platform: str, variant: str = "default") -> str:
     """Generate HTML template content for a given category and platform."""
     # Dimensions based on platform
@@ -261,6 +329,37 @@ DEFAULT_TEMPLATES = [
         "is_default": True,
         "is_country_themed": False,
     },
+    # --- STORY-TEASER (Feed posts pointing to Story series) ---
+    {
+        "name": "Story-Teaser: Neue Serie startet!",
+        "category": "story_teaser",
+        "platform_format": "feed_square",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_teaser_variant": "neue_serie",
+    },
+    {
+        "name": "Story-Teaser: Fortsetzung in Stories!",
+        "category": "story_teaser",
+        "platform_format": "feed_square",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_teaser_variant": "fortsetzung",
+    },
+    {
+        "name": "Story-Teaser: Finale Episode heute!",
+        "category": "story_teaser",
+        "platform_format": "feed_square",
+        "slide_count": 1,
+        "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
+        "is_default": True,
+        "is_country_themed": False,
+        "_story_teaser_variant": "finale",
+    },
     # --- COUNTRY-THEMED TEMPLATES ---
     {
         "name": "USA Highschool Spotlight",
@@ -314,9 +413,14 @@ async def seed_default_templates(db: AsyncSession) -> int:
         category = tpl_data["category"]
         platform = tpl_data["platform_format"]
 
-        # Generate HTML and CSS
-        html_content = _make_html(category, platform)
-        css_content = _make_css(category)
+        # Generate HTML and CSS - use special templates for story_teaser
+        if category == "story_teaser":
+            variant = tpl_data.get("_story_teaser_variant", "neue_serie")
+            html_content = _make_story_teaser_html(variant)
+            css_content = _make_story_teaser_css()
+        else:
+            html_content = _make_html(category, platform)
+            css_content = _make_css(category)
 
         # Get country-specific colors if applicable
         country = tpl_data.get("country")
@@ -350,4 +454,58 @@ async def seed_default_templates(db: AsyncSession) -> int:
 
     await db.commit()
     logger.info(f"Seeded {created} default templates across all categories.")
+    return created
+
+
+async def seed_story_teaser_templates(db: AsyncSession) -> int:
+    """Seed story-teaser templates if they don't exist yet.
+
+    This is a separate function to handle adding story-teaser templates
+    to existing installations that already have other default templates.
+    """
+    # Check if story-teaser templates already exist
+    result = await db.execute(
+        select(func.count()).select_from(Template).where(
+            Template.is_default == True,
+            Template.category == "story_teaser",
+        )
+    )
+    existing_count = result.scalar()
+
+    if existing_count > 0:
+        logger.info(f"Found {existing_count} story-teaser templates, skipping seed.")
+        return 0
+
+    logger.info("No story-teaser templates found. Seeding...")
+    created = 0
+
+    story_teaser_templates = [t for t in DEFAULT_TEMPLATES if t.get("category") == "story_teaser"]
+
+    for tpl_data in story_teaser_templates:
+        variant = tpl_data.get("_story_teaser_variant", "neue_serie")
+        html_content = _make_story_teaser_html(variant)
+        css_content = _make_story_teaser_css()
+
+        template = Template(
+            name=tpl_data["name"],
+            category="story_teaser",
+            platform_format=tpl_data["platform_format"],
+            slide_count=tpl_data["slide_count"],
+            html_content=html_content,
+            css_content=css_content,
+            default_colors=DEFAULT_COLORS,
+            default_fonts=DEFAULT_FONTS,
+            placeholder_fields=tpl_data["placeholder_fields"],
+            thumbnail_url=None,
+            is_default=True,
+            is_country_themed=False,
+            country=None,
+            version=1,
+            parent_template_id=None,
+        )
+        db.add(template)
+        created += 1
+
+    await db.commit()
+    logger.info(f"Seeded {created} story-teaser templates.")
     return created

@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const auth = useAuthStore()
+const router = useRouter()
 
 // State
 const loading = ref(false)
@@ -47,6 +49,16 @@ const goalStats = ref({
 const seasonalMarkers = ref([])
 const showSeasonalMarkers = ref(true)
 
+// Recycling suggestions for gap days
+const recyclingSuggestions = ref({}) // dateStr -> suggestion
+const showRecyclingSuggestions = ref(true)
+
+// Story Arc Timeline
+const showArcTimeline = ref(true)
+const arcTimelineData = ref([]) // Array of arc objects from API
+const hoveredEpisode = ref(null) // { arc, episode, x, y } for tooltip
+const tooltipPosition = ref({ x: 0, y: 0 })
+
 // Platform filter options
 const platformOptions = [
   { value: null, label: 'Alle', icon: '📋' },
@@ -88,6 +100,7 @@ const categoryColors = {
   foto_posts: { bg: 'bg-pink-100 dark:bg-pink-900/40', border: 'border-pink-400', text: 'text-pink-700 dark:text-pink-300', dot: 'bg-pink-500' },
   reel_tiktok_thumbnails: { bg: 'bg-violet-100 dark:bg-violet-900/40', border: 'border-violet-400', text: 'text-violet-700 dark:text-violet-300', dot: 'bg-violet-500' },
   story_posts: { bg: 'bg-orange-100 dark:bg-orange-900/40', border: 'border-orange-400', text: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' },
+  story_teaser: { bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/40', border: 'border-fuchsia-400', text: 'text-fuchsia-700 dark:text-fuchsia-300', dot: 'bg-fuchsia-500' },
 }
 
 // Category labels & icons
@@ -101,6 +114,7 @@ const categoryMeta = {
   foto_posts: { label: 'Foto', icon: '📸' },
   reel_tiktok_thumbnails: { label: 'Reel', icon: '🎬' },
   story_posts: { label: 'Story', icon: '📱' },
+  story_teaser: { label: 'Teaser', icon: '👉' },
 }
 
 // Status icons and labels
@@ -403,6 +417,141 @@ async function fetchGaps() {
   }
 }
 
+// Fetch recycling suggestions for gap days in current month
+async function fetchRecyclingSuggestions() {
+  try {
+    const res = await fetch(`/api/recycling/calendar-suggestions?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    const map = {}
+    for (const s of (data.suggestions || [])) {
+      if (s.suggested_post) {
+        map[s.gap_date] = s.suggested_post
+      }
+    }
+    recyclingSuggestions.value = map
+  } catch (err) {
+    console.error('Recycling suggestions fetch error:', err)
+    recyclingSuggestions.value = {}
+  }
+}
+
+// Fetch arc timeline data for the current month
+async function fetchArcTimeline() {
+  if (!showArcTimeline.value) return
+  try {
+    const res = await fetch(`/api/calendar/arc-timeline?month=${currentMonth.value}&year=${currentYear.value}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    arcTimelineData.value = data.arcs || []
+  } catch (err) {
+    console.error('Arc timeline fetch error:', err)
+    arcTimelineData.value = []
+  }
+}
+
+// Compute arc timeline rows for the month grid
+// Each arc becomes a horizontal bar spanning from its first to last episode date
+// Multiple arcs can overlap so we assign rows to avoid visual collision
+const arcTimelineRows = computed(() => {
+  if (!showArcTimeline.value || arcTimelineData.value.length === 0) return []
+
+  const days = calendarDays.value
+  if (!days || days.length === 0) return []
+
+  const firstDateStr = days[0].dateStr
+  const lastDateStr = days[days.length - 1].dateStr
+
+  const rows = []
+
+  for (const arc of arcTimelineData.value) {
+    // Clamp arc start/end to visible range
+    const arcStart = arc.start_date < firstDateStr ? firstDateStr : arc.start_date
+    const arcEnd = arc.end_date > lastDateStr ? lastDateStr : arc.end_date
+
+    // Find column indices in the 42-cell grid
+    const startIdx = days.findIndex(d => d.dateStr >= arcStart)
+    const endIdx = days.findIndex(d => d.dateStr > arcEnd)
+    const actualEndIdx = endIdx === -1 ? days.length - 1 : endIdx - 1
+
+    if (startIdx === -1 || startIdx > actualEndIdx) continue
+
+    // Find episode positions within the grid
+    const episodePositions = []
+    for (const ep of arc.episodes) {
+      const epIdx = days.findIndex(d => d.dateStr === ep.scheduled_date)
+      if (epIdx >= 0) {
+        episodePositions.push({
+          ...ep,
+          colIndex: epIdx,
+        })
+      }
+    }
+
+    rows.push({
+      arc,
+      startCol: startIdx,
+      endCol: actualEndIdx,
+      spanCols: actualEndIdx - startIdx + 1,
+      episodes: episodePositions,
+    })
+  }
+
+  return rows
+})
+
+// Status color map for episode dots
+const episodeStatusColors = {
+  draft: '#9CA3AF',      // gray
+  scheduled: '#3B82F6',  // blue
+  reminded: '#F59E0B',   // amber
+  exported: '#10B981',   // green
+  posted: '#059669',     // emerald
+}
+
+function getEpisodeStatusColor(status) {
+  return episodeStatusColors[status] || '#9CA3AF'
+}
+
+// Status labels for episodes
+const episodeStatusLabels = {
+  draft: 'Entwurf',
+  scheduled: 'Geplant',
+  reminded: 'Erinnert',
+  exported: 'Exportiert',
+  posted: 'Veroeffentlicht',
+}
+
+function showEpisodeTooltip(event, arc, episode) {
+  const rect = event.target.getBoundingClientRect()
+  tooltipPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.top - 8,
+  }
+  hoveredEpisode.value = { arc, episode }
+}
+
+function hideEpisodeTooltip() {
+  hoveredEpisode.value = null
+}
+
+function onEpisodeClick(episode) {
+  hideEpisodeTooltip()
+  if (episode.id) {
+    router.push(`/posts/${episode.id}/edit`)
+  }
+}
+
+// Get recycling suggestion for a specific date
+function getRecyclingSuggestion(dateStr) {
+  if (!showRecyclingSuggestions.value) return null
+  return recyclingSuggestions.value[dateStr] || null
+}
+
 // Fetch seasonal markers (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn, etc.)
 async function fetchSeasonalMarkers() {
   try {
@@ -494,6 +643,8 @@ function fetchData() {
     fetchCalendar()
     fetchGaps()
     fetchSeasonalMarkers()
+    fetchRecyclingSuggestions()
+    fetchArcTimeline()
   } else if (viewMode.value === 'week') {
     fetchWeek()
   } else if (viewMode.value === 'queue') {
@@ -747,6 +898,8 @@ watch([currentMonth, currentYear], () => {
     fetchCalendar()
     fetchGaps()
     fetchSeasonalMarkers()
+    fetchRecyclingSuggestions()
+    fetchArcTimeline()
   }
 })
 
@@ -865,6 +1018,24 @@ onMounted(() => {
           Fristen
           <span v-if="showSeasonalMarkers && seasonalMarkers.length > 0" class="bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ seasonalMarkers.length }}
+          </span>
+        </button>
+
+        <!-- Story Arc Timeline toggle (only in month view) -->
+        <button
+          v-if="viewMode === 'month'"
+          @click="showArcTimeline = !showArcTimeline; if (showArcTimeline) fetchArcTimeline()"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="showArcTimeline
+            ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Story-Arc-Timeline anzeigen/ausblenden"
+          aria-label="Story-Arc-Timeline anzeigen/ausblenden"
+        >
+          <span v-if="showArcTimeline">📖</span><span v-else>📕</span>
+          Arcs
+          <span v-if="showArcTimeline && arcTimelineData.length > 0" class="bg-violet-200 dark:bg-violet-800 text-violet-800 dark:text-violet-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
+            {{ arcTimelineData.length }}
           </span>
         </button>
 
@@ -1070,6 +1241,60 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Story Arc Timeline Layer -->
+      <div v-if="showArcTimeline && arcTimelineRows.length > 0" class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20 px-1 py-1.5">
+        <div
+          v-for="(row, rowIdx) in arcTimelineRows"
+          :key="'arc-' + row.arc.id"
+          class="relative mb-1 last:mb-0"
+          :style="{ height: '26px' }"
+        >
+          <!-- Arc bar background - positioned absolutely across the grid -->
+          <div
+            class="absolute rounded-full flex items-center overflow-hidden transition-all"
+            :style="{
+              left: (row.startCol / 7 * 100) + '%',
+              width: (row.spanCols / 7 * 100) + '%',
+              top: '0',
+              height: '24px',
+              backgroundColor: row.arc.color.light,
+              border: '2px solid ' + row.arc.color.bg,
+            }"
+            :title="row.arc.title + ' (' + row.arc.total_episodes + ' Episoden, ' + row.arc.start_date + ' bis ' + row.arc.end_date + ')'"
+          >
+            <!-- Arc title (inside the bar) -->
+            <span
+              class="text-[11px] font-semibold truncate px-2 leading-none whitespace-nowrap"
+              :style="{ color: row.arc.color.text }"
+            >
+              {{ row.arc.title }}
+              <span class="font-normal opacity-75">({{ row.arc.total_episodes }}/{{ row.arc.planned_episodes }})</span>
+            </span>
+          </div>
+
+          <!-- Episode dots on the bar -->
+          <div
+            v-for="ep in row.episodes"
+            :key="'ep-' + ep.id"
+            class="absolute cursor-pointer z-10 group"
+            :style="{
+              left: 'calc(' + ((ep.colIndex + 0.5) / 7 * 100) + '% - 6px)',
+              top: '3px',
+              width: '18px',
+              height: '18px',
+            }"
+            @mouseenter="showEpisodeTooltip($event, row.arc, ep)"
+            @mouseleave="hideEpisodeTooltip"
+            @click.stop="onEpisodeClick(ep)"
+          >
+            <div
+              class="w-full h-full rounded-full border-2 border-white dark:border-gray-800 shadow-sm transition-transform group-hover:scale-125"
+              :style="{ backgroundColor: getEpisodeStatusColor(ep.status) }"
+            ></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Calendar cells - 6 rows -->
       <div class="grid grid-cols-7">
         <div
@@ -1107,6 +1332,14 @@ onMounted(() => {
                 title="Keine Posts geplant - Posting-Luecke"
               >
                 Luecke
+              </span>
+              <!-- Recycling suggestion for gap days -->
+              <span
+                v-if="isGapDate(dayObj.dateStr, dayObj.isCurrentMonth) && getRecyclingSuggestion(dayObj.dateStr)"
+                class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 cursor-pointer"
+                :title="'Recycling-Vorschlag: ' + (getRecyclingSuggestion(dayObj.dateStr)?.title || '')"
+              >
+                &#9851;&#65039;
               </span>
               <!-- Post count badge -->
               <span
@@ -1429,6 +1662,40 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        <div v-if="viewMode === 'month' && showArcTimeline && arcTimelineData.length > 0">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Story-Arcs</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="arc in arcTimelineData"
+              :key="'legend-arc-' + arc.id"
+              class="flex items-center gap-1.5"
+            >
+              <span
+                class="w-3 h-3 rounded-full"
+                :style="{ backgroundColor: arc.color.bg }"
+              ></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">{{ arc.title }} ({{ arc.total_episodes }}/{{ arc.planned_episodes }})</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3 mt-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">Entwurf</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">Geplant</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">Erinnert</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">Veroeffentlicht</span>
+            </div>
+          </div>
+        </div>
         <div v-if="viewMode === 'month'">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Posting-Luecken</h3>
           <div class="flex items-center gap-2">
@@ -1533,5 +1800,37 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Episode Tooltip (floating, follows mouse) -->
+    <Teleport to="body">
+      <div
+        v-if="hoveredEpisode"
+        class="fixed z-[100] pointer-events-none"
+        :style="{
+          left: tooltipPosition.x + 'px',
+          top: tooltipPosition.y + 'px',
+          transform: 'translate(-50%, -100%)',
+        }"
+      >
+        <div class="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg shadow-xl px-3 py-2 text-xs max-w-[260px]">
+          <!-- Arc name -->
+          <div class="font-bold text-[11px] mb-1 opacity-70">
+            {{ hoveredEpisode.arc.title }}
+          </div>
+          <!-- Episode title -->
+          <div class="font-semibold mb-1">
+            {{ hoveredEpisode.episode.title }}
+          </div>
+          <!-- Episode details -->
+          <div class="flex flex-col gap-0.5">
+            <span>Episode {{ hoveredEpisode.episode.episode_number }} von {{ hoveredEpisode.arc.planned_episodes }}</span>
+            <span>Datum: {{ hoveredEpisode.episode.scheduled_date }}{{ hoveredEpisode.episode.scheduled_time ? ' um ' + hoveredEpisode.episode.scheduled_time : '' }}</span>
+            <span>Status: {{ episodeStatusLabels[hoveredEpisode.episode.status] || hoveredEpisode.episode.status }}</span>
+          </div>
+          <!-- Arrow -->
+          <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-100"></div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

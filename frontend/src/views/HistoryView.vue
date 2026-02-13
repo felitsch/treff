@@ -23,6 +23,7 @@ const searchQuery = ref('')
 const filterCategory = ref('')
 const filterPlatform = ref('')
 const filterStatus = ref('')
+const filterCountry = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
 
@@ -97,6 +98,7 @@ const categories = [
   { id: 'foto_posts', label: 'Foto-Posts', icon: '📸' },
   { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬' },
   { id: 'story_posts', label: 'Story-Posts', icon: '📱' },
+  { id: 'story_teaser', label: 'Story-Teaser', icon: '👉' },
 ]
 
 const platforms = [
@@ -112,6 +114,25 @@ const statuses = [
   { id: 'exported', label: 'Exportiert' },
   { id: 'posted', label: 'Veroeffentlicht' },
 ]
+
+const countries = [
+  { id: 'usa', label: 'USA', flag: '🇺🇸' },
+  { id: 'canada', label: 'Kanada', flag: '🇨🇦' },
+  { id: 'australia', label: 'Australien', flag: '🇦🇺' },
+  { id: 'newzealand', label: 'Neuseeland', flag: '🇳🇿' },
+  { id: 'ireland', label: 'Irland', flag: '🇮🇪' },
+]
+
+// Country helpers
+function countryLabel(countryId) {
+  const c = countries.find(co => co.id === countryId)
+  return c ? c.label : countryId
+}
+
+function countryFlag(countryId) {
+  const c = countries.find(co => co.id === countryId)
+  return c ? c.flag : '🌍'
+}
 
 // Category helpers
 function categoryLabel(catId) {
@@ -207,6 +228,7 @@ const activeFilters = computed(() => {
   if (filterCategory.value) count++
   if (filterPlatform.value) count++
   if (filterStatus.value) count++
+  if (filterCountry.value) count++
   if (filterDateFrom.value || filterDateTo.value) count++
   return count
 })
@@ -217,6 +239,7 @@ function clearFilters() {
   filterCategory.value = ''
   filterPlatform.value = ''
   filterStatus.value = ''
+  filterCountry.value = ''
   filterDateFrom.value = ''
   filterDateTo.value = ''
 }
@@ -233,6 +256,7 @@ async function fetchPosts(resetPage = true) {
     if (filterCategory.value) params.category = filterCategory.value
     if (filterPlatform.value) params.platform = filterPlatform.value
     if (filterStatus.value) params.status = filterStatus.value
+    if (filterCountry.value) params.country = filterCountry.value
     if (searchQuery.value && searchQuery.value.trim()) params.search = searchQuery.value.trim()
     if (filterDateFrom.value) params.date_from = filterDateFrom.value
     if (filterDateTo.value) params.date_to = filterDateTo.value
@@ -810,6 +834,19 @@ onUnmounted(() => {
           </option>
         </select>
 
+        <!-- Country filter -->
+        <select
+          v-model="filterCountry"
+          @change="fetchPosts"
+          aria-label="Land filtern"
+          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
+        >
+          <option value="">Alle Laender</option>
+          <option v-for="c in countries" :key="c.id" :value="c.id">
+            {{ c.flag }} {{ c.label }}
+          </option>
+        </select>
+
         <!-- Sort controls -->
         <div class="flex items-center gap-1.5">
           <select
@@ -922,7 +959,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+    <div v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus && !filterCountry" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
       <div class="text-5xl mb-4">📝</div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Noch keine Posts erstellt</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-6">Erstelle deinen ersten Social-Media-Post fuer TREFF!</p>
@@ -1010,6 +1047,14 @@ onUnmounted(() => {
                 <span>{{ platformIcon(post.platform) }}</span>
                 <span>{{ platformLabel(post.platform) }}</span>
               </span>
+              <!-- Country -->
+              <template v-if="post.country">
+                <span class="text-gray-300 dark:text-gray-600">|</span>
+                <span class="inline-flex items-center gap-1">
+                  <span>{{ countryFlag(post.country) }}</span>
+                  <span>{{ countryLabel(post.country) }}</span>
+                </span>
+              </template>
               <span class="text-gray-300 dark:text-gray-600">|</span>
               <!-- Date -->
               <span>{{ formatDateShort(post.created_at) }}</span>

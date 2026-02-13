@@ -83,6 +83,7 @@ function categoryLabel(cat) {
     foto_posts: 'Foto-Post',
     reel_tiktok_thumbnails: 'Reel/TikTok',
     story_posts: 'Story',
+    story_teaser: 'Story-Teaser',
   }
   return labels[cat] || cat
 }
@@ -119,6 +120,7 @@ function categoryHexColor(cat) {
     foto_posts: '#EC4899',
     reel_tiktok_thumbnails: '#F97316',
     story_posts: '#14B8A6',
+    story_teaser: '#D946EF',
   }
   return colors[cat] || '#6B7280'
 }
@@ -135,6 +137,7 @@ function categoryColor(cat) {
     foto_posts: 'bg-pink-500',
     reel_tiktok_thumbnails: 'bg-orange-500',
     story_posts: 'bg-teal-500',
+    story_teaser: 'bg-fuchsia-500',
   }
   return colors[cat] || 'bg-gray-500'
 }
