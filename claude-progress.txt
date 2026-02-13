@@ -1,5 +1,55 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #183: Story-Arc Erstellungs-Wizard
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Built a complete 6-step Story-Arc Creation Wizard as a Vue.js multi-step dialog
+- Backend: Added 3 new endpoints:
+  - POST /api/ai/suggest-arc-chapters: AI-powered chapter structure generation (Gemini + rule-based fallback with 12 typical exchange year episodes + country-specific episodes for USA/Kanada/Australien/Neuseeland/Irland)
+  - POST /api/ai/suggest-arc-title: AI title/subtitle/description suggestions (Gemini + rule-based fallback with 3 personalized templates)
+  - POST /api/story-arcs/wizard: One-shot creation of story arc + episodes + calendar placeholders
+- Frontend: Created StoryArcWizardView.vue (~905 lines) with:
+  - Step 1: Student selection with inline student creation (name + country)
+  - Step 2: Title & description with AI suggestion button (3 clickable suggestions)
+  - Step 3: Chapter planning with AI episode generation, reorder (up/down), edit inline, remove, add manual
+  - Step 4: Tone & style selection (jugendlich/serioess) with visual cards
+  - Step 5: Schedule frequency (daily/2x-weekly/weekly/biweekly) with start date, calendar placeholder toggle, and date preview
+  - Step 6: Cover image selection from asset library or AI generation
+- Step indicator with green checkmarks for completed steps
+- Route: /story-arc-wizard added to router and sidebar navigation
+
+### Verification steps completed:
+1. Navigate to Story-Arc Wizard via sidebar - PASS (page loads with 6-step indicator)
+2. Step 1: Create new student "Emma Fischer" (USA) inline - PASS (toast "Student erstellt!", student selected with checkmark)
+3. Step 2: Click "KI-Titelvorschlaege" - PASS (3 suggestions: "Emma Fischers USA-Abenteuer", "Mein Jahr in USA", "Dear Diary: USA")
+4. Step 2: Apply first suggestion - PASS (title, subtitle, description auto-filled, "Weiter" enabled)
+5. Step 3: Auto-generates 8 AI chapters via Gemini - PASS (personalized titles like "Koffer gepackt", "OMG, bin ich wirklich hier?!", "Prom-Night-Glamour")
+6. Step 4: Tone selection "Jugendlich" pre-selected - PASS (visual card with blue border)
+7. Step 5: Schedule "Woechentlich" with start Feb 14, calendar placeholders ON - PASS (preview shows 8 dates: Feb 14 through Apr 4)
+8. Step 6: Cover image step with AI generation prompt - PASS (optional, skippable)
+9. Click "Serie erstellen" - PASS (navigates to Calendar, toast "Story-Arc ... erstellt mit 8 Episoden!")
+10. Calendar shows episode placeholders with E1, E2, E3 badges - PASS
+11. API verification: Story arc persisted with all fields (id=13, title, subtitle, description, student_id, country, tone) - PASS
+12. API verification: 8 episodes created with post_ids 500-507 linked - PASS
+13. Console: 0 errors, 0 warnings
+14. Mock data grep: zero matches in all new files
+
+### Files created/modified:
+- frontend/src/views/StoryArcWizardView.vue (NEW) - 6-step wizard component (~905 lines)
+- backend/app/api/routes/ai.py (modified) - Added suggest-arc-chapters + suggest-arc-title endpoints (~300 lines)
+- backend/app/api/routes/story_arcs.py (modified) - Added /wizard endpoint (~120 lines), StoryEpisode/Post imports
+- frontend/src/router/index.js (modified) - Added /story-arc-wizard route
+- frontend/src/components/layout/SidebarNav.vue (modified) - Added Story-Wizard sidebar entry
+
+### Git commit: c61d4be
+
+### Current state:
+- Feature #183 marked as PASSING
+
+---
+
 ## Session - Feature #180: Student-Post-Verknuepfung
 **Date:** 2026-02-13
 **Status:** PASSING
