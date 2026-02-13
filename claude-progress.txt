@@ -1,5 +1,72 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #179: Student-Profil UI mit Dashboard
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented full Student Profile UI with Dashboard view
+- Enhanced StudentsView.vue grid cards with:
+  - Profile image display (falls back to country flag)
+  - Country flag alongside country label
+  - "Details" navigation button alongside existing "Bearbeiten" and "Loeschen"
+  - Click-to-navigate entire card to detail view
+  - `.stop` event modifiers on action buttons to prevent card click
+- Created comprehensive StudentDetailView.vue (~459 lines) with:
+  - Profile header card with large image (or country flag placeholder)
+  - Hover overlay for profile image upload ("Bild aendern")
+  - Name, country, city, status badge, school, host family, date range
+  - Bio text, fun facts as yellow pills, personality preset as purple pills
+  - Catchphrases in indigo pills
+  - 6 statistics cards: Total Posts, Published, Scheduled, Drafts, Story Arcs, Episodes
+  - Story Arcs section with progress bars, episode counts, post counts
+  - Posts list with episode badges (E1, E2, E3), status badges, platform info
+  - Click-to-navigate posts to edit view
+  - Back button to students list
+- Added backend GET /api/students/{id}/dashboard endpoint:
+  - Returns student profile with resolved profile_image_url
+  - Returns all story arcs linked to student
+  - Returns all posts linked via story_arc_id OR direct student_id FK
+  - Computes stats: total_posts, posted_count, scheduled_count, draft_count, story_arcs_count, episodes_count
+  - Uses OR clause with deduplication for posts found via both FK paths
+- Added /students/:id route in Vue Router
+- Profile image upload: uploads to /api/assets/upload, then updates student profile_image_id
+
+### Verification steps completed:
+1. StudentsView.vue grid with 3 test students - PASS
+   - Cards show country flags, status badges, personality badges
+   - Country filter works (selected Kanada -> only Jonathan shown)
+   - Search field present and functional
+   - "Details", "Bearbeiten", "Loeschen" buttons present
+2. StudentDetailView for Jonathan (student #5) - PASS
+   - Profile header with Canadian flag, name, city, status
+   - School, host family, date range (01.09.2025 - 30.06.2026)
+   - Fun facts: Spielt Eishockey, Liebt Poutine, Spricht schon etwas Franzoesisch
+   - Personality: Witzig, Humor 4/5, Moderat, Ich-Perspektive, catchphrases
+   - Stats: 4 total, 2 published, 1 scheduled, 1 draft, 1 story arc, 0 episodes
+   - Story arc: Jonathans Kanada-Abenteuer (Aktiv, 38% progress, 3/8 episodes)
+   - 4 posts with episode badges (E1, E2, E3), correct statuses
+3. StudentDetailView for Laura (student #6) - PASS
+   - Profile with Australian flag, Sydney, Aktiv
+   - Fun facts and personality badges shown correctly
+   - Stats: 0 posts, 1 story arc (Lauras Surf-Tagebuch, Entwurf, 0/5)
+   - Empty posts section with proper message
+4. Back button navigation - PASS (returns to /students grid)
+5. Profile image upload button visible on hover - PASS
+6. Mock data grep checks - PASS (zero matches in all modified files)
+7. Server restart persistence - PASS (all data survives backend restart)
+8. Console errors - PASS (0 JavaScript errors)
+
+### Files modified:
+- backend/app/api/routes/students.py - Added dashboard endpoint with stats, arcs, posts
+- frontend/src/views/StudentsView.vue - Added profile images, detail links, router import
+- frontend/src/views/StudentDetailView.vue - Complete rewrite with full dashboard UI
+- frontend/src/router/index.js - Added /students/:id route
+
+### Current state:
+- Feature #179 marked as PASSING
+- Git commit: 88b37fd
+
 ## Session - Feature #174: Text- und Branding-Overlays auf Videos
 **Date:** 2026-02-13
 **Status:** PASSING
