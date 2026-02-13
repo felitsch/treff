@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
 import AssetCropModal from '@/components/assets/AssetCropModal.vue'
+import VideoTrimmer from '@/components/assets/VideoTrimmer.vue'
 
 // Tab state
 const activeTab = ref('library') // 'library' or 'stock'
@@ -24,6 +25,10 @@ const cropAsset = ref(null)
 
 // Video preview state
 const videoPreviewAsset = ref(null)
+
+// Video trimmer state
+const showTrimmer = ref(false)
+const trimAsset = ref(null)
 
 // Stock photo state
 const stockSearchQuery = ref('')
@@ -94,6 +99,11 @@ function isVideoAsset(asset) {
   return asset.file_type && asset.file_type.startsWith('video/')
 }
 
+// Check if an asset is audio
+function isAudioAsset(asset) {
+  return asset.file_type && asset.file_type.startsWith('audio/')
+}
+
 // Format video duration
 function formatDuration(seconds) {
   if (!seconds && seconds !== 0) return ''
@@ -112,12 +122,33 @@ function closeVideoPreview() {
   videoPreviewAsset.value = null
 }
 
+// Open video trimmer
+function openTrimmer(asset) {
+  trimAsset.value = asset
+  showTrimmer.value = true
+}
+
+// Handle trim completion
+function onTrimmed(trimmedAsset) {
+  // If saved as new, add to list; otherwise update existing
+  const existingIdx = assets.value.findIndex(a => a.id === trimmedAsset.id)
+  if (existingIdx >= 0) {
+    assets.value[existingIdx] = trimmedAsset
+  } else {
+    assets.value.unshift(trimmedAsset)
+  }
+  showTrimmer.value = false
+  trimAsset.value = null
+}
+
 // Computed
 const filteredAssets = computed(() => {
   let filtered = assets.value
   if (selectedFilter.value !== 'all') {
     if (selectedFilter.value === 'video') {
       filtered = filtered.filter(a => a.file_type && a.file_type.startsWith('video/'))
+    } else if (selectedFilter.value === 'audio') {
+      filtered = filtered.filter(a => a.file_type && a.file_type.startsWith('audio/'))
     } else {
       filtered = filtered.filter(a => a.file_type === `image/${selectedFilter.value}`)
     }
@@ -164,18 +195,20 @@ async function uploadFile(file) {
   // Validate file type
   const allowedImages = ['image/jpeg', 'image/png', 'image/webp']
   const allowedVideos = ['video/mp4', 'video/quicktime', 'video/webm']
-  const allowed = [...allowedImages, ...allowedVideos]
+  const allowedAudio = ['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/x-wav', 'audio/mp3', 'audio/x-aac']
+  const allowed = [...allowedImages, ...allowedVideos, ...allowedAudio]
 
   if (!allowed.includes(file.type)) {
-    uploadError.value = `Dateityp ${file.type || 'unbekannt'} nicht erlaubt. Erlaubt: JPG, PNG, WebP, MP4, MOV, WebM`
+    uploadError.value = `Dateityp ${file.type || 'unbekannt'} nicht erlaubt. Erlaubt: JPG, PNG, WebP, MP4, MOV, WebM, MP3, WAV, AAC`
     return
   }
 
   const isVideo = allowedVideos.includes(file.type)
+  const isAudio = allowedAudio.includes(file.type)
 
-  // Validate file size (max 20MB for images, 500MB for videos)
-  const maxSize = isVideo ? 500 * 1024 * 1024 : 20 * 1024 * 1024
-  const maxLabel = isVideo ? '500 MB' : '20 MB'
+  // Validate file size (max 20MB for images, 500MB for videos, 50MB for audio)
+  const maxSize = isVideo ? 500 * 1024 * 1024 : isAudio ? 50 * 1024 * 1024 : 20 * 1024 * 1024
+  const maxLabel = isVideo ? '500 MB' : isAudio ? '50 MB' : '20 MB'
   if (file.size > maxSize) {
     uploadError.value = `Datei ist zu gross (max. ${maxLabel})`
     return
@@ -450,7 +483,7 @@ onMounted(fetchAssets)
         <input
           ref="fileInput"
           type="file"
-          accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,audio/mpeg,audio/wav,audio/aac,.mp4,.mov,.webm,.mp3,.wav,.aac"
           class="hidden"
           @change="onFileSelect"
         />
@@ -489,7 +522,7 @@ onMounted(fetchAssets)
             </span>
           </p>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            JPG, PNG, WebP (max. 20 MB) &middot; MP4, MOV, WebM (max. 500 MB)
+            JPG, PNG, WebP (max. 20 MB) &middot; MP4, MOV, WebM (max. 500 MB) &middot; MP3, WAV, AAC (max. 50 MB)
           </p>
         </div>
       </div>
@@ -576,6 +609,7 @@ onMounted(fetchAssets)
           <option value="png">PNG</option>
           <option value="webp">WebP</option>
           <option value="video">Video</option>
+          <option value="audio">Audio</option>
         </select>
         <button
           v-if="hasActiveFilters"
@@ -599,7 +633,7 @@ onMounted(fetchAssets)
           <button @click="selectedCountry = 'all'" class="hover:text-green-900 dark:hover:text-green-100">&times;</button>
         </span>
         <span v-if="selectedFilter !== 'all'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-          {{ selectedFilter === 'video' ? 'Video' : selectedFilter.toUpperCase() }}
+          {{ selectedFilter === 'video' ? 'Video' : selectedFilter === 'audio' ? 'Audio' : selectedFilter.toUpperCase() }}
           <button @click="selectedFilter = 'all'" class="hover:text-purple-900 dark:hover:text-purple-100">&times;</button>
         </span>
         <span v-if="searchQuery.trim()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium">
@@ -751,19 +785,31 @@ onMounted(fetchAssets)
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
               </button>
-              <!-- Play button (only for videos) -->
-              <button
-                v-if="isVideoAsset(asset)"
-                @click.stop="openVideoPreview(asset)"
-                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                title="Video abspielen"
-                aria-label="Video abspielen"
-                :data-testid="`play-btn-${asset.id}`"
-              >
-                <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </button>
+              <!-- Video buttons: Play + Trim -->
+              <template v-if="isVideoAsset(asset)">
+                <button
+                  @click.stop="openVideoPreview(asset)"
+                  class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                  title="Video abspielen"
+                  aria-label="Video abspielen"
+                  :data-testid="`play-btn-${asset.id}`"
+                >
+                  <svg class="h-3.5 w-3.5 text-gray-500 hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
+                <button
+                  @click.stop="openTrimmer(asset)"
+                  class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                  title="Video trimmen"
+                  aria-label="Video trimmen"
+                  :data-testid="`trim-btn-${asset.id}`"
+                >
+                  <svg class="h-3.5 w-3.5 text-gray-500 hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                  </svg>
+                </button>
+              </template>
               <!-- Delete button -->
               <button
                 v-if="showDeleteConfirm === asset.id"
@@ -956,6 +1002,15 @@ onMounted(fetchAssets)
       @cropped="onCropped"
     />
 
+    <!-- Video Trimmer Modal -->
+    <VideoTrimmer
+      v-if="trimAsset"
+      :show="showTrimmer"
+      :asset="trimAsset"
+      @close="showTrimmer = false; trimAsset = null"
+      @trimmed="onTrimmed"
+    />
+
     <!-- Video Preview Modal -->
     <teleport to="body">
       <div v-if="videoPreviewAsset" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="closeVideoPreview" data-testid="video-preview-modal">
@@ -972,11 +1027,23 @@ onMounted(fetchAssets)
                 <span v-if="videoPreviewAsset.duration_seconds"> &middot; {{ formatDuration(videoPreviewAsset.duration_seconds) }}</span>
               </p>
             </div>
-            <button @click="closeVideoPreview" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-testid="video-preview-close">
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                @click="closeVideoPreview(); openTrimmer(videoPreviewAsset)"
+                class="px-3 py-1.5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-colors flex items-center gap-1.5"
+                data-testid="preview-trim-btn"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                </svg>
+                Trimmen
+              </button>
+              <button @click="closeVideoPreview" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-testid="video-preview-close">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           <!-- Video player -->
           <div class="bg-black">

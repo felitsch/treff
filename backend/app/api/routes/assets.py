@@ -33,11 +33,13 @@ THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
 # Allowed file types
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"]
-ALLOWED_TYPES = ALLOWED_IMAGE_TYPES + ALLOWED_VIDEO_TYPES
+ALLOWED_AUDIO_TYPES = ["audio/mpeg", "audio/wav", "audio/aac", "audio/x-wav", "audio/mp3", "audio/x-aac"]
+ALLOWED_TYPES = ALLOWED_IMAGE_TYPES + ALLOWED_VIDEO_TYPES + ALLOWED_AUDIO_TYPES
 
 # Max upload sizes
 MAX_IMAGE_SIZE = 20 * 1024 * 1024  # 20 MB
 MAX_VIDEO_SIZE = 500 * 1024 * 1024  # 500 MB
+MAX_AUDIO_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
 def asset_to_dict(asset: Asset) -> dict:
@@ -67,6 +69,56 @@ def asset_to_dict(asset: Asset) -> dict:
 def is_video_type(content_type: str) -> bool:
     """Check if a content type is a video type."""
     return content_type in ALLOWED_VIDEO_TYPES
+
+
+def is_audio_type(content_type: str) -> bool:
+    """Check if a content type is an audio type."""
+    return content_type in ALLOWED_AUDIO_TYPES
+
+
+def _extract_audio_metadata(audio_path: Path) -> dict:
+    """Extract audio metadata (duration) using ffprobe.
+
+    Returns dict with keys: duration_seconds (may be None).
+    """
+    metadata = {"duration_seconds": None}
+
+    try:
+        cmd = [
+            "ffprobe",
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_format",
+            "-show_streams",
+            str(audio_path),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if proc.returncode != 0:
+            logger.warning(f"ffprobe failed for audio {audio_path}: {proc.stderr}")
+            return metadata
+
+        data = json.loads(proc.stdout)
+
+        # Get duration from format
+        fmt = data.get("format", {})
+        if fmt.get("duration"):
+            metadata["duration_seconds"] = round(float(fmt["duration"]), 2)
+
+        # Fallback: get duration from first audio stream
+        if metadata["duration_seconds"] is None:
+            for stream in data.get("streams", []):
+                if stream.get("codec_type") == "audio" and stream.get("duration"):
+                    metadata["duration_seconds"] = round(float(stream["duration"]), 2)
+                    break
+
+    except FileNotFoundError:
+        logger.warning("ffprobe not found on system - audio metadata extraction unavailable")
+    except subprocess.TimeoutExpired:
+        logger.warning(f"ffprobe timed out for {audio_path}")
+    except Exception as e:
+        logger.warning(f"Error extracting audio metadata: {e}")
+
+    return metadata
 
 
 def _extract_video_metadata(video_path: Path) -> dict:
@@ -178,11 +230,13 @@ async def list_assets(
     if source:
         query = query.where(Asset.source == source)
     if file_type:
-        # Support filtering by broad type: "image" or "video"
+        # Support filtering by broad type: "image", "video", or "audio"
         if file_type == "image":
             query = query.where(Asset.file_type.in_(ALLOWED_IMAGE_TYPES))
         elif file_type == "video":
             query = query.where(Asset.file_type.in_(ALLOWED_VIDEO_TYPES))
+        elif file_type == "audio":
+            query = query.where(Asset.file_type.in_(ALLOWED_AUDIO_TYPES))
         else:
             query = query.where(Asset.file_type == file_type)
     if search:
@@ -215,9 +269,19 @@ async def upload_asset(
         )
 
     is_video = is_video_type(file.content_type)
+    is_audio = is_audio_type(file.content_type)
 
     # Generate unique filename
-    ext = os.path.splitext(file.filename or ("video.mp4" if is_video else "image.jpg"))[1] or (".mp4" if is_video else ".jpg")
+    if is_video:
+        default_name = "video.mp4"
+        default_ext = ".mp4"
+    elif is_audio:
+        default_name = "audio.mp3"
+        default_ext = ".mp3"
+    else:
+        default_name = "image.jpg"
+        default_ext = ".jpg"
+    ext = os.path.splitext(file.filename or default_name)[1] or default_ext
     unique_filename = f"{uuid.uuid4()}{ext}"
     file_path = ASSETS_UPLOAD_DIR / unique_filename
 
@@ -226,8 +290,15 @@ async def upload_asset(
     file_size = len(content)
 
     # Validate file size based on type
-    max_size = MAX_VIDEO_SIZE if is_video else MAX_IMAGE_SIZE
-    max_size_label = "500 MB" if is_video else "20 MB"
+    if is_video:
+        max_size = MAX_VIDEO_SIZE
+        max_size_label = "500 MB"
+    elif is_audio:
+        max_size = MAX_AUDIO_SIZE
+        max_size_label = "50 MB"
+    else:
+        max_size = MAX_IMAGE_SIZE
+        max_size_label = "20 MB"
     if file_size > max_size:
         raise HTTPException(
             status_code=400,
@@ -253,6 +324,11 @@ async def upload_asset(
         # Generate thumbnail from first frame
         thumb_filename = f"{uuid.uuid4()}.jpg"
         thumbnail_path = _generate_video_thumbnail(file_path, thumb_filename)
+    elif is_audio:
+        # Extract audio metadata using ffprobe
+        meta = _extract_audio_metadata(file_path)
+        duration_seconds = meta["duration_seconds"]
+        # Audio has no dimensions or thumbnail
     else:
         # Try to get image dimensions
         try:
@@ -484,6 +560,184 @@ async def crop_asset(
         asset.file_size = len(output_bytes)
         asset.width = final_width
         asset.height = final_height
+        await db.flush()
+        await db.refresh(asset)
+        return asset_to_dict(asset)
+
+
+@router.post("/trim")
+async def trim_video(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Trim a video asset by setting start and end times.
+
+    Uses ffmpeg to extract the specified segment and saves it as a new asset.
+
+    Request body:
+    {
+        "asset_id": int,           # ID of the video asset to trim
+        "start_time": float,       # Start time in seconds (e.g. 2.5)
+        "end_time": float,         # End time in seconds (e.g. 10.0)
+        "save_as_new": bool        # If true, save as new asset; if false, overwrite original
+    }
+    """
+    asset_id = request.get("asset_id")
+    start_time = request.get("start_time", 0)
+    end_time = request.get("end_time")
+    save_as_new = request.get("save_as_new", True)
+
+    if not asset_id:
+        raise HTTPException(status_code=400, detail="asset_id is required")
+    if end_time is None:
+        raise HTTPException(status_code=400, detail="end_time is required")
+
+    start_time = float(start_time)
+    end_time = float(end_time)
+
+    if start_time < 0:
+        raise HTTPException(status_code=400, detail="start_time must be >= 0")
+    if end_time <= start_time:
+        raise HTTPException(status_code=400, detail="end_time must be greater than start_time")
+
+    # Fetch the asset
+    result = await db.execute(
+        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
+    )
+    asset = result.scalar_one_or_none()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    # Verify it's a video
+    if not is_video_type(asset.file_type):
+        raise HTTPException(status_code=400, detail="Asset is not a video file")
+
+    # Verify source file exists
+    source_path = ASSETS_UPLOAD_DIR / asset.filename
+    if not source_path.exists():
+        raise HTTPException(status_code=404, detail="Video file not found on disk")
+
+    # Validate end_time against video duration if known
+    if asset.duration_seconds and end_time > asset.duration_seconds + 0.5:
+        raise HTTPException(
+            status_code=400,
+            detail=f"end_time ({end_time}s) exceeds video duration ({asset.duration_seconds}s)",
+        )
+
+    # Calculate duration of trimmed segment
+    duration = end_time - start_time
+    if duration < 0.1:
+        raise HTTPException(status_code=400, detail="Trimmed segment too short (min 0.1s)")
+
+    # Generate output filename
+    ext = os.path.splitext(asset.filename)[1]
+    output_filename = f"{uuid.uuid4()}{ext}"
+    output_path = ASSETS_UPLOAD_DIR / output_filename
+
+    # Run ffmpeg to trim
+    try:
+        cmd = [
+            "ffmpeg",
+            "-i", str(source_path),
+            "-ss", str(start_time),
+            "-to", str(end_time),
+            "-c", "copy",  # Stream copy for fast trimming (no re-encoding)
+            "-avoid_negative_ts", "make_zero",
+            "-y",  # Overwrite output
+            str(output_path),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if proc.returncode != 0:
+            logger.error(f"ffmpeg trim failed: {proc.stderr[:1000]}")
+            # Fallback: try with re-encoding if stream copy fails
+            cmd_reencode = [
+                "ffmpeg",
+                "-i", str(source_path),
+                "-ss", str(start_time),
+                "-to", str(end_time),
+                "-c:v", "libx264",
+                "-c:a", "aac",
+                "-avoid_negative_ts", "make_zero",
+                "-y",
+                str(output_path),
+            ]
+            proc2 = subprocess.run(cmd_reencode, capture_output=True, text=True, timeout=300)
+            if proc2.returncode != 0:
+                logger.error(f"ffmpeg trim re-encode also failed: {proc2.stderr[:1000]}")
+                raise HTTPException(status_code=500, detail="Video trimming failed")
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="ffmpeg not found on system - video trimming unavailable",
+        )
+    except subprocess.TimeoutExpired:
+        # Clean up partial output
+        if output_path.exists():
+            output_path.unlink()
+        raise HTTPException(status_code=504, detail="Video trimming timed out")
+
+    # Verify output file was created
+    if not output_path.exists() or output_path.stat().st_size == 0:
+        raise HTTPException(status_code=500, detail="Trimmed video file is empty or missing")
+
+    # Extract metadata from trimmed video
+    trimmed_meta = _extract_video_metadata(output_path)
+    trimmed_size = output_path.stat().st_size
+
+    # Generate thumbnail for trimmed video
+    thumb_filename = f"{uuid.uuid4()}.jpg"
+    trimmed_thumbnail = _generate_video_thumbnail(output_path, thumb_filename)
+
+    if save_as_new:
+        # Create a new asset record
+        new_asset = Asset(
+            user_id=user_id,
+            filename=output_filename,
+            original_filename=f"trimmed_{asset.original_filename or asset.filename}",
+            file_path=f"/uploads/assets/{output_filename}",
+            file_type=asset.file_type,
+            file_size=trimmed_size,
+            width=trimmed_meta["width"] or asset.width,
+            height=trimmed_meta["height"] or asset.height,
+            source="trim",
+            category=asset.category,
+            country=asset.country,
+            tags=asset.tags,
+            duration_seconds=trimmed_meta["duration_seconds"],
+            thumbnail_path=trimmed_thumbnail,
+        )
+        db.add(new_asset)
+        await db.flush()
+        await db.refresh(new_asset)
+        return asset_to_dict(new_asset)
+    else:
+        # Delete old file and thumbnail
+        try:
+            if source_path.exists():
+                source_path.unlink()
+        except Exception:
+            pass
+        if asset.thumbnail_path:
+            try:
+                old_thumb = THUMBNAILS_DIR / os.path.basename(asset.thumbnail_path)
+                if old_thumb.exists():
+                    old_thumb.unlink()
+            except Exception:
+                pass
+
+        # Rename output to replace original
+        import shutil
+        final_path = ASSETS_UPLOAD_DIR / asset.filename
+        shutil.move(str(output_path), str(final_path))
+
+        # Update asset record
+        asset.file_size = trimmed_size
+        asset.width = trimmed_meta["width"] or asset.width
+        asset.height = trimmed_meta["height"] or asset.height
+        asset.duration_seconds = trimmed_meta["duration_seconds"]
+        asset.thumbnail_path = trimmed_thumbnail
         await db.flush()
         await db.refresh(asset)
         return asset_to_dict(asset)
