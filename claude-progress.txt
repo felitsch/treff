@@ -1,5 +1,126 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #188: Cross-Post Verknuepfung zwischen Feed und Stories
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was implemented:
+1. **PostRelation Model** (`backend/app/models/post_relation.py`) - SQLAlchemy M2M model with:
+   - source_post_id, target_post_id (FKs with CASCADE delete)
+   - relation_type: story_teaser, cross_reference, sequel, related
+   - note: optional user annotation
+   - UniqueConstraint on (source_post_id, target_post_id) to prevent duplicates
+   - Indexes on both FK columns for query performance
+
+2. **Post Relations API** (`backend/app/api/routes/post_relations.py`) - Full REST endpoints:
+   - `GET /api/posts/{id}/relations` - Bidirectional relations (outgoing + incoming) with enriched post summaries
+   - `POST /api/posts/{id}/relations` - Create relation with validation (no self-links, no duplicates, both-direction check)
+   - `DELETE /api/posts/{id}/relations/{rel_id}` - Delete relation
+   - `POST /api/posts/{id}/suggest-relations` - Auto-suggest based on: same story arc, cross-platform (feed<->story), same student, same country+category
+
+3. **RelatedPostsPanel.vue** (`frontend/src/components/posts/RelatedPostsPanel.vue`) - Complete Vue component:
+   - Collapsible panel with relation count badge
+   - Existing relations list with type badges (Story-Teaser, Verweis, Fortsetzung, Verwandt)
+   - Direction arrows (outgoing -> / incoming <-)
+   - Clickable links to related post editor
+   - AI-powered suggestions section
+   - Search-and-link functionality with relation type selector
+   - Remove relation with hover-reveal X button
+   - Story-arc teaser suggestion hint when post belongs to arc without teaser links
+   - Toast notifications for all operations
+
+4. **EditPostView Integration** - Panel placed between Student selector and Captions section
+
+### Verification steps completed:
+1. Post model with related_posts M2M - PASS (post_relations table created with indexes)
+2. Migration via create_all in main.py lifespan - PASS (table auto-created on startup)
+3. Post-Editor: link related posts/episodes - PASS (search, suggestions, type selection all work)
+4. Automatic suggestion: cross-platform posts with same country - PASS (Story post suggested for Feed post)
+5. Story-Teaser template variant exists - PASS (3 story_teaser templates already seeded)
+6. Display linked posts in post-detail view - PASS (bidirectional with direction arrows)
+7. Navigation between linked posts - PASS (clickable links navigate to /posts/{id}/edit)
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] Mock data grep checks clean (zero matches in all new files)
+- [x] Server restart persistence verified (relation survived full restart)
+- [x] No 500s in network requests
+- [x] Authentication required (JWT protected endpoints)
+- [x] Duplicate prevention works (409 response)
+- [x] Self-link prevention works (400 response)
+- [x] Cascade delete works (deleting a post removes its relations)
+
+### Files created/modified:
+- backend/app/models/post_relation.py (NEW) - PostRelation SQLAlchemy model (~39 lines)
+- backend/app/api/routes/post_relations.py (NEW) - Full CRUD + suggest API (~376 lines)
+- backend/app/models/__init__.py (modified) - Added PostRelation import
+- backend/app/main.py (modified) - Added post_relations router
+- frontend/src/components/posts/RelatedPostsPanel.vue (NEW) - Related posts UI component (~363 lines)
+- frontend/src/views/EditPostView.vue (modified) - Integrated RelatedPostsPanel
+
+### Git commit: 29c5458
+
+### Current state:
+- Feature #188 marked as PASSING
+
+---
+
+## Session - Feature #185: Story-Arc Uebersichtsseite
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Built StoryArcsView.vue - a card grid overview page for all Story-Arcs
+  - Stats bar showing total/active/paused/draft/completed counts
+  - Three filter dropdowns: status (API-level), country (API-level), student (client-side)
+  - Card design with gradient cover image placeholders, country flags, status badges
+  - Progress bars per arc showing published/total episodes
+  - Student name display, tone, creation date
+  - Empty state with CTA button to wizard
+- Built StoryArcDetailView.vue - detail page with episode timeline
+  - Header section with cover image/gradient, status badge, title, subtitle, description
+  - Meta tags: student, country with flag, tone, creation date
+  - Overall progress bar with percentage
+  - Vertical timeline with numbered E1-E6 dots color-coded by status (green=published, yellow=draft, gray=planned)
+  - Episode cards with title, status badge, teaser text, linked post info
+  - Clickable episodes navigate to post editor
+  - Back button to overview
+- Backend: Enhanced GET /api/story-arcs with enriched=true (student_name, episode counts, cover_image_url)
+- Backend: Enhanced GET /api/story-arcs/{arc_id} with include_episodes=true (episode list with post info)
+- Routes: /story-arcs and /story-arcs/:id registered in Vue Router
+- Sidebar: Changed "Story-Wizard" entry to "Story-Arcs" pointing to /story-arcs
+
+### Verification steps completed:
+1. Navigate to /story-arcs via sidebar - PASS (page loads with stats, filters, empty state)
+2. Created test data (1 student + 3 arcs with episodes) via browser JS - PASS
+3. Card grid shows 3 cards with status badges, country flags, progress bars - PASS
+4. Status filter "Aktiv" shows only 1 card - PASS
+5. Country and student filter dropdowns populated correctly - PASS
+6. Click arc card navigates to detail view - PASS
+7. Detail view shows header, meta tags, progress bar, episode timeline - PASS
+8. Timeline shows 6 episodes with E1-E6 badges, titles, status, teaser, post info - PASS
+9. Back button navigates from detail to overview - PASS
+10. Console: 0 errors on story-arcs pages
+11. Mock data grep: zero matches in all new files
+
+### Key fixes during development:
+- Replaced raw axios with `api` from @/utils/api for JWT auth token injection
+- Fixed emoji rendering: replaced \u{} unicode escapes with actual emoji chars in Vue templates
+
+### Files created/modified:
+- frontend/src/views/StoryArcsView.vue (NEW) - Card grid overview (~290 lines)
+- frontend/src/views/StoryArcDetailView.vue (NEW) - Detail with timeline (~280 lines)
+- backend/app/api/routes/story_arcs.py (modified) - enriched + include_episodes params
+- frontend/src/router/index.js (modified) - Added /story-arcs and /story-arcs/:id routes
+- frontend/src/components/layout/SidebarNav.vue (modified) - Story-Arcs sidebar entry
+
+### Git commit: 4cb87b9
+
+### Current state:
+- Feature #185 marked as PASSING
+
+---
+
 ## Session - Feature #183: Story-Arc Erstellungs-Wizard
 **Date:** 2026-02-13
 **Status:** PASSING
