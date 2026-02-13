@@ -9476,3 +9476,57 @@ Replaced all inline empty states across 15 views with a unified, reusable EmptyS
 
 ### Current state:
 - Feature #225 marked as PASSING
+
+---
+
+## Session - Feature #211: Assets Tour - Medienverwaltung
+**Date:** 2026-02-13
+**Feature ID:** #211
+**Status:** PASSING
+
+### What was verified:
+Feature #211 required a guided tour for the Asset-Bibliothek page. Upon investigation, the tour was already fully implemented as part of Feature #206 (page-level tour system):
+
+1. **Tour config** already exists in `tourConfigs.js` with 6 steps:
+   - Step 1: `assets-header` - "Willkommen in der Asset-Bibliothek!" (zentrale Medienverwaltung)
+   - Step 2: `assets-upload` - "Dateien hochladen – Drag & Drop" (Formate: Bilder + Videos + Audio)
+   - Step 3: `assets-grid` - "Crop-Tool & Video-Trimmer" (Bearbeitungs-Buttons)
+   - Step 4: `assets-filters` - "Kategorisierung, Tagging & Suche" (Land, Typ, Suche)
+   - Step 5: `assets-tabs` - "Stock-Foto-Integration (Unsplash & Pexels)"
+   - Step 6: `assets-usage-hint` - "Assets in Posts & Videos verwenden"
+
+2. **data-tour attributes** on all 6 target elements in AssetsView.vue
+3. **TourSystem component** imported and integrated (line 6, line 1124)
+4. **Tour restart button** in header ("? Tour")
+5. **TopBar mapping** `/assets` -> `'assets'` tour key
+
+### Browser verification steps:
+1. Navigated to Assets page - PASS (tour auto-started on first visit)
+2. Tour Step 1/6: "Willkommen in der Asset-Bibliothek!" - PASS (highlights header, correct description)
+3. Tour Step 2/6: "Dateien hochladen – Drag & Drop" - PASS (highlights upload zone)
+4. Tour Step 3/6: "Crop-Tool & Video-Trimmer" - PASS (highlights asset grid with uploaded test image)
+5. Tour Step 4/6: "Kategorisierung, Tagging & Suche" - PASS (highlights filter bar)
+6. Tour Step 5/6: "Stock-Foto-Integration (Unsplash & Pexels)" - PASS (highlights tabs area)
+7. Tour Step 6/6: "Assets in Posts & Videos verwenden" - PASS (highlights usage hint, "Tour beenden" button)
+8. Tour restart via in-page "? Tour" button - PASS
+9. Tour restart via TopBar "Seiten-Tour starten" button - PASS
+10. Console errors: 0 errors, 0 warnings - PASS
+11. Mock data grep: zero matches in tour/assets files - PASS
+12. Test data cleanup: uploaded test_asset_211.png and deleted after verification - PASS
+
+### Screenshots captured:
+- feature211-step1-asset-library.png (Step 1: header highlighted)
+- feature211-step2-upload.png (Step 2: upload zone highlighted)
+- feature211-step3-crop-trim.png (Step 3: asset grid highlighted with test image)
+- feature211-step4-filters.png (Step 4: filter bar highlighted)
+- feature211-step5-stock.png (Step 5: tabs highlighted)
+- feature211-step6-usage.png (Step 6: usage hint highlighted, Tour beenden button)
+
+### Notes:
+- No code changes were needed - the tour was already fully implemented
+- Step 3 (Crop-Tool) targets the asset grid which is only visible when assets exist; the TourSystem gracefully skips missing targets
+- All tour descriptions match the feature requirements exactly
+
+### Current state:
+- Feature #211 marked as PASSING
+- 212/225 features passing (94.2%)
