@@ -103,6 +103,11 @@ const routes = [
         name: 'VideoTemplates',
         component: () => import('@/views/VideoTemplatesView.vue'),
       },
+      {
+        path: 'video-export',
+        name: 'VideoExport',
+        component: () => import('@/views/VideoExportView.vue'),
+      },
     ],
   },
   {

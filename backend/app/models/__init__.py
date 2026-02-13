@@ -19,6 +19,9 @@ from app.models.interactive_element import PostInteractiveElement
 from app.models.series_reminder import SeriesReminder
 from app.models.story_episode import StoryEpisode
 from app.models.video_overlay import VideoOverlay
+from app.models.music_track import MusicTrack
+from app.models.video_template import VideoTemplate
+from app.models.video_export import VideoExport
 
 __all__ = [
     "User",
@@ -40,4 +43,7 @@ __all__ = [
     "PostInteractiveElement",
     "SeriesReminder",
     "VideoOverlay",
+    "MusicTrack",
+    "VideoTemplate",
+    "VideoExport",
 ]

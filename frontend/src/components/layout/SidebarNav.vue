@@ -22,6 +22,8 @@ const navItems = [
   { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
   { name: 'Video-Overlay', path: '/video-overlays', icon: '🎞️' },
   { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },
+  { name: 'Video-Branding', path: '/video-templates', icon: '🏷️' },
+  { name: 'Video-Export', path: '/video-export', icon: '📤' },
   { name: 'Analytics', path: '/analytics', icon: '📈' },
   { name: 'Settings', path: '/settings', icon: '⚙️' },
 ]

@@ -294,6 +294,13 @@ onMounted(() => {
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <router-link
+          to="/video-templates"
+          class="px-3 py-2 text-sm font-medium text-treff-blue bg-treff-blue/10 rounded-lg hover:bg-treff-blue/20 transition-colors flex items-center gap-1.5"
+          data-testid="branding-templates-link"
+        >
+          <span>🏷️</span> Intro/Outro Branding
+        </router-link>
         <button
           v-if="clips.length > 0"
           @click="resetComposer"

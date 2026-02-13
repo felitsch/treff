@@ -19,7 +19,8 @@ from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
 from app.core.seed_music_tracks import seed_music_tracks
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer
+from app.core.seed_video_templates import seed_video_templates
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,11 @@ async def lifespan(app: FastAPI):
         try:
             await conn.execute(text("ALTER TABLE posts ADD COLUMN linked_post_group_id VARCHAR"))
             logger.info("Added linked_post_group_id column to posts table")
+        except Exception:
+            pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN student_id INTEGER REFERENCES students(id) ON DELETE SET NULL"))
+            logger.info("Added student_id column to posts table")
         except Exception:
             pass  # Column already exists
 
@@ -136,6 +142,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default music tracks")
         except Exception as e:
             logger.error(f"Failed to seed music tracks: {e}")
+
+    # Seed default video branding templates (intro/outro)
+    async with async_session() as session:
+        try:
+            count = await seed_video_templates(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default video branding templates")
+        except Exception as e:
+            logger.error(f"Failed to seed video templates: {e}")
 
     yield
 
@@ -237,6 +252,8 @@ app.include_router(series_reminders.router, prefix="/api/series-reminders", tags
 app.include_router(video_overlays.router, prefix="/api/video-overlays", tags=["Video Overlays"])
 app.include_router(audio_mixer.router, prefix="/api/audio", tags=["Audio Mixer"])
 app.include_router(video_composer.router, prefix="/api/video-composer", tags=["Video Composer"])
+app.include_router(video_templates.router, prefix="/api/video-templates", tags=["Video Templates"])
+app.include_router(video_export.router, prefix="/api/video-export", tags=["Video Export"])
 
 
 if __name__ == "__main__":
