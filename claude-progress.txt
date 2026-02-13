@@ -8130,3 +8130,54 @@
 
 ### Current state:
 - Feature #200 marked as PASSING
+
+---
+
+## Feature #202: Serien-Abhaengigkeiten und Reihenfolge-Schutz
+### Date: 2026-02-13
+### Status: PASSING
+
+### What was implemented:
+- Episode order validation: Episode 2 cannot be scheduled before Episode 1 within a Story-Arc
+- Calendar enforces correct chronological ordering with visual conflict indicators (red "Reihenfolge-Konflikt" alert)
+- Drag-and-drop respects dependencies and warns on conflicts
+- "Trotzdem planen" (force schedule) option for overriding conflicts
+- "Alle folgenden Episoden mit verschieben" (shift all following episodes) checkbox
+- Configurable minimum gap between episodes (0, 1, 2, 3, 5, 7 days) in Settings
+- Episode badges (E1, E2, E3, E4) on calendar post cards
+
+### Backend changes:
+- backend/app/models/post.py - Added episode_number field to Post model
+- backend/app/main.py - Added ALTER TABLE migration for episode_number column
+- backend/app/api/routes/posts.py - Added episode_number to post_to_dict
+- backend/app/api/routes/calendar.py - Major changes:
+  - Helper functions: _get_arc_episodes, _get_min_episode_gap, _validate_episode_order
+  - POST /api/calendar/validate-episode-order - Validates scheduling without committing
+  - POST /api/calendar/schedule-episode - Schedules with validation, force option, shift-following cascade
+  - GET /api/calendar/episode-gap-setting - Get user's min gap setting
+  - PUT /api/calendar/episode-gap-setting - Set user's min gap setting (0-30 days)
+
+### Frontend changes:
+- frontend/src/views/CalendarView.vue - Enhanced scheduling dialog with:
+  - Episode validation state (conflicts, warnings, episode info)
+  - Async onDrop that calls validateEpisodeOrder for arc posts
+  - Conflict display (red box with X icons and messages)
+  - Warning display (amber box with warning icons)
+  - Alle folgenden Episoden mit verschieben checkbox
+  - Dynamic button text (Trotzdem planen for conflicts, Episode planen normally)
+  - Episode number badges (E1, E2, etc.) on calendar post cards
+- frontend/src/views/SettingsView.vue - Added min episode gap dropdown (0-7 days)
+
+### Verification completed:
+- API: EP3 on Feb 16 correctly returns 2 conflicts
+- API: EP3 on Feb 20 correctly returns valid
+- Browser: Drag EP3 to Feb 16 shows Reihenfolge-Konflikt with both conflict messages
+- Browser: Drag EP3 to Feb 20 shows clean dialog with Episode planen button
+- Browser: EP3 successfully scheduled on Feb 20, calendar shows E3 badge
+- Browser: Story-Arc timeline updated to Test Serie 202 (3/4)
+- Browser: Settings page shows Mindestabstand dropdown with 1 Tag selected
+- Console: Zero errors
+- Mock data: No mock/dummy/hardcode/TODO/FIXME patterns
+
+### Current state:
+- Feature #202 marked as PASSING
