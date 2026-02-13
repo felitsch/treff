@@ -1,5 +1,125 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #201: Content-Mix Visualisierung
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Created ContentMixPanel.vue as a collapsible right sidebar in CalendarView
+- Added GET /api/analytics/content-mix backend endpoint with comprehensive data:
+  - Category distribution (for donut chart)
+  - Platform/format distribution (for donut chart)
+  - Country distribution (for donut chart)
+  - Posts per day of week (for bar chart)
+  - Serie vs. Einzelpost split (progress bar)
+  - Warnings for imbalances (missing platforms, category concentration, day concentration, missing countries, arc-heavy)
+  - Recommendations (missing country, missing platform, empty days, variety suggestions)
+  - Target-mix comparison (configurable in Settings)
+- Built ContentMixPanel.vue with:
+  - Collapsible sidebar with toggle button in CalendarView toolbar
+  - Week/Month period toggle
+  - Summary stats (total posts, categories count, countries count)
+  - Serie vs. Einzel split bar
+  - 3-tab donut chart (Kategorie, Format, Land) with Chart.js Doughnut
+  - Bar chart (Posts pro Wochentag) with Chart.js Bar
+  - Warnings section with severity-colored badges
+  - Recommendations section with action suggestions
+- Added "Ziel Content-Mix" section in SettingsView with:
+  - Platform distribution sliders (IG Feed, IG Story, TikTok)
+  - Country distribution sliders (USA, Kanada, Australien, Neuseeland, Irland)
+  - Saves/loads to/from /api/settings as JSON strings
+
+### Files created/modified:
+- frontend/src/components/calendar/ContentMixPanel.vue (NEW) - 547 lines
+- backend/app/api/routes/analytics.py (modified) - Added content-mix endpoint (+279 lines)
+- frontend/src/views/SettingsView.vue (modified) - Added target-mix settings section (+104 lines)
+- frontend/src/views/CalendarView.vue (modified) - Added import, state, toolbar toggle, and component placement
+
+### Verification steps completed:
+1. Erstelle ContentMixPanel.vue als Sidebar im Kalender - PASS
+   - Component visible in calendar view as right sidebar
+   - Collapsible with toggle button in toolbar and panel header
+2. Donut-Chart: Verteilung nach Kategorie, Serie vs. Einzelpost, Land, Format - PASS
+   - Three donut charts via tabs: Kategorie, Format, Land
+   - Serie vs. Einzel progress bar with counts
+   - Charts render correctly with Chart.js (Doughnut component)
+3. Balkendiagramm: Posts pro Tag der Woche - PASS
+   - Bar chart showing Mo-So distribution
+   - Renders with Chart.js Bar component
+4. Warnungen bei Ungleichgewicht - PASS
+   - Backend generates warnings for: missing platforms, missing countries, category concentration >60%, day concentration >60%, arc-heavy
+   - Displayed with severity-colored badges (amber for warning, blue for info)
+5. Empfehlungen - PASS
+   - Backend generates recommendations for: missing countries, missing platforms, empty days, variety
+   - Displayed with green badges and action messages
+   - Verified: "Mehr Abwechslung: Tipps & Tricks ausprobieren" shown for skewed data
+6. Vergleich mit Ziel-Mix konfigurierbar in Settings - PASS
+   - Ziel Content-Mix section in Settings with platform and country sliders
+   - Data stored in /api/settings as JSON (target_mix_platforms, target_mix_countries)
+   - Read by content-mix endpoint for comparison
+7. Teste mit verschiedenen Content-Konstellationen - PASS
+   - Tested with 0 posts (empty state with start recommendation)
+   - Tested with 7 balanced posts (no warnings, no recommendations)
+   - Tested with 10 skewed posts (variety recommendation triggered)
+   - Data persists across server restart
+
+### Verification checklist:
+- [x] Zero JavaScript console errors (0 errors, 0 warnings)
+- [x] All mock data grep checks clean (zero matches in new files)
+- [x] Server restart persistence verified (10 posts survived restart)
+- [x] No 500s in network requests
+- [x] API returns correct JSON structure with all fields
+- [x] Screenshots captured:
+  - feature201-step1-category-donut.png
+  - feature201-step2-format-donut.png
+  - feature201-step3-country-donut.png
+  - feature201-step4-collapsed.png
+  - feature201-step5-month-period.png (best overview)
+  - feature201-step6-settings-target-mix.png
+  - feature201-final-calendar.png
+
+### Current state:
+- Feature #201 marked as PASSING
+- Git commit: 0ebf9af
+
+---
+
+## Session - Feature #199: Content-Recycling und Evergreen-Detection
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Content-Recycling engine that scans posts older than 90 days and scores them (0-100)
+- Scoring algorithm: evergreen category (+40), age (+20 max), posted status (+20), country (+10), caption (+10)
+- Evergreen categories: FAQ, Tipps & Tricks, Laender-Spotlight, Infografiken
+- Backend: 4 API endpoints under /api/recycling:
+  - GET /api/recycling - List recyclable posts with filters (min_age_days, category, evergreen_only, limit)
+  - GET /api/recycling/stats - Dashboard stats (total_recyclable, evergreen_count, categories breakdown)
+  - POST /api/recycling/{post_id}/refresh - One-click recycle: creates new draft copy with "(Refresh)" suffix
+  - GET /api/recycling/calendar-suggestions - Matches recyclable posts to calendar gap days
+- Frontend: RecyclingPanel.vue dashboard component with score badges, country flags, evergreen filter toggle
+- Dashboard integration: RecyclingPanel shown on DashboardView between Serien-Status and Content-Vorschlaege
+- Calendar integration: recyclable post indicators on gap days in CalendarView month view
+- HTML numeric entities for emoji rendering in Vue templates (not Unicode escape sequences)
+- Timezone-naive datetime comparisons for SQLite compatibility
+
+### Key files:
+- backend/app/api/routes/recycling.py (NEW - ~400 lines, core recycling engine)
+- frontend/src/components/dashboard/RecyclingPanel.vue (NEW - ~240 lines)
+- backend/app/main.py (MODIFIED - added recycling route)
+- frontend/src/views/DashboardView.vue (MODIFIED - added RecyclingPanel import)
+- frontend/src/views/CalendarView.vue (MODIFIED - added recycling state + gap indicators)
+
+### Verification:
+- All 4 API endpoints tested and returning correct data
+- Dashboard renders 5 suggestions sorted by score (100%, 100%, 93%, 86%, 42%)
+- Evergreen filter correctly filters to 4 evergreen-only items
+- Refresh creates new draft posts with correct original_post_id reference
+- Server restart persistence confirmed
+- No mock/dummy/hardcoded data in source
+
+---
+
 ## Session - Feature #203: Automatische Serien-Erinnerungen und Pausen-Warnung
 **Date:** 2026-02-13
 **Status:** PASSING
