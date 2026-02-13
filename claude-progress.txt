@@ -1,5 +1,49 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #212: Kalender Tour - Content-Planung
+**Date:** 2026-02-13
+**Feature ID:** #212
+**Status:** PASSING
+
+### What was implemented:
+Expanded the calendar page tour from 3 basic steps to 8 comprehensive steps covering all calendar features.
+
+### Tour Steps (8 total):
+1. **Willkommen im Content-Kalender!** - Overview of calendar as central planning tool (targets: cal-toolbar)
+2. **Ansichten: Monat, Woche, Lanes & Queue** - Explains all 4 view modes (targets: cal-views)
+3. **Drag & Drop: Posts per Maus planen** - Drag-and-drop scheduling, episode validation (targets: cal-grid)
+4. **Entwuerfe-Sidebar: Ungeplante Posts** - Sidebar with unscheduled drafts (targets: cal-sidebar)
+5. **Luecken-Erkennung: Nie wieder Posting-Pausen** - Gap detection feature (targets: cal-gaps)
+6. **Saisonale Marker: Fristen im Blick** - Seasonal markers for deadlines (targets: cal-seasonal)
+7. **Content-Mix: Ausgewogene Kategorien** - Content-Mix analysis panel (targets: cal-mix)
+8. **Story-Arc Timeline: Serien visualisieren** - Story-Arc timeline layer (targets: cal-arcs)
+
+### Files modified:
+- frontend/src/tours/tourConfigs.js - Expanded calendar tour from 3 to 8 steps with detailed German descriptions
+- frontend/src/views/CalendarView.vue - Added 5 new data-tour attributes: cal-views, cal-gaps, cal-seasonal, cal-arcs, cal-mix
+
+### Verification completed:
+- Browser: All 8 tour steps navigate correctly with proper element highlighting
+- Browser: Step 1 (cal-toolbar) shows welcome overview
+- Browser: Step 2 (cal-views) highlights view mode toggle buttons
+- Browser: Step 3 (cal-grid) highlights calendar grid area
+- Browser: Step 4 (cal-sidebar) highlights sidebar with right positioning
+- Browser: Step 5 (cal-gaps) highlights Luecken button
+- Browser: Step 6 (cal-seasonal) highlights Fristen button
+- Browser: Step 7 (cal-mix) highlights Mix button
+- Browser: Step 8 (cal-arcs) highlights Arcs button with "Tour beenden" final button
+- Browser: Tour restart via "Tour" button works correctly
+- Browser: Tour auto-starts on first visit (new user)
+- Console: Zero JavaScript errors (0 errors, 0 warnings)
+- Mock data: No globalThis/devStore/mockDb/testData patterns in modified files
+- Progress dots, back/forward navigation, skip all working
+- Git commit: c0d6715
+
+### Current state:
+- Feature #212 marked as PASSING
+
+---
+
 ## Session - Feature #209: Create Post Tour - Schritt-fuer-Schritt Wizard Erklaerung
 **Date:** 2026-02-13
 **Feature ID:** #209
