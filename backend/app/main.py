@@ -13,12 +13,12 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import engine, Base, async_session
-from app.core.seed_templates import seed_default_templates
+from app.core.seed_templates import seed_default_templates, seed_story_teaser_templates
 from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements, recycling
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,11 @@ async def lifespan(app: FastAPI):
             logger.info("Added personality_preset column to students table")
         except Exception:
             pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN story_arc_id INTEGER REFERENCES story_arcs(id)"))
+            logger.info("Added story_arc_id column to posts table")
+        except Exception:
+            pass  # Column already exists
 
     # Seed default templates if not already present
     async with async_session() as session:
@@ -66,6 +71,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default templates")
         except Exception as e:
             logger.error(f"Failed to seed templates: {e}")
+
+    # Seed story-teaser templates if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_story_teaser_templates(session)
+            if count > 0:
+                logger.info(f"Seeded {count} story-teaser templates")
+        except Exception as e:
+            logger.error(f"Failed to seed story-teaser templates: {e}")
 
     # Seed default content suggestions if not already present
     async with async_session() as session:
@@ -197,6 +211,7 @@ app.include_router(story_arcs.router, prefix="/api/story-arcs", tags=["Story Arc
 app.include_router(hashtag_sets.router, prefix="/api/hashtag-sets", tags=["Hashtag Sets"])
 app.include_router(ctas.router, prefix="/api/ctas", tags=["CTAs"])
 app.include_router(interactive_elements.router, prefix="/api/posts", tags=["Interactive Elements"])
+app.include_router(recycling.router, prefix="/api/recycling", tags=["Content Recycling"])
 
 
 if __name__ == "__main__":

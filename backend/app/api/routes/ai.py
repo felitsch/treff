@@ -3155,3 +3155,442 @@ async def generate_interactive(
             for k, v in INTERACTIVE_ELEMENT_TYPES.items()
         },
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Engagement-Boost Vorschlaege (AI-powered engagement improvement suggestions)
+# ═══════════════════════════════════════════════════════════════════════
+
+def _build_engagement_boost_system_prompt() -> str:
+    """Build the system prompt for engagement boost analysis."""
+    return """Du bist ein erfahrener Social-Media-Experte und Engagement-Analyst fuer TREFF Sprachreisen,
+einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
+
+Deine Aufgabe: Analysiere einen Social-Media-Post-Entwurf und gib konkrete, umsetzbare Vorschlaege,
+wie das Engagement (Likes, Kommentare, Shares, Saves) erhoeht werden kann.
+
+Analysiere diese Aspekte:
+1. Hook-Staerke: Ist der erste Satz/die Headline aufmerksamkeitsstark genug?
+2. CTA-Vorhandensein: Gibt es einen klaren Call-to-Action? Ist er stark genug?
+3. Textlaenge: Ist die Caption zu lang/zu kurz fuer die Plattform?
+4. Hashtag-Qualitaet: Sind die Hashtags relevant, vielfaeltig, nicht zu viele/wenige?
+5. Posting-Zeit: Ist die geplante Posting-Zeit optimal fuer die Zielgruppe (deutsche Teenager 14-18)?
+6. Format-Wahl: Ist das gewaehlte Format (Feed Post, Story, Reel) das richtige fuer diesen Inhalt?
+7. Emotionale Ansprache: Spricht der Post die Zielgruppe emotional an?
+8. Interaktionsanreize: Gibt es Elemente, die zur Interaktion einladen (Fragen, Umfragen, etc.)?
+
+Fuer jeden Vorschlag gib an:
+- priority: "high", "medium", oder "low"
+- category: Eine der Kategorien (hook, cta, length, hashtags, timing, format, emotion, interaction)
+- suggestion: Der konkrete Verbesserungsvorschlag auf Deutsch (2-3 Saetze)
+- estimated_boost: Geschaetzte Engagement-Verbesserung als Prozent-String (z.B. "+15%", "+5%", "+25%")
+- action_text: Ein kurzer Aktionstext fuer den "Anwenden" Button (z.B. "Hook umschreiben", "CTA hinzufuegen")
+
+WICHTIG:
+- Alle Texte auf Deutsch
+- Konkret und umsetzbar, nicht vage
+- Maximal 6 Vorschlaege, mindestens 2
+- Sortiert nach Priority (high zuerst)
+- Geschaetzte Boosts realistisch (nicht ueber +30%)
+
+Antworte NUR als JSON-Array von Vorschlaegen. Kein zusaetzlicher Text."""
+
+
+def _build_engagement_boost_content_prompt(
+    post_content: dict,
+    platform: str,
+    post_format: str,
+    posting_time: str | None = None,
+) -> str:
+    """Build the content prompt with the actual post data to analyze."""
+    # Extract post content details
+    slides = post_content.get("slides", [])
+    caption_instagram = post_content.get("caption_instagram", "")
+    caption_tiktok = post_content.get("caption_tiktok", "")
+    hashtags_instagram = post_content.get("hashtags_instagram", "")
+    hashtags_tiktok = post_content.get("hashtags_tiktok", "")
+    cta_text = post_content.get("cta_text", "")
+    category = post_content.get("category", "")
+    country = post_content.get("country", "")
+    tone = post_content.get("tone", "")
+
+    # Build slide content summary
+    slide_texts = []
+    for i, slide in enumerate(slides):
+        parts = []
+        if slide.get("headline"):
+            parts.append(f"Headline: {slide['headline']}")
+        if slide.get("subheadline"):
+            parts.append(f"Subheadline: {slide['subheadline']}")
+        if slide.get("body_text"):
+            parts.append(f"Body: {slide['body_text']}")
+        if slide.get("cta_text"):
+            parts.append(f"CTA: {slide['cta_text']}")
+        slide_texts.append(f"Slide {i+1}: " + " | ".join(parts))
+
+    slides_summary = "\n".join(slide_texts) if slide_texts else "Keine Slides vorhanden"
+
+    # Pick the right caption for the platform
+    caption = caption_instagram if "instagram" in platform else caption_tiktok
+    hashtags = hashtags_instagram if "instagram" in platform else hashtags_tiktok
+
+    prompt = f"""Analysiere diesen Social-Media-Post-Entwurf fuer TREFF Sprachreisen und gib Engagement-Boost-Vorschlaege:
+
+PLATTFORM: {platform}
+FORMAT: {post_format}
+KATEGORIE: {category}
+LAND: {country or 'Nicht angegeben'}
+TON: {tone or 'Nicht angegeben'}
+GEPLANTE POSTING-ZEIT: {posting_time or 'Nicht angegeben'}
+
+SLIDE-INHALTE:
+{slides_summary}
+
+CAPTION:
+{caption or 'Keine Caption vorhanden'}
+
+HASHTAGS:
+{hashtags or 'Keine Hashtags vorhanden'}
+
+CTA:
+{cta_text or 'Kein CTA vorhanden'}
+
+ANZAHL SLIDES: {len(slides)}
+
+Gib 2-6 konkrete Verbesserungsvorschlaege als JSON-Array zurueck, sortiert nach Priority (high zuerst).
+Jeder Vorschlag hat: priority, category, suggestion, estimated_boost, action_text."""
+
+    return prompt
+
+
+async def _generate_engagement_boost_with_gemini(
+    post_content: dict,
+    platform: str,
+    post_format: str,
+    posting_time: str | None,
+    api_key: str,
+) -> list[dict] | None:
+    """Generate engagement boost suggestions using Gemini 2.5 Flash."""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        system_prompt = _build_engagement_boost_system_prompt()
+        content_prompt = _build_engagement_boost_content_prompt(
+            post_content, platform, post_format, posting_time
+        )
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.7,
+                max_output_tokens=2048,
+            ),
+        )
+
+        if not response.text:
+            logger.warning("Empty response from Gemini for engagement boost")
+            return None
+
+        suggestions = json.loads(response.text)
+
+        # Validate structure
+        if not isinstance(suggestions, list):
+            logger.warning("Gemini engagement boost response is not a list")
+            return None
+
+        valid_priorities = {"high", "medium", "low"}
+        valid_categories = {"hook", "cta", "length", "hashtags", "timing", "format", "emotion", "interaction"}
+
+        validated = []
+        for s in suggestions[:6]:  # Max 6 suggestions
+            if not isinstance(s, dict):
+                continue
+            suggestion = {
+                "priority": s.get("priority", "medium") if s.get("priority") in valid_priorities else "medium",
+                "category": s.get("category", "interaction") if s.get("category") in valid_categories else "interaction",
+                "suggestion": str(s.get("suggestion", ""))[:500],
+                "estimated_boost": str(s.get("estimated_boost", "+5%"))[:10],
+                "action_text": str(s.get("action_text", "Anwenden"))[:50],
+            }
+            if suggestion["suggestion"]:
+                validated.append(suggestion)
+
+        # Sort by priority
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        validated.sort(key=lambda x: priority_order.get(x["priority"], 1))
+
+        return validated if validated else None
+
+    except Exception as e:
+        logger.warning(f"Gemini engagement boost generation failed: {e}")
+        return None
+
+
+def _generate_engagement_boost_rule_based(
+    post_content: dict,
+    platform: str,
+    post_format: str,
+    posting_time: str | None = None,
+) -> list[dict]:
+    """Generate rule-based engagement boost suggestions as fallback."""
+    suggestions = []
+
+    slides = post_content.get("slides", [])
+    caption_instagram = post_content.get("caption_instagram", "")
+    caption_tiktok = post_content.get("caption_tiktok", "")
+    hashtags_instagram = post_content.get("hashtags_instagram", "")
+    hashtags_tiktok = post_content.get("hashtags_tiktok", "")
+    cta_text = post_content.get("cta_text", "")
+
+    caption = caption_instagram if "instagram" in platform else caption_tiktok
+    hashtags = hashtags_instagram if "instagram" in platform else hashtags_tiktok
+
+    # Check hook strength
+    if slides:
+        headline = slides[0].get("headline", "")
+        if len(headline) < 15:
+            suggestions.append({
+                "priority": "high",
+                "category": "hook",
+                "suggestion": "Die Headline ist sehr kurz. Ein laengerer, emotionalerer Hook wie eine Frage oder ein ueberraschendes Fakt erzeugt mehr Aufmerksamkeit und stoppt den Scroll-Daumen.",
+                "estimated_boost": "+20%",
+                "action_text": "Hook verstaerken",
+            })
+        elif "?" not in headline and "!" not in headline:
+            suggestions.append({
+                "priority": "medium",
+                "category": "hook",
+                "suggestion": "Nutze eine Frage oder einen Ausruf in der Headline, um Neugier zu wecken. Fragen erhoehen die Kommentarrate um bis zu 150%.",
+                "estimated_boost": "+15%",
+                "action_text": "Frage einbauen",
+            })
+
+    # Check CTA
+    if not cta_text and not any(s.get("cta_text") for s in slides):
+        suggestions.append({
+            "priority": "high",
+            "category": "cta",
+            "suggestion": "Es fehlt ein Call-to-Action. Fuege z.B. 'Link in Bio fuer mehr Infos!', 'Speichere diesen Post!' oder 'Markiere jemanden, der das braucht!' hinzu.",
+            "estimated_boost": "+25%",
+            "action_text": "CTA hinzufuegen",
+        })
+
+    # Check caption length
+    if caption:
+        caption_len = len(caption)
+        if "instagram" in platform:
+            if caption_len < 100:
+                suggestions.append({
+                    "priority": "medium",
+                    "category": "length",
+                    "suggestion": "Die Caption ist recht kurz. Instagram belohnt laengere Captions (150-300 Zeichen), da sie die Verweildauer erhoehen und dem Algorithmus signalisieren, dass der Content wertvoll ist.",
+                    "estimated_boost": "+10%",
+                    "action_text": "Caption erweitern",
+                })
+            elif caption_len > 500:
+                suggestions.append({
+                    "priority": "low",
+                    "category": "length",
+                    "suggestion": "Die Caption ist sehr lang. Kuerze sie auf die wichtigsten Punkte und verschiebe Details in die Kommentare oder die Story.",
+                    "estimated_boost": "+5%",
+                    "action_text": "Caption kuerzen",
+                })
+        elif "tiktok" in platform:
+            if caption_len > 200:
+                suggestions.append({
+                    "priority": "medium",
+                    "category": "length",
+                    "suggestion": "TikTok-Captions sollten kurz und knackig sein (unter 150 Zeichen). Der Fokus liegt auf dem Video, nicht auf der Beschreibung.",
+                    "estimated_boost": "+10%",
+                    "action_text": "Caption kuerzen",
+                })
+    else:
+        suggestions.append({
+            "priority": "high",
+            "category": "length",
+            "suggestion": "Es fehlt eine Caption. Eine gute Caption mit Storytelling-Elementen und einem Call-to-Action ist essentiell fuer Engagement.",
+            "estimated_boost": "+20%",
+            "action_text": "Caption schreiben",
+        })
+
+    # Check hashtags
+    if hashtags:
+        hashtag_count = hashtags.count("#")
+        if "instagram" in platform:
+            if hashtag_count < 5:
+                suggestions.append({
+                    "priority": "medium",
+                    "category": "hashtags",
+                    "suggestion": f"Nur {hashtag_count} Hashtags. Fuer optimale Reichweite nutze 10-15 relevante Hashtags. Mische populaere (#Auslandsjahr, #HighSchool) mit Nischen-Hashtags (#TREFFSprachreisen).",
+                    "estimated_boost": "+15%",
+                    "action_text": "Hashtags ergaenzen",
+                })
+            elif hashtag_count > 25:
+                suggestions.append({
+                    "priority": "low",
+                    "category": "hashtags",
+                    "suggestion": f"{hashtag_count} Hashtags sind zu viele. Instagram empfiehlt 3-5 hochrelevante Hashtags fuer maximale Reichweite.",
+                    "estimated_boost": "+5%",
+                    "action_text": "Hashtags reduzieren",
+                })
+    else:
+        suggestions.append({
+            "priority": "high",
+            "category": "hashtags",
+            "suggestion": "Keine Hashtags vorhanden! Hashtags sind essentiell fuer die Auffindbarkeit. Fuege mindestens 5-10 relevante Hashtags hinzu.",
+            "estimated_boost": "+25%",
+            "action_text": "Hashtags hinzufuegen",
+        })
+
+    # Check posting time
+    if posting_time:
+        try:
+            hour = int(posting_time.split(":")[0])
+            if hour < 7 or hour > 21:
+                suggestions.append({
+                    "priority": "medium",
+                    "category": "timing",
+                    "suggestion": f"Posting um {posting_time} Uhr ist suboptimal. Die beste Posting-Zeit fuer deutsche Teenager ist 17-19 Uhr (nach der Schule) oder 12-13 Uhr (Mittagspause).",
+                    "estimated_boost": "+15%",
+                    "action_text": "Zeit anpassen",
+                })
+            elif 9 <= hour <= 14:
+                suggestions.append({
+                    "priority": "low",
+                    "category": "timing",
+                    "suggestion": f"Posting um {posting_time} Uhr erreicht eure Zielgruppe waehrend der Schulzeit. Teste alternativ 17-19 Uhr fuer hoehere Engagement-Raten.",
+                    "estimated_boost": "+10%",
+                    "action_text": "Abendzeit testen",
+                })
+        except (ValueError, IndexError):
+            pass
+
+    # Check format
+    if post_format == "instagram_feed" and slides and len(slides) == 1:
+        suggestions.append({
+            "priority": "medium",
+            "category": "format",
+            "suggestion": "Carousel-Posts (mehrere Slides) erhalten auf Instagram bis zu 3x mehr Engagement als einzelne Bilder. Erweitere den Post um 3-5 Slides mit verschiedenen Aspekten des Themas.",
+            "estimated_boost": "+20%",
+            "action_text": "Carousel erstellen",
+        })
+    elif post_format == "instagram_feed" and slides and len(slides) > 8:
+        suggestions.append({
+            "priority": "low",
+            "category": "format",
+            "suggestion": f"{len(slides)} Slides koennen ueberfordernd wirken. Die optimale Carousel-Laenge liegt bei 5-7 Slides. Fasse die wichtigsten Punkte zusammen.",
+            "estimated_boost": "+5%",
+            "action_text": "Slides reduzieren",
+        })
+
+    # Check interaction elements
+    has_question = any(
+        "?" in (s.get("headline", "") + s.get("body_text", ""))
+        for s in slides
+    )
+    if not has_question and caption and "?" not in caption:
+        suggestions.append({
+            "priority": "medium",
+            "category": "interaction",
+            "suggestion": "Fuege eine Frage am Ende der Caption hinzu, z.B. 'In welches Land wuerdest du gehen?' oder 'Wer war schon im Ausland?'. Fragen erhoehen die Kommentarrate signifikant.",
+            "estimated_boost": "+15%",
+            "action_text": "Frage hinzufuegen",
+        })
+
+    # Ensure at least 2 suggestions
+    if len(suggestions) < 2:
+        suggestions.append({
+            "priority": "low",
+            "category": "emotion",
+            "suggestion": "Erwaehne persoenliche Erfahrungen oder Zitate von ehemaligen Teilnehmern. Authentischer Content erzeugt mehr emotionale Resonanz und wird haeufiger geteilt.",
+            "estimated_boost": "+10%",
+            "action_text": "Story einbauen",
+        })
+    if len(suggestions) < 2:
+        suggestions.append({
+            "priority": "low",
+            "category": "interaction",
+            "suggestion": "Fuege 'Speichere diesen Post fuer spaeter!' in die Caption ein. Save-Aufrufe erhoehen die Reichweite, da Instagram Saves als starkes Engagement-Signal wertet.",
+            "estimated_boost": "+10%",
+            "action_text": "Save-Aufruf hinzufuegen",
+        })
+
+    # Sort by priority
+    priority_order = {"high": 0, "medium": 1, "low": 2}
+    suggestions.sort(key=lambda x: priority_order.get(x["priority"], 1))
+
+    return suggestions[:6]
+
+
+@router.post("/engagement-boost")
+async def engagement_boost(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Analyze a post draft and return engagement improvement suggestions.
+
+    Uses Gemini 2.5 Flash for AI-powered analysis when available,
+    with comprehensive rule-based fallback.
+
+    Expects:
+    - post_content (dict): Post data with slides, captions, hashtags, cta_text, category, country, tone
+    - platform (str): Target platform (instagram_feed, instagram_story, tiktok)
+    - format (str): Post format (same as platform or specific format)
+    - posting_time (str, optional): Planned posting time (HH:MM)
+
+    Returns list of engagement boost suggestions with priority, category,
+    suggestion text, estimated boost percentage, and action text.
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "engagement-boost")
+
+    post_content = request.get("post_content", {})
+    platform = request.get("platform", "instagram_feed")
+    post_format = request.get("format", platform)
+    posting_time = request.get("posting_time")
+
+    if not post_content:
+        raise HTTPException(
+            status_code=400,
+            detail="post_content is required. Provide slides, captions, hashtags, etc."
+        )
+
+    # Try Gemini first
+    api_key = await _get_gemini_api_key(user_id, db)
+    suggestions = None
+    source = "rule_based"
+
+    if api_key:
+        suggestions = await _generate_engagement_boost_with_gemini(
+            post_content=post_content,
+            platform=platform,
+            post_format=post_format,
+            posting_time=posting_time,
+            api_key=api_key,
+        )
+        if suggestions:
+            source = "gemini"
+
+    # Fallback to rule-based
+    if not suggestions:
+        suggestions = _generate_engagement_boost_rule_based(
+            post_content=post_content,
+            platform=platform,
+            post_format=post_format,
+            posting_time=posting_time,
+        )
+
+    return {
+        "status": "success",
+        "suggestions": suggestions,
+        "count": len(suggestions),
+        "source": source,
+        "platform": platform,
+        "format": post_format,
+    }

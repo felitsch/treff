@@ -129,6 +129,7 @@ const categories = [
   { id: 'foto_posts', label: 'Foto-Posts', icon: '📸', desc: 'Fotos mit Branding-Overlay' },
   { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬', desc: 'Thumbnails fuer Videos' },
   { id: 'story_posts', label: 'Story-Posts', icon: '📱', desc: 'Instagram Story Content' },
+  { id: 'story_teaser', label: 'Story-Teaser', icon: '👉', desc: 'Feed-Post als Wegweiser zu Story-Serien' },
 ]
 
 // Step 3: Platform (static data)

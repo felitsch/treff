@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
 
@@ -31,6 +31,137 @@ const postsPerMonth = ref('12')
 const preferredPostingTime = ref('10:00')
 const preferredPlatform = ref('instagram_feed')
 
+// ── Hashtag Manager state ──
+const hashtagSets = ref([])
+const hashtagSetsLoading = ref(false)
+const hashtagFilterCountry = ref('')
+const hashtagFilterCategory = ref('')
+const showCreateHashtagForm = ref(false)
+const newHashtagSet = ref({ name: '', hashtags: '', category: '', country: '' })
+const savingHashtagSet = ref(false)
+const editingHashtagSetId = ref(null)
+const editingHashtagSet = ref({ name: '', hashtags: '', category: '', country: '' })
+
+const countryOptions = [
+  { value: '', label: 'Alle Laender' },
+  { value: 'usa', label: 'USA' },
+  { value: 'canada', label: 'Kanada' },
+  { value: 'australia', label: 'Australien' },
+  { value: 'newzealand', label: 'Neuseeland' },
+  { value: 'ireland', label: 'Irland' },
+]
+
+const categoryOptions = [
+  { value: '', label: 'Alle Kategorien' },
+  { value: 'allgemein', label: 'Allgemein' },
+  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
+  { value: 'fristen_cta', label: 'Fristen/CTA' },
+  { value: 'tipps_tricks', label: 'Tipps & Tricks' },
+  { value: 'faq', label: 'FAQ' },
+  { value: 'infografiken', label: 'Infografiken' },
+]
+
+const countryName = (code) => {
+  const map = { usa: 'USA', canada: 'Kanada', australia: 'Australien', newzealand: 'Neuseeland', ireland: 'Irland' }
+  return map[code] || code || 'Allgemein'
+}
+
+const filteredHashtagSets = computed(() => {
+  return hashtagSets.value.filter(s => {
+    if (hashtagFilterCountry.value && s.country !== hashtagFilterCountry.value) return false
+    if (hashtagFilterCategory.value && s.category !== hashtagFilterCategory.value) return false
+    return true
+  })
+})
+
+async function fetchHashtagSets() {
+  hashtagSetsLoading.value = true
+  try {
+    const res = await api.get('/api/hashtag-sets')
+    hashtagSets.value = res.data.hashtag_sets || []
+  } catch (err) {
+    console.error('Failed to load hashtag sets:', err)
+  } finally {
+    hashtagSetsLoading.value = false
+  }
+}
+
+async function createHashtagSet() {
+  if (!newHashtagSet.value.name.trim() || !newHashtagSet.value.hashtags.trim()) return
+  savingHashtagSet.value = true
+  try {
+    const tagsArray = newHashtagSet.value.hashtags
+      .split(/[\s,]+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 0)
+      .map(t => t.startsWith('#') ? t : '#' + t)
+    const res = await api.post('/api/hashtag-sets', {
+      name: newHashtagSet.value.name.trim(),
+      hashtags: tagsArray,
+      category: newHashtagSet.value.category || null,
+      country: newHashtagSet.value.country || null,
+      performance_score: 5.0,
+    })
+    hashtagSets.value.unshift(res.data)
+    newHashtagSet.value = { name: '', hashtags: '', category: '', country: '' }
+    showCreateHashtagForm.value = false
+  } catch (err) {
+    console.error('Failed to create hashtag set:', err)
+  } finally {
+    savingHashtagSet.value = false
+  }
+}
+
+function startEditHashtagSet(hs) {
+  editingHashtagSetId.value = hs.id
+  editingHashtagSet.value = {
+    name: hs.name,
+    hashtags: hs.hashtags.join(' '),
+    category: hs.category || '',
+    country: hs.country || '',
+  }
+}
+
+function cancelEditHashtagSet() {
+  editingHashtagSetId.value = null
+  editingHashtagSet.value = { name: '', hashtags: '', category: '', country: '' }
+}
+
+async function saveEditHashtagSet(id) {
+  if (!editingHashtagSet.value.name.trim()) return
+  savingHashtagSet.value = true
+  try {
+    const tagsArray = editingHashtagSet.value.hashtags
+      .split(/[\s,]+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 0)
+      .map(t => t.startsWith('#') ? t : '#' + t)
+    const res = await api.put(`/api/hashtag-sets/${id}`, {
+      name: editingHashtagSet.value.name.trim(),
+      hashtags: tagsArray,
+      category: editingHashtagSet.value.category || null,
+      country: editingHashtagSet.value.country || null,
+    })
+    const idx = hashtagSets.value.findIndex(s => s.id === id)
+    if (idx !== -1) hashtagSets.value[idx] = res.data
+    editingHashtagSetId.value = null
+  } catch (err) {
+    console.error('Failed to update hashtag set:', err)
+  } finally {
+    savingHashtagSet.value = false
+  }
+}
+
+async function deleteHashtagSet(id) {
+  try {
+    await api.delete(`/api/hashtag-sets/${id}`)
+    hashtagSets.value = hashtagSets.value.filter(s => s.id !== id)
+  } catch (err) {
+    console.error('Failed to delete hashtag set:', err)
+  }
+}
+
 async function fetchSettings() {
   loading.value = true
   error.value = null
@@ -57,6 +188,9 @@ async function fetchSettings() {
     if (settings.posts_per_month) postsPerMonth.value = settings.posts_per_month
     if (settings.preferred_posting_time) preferredPostingTime.value = settings.preferred_posting_time
     if (settings.preferred_platform) preferredPlatform.value = settings.preferred_platform
+
+    // Fetch hashtag sets
+    await fetchHashtagSets()
   } catch (err) {
     console.error('Failed to load settings:', err)
     error.value = 'Einstellungen konnten nicht geladen werden.'
@@ -426,6 +560,211 @@ onMounted(() => {
               <option value="tiktok">TikTok</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <!-- ======================== -->
+      <!-- SECTION 5: Hashtag Manager -->
+      <!-- ======================== -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="hashtag-manager-section">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <span>#</span> Hashtag-Manager
+              </h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verwalte deine Hashtag-Sets fuer verschiedene Laender und Kategorien</p>
+            </div>
+            <button
+              @click="showCreateHashtagForm = !showCreateHashtagForm"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-treff-blue bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+              data-testid="create-hashtag-set-btn"
+            >
+              <span v-if="!showCreateHashtagForm">+ Neues Set</span>
+              <span v-else>Abbrechen</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Create New Set Form -->
+          <div v-if="showCreateHashtagForm" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3" data-testid="create-hashtag-form">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Set-Name</label>
+              <input
+                v-model="newHashtagSet.name"
+                type="text"
+                placeholder="z.B. Meine USA Hashtags"
+                class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"
+                data-testid="new-hashtag-name"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hashtags (durch Leerzeichen oder Komma getrennt)</label>
+              <textarea
+                v-model="newHashtagSet.hashtags"
+                rows="2"
+                placeholder="#TREFFSprachreisen #HighSchoolUSA #Auslandsjahr"
+                class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"
+                data-testid="new-hashtag-tags"
+              ></textarea>
+            </div>
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land</label>
+                <select v-model="newHashtagSet.country" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" data-testid="new-hashtag-country">
+                  <option value="">Kein Land</option>
+                  <option value="usa">USA</option>
+                  <option value="canada">Kanada</option>
+                  <option value="australia">Australien</option>
+                  <option value="newzealand">Neuseeland</option>
+                  <option value="ireland">Irland</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategorie</label>
+                <select v-model="newHashtagSet.category" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" data-testid="new-hashtag-category">
+                  <option value="">Keine Kategorie</option>
+                  <option value="allgemein">Allgemein</option>
+                  <option value="laender_spotlight">Laender-Spotlight</option>
+                  <option value="erfahrungsberichte">Erfahrungsberichte</option>
+                  <option value="fristen_cta">Fristen/CTA</option>
+                  <option value="tipps_tricks">Tipps & Tricks</option>
+                  <option value="faq">FAQ</option>
+                  <option value="infografiken">Infografiken</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button
+                @click="createHashtagSet"
+                :disabled="savingHashtagSet || !newHashtagSet.name.trim() || !newHashtagSet.hashtags.trim()"
+                class="px-4 py-2 text-sm font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                data-testid="save-new-hashtag-btn"
+              >
+                <span v-if="savingHashtagSet">Speichern...</span>
+                <span v-else>Set erstellen</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="flex gap-3">
+            <select
+              v-model="hashtagFilterCountry"
+              class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"
+              data-testid="hashtag-filter-country"
+            >
+              <option v-for="opt in countryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+            <select
+              v-model="hashtagFilterCategory"
+              class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"
+              data-testid="hashtag-filter-category"
+            >
+              <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+
+          <!-- Hashtag Sets List -->
+          <div v-if="hashtagSetsLoading" class="text-center py-4">
+            <span class="text-gray-400 text-sm">Hashtag-Sets werden geladen...</span>
+          </div>
+
+          <div v-else-if="filteredHashtagSets.length === 0" class="text-center py-4">
+            <span class="text-gray-400 text-sm">Keine Hashtag-Sets gefunden.</span>
+          </div>
+
+          <div v-else class="space-y-3 max-h-96 overflow-y-auto" data-testid="hashtag-sets-list">
+            <div
+              v-for="hs in filteredHashtagSets"
+              :key="hs.id"
+              class="border border-gray-200 dark:border-gray-600 rounded-lg p-3"
+              :class="hs.is_default ? 'bg-gray-50 dark:bg-gray-700/30' : 'bg-white dark:bg-gray-700'"
+              :data-testid="'hashtag-set-' + hs.id"
+            >
+              <!-- View mode -->
+              <div v-if="editingHashtagSetId !== hs.id">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-sm text-gray-900 dark:text-white">{{ hs.name }}</span>
+                    <span v-if="hs.is_default" class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded">Standard</span>
+                    <span v-if="hs.country" class="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded">{{ countryName(hs.country) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1" v-if="!hs.is_default">
+                    <button
+                      @click="startEditHashtagSet(hs)"
+                      class="p-1 text-gray-400 hover:text-treff-blue transition-colors"
+                      title="Bearbeiten"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button
+                      @click="deleteHashtagSet(hs.id)"
+                      class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Loeschen"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="(tag, tidx) in hs.hashtags"
+                    :key="tidx"
+                    class="text-xs px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full"
+                  >{{ tag }}</span>
+                </div>
+                <div class="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
+                  <span v-if="hs.category">{{ hs.category }}</span>
+                  <span>Score: {{ hs.performance_score }}</span>
+                </div>
+              </div>
+
+              <!-- Edit mode -->
+              <div v-else class="space-y-2">
+                <input
+                  v-model="editingHashtagSet.name"
+                  type="text"
+                  class="w-full px-3 py-1.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-sm text-gray-900 dark:text-white"
+                />
+                <textarea
+                  v-model="editingHashtagSet.hashtags"
+                  rows="2"
+                  class="w-full px-3 py-1.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-sm text-gray-900 dark:text-white"
+                ></textarea>
+                <div class="flex gap-2">
+                  <select v-model="editingHashtagSet.country" class="flex-1 px-2 py-1.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-sm text-gray-900 dark:text-white">
+                    <option value="">Kein Land</option>
+                    <option value="usa">USA</option>
+                    <option value="canada">Kanada</option>
+                    <option value="australia">Australien</option>
+                    <option value="newzealand">Neuseeland</option>
+                    <option value="ireland">Irland</option>
+                  </select>
+                  <select v-model="editingHashtagSet.category" class="flex-1 px-2 py-1.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-sm text-gray-900 dark:text-white">
+                    <option value="">Keine Kategorie</option>
+                    <option value="allgemein">Allgemein</option>
+                    <option value="laender_spotlight">Laender-Spotlight</option>
+                    <option value="erfahrungsberichte">Erfahrungsberichte</option>
+                  </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button @click="cancelEditHashtagSet" class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Abbrechen</button>
+                  <button
+                    @click="saveEditHashtagSet(hs.id)"
+                    :disabled="savingHashtagSet"
+                    class="px-3 py-1 text-sm font-medium text-white bg-treff-blue rounded hover:bg-blue-600 disabled:opacity-50"
+                  >Speichern</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-400 dark:text-gray-500">
+            {{ filteredHashtagSets.length }} von {{ hashtagSets.length }} Sets angezeigt.
+            Standard-Sets koennen nicht bearbeitet oder geloescht werden.
+          </p>
         </div>
       </div>
 
