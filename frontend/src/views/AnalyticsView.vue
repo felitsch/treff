@@ -488,7 +488,7 @@ onMounted(() => {
       </div>
 
       <!-- Goal tracking -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="goal-tracking">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="goal-tracking" data-tour="analytics-goals">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Zielverfolgung</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Weekly goal -->
@@ -530,7 +530,7 @@ onMounted(() => {
       </div>
 
       <!-- Posting frequency line chart -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="frequency-chart">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="frequency-chart" data-tour="analytics-frequency">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Posting-Frequenz</h2>
           <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
@@ -566,7 +566,7 @@ onMounted(() => {
       <!-- Distribution charts row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Category distribution - Doughnut Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="category-distribution">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="category-distribution" data-tour="analytics-categories">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kategorieverteilung</h2>
           <EmptyState
             v-if="categories.length === 0"
@@ -591,7 +591,7 @@ onMounted(() => {
         </div>
 
         <!-- Platform distribution -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="platform-distribution">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="platform-distribution" data-tour="analytics-platforms">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plattformverteilung</h2>
           <EmptyState
             v-if="platforms.length === 0"

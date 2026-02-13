@@ -335,20 +335,46 @@ const tourConfigs = {
 
   // ─── History ─────────────────────────────────────────────
   history: {
-    title: 'Post-Verlauf Tour',
+    title: 'Post-Archiv Tour – Dein Content-Gedaechtnis',
     steps: [
+      // Tour-Step 1: Was ist das Archiv (alle erstellten Posts)
       {
-        target: '[data-tour="history-filters"]',
-        title: 'Filter & Suche',
+        target: '[data-tour="history-header"]',
+        title: 'Willkommen im Post-Archiv!',
         description:
-          'Durchsuche deine Posts nach Titel, filtere nach Kategorie, Plattform, Status, Land oder Datum.',
+          'Das Post-Archiv ist dein zentrales Content-Gedaechtnis. Hier findest du ALLE jemals erstellten Posts — egal ob Entwurf, geplant oder bereits veroeffentlicht. WARUM? Ein gut gepflegtes Archiv ist Gold wert: Du kannst erfolgreiche Posts wiederverwenden, saisonale Inhalte recyclen und jederzeit nachvollziehen, was du wann gepostet hast. So baust du langfristig eine konsistente Content-Strategie fuer TREFF Sprachreisen auf.',
         position: 'bottom',
       },
+      // Tour-Step 2: Suche und Filter erklaeren
       {
-        target: '[data-tour="history-list"]',
-        title: 'Post-Liste',
+        target: '[data-tour="history-filters"]',
+        title: 'Suche, Filter & Sortierung',
         description:
-          'Hier siehst du alle erstellten Posts mit Vorschaubild, Titel, Status und Aktionen (Bearbeiten, Duplizieren, Loeschen).',
+          'Mit der Suchleiste findest du Posts blitzschnell nach Titel oder Stichwort. Die Filter-Dropdowns grenzen nach Kategorie (z.B. Laender-Spotlight, FAQ), Plattform (Instagram Feed, Story, TikTok), Status (Entwurf, Geplant, Veroeffentlicht), Land und Zeitraum ein. Die Sortierung laesst sich nach Erstelldatum, Aktualisierung, Titel oder geplantem Datum ordnen — aufsteigend oder absteigend. TIPP: Kombiniere Filter, um z.B. alle USA-Posts der letzten 30 Tage zu finden!',
+        position: 'bottom',
+      },
+      // Tour-Step 3: Bulk-Export erklaeren (ZIP Download)
+      {
+        target: '[data-tour="history-batch"]',
+        title: 'Batch-Auswahl & ZIP-Export',
+        description:
+          'Klicke auf "Auswaehlen", um in den Mehrfachauswahl-Modus zu wechseln. Waehle einzelne Posts per Checkbox oder nutze "Alle auswaehlen" fuer die komplette Seite. Mit "Batch-Export" erhaeltst du alle ausgewaehlten Posts als ZIP-Datei — jeder Post wird als PNG-Bild gerendert, perfekt zum Versenden an Kunden oder fuer Backup-Zwecke. TIPP: Exportiere z.B. alle Posts einer Woche, um sie deinem Team zur Freigabe zu schicken.',
+        position: 'bottom',
+      },
+      // Tour-Step 4: Post bearbeiten/loeschen erklaeren
+      {
+        target: '[data-tour="history-actions"]',
+        title: 'Post-Aktionen: Bearbeiten, Duplizieren & Loeschen',
+        description:
+          'Jeder Post bietet dir mehrere Aktionen: Mit dem Stift-Icon (Bearbeiten) oeffnest du den Post im Editor und kannst Text, Bilder oder Design aendern. Das Kopier-Icon (Duplizieren) erstellt eine exakte Kopie als neuen Entwurf — ideal fuer aehnliche Posts mit kleinen Anpassungen. Das Kalender-Icon ermoeglicht direktes (Um-)Planen. Und das Papierkorb-Icon (Loeschen) entfernt den Post nach Bestaetigung endgueltig.',
+        position: 'top',
+      },
+      // Tour-Step 5: Zusammenhang mit Content-Recycling erklaeren
+      {
+        target: '[data-tour="history-recycling"]',
+        title: 'Content-Recycling: Alte Posts neu nutzen!',
+        description:
+          'Das Archiv ist dein Schluessel zum Content-Recycling! Erfolgreiche Posts von letztem Jahr koennen mit kleinen Anpassungen erneut veroeffentlicht werden. STRATEGIE: (1) Filtere nach "Veroeffentlicht" und sortiere nach Engagement. (2) Dupliziere Top-Posts und aktualisiere Zahlen, Daten oder Bilder. (3) Plane den recycelten Post im Kalender fuer eine ruhige Woche. So sparst du Zeit und nutzt bewaehrte Inhalte optimal. Gehe zum Wochenplaner, um recycelte Posts strategisch einzuplanen!',
         position: 'top',
       },
     ],
@@ -356,35 +382,102 @@ const tourConfigs = {
 
   // ─── Analytics ───────────────────────────────────────────
   analytics: {
-    title: 'Analytics Tour',
+    title: 'Analytics Tour – Datenbasierte Content-Optimierung',
     steps: [
+      // Tour-Step 1: Ueberblick Analytics (Daten-basierte Content-Optimierung)
       {
         target: '[data-tour="analytics-header"]',
-        title: 'Dein Content-Dashboard',
+        title: 'Willkommen im Analytics-Dashboard!',
         description:
-          'Behalte den Ueberblick ueber deine Posting-Aktivitaet, Ziel-Erreichung und Content-Mix.',
+          'Das Analytics-Dashboard ist dein Kompass fuer datenbasierte Content-Optimierung. Hier siehst du auf einen Blick, wie aktiv du postest, ob du deine Ziele erreichst und wie ausgewogen dein Content-Mix ist. WARUM? Ohne Daten postest du im Blindflug — mit Analytics erkennst du Muster, Schwaechen und Chancen. Nutze die Erkenntnisse, um deinen Content strategisch zu verbessern und die Reichweite von TREFF Sprachreisen kontinuierlich zu steigern.',
         position: 'bottom',
       },
+      // Tour-Step 2: Posting-Frequenz Chart erklaeren
       {
-        target: '[data-tour="analytics-charts"]',
-        title: 'Charts & Statistiken',
+        target: '[data-tour="analytics-frequency"]',
+        title: 'Posting-Frequenz: Dein Aktivitaets-Verlauf',
         description:
-          'Visualisiere deine Posting-Frequenz, Kategorie-Verteilung und Plattform-Aufteilung ueber verschiedene Zeitraeume.',
+          'Dieses Liniendiagramm zeigt, wie oft du in einem bestimmten Zeitraum gepostet hast. Wechsle zwischen "Letzte 7 Tage", "Letzte 30 Tage", "Letztes Quartal" und "Letztes Jahr", um Trends zu erkennen. WARUM? Regelmaessigkeit ist der wichtigste Faktor fuer den Instagram-Algorithmus — Luecken kosten Reichweite! Ideal sind 3-5 Posts pro Woche. Siehst du hier Einbrueche, nutze den Wochenplaner, um Luecken zu fuellen.',
         position: 'top',
+      },
+      // Tour-Step 3: Kategorie-Verteilung erklaeren (ist der Content-Mix ausgewogen?)
+      {
+        target: '[data-tour="analytics-categories"]',
+        title: 'Kategorieverteilung: Ist dein Content-Mix ausgewogen?',
+        description:
+          'Das Doughnut-Diagramm zeigt die Verteilung deiner Posts nach Kategorie: Laender-Spotlight, Erfahrungsberichte, Tipps & Tricks, FAQ, Fristen/CTA und mehr. WARUM? Ein einseitiger Content-Mix langweilt Follower — wenn du nur Laender-Spotlights postest, fehlen persoenliche Geschichten (Erfahrungsberichte) und nuetzliche Infos (FAQ, Tipps). Ziel: Keine Kategorie sollte mehr als 40% ausmachen. Klicke auf Segmente, um Details zu sehen.',
+        position: 'top',
+      },
+      // Tour-Step 4: Plattform-Verteilung erklaeren
+      {
+        target: '[data-tour="analytics-platforms"]',
+        title: 'Plattformverteilung: Instagram vs. TikTok',
+        description:
+          'Diese Balken zeigen, wie sich deine Posts auf Instagram Feed, Instagram Story und TikTok verteilen. WARUM? Unterschiedliche Plattformen erreichen unterschiedliche Zielgruppen — TikTok spricht eher Teenager direkt an, Instagram Feed und Stories erreichen auch Eltern. Eine gesunde Verteilung sorgt dafuer, dass du beide Zielgruppen bedienst. Tipp: Stories sind ideal fuer hinter-den-Kulissen-Content und Serien-Teaser.',
+        position: 'top',
+      },
+      // Tour-Step 5: Wochen-/Monats-Ziele erklaeren und Zusammenhang mit Settings
+      {
+        target: '[data-tour="analytics-goals"]',
+        title: 'Wochen- & Monatsziele: Dein Fortschritt',
+        description:
+          'Die Fortschrittsbalken zeigen, wie nah du deinen Posting-Zielen bist — getrennt nach Woche und Monat. Gruen bedeutet: Ziel erreicht! WARUM? Klare Ziele motivieren und schaffen Verbindlichkeit. Die Zielwerte (z.B. 4 Posts/Woche, 16 Posts/Monat) konfigurierst du unter Einstellungen > Posting-Ziele. Passe sie an, wenn du merkst, dass sie zu hoch oder niedrig sind. Der Wochenplaner hilft dir, die Ziele systematisch zu erreichen.',
+        position: 'bottom',
       },
     ],
   },
 
   // ─── Settings ────────────────────────────────────────────
   settings: {
-    title: 'Einstellungen Tour',
+    title: 'Einstellungen Tour – Dein Kontrollzentrum',
     steps: [
+      // Tour-Step 1: Ueberblick Settings
       {
         target: '[data-tour="settings-sections"]',
-        title: 'Einstellungen verwalten',
+        title: 'Willkommen in den Einstellungen!',
         description:
-          'Passe dein Profil, Branding-Farben, API-Schluessel, Posting-Ziele, Hashtag-Strategien und Tour-Einstellungen an.',
+          'Die Einstellungen sind dein Kontrollzentrum: Hier konfigurierst du alles, was die App an dein Unternehmen und deine Arbeitsweise anpasst — von Account-Daten ueber Brand-Farben und API-Schluessel bis hin zu Posting-Zielen, Content-Mix und Hashtag-Strategien. Jede Aenderung hier wirkt sich direkt auf Posts, Templates, KI-Generierung und Analytics aus. Lass uns die einzelnen Bereiche kennenlernen!',
         position: 'bottom',
+      },
+      // Tour-Step 2: Brand-Farben erklaeren (fliessen in Templates ein)
+      {
+        target: '[data-tour="settings-brand"]',
+        title: 'Brand-Farben: Dein visuelles Branding',
+        description:
+          'Die drei Brand-Farben (Primaer, Sekundaer, Akzent) definieren das visuelle Erscheinungsbild deiner gesamten Content-Produktion. WARUM? Diese Farben fliessen automatisch in alle Templates ein — Ueberschriften, Buttons, Hintergruende und Akzente nutzen deine Markenfarben fuer konsistentes Branding. Die Vorschau unten zeigt dir sofort, wie die Farben zusammenwirken. Standard: TREFF-Blau (#3B7AB1), TREFF-Gelb (#FDD000) und Weiss (#FFFFFF).',
+        position: 'bottom',
+      },
+      // Tour-Step 3: API-Keys erklaeren (Gemini fuer AI, Unsplash fuer Stock-Fotos)
+      {
+        target: '[data-tour="settings-api-keys"]',
+        title: 'API-Schluessel: KI & Stock-Fotos freischalten',
+        description:
+          'Hier hinterlegst du die Schluessel fuer externe Dienste: Der Google Gemini API-Schluessel aktiviert die KI-Textgenerierung (Captions, Hashtags, Hooks) und KI-Bildgenerierung — ohne ihn funktioniert kein KI-Feature! Der OpenAI-Schluessel ist ein optionaler Fallback fuer Textgenerierung. Der Unsplash-Schluessel ermoeglicht die Suche nach kostenlosen Stock-Fotos direkt in der Asset-Bibliothek. Alle Schluessel werden verschluesselt gespeichert und nie im Klartext angezeigt.',
+        position: 'bottom',
+      },
+      // Tour-Step 4: Posting-Ziele erklaeren (Targets fuer Analytics)
+      {
+        target: '[data-tour="settings-posting-goals"]',
+        title: 'Posting-Ziele: Deine Content-Targets',
+        description:
+          'Hier definierst du deine Posting-Ziele: Posts pro Woche und Monat, bevorzugte Posting-Zeit und Plattform, sowie den Mindestabstand zwischen Story-Arc-Episoden. WARUM? Diese Ziele werden im Analytics-Dashboard als Fortschrittsbalken angezeigt — so siehst du jederzeit, ob du auf Kurs bist. Der KI-Wochenplaner nutzt die bevorzugte Plattform und Zeit als Basis fuer Vorschlaege. Empfehlung: Starte mit 3-4 Posts pro Woche und steigere dich schrittweise.',
+        position: 'bottom',
+      },
+      // Tour-Step 5: Content-Mix-Ziele erklaeren
+      {
+        target: '[data-tour="settings-content-mix"]',
+        title: 'Content-Mix-Ziele: Ausgewogene Verteilung',
+        description:
+          'Der Ziel-Content-Mix bestimmt, wie sich deine Posts auf Plattformen und Laender verteilen sollen. Die Plattform-Verteilung (Instagram Feed, Story, TikTok) stellt sicher, dass du alle Kanaele bedienst. Die Laender-Verteilung (USA, Kanada, Australien, Neuseeland, Irland) sorgt dafuer, dass kein Zielland vernachlaessigt wird. WARUM? Das Analytics-Dashboard vergleicht deine tatsaechliche Verteilung mit diesen Zielen und zeigt Abweichungen — so erkennst du, welche Laender oder Plattformen mehr Aufmerksamkeit brauchen.',
+        position: 'bottom',
+      },
+      // Tour-Step 6: Hashtag-Manager erklaeren
+      {
+        target: '[data-tour="settings-hashtags"]',
+        title: 'Hashtag-Manager: Deine Hashtag-Strategie',
+        description:
+          'Der Hashtag-Manager verwaltet vordefinierte Hashtag-Sets fuer verschiedene Laender und Kategorien. 17 Standard-Sets (TREFF Brand, Engagement Booster, laenderspezifische Sets) sind bereits angelegt — du kannst eigene Sets erstellen, bearbeiten und filtern. WARUM? Im Post-Editor werden passende Hashtags automatisch vorgeschlagen, basierend auf Kategorie und Land des Posts. So nutzt du immer die richtigen Hashtags fuer maximale Reichweite, ohne jedes Mal neu zu recherchieren. Standard-Sets sind schuetzwuerdig und koennen nicht versehentlich geloescht werden.',
+        position: 'top',
       },
     ],
   },
@@ -593,6 +686,207 @@ const tourConfigs = {
     ],
   },
 
+  // ═══════════════════════════════════════════════════════════
+  // VIDEO-TOOL-SUITE TOURS
+  // Workflow: Thumbnails → Overlay → Schnitt → Branding → Export → Audio
+  // ═══════════════════════════════════════════════════════════
+
+  // ─── Thumbnail Generator ─────────────────────────────────
+  'thumbnail-generator': {
+    title: 'Thumbnail-Generator Tour',
+    steps: [
+      {
+        target: '[data-tour="tg-header"]',
+        title: 'Thumbnails erstellen',
+        description:
+          'Willkommen im Thumbnail-Generator! Erstelle ansprechende Thumbnails fuer deine Videos und Reels — mit Text-Overlays, TREFF-Branding und verschiedenen Layouts. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="tg-hook-text"]',
+        title: 'Hook-Text: Aufmerksamkeit gewinnen',
+        description:
+          'Gib hier deinen Hook-Text ein — den kurzen, knackigen Satz, der auf dem Thumbnail erscheint und sofort Aufmerksamkeit erregt. Nutze maximal 5-7 Woerter, z.B. "Dein Auslandsjahr wartet!" oder "5 Dinge, die niemand dir sagt". Der Hook entscheidet, ob Nutzer auf dein Video klicken.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="tg-background"]',
+        title: 'Hintergrund waehlen',
+        description:
+          'Waehle einen Hintergrund fuer dein Thumbnail: Lade ein eigenes Foto hoch, waehle aus der TREFF-Asset-Bibliothek oder nutze einen einfarbigen Hintergrund in TREFF-Blau oder -Gelb. Eigene Fotos von Schuelerinnen im Ausland wirken besonders authentisch und erzielen hoehere Klickraten.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="tg-export"]',
+        title: 'Export-Optionen',
+        description:
+          'Exportiere dein Thumbnail als PNG oder JPG. Waehle die passende Groesse: 1280×720 (YouTube/Standard), 1080×1080 (Instagram Feed), oder 1080×1920 (Stories/Reels). Du kannst auch mehrere Groessen gleichzeitig exportieren fuer verschiedene Plattformen.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="tg-preview"]',
+        title: 'Live-Vorschau',
+        description:
+          'Hier siehst du die Echtzeit-Vorschau deines Thumbnails. Alle Aenderungen — Text, Hintergrund, Branding-Elemente — werden sofort sichtbar. Tipp: Pruefe, ob der Text auch auf kleinen Handybildschirmen gut lesbar ist.',
+        position: 'left',
+      },
+    ],
+  },
+
+  // ─── Video Overlay Editor ───────────────────────────────
+  'video-overlays': {
+    title: 'Video-Overlay-Editor Tour',
+    steps: [
+      {
+        target: '[data-tour="vo-header"]',
+        title: 'Video-Overlay-Editor',
+        description:
+          'Willkommen im Overlay-Editor! Hier fügst du Text, Logos, Sticker und Animationen ueber deine Videos — ideal fuer TREFF-Branding, Untertitel und Call-to-Actions. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vo-video-select"]',
+        title: 'Video auswaehlen',
+        description:
+          'Waehle das Video, dem du Overlays hinzufuegen moechtest. Du kannst ein bereits hochgeladenes Video aus deiner Bibliothek waehlen oder ein neues Video hochladen. Unterstuetzte Formate: MP4, MOV, WebM.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vo-layer-add"]',
+        title: 'Layer hinzufuegen',
+        description:
+          'Fuege neue Overlay-Layer hinzu: Text-Layer fuer Titel und Untertitel, Bild-Layer fuer Logos und Sticker, oder Form-Layer fuer Hintergrundboxen. Jeder Layer kann einzeln positioniert, skaliert und zeitlich eingestellt werden.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vo-layer-list"]',
+        title: 'Layer-Verwaltung',
+        description:
+          'Hier siehst du alle aktiven Layer deines Videos. Ziehe Layer per Drag & Drop, um die Reihenfolge zu aendern (obere Layer verdecken untere). Klicke auf einen Layer, um seine Eigenschaften zu bearbeiten. Blende Layer temporaer aus mit dem Augen-Icon.',
+        position: 'right',
+      },
+      {
+        target: '[data-tour="vo-preview"]',
+        title: 'Video-Vorschau',
+        description:
+          'Die Echtzeit-Vorschau zeigt dein Video mit allen Overlays. Nutze die Zeitleiste, um zu verschiedenen Stellen zu springen und zu pruefen, ob Overlays zum richtigen Zeitpunkt erscheinen. Klicke direkt in die Vorschau, um Layer zu verschieben.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vo-properties"]',
+        title: 'Layer-Eigenschaften',
+        description:
+          'Bearbeite hier die Details des ausgewaehlten Layers: Schriftart, Farbe, Groesse, Transparenz, Position (X/Y), Start- und Endzeit sowie Animationseffekte (Einblenden, Herausgleiten etc.). TREFF-Blau (#4C8BC2) und -Gelb (#FDD000) sind als Schnellfarben verfuegbar.',
+        position: 'left',
+      },
+      {
+        target: '[data-tour="vo-render"]',
+        title: 'Rendern & Exportieren',
+        description:
+          'Wenn alle Overlays sitzen, klicke auf "Rendern", um das finale Video mit allen Overlays zu erzeugen. Das gerenderte Video kann direkt im Video-Export weiterverarbeitet werden — dort wahlst du Seitenverhaeltnis und Plattform.',
+        position: 'top',
+      },
+    ],
+  },
+
+  // ─── Video Composer ─────────────────────────────────────
+  'video-composer': {
+    title: 'Video-Composer Tour',
+    steps: [
+      {
+        target: '[data-tour="vc-header"]',
+        title: 'Video-Composer',
+        description:
+          'Willkommen im Video-Composer! Hier schneidest und kombinierst du mehrere Clips zu einem fertigen Video — perfekt fuer Reels, Zusammenschnitte und Story-Videos. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vc-library"]',
+        title: 'Video-Bibliothek',
+        description:
+          'Durchsuche deine hochgeladenen Videos und waehle Clips fuer dein Projekt. Ziehe Videos per Drag & Drop in die Timeline. Tipp: Kurze Clips (5-15 Sek.) funktionieren am besten fuer Social-Media-Reels — Abwechslung haelt die Aufmerksamkeit!',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vc-format"]',
+        title: 'Ausgabeformat waehlen',
+        description:
+          'Waehle das Seitenverhaeltnis fuer dein Projekt: 9:16 (Instagram Reels / TikTok), 1:1 (Instagram Feed), 4:5 (Instagram Feed optimal), oder 16:9 (YouTube). Das Format bestimmt, wie deine Clips zugeschnitten und angezeigt werden.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vc-timeline"]',
+        title: 'Timeline: Clips anordnen',
+        description:
+          'Die Timeline ist das Herzstück des Composers. Ordne deine Clips in der gewuenschten Reihenfolge an, kuerze sie auf die optimale Laenge und fuege Uebergaenge (Crossfade, Cut) zwischen Clips hinzu. Die Gesamtlaenge wird oben rechts angezeigt — ideal sind 15-60 Sekunden fuer Reels.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="vc-compose"]',
+        title: 'Video zusammensetzen',
+        description:
+          'Klicke auf "Zusammensetzen", um alle Clips zu einem finalen Video zu rendern. Der Prozess dauert je nach Laenge wenige Sekunden bis Minuten. Das fertige Video kannst du anschliessend im Video-Export fuer verschiedene Plattformen optimieren.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="vc-branding-link"]',
+        title: 'Weiter zu Branding & Export',
+        description:
+          'Nach dem Zusammensetzen kannst du dein Video in den Video-Templates mit TREFF-Branding versehen, im Overlay-Editor Text und Logos hinzufuegen, und im Audio-Mixer Hintergrundmusik einblenden. Der komplette Workflow: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
+        position: 'bottom',
+      },
+    ],
+  },
+
+  // ─── Video Templates / Branding ─────────────────────────
+  'video-templates': {
+    title: 'Video-Branding-Templates Tour',
+    steps: [
+      {
+        target: '[data-tour="vt-header"]',
+        title: 'Video-Branding-Templates',
+        description:
+          'Willkommen bei den Video-Branding-Templates! Hier verwaltest du wiederverwendbare Vorlagen fuer Intros, Outros, Texteinblendungen und Bauchbinden — alles im TREFF-Design. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vt-filters"]',
+        title: 'Kategorien filtern',
+        description:
+          'Filtere Templates nach Kategorie: Intro (Vorspann), Outro (Abspann), Lower Third (Bauchbinde), Texteinblendung oder Uebergang. So findest du schnell das passende Template fuer deinen Bedarf.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vt-grid"]',
+        title: 'Template-Galerie',
+        description:
+          'Durchstoebre die verfuegbaren Templates in der Galerie. Jedes Template zeigt eine Vorschau, den Typ und die anpassbaren Felder. Klicke auf ein Template, um Details zu sehen und es auf dein Video anzuwenden.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vt-create"]',
+        title: 'Eigenes Template erstellen',
+        description:
+          'Erstelle eigene Branding-Templates mit dem TREFF-Farbschema (Blau #4C8BC2, Gelb #FDD000). Definiere Platzhalter fuer Text, Logo-Position und Animationen. Einmal erstellt, kannst du Templates immer wieder auf verschiedene Videos anwenden.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="vt-apply"]',
+        title: 'Template anwenden',
+        description:
+          'Waehle ein Template und passe die Platzhalter an (z.B. Titel, Untertitel, Laenderangabe). Klicke "Anwenden", um das Template auf dein aktuelles Video-Projekt zu uebertragen. Die Aenderungen werden in der Vorschau sofort sichtbar.',
+        position: 'left',
+      },
+      {
+        target: '[data-tour="vt-workflow"]',
+        title: 'Workflow-Integration',
+        description:
+          'Templates lassen sich in jedem Schritt des Video-Workflows einsetzen: Fuege ein Intro vor dem Schnitt im Composer hinzu, ueberlagere Bauchbinden im Overlay-Editor, oder haenge ein Outro an. Konsistentes Branding ueber alle Videos stärkt deine Markenwahrnehmung.',
+        position: 'top',
+      },
+    ],
+  },
+
   // ─── Video Export ────────────────────────────────────────
   'video-export': {
     title: 'Video-Export Tour',
@@ -601,8 +895,57 @@ const tourConfigs = {
         target: '[data-tour="ve-header"]',
         title: 'Video-Export',
         description:
-          'Exportiere deine Videos in verschiedenen Seitenverhaeltnissen (9:16, 1:1, 4:5) fuer Instagram Reels, Feed und TikTok.',
+          'Willkommen im Video-Export! Hier optimierst du deine Videos fuer verschiedene Plattformen — mit dem richtigen Seitenverhaeltnis, Fokuspunkt und Qualitaetseinstellungen. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
         position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-library"]',
+        title: 'Video-Bibliothek',
+        description:
+          'Waehle das Video, das du exportieren moechtest. Du siehst alle hochgeladenen und gerenderten Videos mit Vorschaubild, Dauer und Dateigroesse. Tipp: Videos aus dem Composer oder Overlay-Editor erscheinen hier automatisch.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-aspect-ratio"]',
+        title: 'Seitenverhaeltnis',
+        description:
+          'Waehle das Seitenverhaeltnis fuer deine Zielplattform: 9:16 (Instagram Reels, TikTok, Stories), 1:1 (Instagram Feed quadratisch), 4:5 (Instagram Feed optimal), oder 16:9 (YouTube, Querformat). Das Video wird entsprechend zugeschnitten.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-focus"]',
+        title: 'Fokuspunkt setzen',
+        description:
+          'Beim Zuschnitt auf ein anderes Seitenverhaeltnis bestimmst du hier, welcher Bereich des Videos im Mittelpunkt bleibt. Setze den Fokuspunkt auf das Gesicht der Person oder das wichtigste Element — so geht beim Zuschnitt nichts Wesentliches verloren.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-platform"]',
+        title: 'Plattform-Presets',
+        description:
+          'Waehle ein vorgefertigtes Preset fuer deine Zielplattform. Jedes Preset setzt automatisch die optimalen Einstellungen fuer Seitenverhaeltnis, Aufloesung, Bitrate und maximale Dateigroesse. So erfuellst du immer die Plattform-Anforderungen.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-quality"]',
+        title: 'Qualitaetseinstellungen',
+        description:
+          'Passe Aufloesung (720p, 1080p, 4K), Bitrate und Komprimierung an. Hoehere Qualitaet = groessere Datei. Fuer Social Media reicht 1080p mit mittlerer Bitrate voellig aus — wichtiger ist schnelle Ladezeit auf Mobilgeraeten.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-batch"]',
+        title: 'Batch-Export',
+        description:
+          'Exportiere ein Video gleichzeitig in mehreren Formaten — z.B. 9:16 fuer Reels UND 1:1 fuer den Feed. Das spart enorm Zeit, wenn du dasselbe Video auf verschiedenen Plattformen teilen moechtest. Alle Varianten werden als ZIP heruntergeladen.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="ve-history"]',
+        title: 'Export-Verlauf',
+        description:
+          'Im Verlauf findest du alle bisherigen Exporte mit Datum, Format und Dateigroesse. Du kannst fruehere Exporte erneut herunterladen oder mit denselben Einstellungen ein neues Video exportieren. Ideal, wenn du ein Update-Video im gleichen Format brauchst.',
+        position: 'top',
       },
     ],
   },
@@ -615,22 +958,50 @@ const tourConfigs = {
         target: '[data-tour="am-header"]',
         title: 'Audio-Mixer',
         description:
-          'Fuege Hintergrundmusik und Audio-Layer zu deinen Videos hinzu. Waehle aus der Musik-Bibliothek oder lade eigene Tracks hoch.',
+          'Willkommen im Audio-Mixer! Hier fügst du Hintergrundmusik, Soundeffekte und Voiceover zu deinen Videos hinzu — und mischst alle Audio-Spuren professionell ab. Teil der Video-Tool-Suite: Thumbnails → Overlay → Schnitt → Branding → Export → Audio.',
         position: 'bottom',
       },
-    ],
-  },
-
-  // ─── Thumbnail Generator ─────────────────────────────────
-  'thumbnail-generator': {
-    title: 'Thumbnail-Generator Tour',
-    steps: [
       {
-        target: '[data-tour="tg-header"]',
-        title: 'Thumbnails erstellen',
+        target: '[data-tour="am-video-select"]',
+        title: 'Video auswaehlen',
         description:
-          'Erstelle ansprechende Thumbnails fuer deine Videos und Reels mit Text-Overlays, TREFF-Branding und verschiedenen Layouts.',
+          'Waehle das Video, dem du Audio hinzufuegen moechtest. Das Original-Audio des Videos bleibt erhalten und kann separat in der Lautstaerke geregelt oder stummgeschaltet werden.',
         position: 'bottom',
+      },
+      {
+        target: '[data-tour="am-audio-source"]',
+        title: 'Audio-Quelle hinzufuegen',
+        description:
+          'Fuege Audio-Spuren hinzu: Waehle aus der lizenzfreien Musik-Bibliothek, lade eigene MP3/WAV-Dateien hoch, oder nimm ein Voiceover direkt im Browser auf. Mehrere Spuren koennen gleichzeitig abgespielt werden.',
+        position: 'bottom',
+      },
+      {
+        target: '[data-tour="am-waveform"]',
+        title: 'Wellenform-Ansicht',
+        description:
+          'Die Wellenform zeigt dir visuell die Lautstaerke-Verlauf deiner Audio-Spuren ueber die Zeit. Nutze die Wellenform, um laute und leise Stellen zu erkennen und Audio-Spuren praezise zu synchronisieren.',
+        position: 'top',
+      },
+      {
+        target: '[data-tour="am-mixer"]',
+        title: 'Lautstaerke-Mixer',
+        description:
+          'Regle hier die Lautstaerke jeder einzelnen Audio-Spur. Typische Mischung: Hintergrundmusik auf 20-30%, Voiceover auf 100%, Original-Video-Audio auf 50%. So bleibt der gesprochene Text immer gut verstaendlich.',
+        position: 'left',
+      },
+      {
+        target: '[data-tour="am-fade"]',
+        title: 'Fade-Effekte',
+        description:
+          'Fuege Fade-In und Fade-Out zu deinen Audio-Spuren hinzu. Ein sanftes Einblenden der Musik (1-2 Sek.) und Ausblenden am Ende wirkt professionell und vermeidet abrupte Schnitte. Besonders wichtig bei Hintergrundmusik in Reels.',
+        position: 'left',
+      },
+      {
+        target: '[data-tour="am-output"]',
+        title: 'Audio rendern',
+        description:
+          'Klicke auf "Audio rendern", um alle Spuren zu einem finalen Audio-Mix zusammenzufuegen. Das Ergebnis wird automatisch mit dem Video verbunden. Anschliessend kannst du das fertige Video im Video-Export fuer verschiedene Plattformen optimieren.',
+        position: 'top',
       },
     ],
   },
