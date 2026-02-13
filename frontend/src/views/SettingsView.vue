@@ -4,6 +4,12 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
+import TourSystem from '@/components/common/TourSystem.vue'
+import { useTour } from '@/composables/useTour'
+
+const tourRef = ref(null)
+const { seenTours, loadTourProgress, resetTour, resetAllTours } = useTour()
+const resettingTour = ref(null)
 
 const auth = useAuthStore()
 
@@ -272,17 +278,27 @@ async function saveSettings() {
 
 onMounted(() => {
   fetchSettings()
+  loadTourProgress()
 })
 </script>
 
 <template>
   <div class="max-w-4xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Einstellungen</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">
-        Verwalte dein Konto, Branding und Integrationen.
-      </p>
+    <div class="mb-8 flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Einstellungen</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          Verwalte dein Konto, Branding und Integrationen.
+        </p>
+      </div>
+      <button
+        @click="tourRef?.startTour()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        title="Seiten-Tour starten"
+      >
+        &#10067; Tour starten
+      </button>
     </div>
 
     <!-- Loading State -->
@@ -308,7 +324,7 @@ onMounted(() => {
     </div>
 
     <!-- Settings Content -->
-    <div v-else class="space-y-6">
+    <div v-else class="space-y-6" data-tour="settings-sections">
       <!-- Success Message -->
       <div
         v-if="saveSuccess"
@@ -874,6 +890,57 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Tour-Einstellungen Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+          &#10067; Tour-Einstellungen
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Jede Seite hat eine eigene gefuehrte Tour, die beim ersten Besuch automatisch startet. Hier kannst du einzelne Tours zuruecksetzen oder alle erneut aktivieren.
+        </p>
+
+        <div class="space-y-3">
+          <!-- Tour reset buttons per page -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div
+              v-for="tourKey in ['dashboard', 'create-post', 'templates', 'assets', 'calendar', 'history', 'week-planner', 'analytics', 'students', 'story-arcs', 'recurring-formats', 'settings', 'video-export', 'audio-mixer', 'thumbnail-generator']"
+              :key="tourKey"
+              class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700"
+            >
+              <span class="text-sm text-gray-700 dark:text-gray-300 capitalize">{{ tourKey.replace(/-/g, ' ') }}</span>
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="seenTours[tourKey]"
+                  class="text-xs text-green-600 dark:text-green-400"
+                >&#10003; Gesehen</span>
+                <span v-else class="text-xs text-gray-400">Noch nicht gesehen</span>
+                <button
+                  v-if="seenTours[tourKey]"
+                  @click="async () => { resettingTour = tourKey; await resetTour(tourKey); resettingTour = null; }"
+                  class="text-xs text-treff-blue hover:text-blue-700 font-medium"
+                  :disabled="resettingTour === tourKey"
+                >
+                  {{ resettingTour === tourKey ? '...' : 'Zuruecksetzen' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reset all tours button -->
+          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <button
+              @click="resetAllTours()"
+              class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
+            >
+              Alle Tours zuruecksetzen
+            </button>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Beim naechsten Besuch jeder Seite wird die Tour erneut automatisch gestartet.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Save Button -->
       <div class="flex justify-end">
         <button
@@ -890,5 +957,8 @@ onMounted(() => {
         </button>
       </div>
     </div>
+
+    <!-- Page-specific guided tour -->
+    <TourSystem ref="tourRef" page-key="settings" />
   </div>
 </template>

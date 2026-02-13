@@ -1,5 +1,87 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #221: App-Konzept Erklaerungsseite (Willkommens-Flow)
+**Date:** 2026-02-13
+**Feature ID:** #221
+**Status:** PASSING
+
+### What was implemented:
+Created a 6-page full-screen welcome flow overlay that appears on first login to explain the overall app concept before page-specific tours start.
+
+### Component Created:
+- `frontend/src/components/common/WelcomeFlow.vue` — Full-screen welcome flow with 6 pages, Teleport to body, slide transitions
+
+### Integration:
+- `frontend/src/views/DashboardView.vue` — Added WelcomeFlow component, checkWelcomeStatus(), welcome_completed persistence via settings API, auto-start Dashboard tour after welcome completion
+
+### 6 Welcome Pages:
+1. **Willkommen** — Intro with 4 feature badges (KI-Textgenerierung, Templates, Kalender, Analytics)
+2. **Die 4 Hauptbereiche** — Visual cards for Content-Erstellung, Planung, Video-Tools, Analyse
+3. **Dein typischer Workflow** — Interactive 5-step diagram: Idee → Planen → Erstellen → Schedulen → Analysieren
+4. **Wie alles zusammenhaengt** — Flowchart showing page connections (Students→Story-Arcs, Templates→Posts, etc.)
+5. **Empfohlener Einstieg** — 4 numbered getting-started steps
+6. **Seitenspezifische Hilfe** — Explains the "?" help button and page-level tours
+
+### Key Features:
+- Skip button on every page
+- Dot navigation for direct page access
+- Progress indicator (Schritt X von 6)
+- Saves `welcome_completed: true` in user settings via PUT /api/settings
+- TourSystem waits until welcomeCheckDone before mounting (prevents race condition)
+- Dashboard tour auto-starts 400ms after welcome completion
+- Second login skips welcome flow entirely
+- Smooth slide transitions, dark mode support
+
+### Verified:
+- All 6 pages render correctly with proper content
+- "Los geht's!" completes the flow and saves setting to DB
+- Dashboard Tour auto-starts after welcome flow completion
+- Second page load does NOT show welcome flow (persisted)
+- Zero application JavaScript errors
+- No mock data, TODOs, or placeholders
+
+---
+
+## Session - Feature #223: Workflow-Hinweise zwischen Seiten
+**Date:** 2026-02-13
+**Feature ID:** #223
+**Status:** PASSING
+
+### What was implemented:
+Created WorkflowHint.vue component and useWorkflowHints composable for contextual, dismissable workflow hints that guide users to related features on other pages.
+
+### Components Created:
+- `frontend/src/components/common/WorkflowHint.vue` — Reusable blue banner with icon, message, navigation link, and dismiss button
+- `frontend/src/composables/useWorkflowHints.js` — localStorage-backed composable for tracking dismissed hints
+
+### Hints Added (8 total across 6 pages):
+1. **Students** → Story-Arcs (when students exist but no arcs created)
+2. **Story-Arcs** → Students (when no students exist yet)
+3. **Calendar** → Recurring Formats (when none configured)
+4. **Calendar** → Week Planner (when no posts exist)
+5. **Create Post** → Templates (at step 2 when no templates)
+6. **Create Post** → Assets (at step 8 when no assets)
+7. **Dashboard** → Settings (when no API keys configured)
+8. **Analytics** → Settings (when no posting goals set)
+
+### Features:
+- Dismissable via X button with localStorage persistence (key: treff_dismissed_hints)
+- Conditional rendering based on actual data state (API checks)
+- Smooth enter/leave transitions
+- Dark mode support
+- Accessible (role="status", data-testid)
+- Unique hint IDs for independent dismiss state
+
+### Files Modified:
+- frontend/src/views/StudentsView.vue
+- frontend/src/views/StoryArcsView.vue
+- frontend/src/views/CalendarView.vue
+- frontend/src/views/CreatePostView.vue
+- frontend/src/views/DashboardView.vue
+- frontend/src/views/AnalyticsView.vue
+
+---
+
 ## Session - Feature #224: Sidebar-Navigation Gruppierung und Labels
 **Date:** 2026-02-13
 **Feature ID:** #224
@@ -9208,3 +9290,52 @@ Date: 2026-02-13
 
 ### Current state:
 - Feature #222 marked as PASSING
+
+---
+
+## Session - Feature #225: Leere-Zustaende mit Handlungsempfehlungen
+**Date:** 2026-02-13
+**Feature ID:** #225
+**Status:** PASSING
+
+### What was implemented:
+Replaced all inline empty states across 15 views with a unified, reusable EmptyState component that provides contextual guidance and direct action buttons.
+
+### Component Created:
+- `frontend/src/components/common/EmptyState.vue` — Reusable empty state with props: icon, title, description, actionLabel, actionTo, secondaryLabel, secondaryTo, compact. Supports both router navigation and custom event emission.
+
+### Views Updated (15 total):
+1. **DashboardView.vue** — 2 empty states: "Letzte Posts" (→ Post erstellen) and "Content-Vorschlaege" (→ Vorschlaege generieren)
+2. **CalendarView.vue** — 1 empty state: Calendar empty (→ Wochenplaner, → Post erstellen)
+3. **HistoryView.vue** — 2 empty states: No posts (→ Post erstellen, → Wochenplaner) and filter no results (→ Filter zuruecksetzen)
+4. **AssetsView.vue** — 2 empty states: No assets (→ Dateien hochladen) and filter no results (→ Filter zuruecksetzen)
+5. **StudentsView.vue** — 1 empty state: No students (→ Schueler anlegen)
+6. **StoryArcsView.vue** — 1 empty state: No arcs (→ Story-Arc erstellen, → Schueler ansehen)
+7. **RecurringFormatsView.vue** — 1 empty state: No formats (→ Format erstellen)
+8. **TemplatesView.vue** — 2 empty states: No templates (→ Post erstellen) and filter no results (→ Filter zuruecksetzen)
+9. **VideoExportView.vue** — 1 empty state: No videos (→ Assets, compact)
+10. **VideoComposerView.vue** — 2 empty states: Video library (→ Assets) and timeline (compact)
+11. **AudioMixerView.vue** — 2 empty states: Video selector (→ Assets) and tracks (compact)
+12. **AnalyticsView.vue** — 3 empty states: Kategorie-, Plattform-, Laenderverteilung (all → Post erstellen, compact)
+13. **VideoOverlayEditorView.vue** — 1 empty state: No videos (→ Assets)
+14. **VideoTemplatesView.vue** — 1 empty state: No matching templates (→ Alle anzeigen, compact)
+15. **WeekPlannerView.vue** — 1 empty state: No plan (→ Wochenplan erstellen)
+
+### Key Design Decisions:
+- Dashed border styling (border-dashed border-gray-300) for visual distinction
+- Brand blue (#3B7AB1) for primary action buttons
+- Compact mode for inline/smaller contexts
+- Dark mode support via dark: classes
+- data-testid attributes for automated testing
+
+### Browser Verification:
+- Verified on: Dashboard, Calendar, History, Students, Story-Arcs, Recurring Formats, Analytics, Assets, Video-Export, Week Planner
+- Zero JavaScript console errors
+- Action button navigation working correctly
+
+### Git Commits:
+- b5d4300: fix: add missing EmptyState.vue component (7 files)
+- Earlier commits already contained EmptyState changes for remaining 8 views (auto-committed by orchestrator)
+
+### Current state:
+- Feature #225 marked as PASSING

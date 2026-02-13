@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import api from '@/utils/api'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 // ── State ──────────────────────────────────────────────────────────
 const hookText = ref('')
@@ -15,6 +16,7 @@ const exportComplete = ref(false)
 const savedPost = ref(null)
 const error = ref('')
 const successMsg = ref('')
+const tourRef = ref(null)
 
 // Export format: '9:16' for Reels/TikTok, '1:1' for Feed preview
 const exportFormat = ref('9:16')
@@ -494,17 +496,26 @@ loadAssets()
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="tg-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thumbnail Generator</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Erstelle Video-Thumbnails im 9:16 oder 1:1 Format</p>
       </div>
-      <button
-        @click="reset"
-        class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-      >
-        Zuruecksetzen
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="tourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Seiten-Tour starten"
+        >
+          &#10067; Tour
+        </button>
+        <button
+          @click="reset"
+          class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          Zuruecksetzen
+        </button>
+      </div>
     </div>
 
     <!-- Messages -->
@@ -792,5 +803,7 @@ loadAssets()
         </div>
       </div>
     </div>
+
+    <TourSystem ref="tourRef" page-key="thumbnail-generator" />
   </div>
 </template>
