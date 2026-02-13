@@ -24,9 +24,130 @@ from app.models.setting import Setting
 from app.models.post import Post
 from app.models.content_suggestion import ContentSuggestion
 from app.models.humor_format import HumorFormat
+from app.models.hook import Hook
+from app.models.student import Student
+from app.models.hashtag_set import HashtagSet
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Emoji-Regelwerk pro Ton (Emoji rules per tone)
+# ═══════════════════════════════════════════════════════════════════════
+
+EMOJI_RULES = {
+    "jugendlich": {
+        "count_range": (3, 6),
+        "style": "begeisternd, aufrufend, jugendlich",
+        "preferred_emojis": ["🔥", "✨", "🎉", "💪", "🙌", "😍", "🤩", "💯", "🚀", "🌍", "✈️", "🏫"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🏈", "🎓", "🗽", "🌉"],
+            "canada": ["🇨🇦", "🍁", "🏔️", "🏒", "🐻"],
+            "australia": ["🇦🇺", "🏄", "🐨", "🌊", "☀️"],
+            "newzealand": ["🇳🇿", "🐑", "🏔️", "🌿", "🧗"],
+            "ireland": ["🇮🇪", "☘️", "🏰", "🌧️", "🍀"],
+        },
+        "description": "Mehr Emojis, begeisternd, Feuer/Raketen/Sterne",
+    },
+    "serioess": {
+        "count_range": (1, 3),
+        "style": "professionell, zurueckhaltend",
+        "preferred_emojis": ["📌", "📋", "✅", "📅", "🎓", "🌐", "📊", "🔑"],
+        "country_emojis": {
+            "usa": ["🇺🇸"], "canada": ["🇨🇦"], "australia": ["🇦🇺"],
+            "newzealand": ["🇳🇿"], "ireland": ["🇮🇪"],
+        },
+        "description": "Weniger Emojis, professionell, Haekchen/Kalender",
+    },
+    "witzig": {
+        "count_range": (4, 8),
+        "style": "humorvoll, uebertrieben, ironisch",
+        "preferred_emojis": ["😂", "🤣", "😅", "💀", "🙈", "😎", "🤡", "💅", "👀", "📢"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🍔", "🏈", "🗽"],
+            "canada": ["🇨🇦", "🍁", "🦫", "🏒"],
+            "australia": ["🇦🇺", "🦘", "🕷️", "🏄"],
+            "newzealand": ["🇳🇿", "🐑", "🧝", "🌋"],
+            "ireland": ["🇮🇪", "☘️", "🍺", "🌈"],
+        },
+        "description": "Viele Emojis, Lach-Emojis, uebertrieben",
+    },
+    "emotional": {
+        "count_range": (3, 5),
+        "style": "gefuehlvoll, herzlich, nostalgisch",
+        "preferred_emojis": ["❤️", "🥺", "😢", "🤗", "💕", "🫶", "✨", "💫", "🌅", "🙏"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🌅", "🏠"], "canada": ["🇨🇦", "🏔️", "❄️"],
+            "australia": ["🇦🇺", "🌊", "🌅"], "newzealand": ["🇳🇿", "🌿", "🌄"],
+            "ireland": ["🇮🇪", "🏰", "🌧️"],
+        },
+        "description": "Herz-Emojis, emotionale Gesichter, Sonnenuntergang",
+    },
+    "motivierend": {
+        "count_range": (3, 5),
+        "style": "aufbauend, energetisch, inspirierend",
+        "preferred_emojis": ["💪", "🔥", "🚀", "⭐", "🏆", "🎯", "✨", "👊", "🌟", "💥"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🗽", "🎓"], "canada": ["🇨🇦", "🏔️", "🍁"],
+            "australia": ["🇦🇺", "🌊", "☀️"], "newzealand": ["🇳🇿", "🏔️", "🌿"],
+            "ireland": ["🇮🇪", "☘️", "🏰"],
+        },
+        "description": "Power-Emojis, Raketen, Sterne, Feuer",
+    },
+    "informativ": {
+        "count_range": (1, 3),
+        "style": "sachlich, uebersichtlich",
+        "preferred_emojis": ["📌", "📊", "💡", "ℹ️", "📋", "✅", "📎", "🔍"],
+        "country_emojis": {
+            "usa": ["🇺🇸"], "canada": ["🇨🇦"], "australia": ["🇦🇺"],
+            "newzealand": ["🇳🇿"], "ireland": ["🇮🇪"],
+        },
+        "description": "Wenige, sachliche Emojis, Info-Icons",
+    },
+    "behind-the-scenes": {
+        "count_range": (2, 4),
+        "style": "authentisch, locker",
+        "preferred_emojis": ["👀", "📸", "🎬", "🎥", "😊", "✌️", "🤫", "💬"],
+        "country_emojis": {
+            "usa": ["🇺🇸"], "canada": ["🇨🇦"], "australia": ["🇦🇺"],
+            "newzealand": ["🇳🇿"], "ireland": ["🇮🇪"],
+        },
+        "description": "Behind-the-scenes Emojis, Kamera, authentisch",
+    },
+    "storytelling": {
+        "count_range": (2, 4),
+        "style": "erzaehlerisch, atmosphaerisch",
+        "preferred_emojis": ["📖", "✨", "🌅", "🗺️", "💭", "🌍", "⏰", "🔮"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🗽", "🌉"], "canada": ["🇨🇦", "🍁", "🏔️"],
+            "australia": ["🇦🇺", "🌊", "🐨"], "newzealand": ["🇳🇿", "🌿", "🏔️"],
+            "ireland": ["🇮🇪", "☘️", "🏰"],
+        },
+        "description": "Story-Emojis, Buch, Globus, Sterne",
+    },
+    "provokant": {
+        "count_range": (2, 5),
+        "style": "mutig, kontrovers, scroll-stopping",
+        "preferred_emojis": ["⚡", "🔥", "💣", "🤔", "👀", "📢", "💯", "🫣"],
+        "country_emojis": {
+            "usa": ["🇺🇸"], "canada": ["🇨🇦"], "australia": ["🇦🇺"],
+            "newzealand": ["🇳🇿"], "ireland": ["🇮🇪"],
+        },
+        "description": "Provokante Emojis, Blitz, Feuer, Lautsprecher",
+    },
+    "wholesome": {
+        "count_range": (3, 6),
+        "style": "herzlich, warm, gemuetlich",
+        "preferred_emojis": ["🥰", "🤗", "💛", "☀️", "🌻", "🏡", "👨‍👩‍👧‍👦", "🫶", "😊", "🌈"],
+        "country_emojis": {
+            "usa": ["🇺🇸", "🏠", "🍎"], "canada": ["🇨🇦", "🍁", "🐻"],
+            "australia": ["🇦🇺", "🐨", "🌅"], "newzealand": ["🇳🇿", "🐑", "🌿"],
+            "ireland": ["🇮🇪", "☘️", "🌈"],
+        },
+        "description": "Herz-Emojis, Sonnenblumen, Familie, warm",
+    },
+}
 
 # Asset upload directory (same as assets.py)
 APP_DIR = Path(__file__).resolve().parent.parent.parent
@@ -385,6 +506,8 @@ async def generate_text(
     - tone (str, optional): jugendlich or serioess (default: jugendlich)
     - platform (str, optional): Target platform
     - slide_count (int, optional): Number of slides (default: 1)
+    - student_id (int, optional): If provided, load the student's personality_preset
+      and use it to customize the AI generation tone and style.
 
     Returns structured content for all slides, captions, and hashtags.
     Includes 'source' field: "gemini" or "rule_based".
@@ -400,11 +523,36 @@ async def generate_text(
         tone = request.get("tone", "jugendlich")
         platform = request.get("platform", "instagram_feed")
         slide_count = request.get("slide_count", 1)
+        student_id = request.get("student_id")
 
         if slide_count < 1:
             slide_count = 1
         if slide_count > 10:
             slide_count = 10
+
+        # Look up student personality preset if student_id is provided
+        personality_preset = None
+        if student_id:
+            result_q = await db.execute(
+                select(Student).where(
+                    Student.id == student_id, Student.user_id == user_id
+                )
+            )
+            student = result_q.scalar_one_or_none()
+            if student and student.personality_preset:
+                try:
+                    personality_preset = json.loads(student.personality_preset)
+                    # Inject the student name into the preset for third-person perspective
+                    if personality_preset and "student_name" not in personality_preset:
+                        personality_preset["student_name"] = student.name
+                    logger.info(
+                        "Loaded personality preset for student %s (id=%d): tone=%s, humor_level=%s",
+                        student.name, student.id,
+                        personality_preset.get("tone", "N/A"),
+                        personality_preset.get("humor_level", "N/A"),
+                    )
+                except (json.JSONDecodeError, TypeError):
+                    logger.warning("Invalid personality_preset JSON for student %d", student_id)
 
         # Get Gemini API key for AI-powered text generation
         api_key = await _get_gemini_api_key(user_id, db)
@@ -418,6 +566,7 @@ async def generate_text(
             platform=platform,
             slide_count=slide_count,
             api_key=api_key,
+            personality_preset=personality_preset,
         )
 
         return result
@@ -1971,3 +2120,1038 @@ async def generate_humor(
     except Exception as e:
         logger.error("Humor generation failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Humor generation failed: {str(e)}")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Hook / Attention-Grabber Generation endpoints
+# ═══════════════════════════════════════════════════════════════════════
+
+HOOK_TYPES = {
+    "frage": {
+        "label": "Frage",
+        "description": "Provokante oder neugierig machende Frage",
+        "icon": "❓",
+        "examples": [
+            "Wusstest du, dass 87% aller Austauschschueler sagen, es war die beste Entscheidung ihres Lebens?",
+            "Was wuerdest du tun, wenn du ploetzlich 10.000 km von zuhause entfernt aufwachst?",
+            "Hast du dich jemals gefragt, wie es sich anfuehlt, in einer amerikanischen High School zu sitzen?",
+        ],
+    },
+    "statistik": {
+        "label": "Statistik",
+        "description": "Ueberraschende Zahl oder Statistik",
+        "icon": "📊",
+        "examples": [
+            "87% aller Austauschschueler sagen: Es war die beste Entscheidung meines Lebens.",
+            "Nur 3% aller deutschen Schueler machen ein Auslandsjahr – gehoerst du bald dazu?",
+            "10.000+ Schueler hat TREFF seit 1984 ins Ausland geschickt.",
+        ],
+    },
+    "emotion": {
+        "label": "Emotion",
+        "description": "Emotionales Statement oder Gefuehlsbeschreibung",
+        "icon": "🥺",
+        "examples": [
+            "Der Moment, in dem du realisierst, dass du deine Gastfamilie mehr vermisst als du dachtest...",
+            "Dieses Gefuehl, wenn du zum ersten Mal alleine am Flughafen stehst – und weisst, dein Abenteuer beginnt jetzt.",
+            "Es gibt diesen einen Moment, der alles veraendert. Fuer mich war es der erste Schultag in Kanada.",
+        ],
+    },
+    "provokation": {
+        "label": "Provokation",
+        "description": "Mutiges Statement oder Unpopular Opinion",
+        "icon": "⚡",
+        "examples": [
+            "Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abitur-Zeugnis.",
+            "Sorry, aber: Wer nie im Ausland war, verpasst die wichtigste Lektion des Lebens.",
+            "Hot Take: Die beste Schule ist nicht in Deutschland – sie ist 10.000 km entfernt.",
+        ],
+    },
+    "story_opener": {
+        "label": "Story-Opener",
+        "description": "Erzaehlerischer Einstieg der neugierig macht",
+        "icon": "📖",
+        "examples": [
+            "Es war 3 Uhr morgens in Vancouver, als mein Telefon klingelte...",
+            "Ich stand am Flughafen mit zwei Koffern und null Plan – und es war der beste Tag meines Lebens.",
+            "Tag 1 in meiner Gastfamilie: Die Mutter stellte mir ein Gericht vor, das ich noch nie gesehen hatte...",
+        ],
+    },
+}
+
+
+def _generate_hooks_rule_based(
+    topic: str,
+    country: str | None,
+    tone: str,
+    platform: str,
+    count: int,
+) -> list[dict]:
+    """Generate hook variants using rule-based templates (fallback)."""
+    import random
+
+    country_name = {
+        "usa": "USA", "canada": "Kanada", "australia": "Australien",
+        "newzealand": "Neuseeland", "ireland": "Irland"
+    }.get(country, "")
+
+    hooks = []
+    hook_type_keys = list(HOOK_TYPES.keys())
+
+    for i in range(count):
+        hook_type = hook_type_keys[i % len(hook_type_keys)]
+        hook_data = HOOK_TYPES[hook_type]
+
+        example = random.choice(hook_data["examples"])
+        if country_name:
+            replacements = {
+                "Kanada": country_name,
+                "Vancouver": {
+                    "usa": "New York", "canada": "Vancouver", "australia": "Sydney",
+                    "newzealand": "Auckland", "ireland": "Dublin",
+                }.get(country, "Vancouver"),
+                "amerikanischen": {
+                    "usa": "amerikanischen", "canada": "kanadischen",
+                    "australia": "australischen", "newzealand": "neuseelaendischen",
+                    "ireland": "irischen",
+                }.get(country, "auslaendischen"),
+            }
+            for old, new in replacements.items():
+                if isinstance(new, str):
+                    example = example.replace(old, new)
+
+        hooks.append({
+            "hook_text": example,
+            "hook_type": hook_type,
+            "hook_type_label": hook_data["label"],
+            "hook_type_icon": hook_data["icon"],
+        })
+
+    return hooks
+
+
+def _generate_hooks_with_gemini(
+    api_key: str,
+    topic: str,
+    country: str | None,
+    tone: str,
+    platform: str,
+    count: int,
+) -> list[dict] | None:
+    """Generate hook variants using Gemini 2.5 Flash."""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = {
+            "usa": "USA", "canada": "Kanada", "australia": "Australien",
+            "newzealand": "Neuseeland", "ireland": "Irland"
+        }.get(country, country or "allgemein")
+
+        tone_instruction = (
+            "Verwende Du-Anrede, begeisternd, 1-2 Emojis pro Hook."
+            if tone in ("jugendlich", "witzig", "motivierend", "wholesome")
+            else "Verwende Sie-Anrede, serioees aber ansprechend, max 1 Emoji."
+        )
+
+        platform_instruction = (
+            "Die Hooks sollen als Text-Overlay in Videos funktionieren (kurz, knackig, visuell)."
+            if platform in ("tiktok", "instagram_story", "instagram_reels")
+            else "Die Hooks sollen als erste Zeile eines Instagram-Feed-Posts funktionieren."
+        )
+
+        system_prompt = f"""Du bist ein Experte fuer Social-Media-Hooks und Attention-Grabber fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
+
+Deine Aufgabe: Generiere {count} verschiedene Hooks/Aufhaenger fuer den Beginn eines Social-Media-Posts. Die ersten 1-3 Sekunden entscheiden, ob jemand weiterliest oder weiterscrollt.
+
+TREFF Sprachreisen:
+- Seit 1984, Eningen u.A., Deutschland
+- ~200 Teilnehmer pro Jahr, Zielgruppe: Schueler 14-18 + Eltern
+- Preise: USA ab 13.800 EUR, Kanada ab 15.200 EUR, Australien ab 18.900 EUR, Neuseeland ab 19.500 EUR, Irland ab 14.500 EUR
+
+{tone_instruction}
+{platform_instruction}
+
+Alle Texte auf Deutsch!"""
+
+        content_prompt = f"""Generiere genau {count} verschiedene Hooks/Attention-Grabber fuer einen TREFF Sprachreisen Post.
+
+THEMA: {topic}
+LAND: {country_name}
+TONALITAET: {tone}
+PLATTFORM: {platform}
+
+Jeder Hook soll einem anderen Typ entsprechen:
+1. "frage" - Provokante oder neugierig machende Frage
+2. "statistik" - Ueberraschende Zahl oder Statistik
+3. "emotion" - Emotionales Statement
+4. "provokation" - Mutiges Statement / Unpopular Opinion
+5. "story_opener" - Erzaehlerischer Einstieg
+
+Regeln:
+- Jeder Hook max 150 Zeichen
+- Hooks sollen zum Stoppen beim Scrollen zwingen (Scroll-Stopper)
+- Jeder Hook soll einzigartig und kreativ sein
+- Hooks muessen zum Thema und Land passen
+
+Antworte ausschliesslich im folgenden JSON-Format:
+{{
+  "hooks": [
+    {{
+      "hook_text": "Der Hook-Text",
+      "hook_type": "frage|statistik|emotion|provokation|story_opener"
+    }}
+  ]
+}}"""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.95,
+                max_output_tokens=2048,
+            ),
+        )
+
+        response_text = response.text.strip()
+
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+
+        result = json.loads(response_text)
+
+        if not isinstance(result, dict) or "hooks" not in result:
+            logger.warning("Gemini hooks response missing 'hooks' key")
+            return None
+
+        hooks_raw = result["hooks"]
+        if not isinstance(hooks_raw, list) or len(hooks_raw) == 0:
+            logger.warning("Gemini returned empty hooks list")
+            return None
+
+        valid_hook_types = set(HOOK_TYPES.keys())
+        hooks = []
+        for h in hooks_raw[:count]:
+            if not isinstance(h, dict) or not h.get("hook_text"):
+                continue
+            hook_type = h.get("hook_type", "frage")
+            if hook_type not in valid_hook_types:
+                hook_type = "frage"
+            hook_data = HOOK_TYPES[hook_type]
+            hooks.append({
+                "hook_text": h["hook_text"][:200],
+                "hook_type": hook_type,
+                "hook_type_label": hook_data["label"],
+                "hook_type_icon": hook_data["icon"],
+            })
+
+        if hooks:
+            logger.info("Gemini generated %d hooks for topic=%s", len(hooks), topic)
+            return hooks
+
+        return None
+
+    except Exception as e:
+        logger.warning("Gemini hook generation failed: %s", e)
+        return None
+
+
+@router.post("/generate-hooks")
+async def generate_hooks(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate multiple hook/attention-grabber variants for a post.
+
+    Expects:
+    - topic (str): Topic or subject for the hooks
+    - tone (str, optional): jugendlich, serioess, etc. (default: jugendlich)
+    - platform (str, optional): instagram_feed, tiktok, etc. (default: instagram_feed)
+    - country (str, optional): Target country
+    - count (int, optional): Number of hooks to generate (default: 5, max: 8)
+
+    Returns:
+    - hooks: list of hook objects with hook_text, hook_type, hook_type_label, hook_type_icon
+    - source: "gemini" or "rule_based"
+    - hook_types: reference list of all available hook types
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "generate-hooks")
+
+    topic = request.get("topic", "").strip() or "Auslandsjahr"
+    tone = request.get("tone", "jugendlich")
+    platform = request.get("platform", "instagram_feed")
+    country = request.get("country")
+    count = request.get("count", 5)
+
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = 5
+    count = max(1, min(8, count))
+
+    api_key = await _get_gemini_api_key(user_id, db)
+    source = "rule_based"
+    hooks = None
+
+    if api_key:
+        hooks = _generate_hooks_with_gemini(
+            api_key=api_key, topic=topic, country=country,
+            tone=tone, platform=platform, count=count,
+        )
+        if hooks:
+            source = "gemini"
+
+    if not hooks:
+        hooks = _generate_hooks_rule_based(
+            topic=topic, country=country, tone=tone,
+            platform=platform, count=count,
+        )
+
+    for h in hooks:
+        hook_record = Hook(
+            user_id=user_id, hook_text=h["hook_text"],
+            hook_type=h["hook_type"], topic=topic, country=country,
+            tone=tone, platform=platform, selected=0, source=source,
+        )
+        db.add(hook_record)
+
+    await db.flush()
+
+    return {
+        "status": "success",
+        "hooks": hooks,
+        "source": source,
+        "count": len(hooks),
+        "hook_types": {
+            k: {"label": v["label"], "description": v["description"], "icon": v["icon"]}
+            for k, v in HOOK_TYPES.items()
+        },
+        "message": f"{len(hooks)} Hook-Varianten generiert!",
+    }
+
+
+@router.post("/save-hook-selection")
+async def save_hook_selection(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Save which hook was selected by the user for a post.
+
+    Expects:
+    - hook_text (str): The selected hook text
+    - hook_type (str): The type of hook (frage, statistik, etc.)
+    - post_id (int, optional): Associated post ID
+    - topic (str, optional): Topic context
+    - country (str, optional): Country context
+
+    Returns:
+    - status: "success"
+    - hook_id: ID of the saved hook record
+    """
+    hook_text = request.get("hook_text", "").strip()
+    hook_type = request.get("hook_type", "frage")
+    post_id = request.get("post_id")
+    topic = request.get("topic")
+    country = request.get("country")
+
+    if not hook_text:
+        raise HTTPException(status_code=400, detail="hook_text is required")
+
+    if hook_type not in HOOK_TYPES:
+        hook_type = "frage"
+
+    hook = Hook(
+        user_id=user_id, post_id=post_id, hook_text=hook_text,
+        hook_type=hook_type, topic=topic, country=country,
+        selected=1, source="user_selected",
+    )
+    db.add(hook)
+    await db.flush()
+    await db.refresh(hook)
+
+    return {
+        "status": "success",
+        "hook_id": hook.id,
+        "message": "Hook-Auswahl gespeichert!",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Hashtag Suggestion Engine
+# ═══════════════════════════════════════════════════════════════════════
+
+def _suggest_hashtags_rule_based(
+    topic: str,
+    country: str | None,
+    platform: str,
+    category: str | None,
+    existing_sets: list[dict],
+) -> dict:
+    """Suggest hashtags using rule-based logic from existing hashtag sets."""
+    import random
+
+    suggested = []
+    reasons = []
+
+    # Always start with TREFF brand hashtag
+    suggested.append("#TREFFSprachreisen")
+
+    # Find matching sets from existing data
+    country_sets = [s for s in existing_sets if s.get("country") == country]
+    category_sets = [s for s in existing_sets if s.get("category") == category]
+    general_sets = [s for s in existing_sets if s.get("category") == "allgemein"]
+
+    # Add from country-specific sets
+    for s in sorted(country_sets, key=lambda x: x.get("performance_score", 0), reverse=True)[:2]:
+        tags = s.get("hashtags", [])
+        if isinstance(tags, str):
+            try:
+                tags = json.loads(tags)
+            except (json.JSONDecodeError, TypeError):
+                tags = []
+        for tag in tags:
+            if tag not in suggested:
+                suggested.append(tag)
+        reasons.append(f"Aus Set '{s['name']}' (Score: {s.get('performance_score', 0)})")
+
+    # Add from category-specific sets
+    for s in sorted(category_sets, key=lambda x: x.get("performance_score", 0), reverse=True)[:1]:
+        tags = s.get("hashtags", [])
+        if isinstance(tags, str):
+            try:
+                tags = json.loads(tags)
+            except (json.JSONDecodeError, TypeError):
+                tags = []
+        for tag in tags:
+            if tag not in suggested:
+                suggested.append(tag)
+
+    # If we still have too few, add from general sets
+    if len(suggested) < 8:
+        for s in general_sets:
+            tags = s.get("hashtags", [])
+            if isinstance(tags, str):
+                try:
+                    tags = json.loads(tags)
+                except (json.JSONDecodeError, TypeError):
+                    tags = []
+            for tag in tags:
+                if tag not in suggested:
+                    suggested.append(tag)
+                if len(suggested) >= 12:
+                    break
+
+    # Topic-based hashtag
+    if topic:
+        topic_tag = "#" + "".join(word.capitalize() for word in topic.split()[:3] if word.isalpha())
+        if topic_tag not in suggested and len(topic_tag) > 2:
+            suggested.append(topic_tag)
+
+    # Limit to 8-12 hashtags
+    suggested = suggested[:12]
+
+    return {
+        "hashtags": suggested,
+        "hashtag_string": " ".join(suggested),
+        "count": len(suggested),
+        "reasons": reasons if reasons else ["Basierend auf vordefinierten Hashtag-Sets"],
+    }
+
+
+def _suggest_hashtags_with_gemini(
+    api_key: str,
+    topic: str,
+    country: str | None,
+    platform: str,
+    category: str | None,
+    tone: str,
+) -> dict | None:
+    """Suggest hashtags using Gemini AI for more intelligent, context-aware suggestions."""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = COUNTRY_NAMES.get(country, country or "allgemein")
+
+        system_prompt = """Du bist ein Social-Media-Hashtag-Stratege fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten (USA, Kanada, Australien, Neuseeland, Irland).
+
+Deine Aufgabe: Generiere eine optimale Hashtag-Kombination fuer maximale Reichweite und Engagement.
+
+REGELN:
+- Erstes Hashtag MUSS immer #TREFFSprachreisen sein
+- Mix aus deutsch und englisch (Zielgruppe: Deutsche Teenager + Eltern)
+- Mix aus high-volume (>100k) und niche (<10k) Hashtags
+- Max 8-12 Hashtags (nicht zu viele, nicht zu wenige)
+- Keine Leerzeichen in Hashtags, CamelCase fuer Lesbarkeit
+- Alle Hashtags mit # beginnen
+- Relevanz zum Thema, Land und Plattform"""
+
+        content_prompt = f"""Generiere optimale Hashtags fuer diesen TREFF Sprachreisen Post:
+
+THEMA: {topic}
+LAND: {country_name}
+PLATTFORM: {platform}
+KATEGORIE: {category or 'allgemein'}
+TONALITAET: {tone}
+
+Antworte als JSON:
+{{
+  "hashtags": ["#TREFFSprachreisen", "#Hashtag2", ...],
+  "reasons": ["Warum diese Kombination gut ist (1-2 Saetze)"]
+}}"""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.7,
+                max_output_tokens=1024,
+            ),
+        )
+
+        response_text = response.text.strip()
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+
+        result = json.loads(response_text)
+
+        if not isinstance(result, dict) or "hashtags" not in result:
+            return None
+
+        hashtags = result["hashtags"]
+        if not isinstance(hashtags, list) or len(hashtags) == 0:
+            return None
+
+        # Ensure #TREFFSprachreisen is first
+        cleaned = []
+        for tag in hashtags:
+            tag = tag.strip()
+            if not tag.startswith("#"):
+                tag = f"#{tag}"
+            if tag not in cleaned:
+                cleaned.append(tag)
+
+        if "#TREFFSprachreisen" not in cleaned:
+            cleaned.insert(0, "#TREFFSprachreisen")
+        elif cleaned[0] != "#TREFFSprachreisen":
+            cleaned.remove("#TREFFSprachreisen")
+            cleaned.insert(0, "#TREFFSprachreisen")
+
+        cleaned = cleaned[:12]
+
+        return {
+            "hashtags": cleaned,
+            "hashtag_string": " ".join(cleaned),
+            "count": len(cleaned),
+            "reasons": result.get("reasons", ["KI-optimierte Hashtag-Kombination"]),
+        }
+
+    except Exception as e:
+        logger.warning("Gemini hashtag suggestion failed: %s", e)
+        return None
+
+
+@router.post("/suggest-hashtags")
+async def suggest_hashtags(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Suggest optimized hashtags based on topic, country, and platform.
+
+    Uses AI (Gemini) when available, falls back to rule-based suggestions
+    from predefined hashtag sets.
+
+    Expects:
+    - topic (str): Post topic
+    - country (str, optional): Target country (usa, canada, australia, newzealand, ireland)
+    - platform (str, optional): Target platform (default: instagram_feed)
+    - category (str, optional): Post category
+    - tone (str, optional): Tone of voice (default: jugendlich)
+
+    Returns:
+    - hashtags: list of hashtag strings
+    - hashtag_string: space-separated hashtag string ready for pasting
+    - count: number of hashtags
+    - source: "gemini" or "rule_based"
+    - emoji_suggestions: recommended emojis based on tone and country
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "suggest-hashtags")
+
+    topic = request.get("topic", "").strip() or "Auslandsjahr"
+    country = request.get("country")
+    platform = request.get("platform", "instagram_feed")
+    category = request.get("category")
+    tone = request.get("tone", "jugendlich")
+
+    # Load existing hashtag sets for rule-based fallback
+    from sqlalchemy import or_
+    sets_result = await db.execute(
+        select(HashtagSet).where(
+            or_(
+                HashtagSet.user_id == user_id,
+                HashtagSet.user_id.is_(None),
+            )
+        ).order_by(HashtagSet.performance_score.desc())
+    )
+    existing_sets = []
+    for hs in sets_result.scalars().all():
+        try:
+            hashtags = json.loads(hs.hashtags) if isinstance(hs.hashtags, str) else hs.hashtags
+        except (json.JSONDecodeError, TypeError):
+            hashtags = []
+        existing_sets.append({
+            "name": hs.name,
+            "hashtags": hashtags,
+            "category": hs.category,
+            "country": hs.country,
+            "performance_score": hs.performance_score,
+        })
+
+    # Try Gemini first
+    api_key = await _get_gemini_api_key(user_id, db)
+    source = "rule_based"
+    result = None
+
+    if api_key:
+        result = _suggest_hashtags_with_gemini(
+            api_key=api_key,
+            topic=topic,
+            country=country,
+            platform=platform,
+            category=category,
+            tone=tone,
+        )
+        if result:
+            source = "gemini"
+
+    if not result:
+        result = _suggest_hashtags_rule_based(
+            topic=topic,
+            country=country,
+            platform=platform,
+            category=category,
+            existing_sets=existing_sets,
+        )
+
+    # Get emoji suggestions based on tone and country
+    emoji_data = _get_emoji_suggestions(tone, country)
+
+    return {
+        "status": "success",
+        "source": source,
+        **result,
+        "emoji_suggestions": emoji_data,
+        "message": f"{result['count']} Hashtags vorgeschlagen!",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Emoji Rules Endpoint
+# ═══════════════════════════════════════════════════════════════════════
+
+def _get_emoji_suggestions(tone: str, country: str | None = None) -> dict:
+    """Get emoji suggestions based on tone and country."""
+    import random
+
+    rules = EMOJI_RULES.get(tone, EMOJI_RULES["jugendlich"])
+
+    # Build emoji pool
+    emoji_pool = list(rules["preferred_emojis"])
+
+    # Add country-specific emojis
+    country_emojis = []
+    if country and country in rules.get("country_emojis", {}):
+        country_emojis = rules["country_emojis"][country]
+        emoji_pool = country_emojis + emoji_pool
+
+    # Select recommended count
+    min_count, max_count = rules["count_range"]
+    recommended_count = min(max_count, len(emoji_pool))
+
+    # Pick a balanced selection
+    selected = []
+    if country_emojis:
+        selected.extend(country_emojis[:2])
+
+    remaining = [e for e in emoji_pool if e not in selected]
+    random.shuffle(remaining)
+    while len(selected) < recommended_count and remaining:
+        selected.append(remaining.pop(0))
+
+    return {
+        "tone": tone,
+        "recommended_emojis": selected[:max_count],
+        "all_emojis": emoji_pool,
+        "country_emojis": country_emojis,
+        "count_range": {"min": min_count, "max": max_count},
+        "style_description": rules["description"],
+    }
+
+
+@router.get("/emoji-rules")
+async def get_emoji_rules(
+    tone: str = "jugendlich",
+    country: str | None = None,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get emoji rules and suggestions for a given tone and country.
+
+    Returns recommended emojis, count range, and style guidelines.
+    """
+    if tone not in EMOJI_RULES:
+        tone = "jugendlich"
+
+    emoji_data = _get_emoji_suggestions(tone, country)
+
+    return {
+        "status": "success",
+        "emoji_rules": emoji_data,
+        "available_tones": list(EMOJI_RULES.keys()),
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Interactive Story Elements AI Generation
+# ═══════════════════════════════════════════════════════════════════════
+
+INTERACTIVE_ELEMENT_TYPES = {
+    "poll": {
+        "label": "Umfrage",
+        "description": "Ja/Nein oder A/B Umfrage",
+        "option_count": 2,
+    },
+    "quiz": {
+        "label": "Quiz",
+        "description": "Multiple-Choice Quiz mit richtiger Antwort",
+        "option_count": 4,
+    },
+    "slider": {
+        "label": "Emoji-Slider",
+        "description": "Bewertungs-Slider mit Emoji",
+        "option_count": 0,
+    },
+    "question": {
+        "label": "Fragen-Sticker",
+        "description": "Offene Frage an die Community",
+        "option_count": 0,
+    },
+}
+
+
+def _generate_interactive_rule_based(
+    element_type: str, topic: str, country: str | None = None
+) -> dict:
+    """Generate interactive element content using rule-based approach (fallback)."""
+    country_name = {
+        "usa": "USA",
+        "canada": "Kanada",
+        "australia": "Australien",
+        "newzealand": "Neuseeland",
+        "ireland": "Irland",
+    }.get(country, "Ausland")
+
+    country_flag = {
+        "usa": "🇺🇸",
+        "canada": "🇨🇦",
+        "australia": "🇦🇺",
+        "newzealand": "🇳🇿",
+        "ireland": "🇮🇪",
+    }.get(country, "🌍")
+
+    if element_type == "poll":
+        templates = [
+            {
+                "question_text": f"Wuerdest du ein Highschool-Jahr in {country_name} {country_flag} machen?",
+                "options": ["Ja, sofort! 🙌", "Nein, lieber woanders"],
+            },
+            {
+                "question_text": f"Was ist dir beim Auslandsjahr wichtiger?",
+                "options": ["Neue Freunde finden 👫", "Sprache perfekt lernen 📚"],
+            },
+            {
+                "question_text": f"{country_flag} {country_name}: Wuerdest du lieber in der Stadt oder auf dem Land leben?",
+                "options": ["Stadt - viel Action! 🏙️", "Land - Natur pur! 🌲"],
+            },
+        ]
+        import random
+        chosen = random.choice(templates)
+        return {
+            "element_type": "poll",
+            "question_text": chosen["question_text"],
+            "options": chosen["options"],
+            "correct_answer": None,
+            "emoji": None,
+            "source": "rule_based",
+        }
+
+    elif element_type == "quiz":
+        templates = [
+            {
+                "question_text": f"Wie viele Schueler gehen auf eine typische US-Highschool?",
+                "options": ["500", "1.500", "3.000", "5.000"],
+                "correct_answer": 1,
+            },
+            {
+                "question_text": f"Wie lange dauert ein Highschool-Jahr in {country_name}?",
+                "options": ["6 Monate", "10 Monate", "12 Monate", "15 Monate"],
+                "correct_answer": 1,
+            },
+            {
+                "question_text": f"Seit wann organisiert TREFF Sprachreisen Auslandsaufenthalte?",
+                "options": ["1990", "1984", "2000", "1975"],
+                "correct_answer": 1,
+            },
+            {
+                "question_text": f"Welches Schulfach gibt es in {country_name}, aber nicht in Deutschland?",
+                "options": ["Yearbook", "Physik", "Mathematik", "Englisch"],
+                "correct_answer": 0,
+            },
+        ]
+        import random
+        chosen = random.choice(templates)
+        return {
+            "element_type": "quiz",
+            "question_text": chosen["question_text"],
+            "options": chosen["options"],
+            "correct_answer": chosen["correct_answer"],
+            "emoji": None,
+            "source": "rule_based",
+        }
+
+    elif element_type == "slider":
+        templates = [
+            {
+                "question_text": f"Wie sehr freust du dich auf dein Auslandsjahr in {country_name}? {country_flag}",
+                "emoji": "🔥",
+            },
+            {
+                "question_text": "Wie krass wuerde ein Highschool-Jahr dein Leben veraendern?",
+                "emoji": "🤯",
+            },
+            {
+                "question_text": f"Wie sehr liebst du {country_name}?",
+                "emoji": "❤️",
+            },
+        ]
+        import random
+        chosen = random.choice(templates)
+        return {
+            "element_type": "slider",
+            "question_text": chosen["question_text"],
+            "options": None,
+            "correct_answer": None,
+            "emoji": chosen["emoji"],
+            "source": "rule_based",
+        }
+
+    else:  # question
+        templates = [
+            {
+                "question_text": f"Was wuerdest du in {country_name} {country_flag} als Erstes machen?",
+            },
+            {
+                "question_text": "Welche Frage hast du zum Auslandsjahr? Frag uns! 💬",
+            },
+            {
+                "question_text": f"Was ist dein groesster Traum fuer dein Jahr in {country_name}?",
+            },
+        ]
+        import random
+        chosen = random.choice(templates)
+        return {
+            "element_type": "question",
+            "question_text": chosen["question_text"],
+            "options": None,
+            "correct_answer": None,
+            "emoji": None,
+            "source": "rule_based",
+        }
+
+
+async def _generate_interactive_with_gemini(
+    element_type: str,
+    topic: str,
+    country: str | None,
+    api_key: str,
+) -> dict | None:
+    """Generate interactive Story element content using Gemini 2.5 Flash."""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        country_name = {
+            "usa": "USA",
+            "canada": "Kanada",
+            "australia": "Australien",
+            "newzealand": "Neuseeland",
+            "ireland": "Irland",
+        }.get(country, "Ausland")
+
+        type_instructions = {
+            "poll": 'Erstelle eine Instagram-Umfrage mit genau 2 Antwortmoeglichkeiten. Format: {"question_text": "...", "options": ["Option A", "Option B"], "correct_answer": null, "emoji": null}',
+            "quiz": 'Erstelle ein Instagram-Quiz mit genau 4 Antwortmoeglichkeiten und einer korrekten Antwort. Format: {"question_text": "...", "options": ["A", "B", "C", "D"], "correct_answer": 0, "emoji": null} (correct_answer ist der Index 0-3)',
+            "slider": 'Erstelle einen Instagram Emoji-Slider. Format: {"question_text": "...", "options": null, "correct_answer": null, "emoji": "🔥"} (waehle ein passendes Emoji)',
+            "question": 'Erstelle einen Instagram Fragen-Sticker. Format: {"question_text": "...", "options": null, "correct_answer": null, "emoji": null}',
+        }
+
+        system_prompt = f"""Du bist ein Social-Media-Experte fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
+
+Zielgruppe: Deutsche Schueler (14-18 Jahre) und deren Eltern.
+Tonfall: Jugendlich aber serioess - locker, nahbar, mit 1-2 passenden Emojis.
+Sprache: DEUTSCH
+
+{type_instructions.get(element_type, type_instructions["poll"])}
+
+Wichtig:
+- Die Frage muss zum Thema "{topic}" und zum Land "{country_name}" passen
+- Verwende jugendliche, ansprechende Sprache
+- Bei Quiz: Die richtige Antwort muss faktisch korrekt sein
+- Bei Poll: Beide Optionen muessen gleichwertig attraktiv sein
+- Bei Slider: Waehle ein Emoji das zur Frage passt
+- Bei Frage: Die Frage soll Engagement/Antworten foerdern
+
+NUR valides JSON zurueckgeben, kein Markdown, keine Erklaerung."""
+
+        content_prompt = f"Erstelle ein interaktives Instagram-Story-Element vom Typ '{element_type}' zum Thema '{topic}' fuer das Land '{country_name}'."
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=content_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                temperature=0.9,
+                max_output_tokens=1024,
+            ),
+        )
+
+        response_text = response.text.strip()
+
+        # Handle potential markdown code fences
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+
+        result = json.loads(response_text)
+
+        if not isinstance(result, dict):
+            logger.warning("Gemini interactive element response is not a dict")
+            return None
+
+        # Ensure required fields
+        result.setdefault("question_text", f"Frage zu {topic}")
+        result["element_type"] = element_type
+        result["source"] = "gemini"
+
+        # Validate type-specific fields
+        if element_type in ("poll", "quiz"):
+            if not isinstance(result.get("options"), list) or len(result.get("options", [])) < 2:
+                logger.warning("Gemini interactive element missing valid options")
+                return None
+
+        if element_type == "quiz":
+            if result.get("correct_answer") is None:
+                result["correct_answer"] = 0
+
+        logger.info(
+            "Gemini interactive element generation succeeded for type=%s, topic=%s",
+            element_type,
+            topic,
+        )
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.warning("Failed to parse Gemini interactive element JSON: %s", e)
+        return None
+    except ImportError:
+        logger.warning("google-genai package not installed")
+        return None
+    except Exception as e:
+        logger.warning("Gemini interactive element generation failed: %s", e)
+        return None
+
+
+@router.post("/generate-interactive")
+async def generate_interactive(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate interactive Story element content (poll, quiz, slider, question).
+
+    Uses Gemini 2.5 Flash when available, with rule-based fallback.
+
+    Expects:
+    - element_type (str): poll, quiz, slider, or question
+    - topic (str): Topic for the interactive element
+    - country (str, optional): Target country
+
+    Returns interactive element content with question, options, etc.
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "generate-interactive")
+
+    element_type = request.get("element_type", "poll")
+    topic = request.get("topic", "Highschool-Aufenthalt")
+    country = request.get("country")
+
+    if element_type not in INTERACTIVE_ELEMENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid element_type. Must be one of: {', '.join(INTERACTIVE_ELEMENT_TYPES.keys())}",
+        )
+
+    # Try Gemini first
+    api_key = await _get_gemini_api_key(user_id, db)
+    result = None
+
+    if api_key:
+        result = await _generate_interactive_with_gemini(
+            element_type=element_type,
+            topic=topic,
+            country=country,
+            api_key=api_key,
+        )
+
+    # Fallback to rule-based
+    if not result:
+        result = _generate_interactive_rule_based(
+            element_type=element_type,
+            topic=topic,
+            country=country,
+        )
+
+    return {
+        "status": "success",
+        "element": result,
+        "available_types": {
+            k: {"label": v["label"], "description": v["description"]}
+            for k, v in INTERACTIVE_ELEMENT_TYPES.items()
+        },
+    }
