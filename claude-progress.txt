@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #189: Erweiterte Tone-Palette (8 Toene statt 2)
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Expanded tone options from 2 (jugendlich/serioess) to 10 tones
+- 8 new tones: witzig, emotional, motivierend, informativ, behind-the-scenes, storytelling, provokant, wholesome
+- Created detailed AI prompt profiles for each tone in text_generator.py
+  - Each tone has unique Gemini system prompt instructions (tone of voice, emoji usage, target audience, example style)
+- Built visual tone selector grid component in CreatePostView.vue
+  - 10 tone buttons with icons, labels, descriptions in a responsive grid (2/3/5 cols)
+  - Example sentence displayed below grid, updates dynamically on tone selection
+  - Blue highlight ring for selected tone
+- Updated tone display in Step 5 summary to use dynamic lookup instead of hardcoded ternary
+- Updated _generate_instagram_caption() to produce tone-specific captions for all 10 tones
+- Updated Post model comment to list all valid tone values
+
+### Files modified:
+- backend/app/core/text_generator.py - Added 8 new tone prompt profiles, updated caption generation
+- backend/app/models/post.py - Updated comment listing valid tone values
+- frontend/src/views/CreatePostView.vue - Added toneOptions array, visual grid selector, dynamic example sentence, updated summary display
+
+### Verification steps completed:
+1. All 10 tones displayed in grid UI with icons and descriptions - PASS
+2. Tone selection changes active state and example sentence - PASS (tested witzig, wholesome, provokant)
+3. Tone label displays correctly in Step 5 summary - PASS ("Tonalitaet: 😂 Witzig")
+4. AI text generation with witzig tone via Gemini - PASS
+   - Generated humor-style content: "USA: Dein Leben, aber krasser! 🇺🇸"
+   - Instagram caption: "Wer braucht Netflix, wenn das eigene Leben so krass ist? 🎬🥳"
+   - TikTok: "POV: Dein Leben wird zum Hollywood-Film!"
+   - Source: KI (Gemini) confirmed
+5. Each tone has detailed Gemini AI prompt profile - PASS (verified in code)
+6. Example sentences provided for each tone - PASS (verified via browser)
+7. Zero JavaScript console errors - PASS
+8. Zero mock data grep matches - PASS (frontend/src and backend/app clean)
+9. Backend healthy with all imports working - PASS
+
+### Screenshots captured:
+- feature189-step4-tone-grid-all-10-tones.png (Step 4 with all 10 tone buttons visible)
+- feature189-step5-witzig-tone-summary.png (Step 5 summary showing "😂 Witzig")
+- feature189-step5-witzig-generated-gemini.png (Successfully generated with Gemini AI)
+- feature189-step6-witzig-preview.png (Preview with humorous generated content)
+
+### Current state:
+- Feature #189 marked as PASSING
+- Code already committed to HEAD (changes were auto-committed by parallel agent)
+
 ## Session - Feature #181: Story-Arc Datenmodell
 **Date:** 2026-02-13
 **Status:** PASSING
