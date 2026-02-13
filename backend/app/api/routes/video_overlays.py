@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.video_overlay import VideoOverlay
 from app.models.asset import Asset
 
@@ -22,10 +24,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-EXPORTS_DIR = APP_DIR / "static" / "uploads" / "exports"
-EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-ASSETS_DIR = APP_DIR / "static" / "uploads" / "assets"
+EXPORTS_DIR = get_upload_dir("exports")
+ASSETS_DIR = get_upload_dir("assets")
+
+FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 
 
 # ---------- Pydantic schemas ----------
@@ -466,6 +468,9 @@ async def render_video_overlay(
 
     Applies all text/branding layers to the source video and produces an MP4 output.
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Video-Overlay-Rendering ist auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     result = await db.execute(
         select(VideoOverlay).where(
             VideoOverlay.id == overlay_id,

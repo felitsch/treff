@@ -14,21 +14,15 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.asset import Asset
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Resolve uploads directory: __file__ is backend/app/api/routes/assets.py
-# parent.parent.parent = backend/app/ which contains static/uploads/assets
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-ASSETS_UPLOAD_DIR = APP_DIR / "static" / "uploads" / "assets"
-ASSETS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-# Thumbnails directory for video thumbnails
-THUMBNAILS_DIR = APP_DIR / "static" / "uploads" / "thumbnails"
-THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
+ASSETS_UPLOAD_DIR = get_upload_dir("assets")
+THUMBNAILS_DIR = get_upload_dir("thumbnails")
 
 # Allowed file types
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]

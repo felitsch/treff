@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from sqlalchemy import select, func
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.music_track import MusicTrack
 from app.models.asset import Asset
 
@@ -22,11 +24,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-ASSETS_DIR = APP_DIR / "static" / "uploads" / "assets"
-MUSIC_DIR = APP_DIR / "static" / "uploads" / "music"
-EXPORTS_DIR = APP_DIR / "static" / "uploads" / "exports"
-EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+ASSETS_DIR = get_upload_dir("assets")
+MUSIC_DIR = get_upload_dir("music")
+EXPORTS_DIR = get_upload_dir("exports")
+
+FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 
 
 # ---------- Pydantic schemas ----------
@@ -134,6 +136,9 @@ async def mix_audio(
     mixes them with configurable volume levels and fade effects, and outputs
     a new video with the mixed audio.
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Audio-Mixing ist auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     # 1. Get the video asset
     result = await db.execute(
         select(Asset).where(Asset.id == data.video_asset_id, Asset.user_id == user_id)
@@ -267,6 +272,9 @@ async def get_audio_waveform(
     Returns an array of amplitude values (0.0-1.0) for rendering a waveform visualization.
     source: 'library' (music track) or 'asset' (user uploaded audio/video)
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Audio-Waveform ist auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     if source == "library":
         result = await db.execute(select(MusicTrack).where(MusicTrack.id == audio_id))
         track = result.scalar_one_or_none()

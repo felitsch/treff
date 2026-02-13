@@ -153,9 +153,8 @@ EMOJI_RULES = {
 }
 
 # Asset upload directory (same as assets.py)
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-ASSETS_UPLOAD_DIR = APP_DIR / "static" / "uploads" / "assets"
-ASSETS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+from app.core.paths import get_upload_dir
+ASSETS_UPLOAD_DIR = get_upload_dir("assets")
 
 
 def asset_to_dict(asset: Asset) -> dict:

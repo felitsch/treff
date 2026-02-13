@@ -1,17 +1,26 @@
 """Application configuration."""
 
+import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
 # Resolve backend directory for absolute paths
 _BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+
+# On Vercel, use /tmp for SQLite (ephemeral but functional)
+if IS_VERCEL:
+    _DB_PATH = "/tmp/treff.db"
+else:
+    _DB_PATH = str(_BACKEND_DIR / "treff.db")
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database - use absolute path so it works regardless of CWD
-    DATABASE_URL: str = f"sqlite+aiosqlite:///{_BACKEND_DIR / 'treff.db'}"
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{_DB_PATH}"
 
     # JWT Authentication
     JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
@@ -39,7 +48,8 @@ class Settings(BaseSettings):
     SQL_ECHO: bool = False
 
     class Config:
-        env_file = str(_BACKEND_DIR / ".env")
+        # On Vercel, env vars come from the dashboard — no .env file
+        env_file = None if IS_VERCEL else str(_BACKEND_DIR / ".env")
         env_file_encoding = "utf-8"
 
 

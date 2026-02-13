@@ -7,6 +7,7 @@ platform-specific presets, ffmpeg-based export pipeline, and batch export.
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.asset import Asset
 from app.models.video_export import VideoExport
 
@@ -28,11 +30,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-ASSETS_DIR = APP_DIR / "static" / "uploads" / "assets"
-COMPOSED_DIR = APP_DIR / "static" / "uploads" / "composed"
-VIDEO_EXPORTS_DIR = APP_DIR / "static" / "uploads" / "video_exports"
-VIDEO_EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+ASSETS_DIR = get_upload_dir("assets")
+COMPOSED_DIR = get_upload_dir("composed")
+VIDEO_EXPORTS_DIR = get_upload_dir("video_exports")
+
+FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 
 
 # ---- Aspect ratio definitions ----
@@ -430,6 +432,9 @@ async def export_video(
     and platform-specific settings. Returns the export result
     with download path.
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Video-Export ist auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     # Validate aspect ratio
     if request.aspect_ratio not in ASPECT_RATIOS:
         raise HTTPException(
@@ -559,6 +564,9 @@ async def batch_export_video(
     Creates separate export jobs for each format and processes them sequentially.
     Returns all results together.
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Video-Export ist auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     # Validate asset
     result = await db.execute(
         select(Asset).where(Asset.id == request.asset_id, Asset.user_id == user_id)

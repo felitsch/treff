@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from sqlalchemy import select, func, or_
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.video_template import VideoTemplate
 from app.models.asset import Asset
 
@@ -22,14 +24,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Resolve paths
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-ASSETS_UPLOAD_DIR = APP_DIR / "static" / "uploads" / "assets"
-COMPOSED_DIR = APP_DIR / "static" / "uploads" / "composed"
-THUMBNAILS_DIR = APP_DIR / "static" / "uploads" / "thumbnails"
-TEMPLATES_DIR = APP_DIR / "static" / "uploads" / "video_templates"
-TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
-COMPOSED_DIR.mkdir(parents=True, exist_ok=True)
+ASSETS_UPLOAD_DIR = get_upload_dir("assets")
+COMPOSED_DIR = get_upload_dir("composed")
+THUMBNAILS_DIR = get_upload_dir("thumbnails")
+TEMPLATES_DIR = get_upload_dir("video_templates")
+
+FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 
 # Country metadata for templates
 COUNTRY_META = {
@@ -610,6 +610,9 @@ async def apply_video_templates(
 
     Returns the composed video with full metadata.
     """
+    if not FFMPEG_AVAILABLE:
+        raise HTTPException(status_code=501, detail="Video-Templates sind auf diesem Server nicht verfuegbar (ffmpeg fehlt).")
+
     if not request.intro_template_id and not request.outro_template_id:
         raise HTTPException(
             status_code=400,

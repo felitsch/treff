@@ -10,13 +10,13 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.paths import get_upload_dir
 from app.models.post import Post
 from app.models.export_history import ExportHistory
 
 router = APIRouter()
 
-EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", "exports")
-os.makedirs(EXPORT_DIR, exist_ok=True)
+EXPORT_DIR = str(get_upload_dir("exports"))
 
 
 def export_to_dict(export: ExportHistory) -> dict:

@@ -5,13 +5,14 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
+from app.core.paths import IS_VERCEL, get_upload_dir
 from app.core.database import engine, Base, async_session
 from app.core.seed_templates import seed_default_templates, seed_story_teaser_templates, seed_story_series_templates
 from app.core.seed_suggestions import seed_default_suggestions
@@ -25,10 +26,8 @@ from app.api.routes import auth, posts, templates, assets, calendar, suggestions
 
 logger = logging.getLogger(__name__)
 
-# Resolve paths relative to this file's location
-BASE_DIR = Path(__file__).resolve().parent
-UPLOADS_DIR = BASE_DIR / "static" / "uploads"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+# Resolve uploads directory (Vercel-aware)
+UPLOADS_DIR = get_upload_dir()
 
 
 @asynccontextmanager
@@ -185,10 +184,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — include Vercel preview/production URLs
+_allowed_origins = [settings.FRONTEND_URL, "http://localhost:5173"]
+_vercel_url = os.environ.get("VERCEL_URL")
+if _vercel_url:
+    _allowed_origins.append(f"https://{_vercel_url}")
+_vercel_project_url = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
+if _vercel_project_url:
+    _allowed_origins.append(f"https://{_vercel_project_url}")
+# Deduplicate
+_allowed_origins = list(set(_allowed_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -245,7 +254,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # Static files for uploads
-app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+if IS_VERCEL:
+    # On Vercel, StaticFiles can't serve from /tmp reliably across invocations.
+    # Use a catch-all route instead.
+    @app.get("/uploads/{file_path:path}")
+    async def serve_upload(file_path: str):
+        full_path = UPLOADS_DIR / file_path
+        if not full_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(str(full_path))
+else:
+    app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # API Routes
 app.include_router(health.router, prefix="/api", tags=["Health"])
