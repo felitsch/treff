@@ -20,7 +20,8 @@ from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
 from app.core.seed_music_tracks import seed_music_tracks
 from app.core.seed_video_templates import seed_video_templates
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export
+from app.core.seed_recurring_formats import seed_recurring_formats
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +162,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Failed to seed video templates: {e}")
 
+    # Seed default recurring formats (Running Gags)
+    async with async_session() as session:
+        try:
+            count = await seed_recurring_formats(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default recurring formats")
+        except Exception as e:
+            logger.error(f"Failed to seed recurring formats: {e}")
+
     yield
 
     # Shutdown
@@ -263,6 +273,8 @@ app.include_router(audio_mixer.router, prefix="/api/audio", tags=["Audio Mixer"]
 app.include_router(video_composer.router, prefix="/api/video-composer", tags=["Video Composer"])
 app.include_router(video_templates.router, prefix="/api/video-templates", tags=["Video Templates"])
 app.include_router(video_export.router, prefix="/api/video-export", tags=["Video Export"])
+app.include_router(recurring_formats.router, prefix="/api/recurring-formats", tags=["Recurring Formats"])
+app.include_router(post_relations.router, prefix="/api/posts", tags=["Post Relations"])
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import { useToast } from '@/composables/useToast'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
+import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
+import RelatedPostsPanel from '@/components/posts/RelatedPostsPanel.vue'
 import { useStudentStore } from '@/stores/students'
 
 const route = useRoute()
@@ -169,6 +171,17 @@ async function saveEpisodeData() {
     console.error('Episode save failed:', err)
     toast.error('Episode-Daten konnten nicht gespeichert werden', 4000)
   }
+}
+
+// Cliffhanger generation callback
+function onCliffhangerGenerated(data) {
+  if (data.cliffhanger_text) {
+    episodeCliffhangerText.value = data.cliffhanger_text
+  }
+  if (data.teaser_text) {
+    episodeNextHint.value = data.teaser_text
+  }
+  toast.success('Cliffhanger & Teaser generiert!', 2500)
 }
 
 // Categories for display
@@ -763,6 +776,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </div>
         </div>
 
+        <!-- Cliffhanger & Teaser System (when post is part of a Story-Arc) -->
+        <CliffhangerPanel
+          v-if="isEpisodePost && storyArc"
+          :arc-id="post.story_arc_id"
+          :episode-number="episodeData?.episode_number || post.episode_number || 1"
+          :planned-episodes="storyArc.planned_episodes || 8"
+          :episode-content="post.topic || slides[0]?.headline || ''"
+          :initial-cliffhanger="episodeCliffhangerText"
+          :initial-teaser="episodeNextHint"
+          @update:cliffhanger="episodeCliffhangerText = $event"
+          @update:teaser="episodeNextHint = $event"
+          @generated="onCliffhangerGenerated"
+        />
+
         <!-- Slide tabs with drag-and-drop reordering + Add/Remove -->
         <div v-if="slides.length >= 1" class="mb-1">
           <div class="flex items-center justify-between mb-2">
@@ -934,6 +961,16 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </option>
           </select>
         </div>
+
+        <!-- Related Posts (Cross-Post Linking) -->
+        <RelatedPostsPanel
+          v-if="post"
+          :post-id="Number(postId)"
+          :story-arc-id="post.story_arc_id"
+          :platform="post.platform"
+          :country="post.country"
+          :category="post.category"
+        />
 
         <!-- Captions editing -->
         <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">

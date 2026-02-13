@@ -22,6 +22,8 @@ from app.models.video_overlay import VideoOverlay
 from app.models.music_track import MusicTrack
 from app.models.video_template import VideoTemplate
 from app.models.video_export import VideoExport
+from app.models.recurring_format import RecurringFormat
+from app.models.post_relation import PostRelation
 
 __all__ = [
     "User",
@@ -46,4 +48,6 @@ __all__ = [
     "MusicTrack",
     "VideoTemplate",
     "VideoExport",
+    "RecurringFormat",
+    "PostRelation",
 ]
