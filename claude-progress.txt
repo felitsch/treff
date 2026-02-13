@@ -1,5 +1,63 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #160: API rate limiting for AI generation endpoints
+**Date:** 2026-02-13
+**Status:** PASSING
+
+### What was accomplished:
+- Implemented per-user, sliding-window rate limiting for all AI generation endpoints
+- Backend: New rate_limiter.py module with configurable limits per endpoint
+  - generate-text: 10 requests per 60 seconds
+  - regenerate-field: 15 requests per 60 seconds
+  - generate-image: 5 requests per 60 seconds
+- Backend: Rate limit checks added to generate-text, regenerate-field, generate-image routes in ai.py
+  - Returns HTTP 429 with German user-friendly message and Retry-After header
+  - Rate limit check happens before the try/except block so HTTPException propagates correctly
+- Frontend: Updated error handling in CreatePostView.vue for 429 responses in:
+  - generateText() function
+  - regenerateField() function
+  - generateAiImage() function (already had 429 handling)
+- Frontend: Added 429 handling to global API interceptor (api.js)
+
+### Verification steps completed:
+1. Send 10 rapid AI generation requests - PASS
+   - Sent 7 sequential requests with 200ms delays (limit set to 5 for testing)
+   - Requests 0-4: HTTP 200 OK (within limit)
+   - Requests 5-6: HTTP 429 with "Zu viele Anfragen. Bitte warte X Sekunden und versuche es erneut."
+   - Screenshot: feature160-step1-rate-limit-api-test.png
+2. Verify server handles gracefully - PASS
+   - Server remained running and responsive after rate limiting
+   - No crashes, no hangs, proper 429 responses with Retry-After header
+3. Verify user receives feedback if rate limited - PASS
+   - Navigated through Create Post wizard to Step 5
+   - First generate click: 200 OK, "Inhalt erfolgreich generiert!"
+   - Second generate click: 429, inline error banner + toast notification shown
+   - Message: "Zu viele Anfragen. Bitte warte 32 Sekunden und versuche es erneut."
+   - Screenshot: feature160-step2-rate-limit-ui-error.png
+4. Verify no server crash or hang - PASS
+   - Server remained running after all tests
+   - Backend PIDs unchanged, accepting new requests
+   - Button re-enabled for retry after rate limit error
+
+### Verification checklist:
+- [x] Zero relevant JavaScript console errors (only expected console.error from catch block)
+- [x] All mock data grep checks clean (zero matches in frontend/src and backend/app)
+- [x] No 500s from rate limiting (proper 429 responses)
+- [x] Server stable after rate limit enforcement
+- [x] Screenshots captured:
+  - feature160-step1-rate-limit-api-test.png (dashboard after API rate limit test)
+  - feature160-step2-rate-limit-ui-error.png (rate limit error displayed in UI)
+
+### Files created/modified:
+- backend/app/core/rate_limiter.py (NEW) - Sliding-window rate limiter with per-user, per-endpoint tracking
+- backend/app/api/routes/ai.py - Added rate limit checks to 3 AI endpoints
+- frontend/src/utils/api.js - Added 429 handling to global API interceptor
+- frontend/src/views/CreatePostView.vue - Added 429 handling to text/field generation catch blocks
+
+### Current state:
+- Feature #160 marked as PASSING
+- 165/170 features passing (97.1%)
+
 ## Session - Feature #159: Network error during save shows retry option
 **Date:** 2026-02-13
 **Status:** PASSING
