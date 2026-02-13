@@ -27,3 +27,5 @@ class User(Base):
     posts = relationship("Post", back_populates="user", cascade="all, delete-orphan")
     assets = relationship("Asset", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("Setting", back_populates="user", cascade="all, delete-orphan")
+    students = relationship("Student", back_populates="user", cascade="all, delete-orphan")
+    story_arcs = relationship("StoryArc", back_populates="user", cascade="all, delete-orphan")

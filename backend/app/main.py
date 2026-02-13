@@ -15,7 +15,8 @@ from app.core.config import settings
 from app.core.database import engine, Base, async_session
 from app.core.seed_templates import seed_default_templates
 from app.core.seed_suggestions import seed_default_suggestions
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai
+from app.core.seed_humor_formats import seed_humor_formats
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,20 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
 
+    # Migrate: add video-specific columns to assets table if missing
+    async with engine.begin() as conn:
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("ALTER TABLE assets ADD COLUMN duration_seconds FLOAT"))
+            logger.info("Added duration_seconds column to assets table")
+        except Exception:
+            pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE assets ADD COLUMN thumbnail_path VARCHAR"))
+            logger.info("Added thumbnail_path column to assets table")
+        except Exception:
+            pass  # Column already exists
+
     # Seed default templates if not already present
     async with async_session() as session:
         try:
@@ -53,6 +68,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default content suggestions")
         except Exception as e:
             logger.error(f"Failed to seed suggestions: {e}")
+
+    # Seed default humor formats if not already present
+    async with async_session() as session:
+        try:
+            count = await seed_humor_formats(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default humor formats")
+        except Exception as e:
+            logger.error(f"Failed to seed humor formats: {e}")
 
     yield
 
@@ -143,6 +167,8 @@ app.include_router(calendar.router, prefix="/api/calendar", tags=["Calendar"])
 app.include_router(suggestions.router, prefix="/api/suggestions", tags=["Suggestions"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Settings"])
+app.include_router(students.router, prefix="/api/students", tags=["Students"])
+app.include_router(story_arcs.router, prefix="/api/story-arcs", tags=["Story Arcs"])
 
 
 if __name__ == "__main__":
