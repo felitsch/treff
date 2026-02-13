@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.sanitizer import sanitize_html, sanitize_css
 from app.models.template import Template
 
 
@@ -98,13 +99,17 @@ async def create_template(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a custom template."""
+    # Sanitize HTML and CSS to prevent XSS
+    safe_html = sanitize_html(template_data.html_content)
+    safe_css = sanitize_css(template_data.css_content)
+
     template = Template(
         name=template_data.name,
         category=template_data.category,
         platform_format=template_data.platform_format,
         slide_count=template_data.slide_count,
-        html_content=template_data.html_content,
-        css_content=template_data.css_content,
+        html_content=safe_html,
+        css_content=safe_css,
         default_colors=template_data.default_colors or json.dumps({
             "primary": "#3B7AB1",
             "secondary": "#FDD000",
@@ -146,6 +151,11 @@ async def update_template(
 
     for key, value in template_data.items():
         if hasattr(template, key) and key not in ("id", "is_default", "created_at"):
+            # Sanitize HTML and CSS content to prevent XSS
+            if key == "html_content" and isinstance(value, str):
+                value = sanitize_html(value)
+            elif key == "css_content" and isinstance(value, str):
+                value = sanitize_css(value)
             setattr(template, key, value)
 
     await db.flush()

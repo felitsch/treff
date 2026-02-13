@@ -73,6 +73,17 @@ const availableFonts = [
   { value: 'Lato', label: 'Lato' },
 ]
 
+// Escape text for safe insertion into HTML (prevents XSS via placeholder injection)
+function escapeHtml(text) {
+  if (!text) return ''
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 // Computed: rendered preview HTML that updates reactively
 const editorPreviewHtml = computed(() => {
   if (!editorTemplate.value) return ''
@@ -81,17 +92,17 @@ const editorPreviewHtml = computed(() => {
   let html = editorTemplate.value.html_content || ''
   let css = editorTemplate.value.css_content || ''
 
-  // Replace placeholders in HTML with user-entered text
-  html = html.replace(/\{\{title\}\}/g, c.headlineText)
-  html = html.replace(/\{\{headline\}\}/g, c.headlineText)
-  html = html.replace(/\{\{subheadline\}\}/g, c.subheadlineText)
-  html = html.replace(/\{\{content\}\}/g, c.bodyText)
-  html = html.replace(/\{\{body_text\}\}/g, c.bodyText)
-  html = html.replace(/\{\{cta_text\}\}/g, c.ctaText)
-  html = html.replace(/\{\{cta\}\}/g, c.ctaText)
-  html = html.replace(/\{\{quote_text\}\}/g, c.bodyText)
-  html = html.replace(/\{\{quote_author\}\}/g, 'Max M., Austauschschueler')
-  html = html.replace(/\{\{bullet_points\}\}/g, 'Punkt 1, Punkt 2, Punkt 3')
+  // Replace placeholders in HTML with escaped user-entered text (XSS prevention)
+  html = html.replace(/\{\{title\}\}/g, escapeHtml(c.headlineText))
+  html = html.replace(/\{\{headline\}\}/g, escapeHtml(c.headlineText))
+  html = html.replace(/\{\{subheadline\}\}/g, escapeHtml(c.subheadlineText))
+  html = html.replace(/\{\{content\}\}/g, escapeHtml(c.bodyText))
+  html = html.replace(/\{\{body_text\}\}/g, escapeHtml(c.bodyText))
+  html = html.replace(/\{\{cta_text\}\}/g, escapeHtml(c.ctaText))
+  html = html.replace(/\{\{cta\}\}/g, escapeHtml(c.ctaText))
+  html = html.replace(/\{\{quote_text\}\}/g, escapeHtml(c.bodyText))
+  html = html.replace(/\{\{quote_author\}\}/g, escapeHtml('Max M., Austauschschueler'))
+  html = html.replace(/\{\{bullet_points\}\}/g, escapeHtml('Punkt 1, Punkt 2, Punkt 3'))
   // Remove any remaining unmatched placeholders
   html = html.replace(/\{\{image\}\}/g, '')
   html = html.replace(/\{\{[^}]+\}\}/g, '')
