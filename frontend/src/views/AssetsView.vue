@@ -417,7 +417,7 @@ onMounted(fetchAssets)
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between" data-tour="assets-header">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Asset-Bibliothek</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -694,7 +694,7 @@ onMounted(fetchAssets)
       />
 
       <!-- Asset Grid -->
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="asset-grid">
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="asset-grid" data-tour="assets-grid">
         <div
           v-for="asset in filteredAssets"
           :key="asset.id"
@@ -1037,6 +1037,20 @@ onMounted(fetchAssets)
         </p>
       </div>
     </template>
+
+    <!-- Usage hint (visible at bottom of page, serves as tour target) -->
+    <div
+      data-tour="assets-usage-hint"
+      class="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+    >
+      <span class="text-lg shrink-0">💡</span>
+      <div>
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Assets in Posts verwenden</p>
+        <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+          Deine Assets stehen automatisch im Post-Editor (Schritt 5: Bild), im Video-Composer, Video-Export und Thumbnail-Generator zur Verfuegung. Tagge Assets mit Land und Kategorie fuer automatische Filterung.
+        </p>
+      </div>
+    </div>
 
     <!-- Crop Modal -->
     <AssetCropModal

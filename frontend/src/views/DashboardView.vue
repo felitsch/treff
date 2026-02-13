@@ -424,7 +424,7 @@ onMounted(() => {
       <!-- Middle Row: Mini Calendar + Recent Posts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Mini Calendar (Next 7 Days) -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-calendar">
           <div class="p-5 border-b border-gray-100 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📅</span> Naechste 7 Tage <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
@@ -475,7 +475,7 @@ onMounted(() => {
         </div>
 
         <!-- Recent Posts -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-recent-posts">
           <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📋</span> Letzte Posts <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
@@ -547,7 +547,7 @@ onMounted(() => {
       <RecyclingPanel />
 
       <!-- Content Suggestions Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-suggestions">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>💡</span> Content-Vorschlaege <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />

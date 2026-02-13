@@ -1823,13 +1823,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Neuen Post erstellen</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-tour="cp-header">Neuen Post erstellen</h1>
       <div class="flex items-center gap-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">Schritt {{ currentStep }} von {{ totalSteps }}</span>
         <button
           @click="tourRef?.startTour()"
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           title="Seiten-Tour starten"
+          data-tour="cp-tour-btn"
         >
           &#10067; Tour
         </button>
@@ -1896,6 +1897,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             @click="goToStep(idx + 1)"
             class="flex flex-col items-center"
             :class="idx + 1 <= currentStep ? 'cursor-pointer' : 'cursor-not-allowed'"
+            :data-tour="'cp-step-' + (idx + 1)"
           >
             <div
               class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
@@ -1954,9 +1956,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- STEP 1: Category Selection -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div v-if="currentStep === 1">
+    <div v-if="currentStep === 1" data-tour="cp-step1-content">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 1: Waehle eine Post-Kategorie <HelpTooltip :text="tooltipTexts.createPost.stepCategory" /></h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="cp-category-grid">
         <button
           v-for="cat in categories"
           :key="cat.id"
@@ -3433,7 +3435,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- Navigation Buttons -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700" data-tour="cp-navigation">
       <button
         v-if="currentStep > 1 && !exportComplete"
         @click="prevStep"

@@ -31,7 +31,7 @@ const props = defineProps({
 
 const emit = defineEmits(['complete'])
 
-const { loadTourProgress, markTourSeen, hasSeenTour, loadedFromBackend } = useTour()
+const { loadTourProgress, markTourSeen, hasSeenTour, loadedFromBackend, tourStartRequest, clearTourStartRequest } = useTour()
 
 const currentStep = ref(0)
 const tooltipStyle = ref({})
@@ -202,6 +202,14 @@ defineExpose({ startTour })
 function handleResize() {
   if (isVisible.value) positionTooltip()
 }
+
+// ─── Watch for external tour start requests (from TopBar button) ──
+watch(tourStartRequest, (req) => {
+  if (req && req.pageKey === props.pageKey) {
+    clearTourStartRequest()
+    startTour()
+  }
+})
 
 // ─── Auto-start on first visit ─────────────────────────────
 onMounted(async () => {

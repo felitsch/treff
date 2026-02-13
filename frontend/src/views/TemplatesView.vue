@@ -652,6 +652,7 @@ onMounted(() => {
         <button
           @click="openCreateModal"
           class="flex items-center gap-2 px-4 py-2.5 bg-treff-blue text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm whitespace-nowrap"
+          data-tour="tpl-create-btn"
         >
           <span class="text-lg leading-none">+</span>
           Neues Template erstellen
@@ -923,6 +924,33 @@ onMounted(() => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Video Templates Hint -->
+    <div
+      v-if="!loading && !error"
+      class="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-5 flex items-start gap-4"
+      data-tour="tpl-video-hint"
+    >
+      <div class="text-3xl flex-shrink-0">🎬</div>
+      <div class="flex-1">
+        <h3 class="text-sm font-semibold text-indigo-900 dark:text-indigo-200 mb-1">
+          Video-Templates fuer Reels &amp; TikTok
+        </h3>
+        <p class="text-sm text-indigo-700 dark:text-indigo-300 leading-relaxed">
+          Neben den Post-Templates gibt es spezielle Video-Templates fuer Intros, Outros, Lower Thirds und Overlays.
+          Diese findest du auf einer separaten Seite.
+        </p>
+        <router-link
+          to="/video-templates"
+          class="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
+        >
+          Zu den Video-Templates
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </router-link>
       </div>
     </div>
 

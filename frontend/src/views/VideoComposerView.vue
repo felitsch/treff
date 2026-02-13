@@ -5,6 +5,7 @@ import draggable from 'vuedraggable'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const router = useRouter()
 const toast = useToast()

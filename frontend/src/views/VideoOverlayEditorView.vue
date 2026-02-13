@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/utils/api'
 import EmptyState from '@/components/common/EmptyState.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -468,7 +469,7 @@ onUnmounted(() => {
     </Teleport>
 
     <!-- Header -->
-    <div class="mb-6">
+    <div data-tour="vo-header" class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
         🎬 Video-Overlay Editor
       </h1>
@@ -484,7 +485,7 @@ onUnmounted(() => {
 
     <template v-else>
       <!-- Step 1: Select Video Asset -->
-      <div v-if="!selectedAsset" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+      <div v-if="!selectedAsset" data-tour="vo-video-select" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Video auswaehlen</h2>
 
         <EmptyState
@@ -540,7 +541,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Add Layer Buttons -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+          <div data-tour="vo-layer-add" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Layer hinzufuegen</h3>
             <div class="grid grid-cols-2 gap-2">
               <button
@@ -556,7 +557,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Layer List -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+          <div data-tour="vo-layer-list" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
               Layers ({{ layers.length }})
             </h3>
@@ -601,7 +602,7 @@ onUnmounted(() => {
 
         <!-- Center: Video preview with overlay layers -->
         <div class="lg:col-span-6 space-y-4">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+          <div data-tour="vo-preview" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
             <!-- Video Preview Area -->
             <div ref="previewContainer" class="relative bg-black aspect-video">
               <video
@@ -704,7 +705,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Action buttons -->
-                <div class="flex items-center gap-2">
+                <div data-tour="vo-render" class="flex items-center gap-2">
                   <button
                     @click="saveOverlay"
                     :disabled="saving || !hasChanges"
@@ -756,7 +757,7 @@ onUnmounted(() => {
 
         <!-- Right: Layer properties panel -->
         <div class="lg:col-span-3">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sticky top-6">
+          <div data-tour="vo-properties" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sticky top-6">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
               Layer-Eigenschaften
             </h3>
@@ -930,5 +931,8 @@ onUnmounted(() => {
         </div>
       </div>
     </template>
+
+    <!-- Tour System -->
+    <TourSystem page-key="video-overlays" />
   </div>
 </template>

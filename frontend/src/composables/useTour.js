@@ -4,6 +4,11 @@
  * Tracks which page tours the user has already seen (via backend settings),
  * exposes helpers to start / complete / skip a tour, and auto-triggers tours
  * on first visit.
+ *
+ * Also provides a shared "tour start request" mechanism:
+ *   - requestTourStart(pageKey) – called from TopBar to request a tour restart
+ *   - tourStartRequest – reactive ref that TourSystem watches to auto-trigger
+ *   - clearTourStartRequest() – called by TourSystem after handling the request
  */
 import { ref, readonly } from 'vue'
 import api from '@/utils/api'
@@ -12,6 +17,10 @@ import api from '@/utils/api'
 const seenTours = ref({})       // { dashboard: true, templates: true, ... }
 const loadedFromBackend = ref(false)
 const loading = ref(false)
+
+// Tour start request – a shared reactive ref for cross-component communication
+// When TopBar sets this to a pageKey, the matching TourSystem picks it up
+const tourStartRequest = ref(null)  // null | { pageKey: string, timestamp: number }
 
 /**
  * Load the tour_progress setting from the backend once per session.
@@ -85,14 +94,32 @@ async function resetAllTours() {
   await saveTourProgress()
 }
 
+/**
+ * Request a tour start for the given page key.
+ * The TopBar calls this; the matching TourSystem component picks it up.
+ */
+function requestTourStart(pageKey) {
+  tourStartRequest.value = { pageKey, timestamp: Date.now() }
+}
+
+/**
+ * Clear the tour start request (called by TourSystem after handling).
+ */
+function clearTourStartRequest() {
+  tourStartRequest.value = null
+}
+
 export function useTour() {
   return {
     seenTours: readonly(seenTours),
     loadedFromBackend: readonly(loadedFromBackend),
+    tourStartRequest: readonly(tourStartRequest),
     loadTourProgress,
     markTourSeen,
     hasSeenTour,
     resetTour,
     resetAllTours,
+    requestTourStart,
+    clearTourStartRequest,
   }
 }

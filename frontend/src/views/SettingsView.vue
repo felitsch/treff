@@ -347,7 +347,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 1: Account Settings -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="account-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="account-section" data-tour="settings-account">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>&#128100;</span> Konto
@@ -388,7 +388,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 2: Brand Settings -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="brand-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="brand-section" data-tour="settings-brand">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>&#127912;</span> Marken-Einstellungen
@@ -486,7 +486,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 3: API Key Configuration -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="api-keys-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="api-keys-section" data-tour="settings-api-keys">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>&#128273;</span> API-Schluessel
@@ -541,7 +541,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 4: Posting Goals -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="posting-goals-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="posting-goals-section" data-tour="settings-posting-goals">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>&#127919;</span> Posting-Ziele
@@ -635,7 +635,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 4b: Target Content-Mix -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="target-mix-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="target-mix-section" data-tour="settings-content-mix">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>📊</span> Ziel Content-Mix
@@ -688,7 +688,7 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 5: Hashtag Manager -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="hashtag-manager-section">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="hashtag-manager-section" data-tour="settings-hashtags">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div>

@@ -732,7 +732,7 @@ onUnmounted(() => {
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div data-tour="history-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Post-Verlauf</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -748,6 +748,7 @@ onUnmounted(() => {
           &#10067; Tour
         </button>
         <button
+          data-tour="history-batch"
           @click="toggleSelectionMode"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm"
           :class="selectionMode
@@ -1107,7 +1108,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center gap-1 flex-shrink-0">
+          <div :data-tour="post === filteredPosts[0] ? 'history-actions' : undefined" class="flex items-center gap-1 flex-shrink-0">
             <button
               v-if="post.status !== 'posted'"
               @click="openScheduleDialog(post)"
@@ -1154,6 +1155,18 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Content Recycling Hint -->
+    <div
+      v-if="totalPosts > 0 && !loading && !error"
+      data-tour="history-recycling"
+      class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-3 mt-4 flex items-center gap-3"
+    >
+      <span class="text-xl flex-shrink-0">♻️</span>
+      <p class="text-xs text-amber-700 dark:text-amber-400">
+        <strong>Content-Recycling Tipp:</strong> Dupliziere erfolgreiche Posts und passe sie leicht an — so sparst du Zeit und nutzt bewaehrte Inhalte erneut!
+      </p>
     </div>
 
     <!-- Pagination Controls -->

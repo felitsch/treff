@@ -532,7 +532,7 @@ loadAssets()
       <div class="lg:col-span-2 space-y-6">
 
         <!-- Hook Text Input -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div data-tour="tg-hook-text" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Hook Text</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Der Text, der auf dem Thumbnail erscheint und Aufmerksamkeit erregt.</p>
           <textarea
@@ -566,7 +566,7 @@ loadAssets()
         </div>
 
         <!-- Background Selection -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div data-tour="tg-background" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Hintergrund</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Waehle eine Farbe oder lade ein Bild hoch.</p>
 
@@ -651,7 +651,7 @@ loadAssets()
         </div>
 
         <!-- Export Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div data-tour="tg-export" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export</h2>
 
           <!-- Export Format Selector -->
@@ -738,7 +738,7 @@ loadAssets()
       </div>
 
       <!-- Right Column: Live Preview -->
-      <div class="lg:sticky lg:top-4 self-start">
+      <div data-tour="tg-preview" class="lg:sticky lg:top-4 self-start">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Live-Vorschau ({{ exportFormat }})</h2>
 
         <div
