@@ -17,6 +17,8 @@ from app.models.hashtag_set import HashtagSet
 from app.models.cta import CTA
 from app.models.interactive_element import PostInteractiveElement
 from app.models.series_reminder import SeriesReminder
+from app.models.story_episode import StoryEpisode
+from app.models.video_overlay import VideoOverlay
 
 __all__ = [
     "User",
@@ -31,9 +33,11 @@ __all__ = [
     "Student",
     "HumorFormat",
     "StoryArc",
+    "StoryEpisode",
     "Hook",
     "HashtagSet",
     "CTA",
     "PostInteractiveElement",
     "SeriesReminder",
+    "VideoOverlay",
 ]

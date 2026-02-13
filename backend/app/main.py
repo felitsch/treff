@@ -18,7 +18,7 @@ from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
 from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, hashtag_sets, ctas, interactive_elements, recycling, series_reminders
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,11 @@ async def lifespan(app: FastAPI):
         try:
             await conn.execute(text("ALTER TABLE posts ADD COLUMN episode_number INTEGER"))
             logger.info("Added episode_number column to posts table")
+        except Exception:
+            pass  # Column already exists
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN linked_post_group_id VARCHAR"))
+            logger.info("Added linked_post_group_id column to posts table")
         except Exception:
             pass  # Column already exists
 
@@ -213,11 +218,13 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"]
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
 app.include_router(story_arcs.router, prefix="/api/story-arcs", tags=["Story Arcs"])
+app.include_router(story_episodes.router, prefix="/api/story-arcs", tags=["Story Episodes"])
 app.include_router(hashtag_sets.router, prefix="/api/hashtag-sets", tags=["Hashtag Sets"])
 app.include_router(ctas.router, prefix="/api/ctas", tags=["CTAs"])
 app.include_router(interactive_elements.router, prefix="/api/posts", tags=["Interactive Elements"])
 app.include_router(recycling.router, prefix="/api/recycling", tags=["Content Recycling"])
 app.include_router(series_reminders.router, prefix="/api/series-reminders", tags=["Series Reminders"])
+app.include_router(video_overlays.router, prefix="/api/video-overlays", tags=["Video Overlays"])
 
 
 if __name__ == "__main__":

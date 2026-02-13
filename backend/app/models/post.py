@@ -35,6 +35,7 @@ class Post(Base):
     scheduled_time: Mapped[str | None] = mapped_column(String, nullable=True)  # HH:MM
     story_arc_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("story_arcs.id"), nullable=True)  # Links teaser posts to story arcs
     episode_number: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Explicit episode ordering within a story arc (1-based)
+    linked_post_group_id: Mapped[str | None] = mapped_column(String, nullable=True)  # UUID grouping sibling posts across platforms
     exported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     posted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

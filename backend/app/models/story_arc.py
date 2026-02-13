@@ -41,3 +41,4 @@ class StoryArc(Base):
     user = relationship("User", back_populates="story_arcs")
     student = relationship("Student", back_populates="story_arcs")
     cover_image = relationship("Asset", foreign_keys=[cover_image_id])
+    episodes = relationship("StoryEpisode", back_populates="arc", cascade="all, delete-orphan", order_by="StoryEpisode.episode_number")
