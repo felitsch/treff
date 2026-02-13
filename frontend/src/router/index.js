@@ -69,6 +69,11 @@ const routes = [
         component: () => import('@/views/EditPostView.vue'),
       },
       {
+        path: 'students',
+        name: 'Students',
+        component: () => import('@/views/StudentsView.vue'),
+      },
+      {
         path: 'thumbnail-generator',
         name: 'ThumbnailGenerator',
         component: () => import('@/views/ThumbnailGeneratorView.vue'),
