@@ -80,7 +80,8 @@ async def login(request: UserLoginRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     """Refresh access token using refresh token."""
-    from jose import JWTError, jwt
+    import jwt
+    from jwt.exceptions import PyJWTError as JWTError
     from app.core.config import settings
 
     try:
