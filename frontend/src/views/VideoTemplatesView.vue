@@ -4,8 +4,10 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
+import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 
 const { addToast } = useToast()
+const workflowTourRef = ref(null)
 
 // State
 const templates = ref([])
@@ -254,13 +256,22 @@ onMounted(() => {
           Intro- und Outro-Sequenzen mit TREFF-Branding fuer einheitliche Reels & TikToks
         </p>
       </div>
-      <button
-        data-tour="vt-create"
-        class="px-4 py-2 bg-treff-blue text-white rounded-lg hover:bg-treff-blue/90 transition-colors"
-        @click="showCreateForm = !showCreateForm"
-      >
-        {{ showCreateForm ? 'Abbrechen' : '+ Neues Template' }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="workflowTourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          title="Video-Workflow-Tour starten"
+        >
+          🎬 Workflow
+        </button>
+        <button
+          data-tour="vt-create"
+          class="px-4 py-2 bg-treff-blue text-white rounded-lg hover:bg-treff-blue/90 transition-colors"
+          @click="showCreateForm = !showCreateForm"
+        >
+          {{ showCreateForm ? 'Abbrechen' : '+ Neues Template' }}
+        </button>
+      </div>
     </div>
 
     <!-- Create Form -->
@@ -647,6 +658,7 @@ onMounted(() => {
     </div>
 
     <!-- Tour System -->
+    <VideoWorkflowTour ref="workflowTourRef" />
     <TourSystem page-key="video-templates" />
   </div>
 </template>

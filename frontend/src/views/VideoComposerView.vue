@@ -6,9 +6,11 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
+import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 
 const router = useRouter()
 const toast = useToast()
+const workflowTourRef = ref(null)
 
 // ---- State ----
 const loading = ref(false)
@@ -296,6 +298,13 @@ onMounted(() => {
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <button
+          @click="workflowTourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          title="Video-Workflow-Tour starten"
+        >
+          🎬 Workflow
+        </button>
         <router-link
           to="/video-templates"
           class="px-3 py-2 text-sm font-medium text-treff-blue bg-treff-blue/10 rounded-lg hover:bg-treff-blue/20 transition-colors flex items-center gap-1.5"
@@ -784,6 +793,7 @@ onMounted(() => {
     </teleport>
 
     <!-- Tour System -->
+    <VideoWorkflowTour ref="workflowTourRef" />
     <TourSystem page-key="video-composer" />
   </div>
 </template>

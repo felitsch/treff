@@ -211,6 +211,12 @@ watch(tourStartRequest, (req) => {
   }
 })
 
+// ─── Video page keys that have a workflow overview tour ──────
+const videoPageKeys = [
+  'thumbnail-generator', 'video-overlays', 'video-composer',
+  'video-templates', 'video-export', 'audio-mixer',
+]
+
 // ─── Auto-start on first visit ─────────────────────────────
 onMounted(async () => {
   window.addEventListener('resize', handleResize)
@@ -220,6 +226,13 @@ onMounted(async () => {
   await loadTourProgress()
 
   if (!hasSeenTour(props.pageKey)) {
+    // If this is a video page and the overview tour hasn't been seen,
+    // delay the page tour to avoid overlap with the workflow overview tour
+    if (videoPageKeys.includes(props.pageKey) && !hasSeenTour('video-tools-overview')) {
+      // Don't auto-start – the user will see the overview first,
+      // then can start the page tour via the "? Tour" button or on next visit
+      return
+    }
     // First visit – auto-start after DOM settles
     setTimeout(() => {
       startTour()

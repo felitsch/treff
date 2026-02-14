@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
+import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 
 // ── State ──────────────────────────────────────────────────────────
 const hookText = ref('')
@@ -17,6 +18,7 @@ const savedPost = ref(null)
 const error = ref('')
 const successMsg = ref('')
 const tourRef = ref(null)
+const workflowTourRef = ref(null)
 
 // Export format: '9:16' for Reels/TikTok, '1:1' for Feed preview
 const exportFormat = ref('9:16')
@@ -503,6 +505,13 @@ loadAssets()
       </div>
       <div class="flex items-center gap-2">
         <button
+          @click="workflowTourRef?.startTour()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          title="Video-Workflow-Tour starten"
+        >
+          🎬 Workflow
+        </button>
+        <button
           @click="tourRef?.startTour()"
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           title="Seiten-Tour starten"
@@ -804,6 +813,7 @@ loadAssets()
       </div>
     </div>
 
+    <VideoWorkflowTour ref="workflowTourRef" />
     <TourSystem ref="tourRef" page-key="thumbnail-generator" />
   </div>
 </template>

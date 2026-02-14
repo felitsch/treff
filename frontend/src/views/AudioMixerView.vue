@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import TourSystem from '@/components/common/TourSystem.vue'
+import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 const toast = useToast()
@@ -45,6 +46,7 @@ const mixProgress = ref(0)
 const mixResult = ref(null)
 const mixError = ref(null)
 const tourRef = ref(null)
+const workflowTourRef = ref(null)
 
 // ---- Computed ----
 const filteredTracks = computed(() => {
@@ -303,13 +305,22 @@ onMounted(async () => {
             Hintergrundmusik und Audio-Effekte zu Videos hinzufuegen. Lautstaerke-Kontrolle fuer Original-Audio vs. Musik.
           </p>
         </div>
-        <button
-          @click="tourRef?.startTour()"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          title="Seiten-Tour starten"
-        >
-          &#10067; Tour
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="workflowTourRef?.startTour()"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+            title="Video-Workflow-Tour starten"
+          >
+            🎬 Workflow
+          </button>
+          <button
+            @click="tourRef?.startTour()"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="Seiten-Tour starten"
+          >
+            &#10067; Tour
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -925,6 +936,7 @@ onMounted(async () => {
       </div>
     </div>
 
+    <VideoWorkflowTour ref="workflowTourRef" />
     <TourSystem ref="tourRef" page-key="audio-mixer" />
   </div>
 </template>

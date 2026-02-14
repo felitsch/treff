@@ -4,9 +4,12 @@ import { useRoute, useRouter } from 'vue-router'
 import api from '@/utils/api'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
+import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 
 const route = useRoute()
 const router = useRouter()
+
+const workflowTourRef = ref(null)
 
 // ---------- State ----------
 const loading = ref(true)
@@ -469,13 +472,22 @@ onUnmounted(() => {
     </Teleport>
 
     <!-- Header -->
-    <div data-tour="vo-header" class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        🎬 Video-Overlay Editor
-      </h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">
-        TREFF-Branding, Texte und Untertitel auf Videos legen
-      </p>
+    <div data-tour="vo-header" class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          🎬 Video-Overlay Editor
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+          TREFF-Branding, Texte und Untertitel auf Videos legen
+        </p>
+      </div>
+      <button
+        @click="workflowTourRef?.startTour()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+        title="Video-Workflow-Tour starten"
+      >
+        🎬 Workflow
+      </button>
     </div>
 
     <!-- Loading state -->
@@ -933,6 +945,7 @@ onUnmounted(() => {
     </template>
 
     <!-- Tour System -->
+    <VideoWorkflowTour ref="workflowTourRef" />
     <TourSystem page-key="video-overlays" />
   </div>
 </template>
