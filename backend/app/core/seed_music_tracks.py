@@ -15,13 +15,10 @@ from pathlib import Path
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.paths import get_upload_dir
 from app.models.music_track import MusicTrack
 
 logger = logging.getLogger(__name__)
-
-APP_DIR = Path(__file__).resolve().parent.parent
-MUSIC_DIR = APP_DIR / "static" / "uploads" / "music"
-MUSIC_DIR.mkdir(parents=True, exist_ok=True)
 
 # Default music library entries with metadata
 DEFAULT_TRACKS = [
@@ -170,6 +167,7 @@ async def seed_music_tracks(session: AsyncSession) -> int:
 
     Returns the number of newly seeded tracks.
     """
+    MUSIC_DIR = get_upload_dir("music")
     result = await session.execute(select(func.count(MusicTrack.id)))
     count = result.scalar()
 
