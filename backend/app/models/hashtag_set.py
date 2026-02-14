@@ -25,7 +25,7 @@ class HashtagSet(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)  # NULL = system default
+    user_id: Mapped[int] = mapped_column(Integer, nullable=True)  # NULL = system default
     name: Mapped[str] = mapped_column(String, nullable=False)
     hashtags: Mapped[str] = mapped_column(Text, nullable=False)  # JSON array of hashtag strings
     category: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "laender_spotlight", "allgemein"

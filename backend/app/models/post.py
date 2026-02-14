@@ -15,7 +15,7 @@ class Post(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     template_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("templates.id"), nullable=True)
     category: Mapped[str] = mapped_column(String, nullable=False)
     country: Mapped[str | None] = mapped_column(String, nullable=True)
