@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.paths import IS_VERCEL, get_upload_dir
 from app.core.database import engine, Base, async_session
+from app.core.seed_users import seed_default_users
 from app.core.seed_templates import seed_default_templates, seed_story_teaser_templates, seed_story_series_templates
 from app.core.seed_suggestions import seed_default_suggestions
 from app.core.seed_humor_formats import seed_humor_formats
@@ -79,6 +80,15 @@ async def lifespan(app: FastAPI):
             logger.info("Added student_id column to posts table")
         except Exception:
             pass  # Column already exists
+
+    # Seed default user (critical for Vercel where DB is ephemeral)
+    async with async_session() as session:
+        try:
+            count = await seed_default_users(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default user(s)")
+        except Exception as e:
+            logger.error(f"Failed to seed default user: {e}")
 
     # Seed default templates if not already present
     async with async_session() as session:

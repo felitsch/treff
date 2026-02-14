@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Default User (seeded on startup for Vercel ephemeral DB)
+    DEFAULT_USER_EMAIL: str = "admin@treff.de"
+    DEFAULT_USER_PASSWORD: str = "treff2024"
+
     # Google Gemini API
     GEMINI_API_KEY: str = ""
 
