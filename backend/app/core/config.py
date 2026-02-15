@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     UNSPLASH_ACCESS_KEY: str = ""
     PEXELS_API_KEY: str = ""
 
+    # Turso (hosted SQLite) — set in Vercel dashboard
+    TURSO_DATABASE_URL: str = ""  # e.g. "libsql://treff-db-user.turso.io"
+    TURSO_AUTH_TOKEN: str = ""
+
     # Server
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
