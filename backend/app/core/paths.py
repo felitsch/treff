@@ -1,5 +1,6 @@
 """Centralized path utilities for Vercel + local compatibility."""
 
+import base64
 import os
 from pathlib import Path
 
@@ -13,3 +14,13 @@ def get_upload_dir(subdir: str = "") -> Path:
     path = base / subdir if subdir else base
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def save_and_encode(data: bytes, file_path: Path) -> str | None:
+    """Write bytes to disk. On Vercel, also return base64 for DB storage."""
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(file_path, "wb") as f:
+        f.write(data)
+    if IS_VERCEL:
+        return base64.b64encode(data).decode("ascii")
+    return None

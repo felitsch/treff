@@ -5,11 +5,14 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import base64
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.paths import IS_VERCEL, get_upload_dir
@@ -80,6 +83,22 @@ async def lifespan(app: FastAPI):
             logger.info("Added student_id column to posts table")
         except Exception:
             pass  # Column already exists
+        # Vercel file persistence: store file bytes as base64 in DB
+        try:
+            await conn.execute(text("ALTER TABLE assets ADD COLUMN file_data TEXT"))
+            logger.info("Added file_data column to assets table")
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("ALTER TABLE music_tracks ADD COLUMN file_data TEXT"))
+            logger.info("Added file_data column to music_tracks table")
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("ALTER TABLE video_overlays ADD COLUMN rendered_data TEXT"))
+            logger.info("Added rendered_data column to video_overlays table")
+        except Exception:
+            pass
 
     # Seed default user (critical for Vercel where DB is ephemeral)
     async with async_session() as session:
@@ -270,9 +289,56 @@ if IS_VERCEL:
     @app.get("/uploads/{file_path:path}")
     async def serve_upload(file_path: str):
         full_path = UPLOADS_DIR / file_path
-        if not full_path.exists():
-            raise HTTPException(status_code=404, detail="File not found")
-        return FileResponse(str(full_path))
+        if full_path.exists():
+            return FileResponse(str(full_path))
+
+        # DB-Fallback: restore file from Turso
+        from app.models.asset import Asset
+        from app.models.music_track import MusicTrack
+        from app.models.video_overlay import VideoOverlay
+
+        filename = file_path.split("/")[-1]
+        async with async_session() as session:
+            # Search in assets
+            result = await session.execute(
+                select(Asset.file_data, Asset.file_type).where(Asset.filename == filename)
+            )
+            row = result.first()
+            if row and row.file_data:
+                file_bytes = base64.b64decode(row.file_data)
+                full_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(full_path, "wb") as f:
+                    f.write(file_bytes)
+                return Response(content=file_bytes, media_type=row.file_type,
+                                headers={"Cache-Control": "public, max-age=86400"})
+
+            # Search in music_tracks
+            result2 = await session.execute(
+                select(MusicTrack.file_data).where(MusicTrack.filename == filename)
+            )
+            row2 = result2.first()
+            if row2 and row2.file_data:
+                file_bytes = base64.b64decode(row2.file_data)
+                full_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(full_path, "wb") as f:
+                    f.write(file_bytes)
+                return Response(content=file_bytes, media_type="audio/mpeg",
+                                headers={"Cache-Control": "public, max-age=86400"})
+
+            # Search in video_overlays (rendered PNGs)
+            result3 = await session.execute(
+                select(VideoOverlay.rendered_data).where(VideoOverlay.rendered_path.like(f"%{filename}"))
+            )
+            row3 = result3.first()
+            if row3 and row3.rendered_data:
+                file_bytes = base64.b64decode(row3.rendered_data)
+                full_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(full_path, "wb") as f:
+                    f.write(file_bytes)
+                return Response(content=file_bytes, media_type="image/png",
+                                headers={"Cache-Control": "public, max-age=86400"})
+
+        raise HTTPException(status_code=404, detail="File not found")
 else:
     app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 

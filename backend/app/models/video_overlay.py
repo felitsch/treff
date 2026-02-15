@@ -22,6 +22,7 @@ class VideoOverlay(Base):
     rendered_path: Mapped[str | None] = mapped_column(String, nullable=True)
     render_status: Mapped[str] = mapped_column(String, default="pending")  # pending, rendering, done, error
     render_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rendered_data: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64-encoded rendered PNG (Vercel persistence)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

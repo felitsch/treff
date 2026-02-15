@@ -20,6 +20,7 @@ class MusicTrack(Base):
     bpm: Mapped[int | None] = mapped_column(Integer, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, default=True)
+    file_data: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64-encoded file bytes (Vercel persistence)
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

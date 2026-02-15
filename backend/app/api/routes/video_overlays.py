@@ -518,6 +518,11 @@ async def render_video_overlay(
         overlay.render_status = "done"
         overlay.rendered_path = f"/uploads/exports/{output_filename}"
         overlay.render_error = None
+        # Persist rendered file in DB for Vercel
+        from app.core.paths import IS_VERCEL
+        if IS_VERCEL and output_path.exists():
+            import base64 as _b64
+            overlay.rendered_data = _b64.b64encode(output_path.read_bytes()).decode("ascii")
     else:
         overlay.render_status = "error"
         overlay.render_error = error_msg

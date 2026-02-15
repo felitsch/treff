@@ -190,6 +190,14 @@ async def seed_music_tracks(session: AsyncSession) -> int:
             except Exception:
                 continue
 
+        # Encode for Vercel persistence
+        b64 = None
+        if filepath.exists():
+            from app.core.paths import IS_VERCEL
+            if IS_VERCEL:
+                import base64
+                b64 = base64.b64encode(filepath.read_bytes()).decode("ascii")
+
         track = MusicTrack(
             name=track_data["name"],
             filename=filename,
@@ -200,6 +208,7 @@ async def seed_music_tracks(session: AsyncSession) -> int:
             bpm=track_data["bpm"],
             description=track_data["description"],
             is_default=True,
+            file_data=b64,
         )
         session.add(track)
         seeded += 1

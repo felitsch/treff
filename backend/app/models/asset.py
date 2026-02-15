@@ -24,6 +24,7 @@ class Asset(Base):
     category: Mapped[str | None] = mapped_column(String, nullable=True)  # country, logo, background, photo, icon, video
     country: Mapped[str | None] = mapped_column(String, nullable=True)
     tags: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
+    file_data: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64-encoded file bytes (Vercel persistence)
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

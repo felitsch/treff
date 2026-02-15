@@ -299,8 +299,9 @@ async def upload_asset(
             detail=f"Datei ist zu gross (max. {max_size_label})",
         )
 
-    with open(file_path, "wb") as f:
-        f.write(content)
+    from app.core.paths import save_and_encode
+
+    b64 = save_and_encode(content, file_path)
 
     # Extract metadata based on file type
     width = None
@@ -349,6 +350,7 @@ async def upload_asset(
         tags=tags,
         duration_seconds=duration_seconds,
         thumbnail_path=thumbnail_path,
+        file_data=b64,
     )
     db.add(asset)
     await db.flush()
@@ -520,12 +522,13 @@ async def crop_asset(
 
     final_width, final_height = cropped.size
 
+    from app.core.paths import save_and_encode
+
     if save_as_new:
         # Save as a new asset
         new_filename = f"{uuid.uuid4()}{ext}"
         new_path = ASSETS_UPLOAD_DIR / new_filename
-        with open(new_path, "wb") as f:
-            f.write(output_bytes)
+        b64 = save_and_encode(output_bytes, new_path)
 
         new_asset = Asset(
             user_id=user_id,
@@ -540,6 +543,7 @@ async def crop_asset(
             category=asset.category,
             country=asset.country,
             tags=asset.tags,
+            file_data=b64,
         )
         db.add(new_asset)
         await db.flush()
@@ -547,13 +551,13 @@ async def crop_asset(
         return asset_to_dict(new_asset)
     else:
         # Overwrite original file
-        with open(source_path, "wb") as f:
-            f.write(output_bytes)
+        b64 = save_and_encode(output_bytes, source_path)
 
         # Update asset record
         asset.file_size = len(output_bytes)
         asset.width = final_width
         asset.height = final_height
+        asset.file_data = b64
         await db.flush()
         await db.refresh(asset)
         return asset_to_dict(asset)
@@ -684,7 +688,15 @@ async def trim_video(
     thumb_filename = f"{uuid.uuid4()}.jpg"
     trimmed_thumbnail = _generate_video_thumbnail(output_path, thumb_filename)
 
+    from app.core.paths import save_and_encode as _se, IS_VERCEL
+
     if save_as_new:
+        # Encode for Vercel persistence
+        b64_trim = None
+        if IS_VERCEL and output_path.exists():
+            import base64 as _b64
+            b64_trim = _b64.b64encode(output_path.read_bytes()).decode("ascii")
+
         # Create a new asset record
         new_asset = Asset(
             user_id=user_id,
@@ -701,6 +713,7 @@ async def trim_video(
             tags=asset.tags,
             duration_seconds=trimmed_meta["duration_seconds"],
             thumbnail_path=trimmed_thumbnail,
+            file_data=b64_trim,
         )
         db.add(new_asset)
         await db.flush()
@@ -725,6 +738,11 @@ async def trim_video(
         import shutil
         final_path = ASSETS_UPLOAD_DIR / asset.filename
         shutil.move(str(output_path), str(final_path))
+
+        # Encode for Vercel persistence
+        if IS_VERCEL and final_path.exists():
+            import base64 as _b64
+            asset.file_data = _b64.b64encode(final_path.read_bytes()).decode("ascii")
 
         # Update asset record
         asset.file_size = trimmed_size
@@ -957,8 +975,8 @@ async def import_stock(
     file_path = ASSETS_UPLOAD_DIR / unique_filename
 
     # Save to disk
-    with open(file_path, "wb") as f:
-        f.write(image_data)
+    from app.core.paths import save_and_encode as _save_and_encode
+    b64_stock = _save_and_encode(image_data, file_path)
 
     # Try to get actual image dimensions
     actual_width = width
@@ -995,6 +1013,7 @@ async def import_stock(
         category=category or "photo",
         country=country or None,
         tags=tags_str or None,
+        file_data=b64_stock,
     )
     db.add(asset)
     await db.flush()

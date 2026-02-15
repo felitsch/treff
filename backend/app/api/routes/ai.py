@@ -817,11 +817,12 @@ async def generate_image(
 
     # Save image to disk and database with proper error handling
     try:
+        from app.core.paths import save_and_encode
+
         unique_filename = f"ai_{uuid.uuid4().hex[:12]}.png"
         file_path = ASSETS_UPLOAD_DIR / unique_filename
 
-        with open(file_path, "wb") as f:
-            f.write(image_bytes)
+        b64 = save_and_encode(image_bytes, file_path)
 
         # Get dimensions
         img = Image.open(io.BytesIO(image_bytes))
@@ -842,6 +843,7 @@ async def generate_image(
             category=category,
             country=country,
             tags="ai,generated",
+            file_data=b64,
         )
         db.add(asset)
         await db.flush()
