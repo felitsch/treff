@@ -261,7 +261,7 @@ const startMix = async () => {
 const downloadResult = () => {
   if (!mixResult.value?.file_path) return
   const link = document.createElement('a')
-  link.href = `/api/static${mixResult.value.file_path}`
+  link.href = mixResult.value.file_path
   link.download = mixResult.value.original_filename || 'mixed-video.mp4'
   link.click()
 }
@@ -363,7 +363,7 @@ onMounted(async () => {
               >
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img v-if="asset.thumbnail_path" :src="`/api/static${asset.thumbnail_path}`" class="w-full h-full object-cover" />
+                    <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" />
                     <span v-else class="text-xl">🎬</span>
                   </div>
                   <div class="min-w-0 flex-1">

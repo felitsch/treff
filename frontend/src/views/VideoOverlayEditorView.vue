@@ -91,7 +91,7 @@ const selectedLayer = computed(() => {
 
 const videoSrc = computed(() => {
   if (!selectedAsset.value) return ''
-  return `http://localhost:8000${selectedAsset.value.file_path}`
+  return selectedAsset.value.file_path
 })
 
 const hasChanges = computed(() => {
@@ -517,7 +517,7 @@ onUnmounted(() => {
             class="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-all"
           >
             <div class="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <img v-if="asset.thumbnail_path" :src="'http://localhost:8000' + asset.thumbnail_path" class="w-full h-full object-cover" />
+              <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" />
               <span v-else class="text-3xl">🎬</span>
             </div>
             <div class="p-2 text-xs text-gray-700 dark:text-gray-300 truncate">
@@ -750,7 +750,7 @@ onUnmounted(() => {
               <div v-if="renderStatus === 'done' && renderedPath" class="mt-2 p-2 bg-green-900/40 rounded-lg flex items-center justify-between">
                 <span class="text-green-400 text-xs">✅ Gerendert!</span>
                 <a
-                  :href="'http://localhost:8000' + renderedPath"
+                  :href="renderedPath"
                   target="_blank"
                   class="text-xs text-green-300 underline hover:text-green-200"
                 >

@@ -286,6 +286,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 if IS_VERCEL:
     # On Vercel, StaticFiles can't serve from /tmp reliably across invocations.
     # Use a catch-all route instead.
+    @app.get("/api/uploads/{file_path:path}")
+    async def serve_upload_api(file_path: str):
+        return await serve_upload(file_path)
+
     @app.get("/uploads/{file_path:path}")
     async def serve_upload(file_path: str):
         full_path = UPLOADS_DIR / file_path
