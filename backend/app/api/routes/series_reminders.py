@@ -250,6 +250,8 @@ async def check_series_reminders(
             last_date = last_episode.created_at
             if last_date:
                 if hasattr(last_date, 'date'):
+                    if last_date.tzinfo is None:
+                        last_date = last_date.replace(tzinfo=timezone.utc)
                     days_since = (now - last_date).days
                 else:
                     days_since = (today - last_date).days if hasattr(last_date, 'day') else 0
@@ -396,6 +398,8 @@ async def get_series_status(
         if last_episode and last_episode.created_at:
             last_date = last_episode.created_at
             if hasattr(last_date, 'date'):
+                if last_date.tzinfo is None:
+                    last_date = last_date.replace(tzinfo=timezone.utc)
                 days_since_last = (now - last_date).days
             elif hasattr(last_date, 'day'):
                 days_since_last = (today - last_date).days
