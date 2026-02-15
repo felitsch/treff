@@ -210,8 +210,7 @@ async def _generate_with_gemini(
 
     Supports aspect_ratio (e.g. '1:1', '9:16', '16:9') and
     image_size ('1K', '2K', '4K') for high-quality output.
-    Falls back to gemini-2.0-flash-exp if gemini-3-pro-image-preview fails.
-    Returns PNG bytes or None.
+    Returns PNG bytes or None (caller falls back to local placeholder).
     """
     # Valid aspect ratios for Nano Banana Pro
     VALID_ASPECT_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"}
@@ -249,8 +248,8 @@ async def _generate_with_gemini(
         # Try Nano Banana Pro (gemini-3-pro-image-preview) first — higher quality,
         # better text rendering, thinking mode, up to 4K resolution
         image_config = types.ImageConfig(
-            aspectRatio=aspect_ratio,
-            imageSize=image_size,
+            aspect_ratio=aspect_ratio,
+            image_size=image_size,
         )
 
         logger.info(
@@ -262,8 +261,8 @@ async def _generate_with_gemini(
             model="gemini-3-pro-image-preview",
             contents=prompt,
             config=types.GenerateContentConfig(
-                responseModalities=["TEXT", "IMAGE"],
-                imageConfig=image_config,
+                response_modalities=["IMAGE", "TEXT"],
+                image_config=image_config,
             ),
         )
 
@@ -275,44 +274,11 @@ async def _generate_with_gemini(
                     logger.info("Nano Banana Pro image generation succeeded")
                     return image.image_bytes
 
-        logger.warning("Nano Banana Pro returned no image, trying fallback model")
+        logger.warning("Nano Banana Pro returned no image")
+        return None
 
     except Exception as e:
         logger.warning(f"Nano Banana Pro (gemini-3-pro-image-preview) failed: {e}")
-
-    # Fallback: try gemini-2.0-flash-exp (older model)
-    try:
-        from google import genai
-        from google.genai import types
-
-        client = genai.Client(api_key=api_key)
-
-        logger.info("Falling back to gemini-2.0-flash-exp for image generation")
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                responseModalities=["IMAGE", "TEXT"],
-            ),
-        )
-
-        # Extract image — try new as_image() first, then inline_data fallback
-        if response.candidates:
-            for part in response.candidates[0].content.parts:
-                # Try new API (as_image returns types.Image with .image_bytes)
-                image = part.as_image()
-                if image is not None and image.image_bytes:
-                    logger.info("gemini-2.0-flash-exp image generation succeeded (as_image)")
-                    return image.image_bytes
-                # Try legacy inline_data
-                if hasattr(part, 'inline_data') and part.inline_data and hasattr(part.inline_data, 'mime_type'):
-                    if part.inline_data.mime_type.startswith("image/"):
-                        logger.info("gemini-2.0-flash-exp image generation succeeded (inline_data)")
-                        return part.inline_data.data
-
-        return None
-    except Exception as e:
-        logger.warning(f"Gemini fallback image generation also failed: {e}")
         return None
 
 
