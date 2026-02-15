@@ -266,13 +266,15 @@ async def _generate_with_gemini(
             ),
         )
 
-        # Extract image using part.as_image() (new SDK method)
+        # Extract image using part.as_image() (returns PIL Image, not genai Image)
         if response.candidates:
             for part in response.candidates[0].content.parts:
-                image = part.as_image()
-                if image is not None and image.image_bytes:
+                pil_image = part.as_image()
+                if pil_image is not None:
+                    buf = io.BytesIO()
+                    pil_image.save(buf, format="PNG")
                     logger.info("Nano Banana Pro image generation succeeded")
-                    return image.image_bytes
+                    return buf.getvalue()
 
         logger.warning("Nano Banana Pro returned no image")
         return None
