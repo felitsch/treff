@@ -6,7 +6,7 @@ import draggable from 'vuedraggable'
 import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
-import { useCreatePostStore } from '@/stores/createPost'
+import { useContentDraftStore } from '@/stores/contentDraft'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
@@ -25,7 +25,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
-const store = useCreatePostStore()
+const store = useContentDraftStore()
 
 // ── Extract reactive refs from store (preserves state across navigation) ──
 const {
