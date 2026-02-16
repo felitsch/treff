@@ -60,7 +60,7 @@ const routes = [
       {
         path: 'create/quick',
         name: 'CreateQuick',
-        component: () => import('@/views/CreatePostView.vue'),
+        component: () => import('@/views/PostCreatorView.vue'),
         meta: {
           requiresAuth: true,
           breadcrumb: [
@@ -73,13 +73,26 @@ const routes = [
       {
         path: 'create/smart',
         name: 'CreateSmart',
-        component: () => import('@/views/CreatePostView.vue'),
+        component: () => import('@/views/PostCreatorView.vue'),
         meta: {
           requiresAuth: true,
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
             { label: 'Smart Post', path: '/create/smart' },
+          ],
+        },
+      },
+      {
+        path: 'create/advanced',
+        name: 'CreateAdvanced',
+        component: () => import('@/views/CreatePostView.vue'),
+        meta: {
+          requiresAuth: true,
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'Erstellen', path: '/create' },
+            { label: 'Erweiterter Modus', path: '/create/advanced' },
           ],
         },
       },
@@ -119,6 +132,20 @@ const routes = [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
             { label: 'Bearbeiten', path: '' },
+          ],
+        },
+      },
+
+      {
+        path: 'create/drafts',
+        name: 'DraftsList',
+        component: () => import('@/views/DraftsListView.vue'),
+        meta: {
+          requiresAuth: true,
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'Erstellen', path: '/create' },
+            { label: 'Entwuerfe', path: '/create/drafts' },
           ],
         },
       },
@@ -241,6 +268,20 @@ const routes = [
                 { label: 'Home', path: '/home' },
                 { label: 'Bibliothek', path: '/library' },
                 { label: 'Template-Galerie', path: '/library/template-gallery' },
+              ],
+            },
+          },
+          {
+            path: 'template-editor',
+            name: 'TemplateEditor',
+            component: () => import('@/views/TemplateEditorView.vue'),
+            meta: {
+              requiresAuth: true,
+              title: 'Template-Editor',
+              breadcrumb: [
+                { label: 'Home', path: '/home' },
+                { label: 'Bibliothek', path: '/library' },
+                { label: 'Template-Editor', path: '/library/template-editor' },
               ],
             },
           },
