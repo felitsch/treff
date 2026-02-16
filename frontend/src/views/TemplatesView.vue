@@ -14,6 +14,10 @@ const error = ref(null)
 const templates = ref([])
 const selectedCategory = ref('')
 const selectedPlatform = ref('')
+const selectedOwnership = ref('')  // '' = Alle, 'system' = System-Templates, 'custom' = Meine Templates
+
+// Duplicate template state
+const duplicating = ref(false)
 
 // Delete template state
 const showDeleteModal = ref(false)
@@ -421,6 +425,11 @@ const filteredTemplates = computed(() => {
   if (selectedPlatform.value) {
     result = result.filter(t => t.platform_format === selectedPlatform.value)
   }
+  if (selectedOwnership.value === 'system') {
+    result = result.filter(t => t.is_default)
+  } else if (selectedOwnership.value === 'custom') {
+    result = result.filter(t => !t.is_default)
+  }
   return result
 })
 
@@ -478,6 +487,47 @@ function parseColors(colorsStr) {
 function clearFilters() {
   selectedCategory.value = ''
   selectedPlatform.value = ''
+  selectedOwnership.value = ''
+}
+
+// Duplicate a template via API and add the copy to local list
+async function duplicateTemplate(template) {
+  duplicating.value = true
+  try {
+    const res = await api.post(`/api/templates/${template.id}/duplicate`)
+    templates.value.push(res.data)
+    // Sort templates so the copy appears next to the original
+    templates.value.sort((a, b) => {
+      if (a.category !== b.category) return a.category.localeCompare(b.category)
+      return a.name.localeCompare(b.name)
+    })
+  } catch (err) {
+    console.error('Failed to duplicate template:', err)
+  } finally {
+    duplicating.value = false
+  }
+}
+
+// Duplicate from editor modal ("Als Kopie speichern")
+async function duplicateFromEditor() {
+  if (!editorTemplate.value) return
+  duplicating.value = true
+  try {
+    const res = await api.post(`/api/templates/${editorTemplate.value.id}/duplicate`)
+    templates.value.push(res.data)
+    templates.value.sort((a, b) => {
+      if (a.category !== b.category) return a.category.localeCompare(b.category)
+      return a.name.localeCompare(b.name)
+    })
+    // Switch editor to the duplicate (now editable)
+    closeEditor()
+    openEditor(res.data, true)
+  } catch (err) {
+    console.error('Failed to duplicate from editor:', err)
+    editorSaveError.value = 'Kopie konnte nicht erstellt werden. Bitte versuche es erneut.'
+  } finally {
+    duplicating.value = false
+  }
 }
 
 async function fetchTemplates() {
@@ -724,9 +774,24 @@ onMounted(() => {
             </select>
           </div>
 
+          <!-- Ownership Filter: Alle / System / Meine -->
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Typ:</label>
+            <select
+              v-model="selectedOwnership"
+              aria-label="Template-Typ filtern"
+              data-testid="ownership-filter"
+              class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent"
+            >
+              <option value="">Alle Templates</option>
+              <option value="system">System-Templates</option>
+              <option value="custom">Meine Templates</option>
+            </select>
+          </div>
+
           <!-- Clear filters -->
           <button
-            v-if="selectedCategory || selectedPlatform"
+            v-if="selectedCategory || selectedPlatform || selectedOwnership"
             @click="clearFilters"
             class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1"
           >
@@ -782,10 +847,24 @@ onMounted(() => {
             @click="openEditor(template)"
             data-testid="template-card"
           >
-            <!-- Action buttons for custom templates -->
-            <div v-if="!template.is_default" class="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-              <!-- Edit button -->
+            <!-- Action buttons - Duplicate for ALL, Edit/Delete for custom only -->
+            <div class="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+              <!-- Duplicate button (all templates) -->
               <button
+                @click.stop="duplicateTemplate(template)"
+                :disabled="duplicating"
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-green-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50"
+                title="Als Kopie speichern"
+                aria-label="Template duplizieren"
+                data-testid="template-duplicate-btn"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <!-- Edit button (custom only) -->
+              <button
+                v-if="!template.is_default"
                 @click.stop="openEditor(template, true)"
                 class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-treff-blue hover:text-white text-gray-600 dark:text-gray-300 transition-all"
                 title="Template bearbeiten"
@@ -796,8 +875,9 @@ onMounted(() => {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
-              <!-- Delete button -->
+              <!-- Delete button (custom only) -->
               <button
+                v-if="!template.is_default"
                 @click.stop="openDeleteModal(template)"
                 class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-red-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all"
                 title="Template loeschen"
@@ -1463,6 +1543,19 @@ onMounted(() => {
               class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
               {{ editorIsEditMode ? 'Abbrechen' : 'Schliessen' }}
+            </button>
+            <!-- "Als Kopie speichern" button — available for system templates (not editable) -->
+            <button
+              v-if="editorTemplate && editorTemplate.is_default"
+              @click="duplicateFromEditor"
+              :disabled="duplicating"
+              class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              data-testid="editor-duplicate-btn"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {{ duplicating ? 'Wird kopiert...' : 'Als Kopie speichern' }}
             </button>
             <button
               v-if="editorIsEditMode"

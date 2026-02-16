@@ -60,10 +60,14 @@ async def list_templates(
     platform_format: Optional[str] = None,
     country: Optional[str] = None,
     search: Optional[str] = None,
+    ownership: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all templates with optional filters."""
+    """List all templates with optional filters.
+
+    ownership: 'system' for default templates, 'custom' for user-created, None for all.
+    """
     query = select(Template)
 
     if category:
@@ -74,6 +78,10 @@ async def list_templates(
         query = query.where(Template.country == country)
     if search:
         query = query.where(Template.name.ilike(f"%{search}%"))
+    if ownership == "system":
+        query = query.where(Template.is_default == True)
+    elif ownership == "custom":
+        query = query.where(Template.is_default == False)
 
     query = query.order_by(Template.category, Template.name)
     result = await db.execute(query)
@@ -185,6 +193,48 @@ async def delete_template(
     await db.delete(template)
     await db.commit()
     return {"message": "Template deleted"}
+
+
+@router.post("/{template_id}/duplicate", status_code=201)
+async def duplicate_template(
+    template_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Duplicate a template (system or custom) as a new custom template.
+
+    The duplicate is fully editable regardless of whether the source was
+    a system template. The name gets ' (Kopie)' appended, and
+    parent_template_id tracks the source.
+    """
+    result = await db.execute(select(Template).where(Template.id == template_id))
+    source = result.scalar_one_or_none()
+    if not source:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    duplicate = Template(
+        name=f"{source.name} (Kopie)",
+        category=source.category,
+        platform_format=source.platform_format,
+        slide_count=source.slide_count,
+        html_content=source.html_content,
+        css_content=source.css_content,
+        default_colors=source.default_colors,
+        default_fonts=source.default_fonts,
+        placeholder_fields=source.placeholder_fields,
+        thumbnail_url=source.thumbnail_url,
+        is_default=False,  # Duplicates are always custom / editable
+        is_country_themed=source.is_country_themed,
+        country=source.country,
+        version=1,
+        parent_template_id=source.id,
+    )
+    db.add(duplicate)
+    await db.flush()
+    await db.refresh(duplicate)
+    result_dict = template_to_dict(duplicate)
+    await db.commit()
+    return result_dict
 
 
 @router.get("/{template_id}/preview")
