@@ -307,6 +307,42 @@
   }
 }
 
+/* ── Typography Scale ─────────────────────────────────────────────── */
+@layer components {
+
+  /* text-display — Large hero/title text (2xl bold) */
+  .text-display {
+    @apply text-2xl font-bold leading-tight text-gray-900;
+  }
+  .dark .text-display {
+    @apply text-white;
+  }
+
+  /* text-heading — Section headings (xl semibold) */
+  .text-heading {
+    @apply text-xl font-semibold leading-snug text-gray-800;
+  }
+  .dark .text-heading {
+    @apply text-gray-100;
+  }
+
+  /* text-body — Default body text (base regular) */
+  .text-body {
+    @apply text-base font-normal leading-relaxed text-gray-700;
+  }
+  .dark .text-body {
+    @apply text-gray-300;
+  }
+
+  /* text-caption — Small caption/meta text (sm regular) */
+  .text-caption {
+    @apply text-sm font-normal leading-normal text-gray-500;
+  }
+  .dark .text-caption {
+    @apply text-gray-400;
+  }
+}
+
 /* ── Utility Layer ────────────────────────────────────────────────── */
 @layer utilities {
   /* Focus ring utility (legacy — prefer native focus-visible) */
@@ -316,6 +352,46 @@
 
   .dark .focus-ring {
     @apply focus:ring-primary-400/50 focus:ring-offset-gray-900;
+  }
+
+  /* === Country Gradient Utilities === */
+  .bg-gradient-usa {
+    background: linear-gradient(135deg, #B22234 0%, #002147 50%, #6B9BD2 100%);
+  }
+  .bg-gradient-canada {
+    background: linear-gradient(135deg, #FF0000 0%, #C41E3A 50%, #FFF5E1 100%);
+  }
+  .bg-gradient-australia {
+    background: linear-gradient(135deg, #8B4513 0%, #CC7722 50%, #006994 100%);
+  }
+  .bg-gradient-nz {
+    background: linear-gradient(135deg, #1B4D3E 0%, #4CAF50 50%, #5CB8E6 100%);
+  }
+  .bg-gradient-ireland {
+    background: linear-gradient(135deg, #169B62 0%, #FF8C00 50%, #FFFFFF 100%);
+  }
+  .bg-gradient-adventure {
+    background: linear-gradient(135deg, #3B7AB1 0%, #FDD000 50%, #FF6B35 100%);
+  }
+
+  /* Dark mode gradient variants (slightly muted) */
+  .dark .bg-gradient-usa {
+    background: linear-gradient(135deg, #8B1A29 0%, #001733 50%, #4A7AAF 100%);
+  }
+  .dark .bg-gradient-canada {
+    background: linear-gradient(135deg, #CC0000 0%, #9B1830 50%, #D4C4A8 100%);
+  }
+  .dark .bg-gradient-australia {
+    background: linear-gradient(135deg, #6B3410 0%, #A66019 50%, #005070 100%);
+  }
+  .dark .bg-gradient-nz {
+    background: linear-gradient(135deg, #143D30 0%, #3D8B40 50%, #4A9BC2 100%);
+  }
+  .dark .bg-gradient-ireland {
+    background: linear-gradient(135deg, #127A4E 0%, #CC7000 50%, #D4D4D4 100%);
+  }
+  .dark .bg-gradient-adventure {
+    background: linear-gradient(135deg, #2F628E 0%, #CAA600 50%, #CC5529 100%);
   }
 
   /* Transition utilities */

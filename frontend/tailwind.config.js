@@ -39,9 +39,82 @@ export default {
           950: '#1A1500',
           DEFAULT: '#FDD000',
         },
+        // === Extended Brand Scale (explicit treff-blue / treff-yellow) ===
+        'treff-blue': {
+          50:  '#EBF3FA',
+          100: '#D7E7F5',
+          200: '#AFCFEB',
+          300: '#87B7E0',
+          400: '#5F9FD6',
+          500: '#3B7AB1',
+          600: '#2F628E',
+          700: '#244A6A',
+          800: '#193247',
+          900: '#0E1A23',
+          DEFAULT: '#3B7AB1',
+        },
+        'treff-yellow': {
+          50:  '#FFFBE6',
+          100: '#FFF7CC',
+          200: '#FFEF99',
+          300: '#FFE766',
+          400: '#FFDF33',
+          500: '#FDD000',
+          600: '#CAA600',
+          700: '#987D00',
+          800: '#655300',
+          900: '#332A00',
+          DEFAULT: '#FDD000',
+        },
+
+        // === Country Palettes ===
+        // USA — Red, White & Blue patriotic theme
+        'treff-usa': {
+          red:    '#B22234',
+          navy:   '#002147',
+          white:  '#FFFFFF',
+          sky:    '#6B9BD2',
+          gold:   '#FFD700',
+          DEFAULT: '#B22234',
+        },
+        // Canada — Red, White, Maple
+        'treff-canada': {
+          red:    '#FF0000',
+          white:  '#FFFFFF',
+          maple:  '#C41E3A',
+          cream:  '#FFF5E1',
+          forest: '#2E5A36',
+          DEFAULT: '#FF0000',
+        },
+        // Australia — Earth, Ochre, Ocean
+        'treff-australia': {
+          earth:  '#8B4513',
+          ochre:  '#CC7722',
+          ocean:  '#006994',
+          sand:   '#F4D8A5',
+          sky:    '#87CEEB',
+          DEFAULT: '#CC7722',
+        },
+        // New Zealand — Forest, Fern, Sky
+        'treff-nz': {
+          forest: '#1B4D3E',
+          fern:   '#4CAF50',
+          sky:    '#5CB8E6',
+          cream:  '#FAF3E0',
+          earth:  '#8B6F47',
+          DEFAULT: '#1B4D3E',
+        },
+        // Ireland — Green, Gold, Stone
+        'treff-ireland': {
+          green:  '#169B62',
+          gold:   '#FF8C00',
+          stone:  '#A9A9A9',
+          white:  '#FFFFFF',
+          moss:   '#3D5A3E',
+          DEFAULT: '#169B62',
+        },
+
         // Legacy aliases (backward compat)
-        'treff-blue':   '#3B7AB1',
-        'treff-yellow': '#FDD000',
         'treff-dark':   '#1A1A2E',
         'treff-light':  '#F5F5F5',
       },
@@ -99,6 +172,9 @@ export default {
         'card':  '0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.06)',
         'card-hover': '0 4px 12px rgb(0 0 0 / 0.1), 0 2px 4px rgb(0 0 0 / 0.06)',
         'dialog': '0 12px 28px rgb(0 0 0 / 0.12), 0 8px 10px rgb(0 0 0 / 0.08)',
+        // === 3-Level Shadow System ===
+        'modal': '0 12px 28px rgb(0 0 0 / 0.12), 0 8px 10px rgb(0 0 0 / 0.08)',
+        'popup': '0 20px 40px rgb(0 0 0 / 0.18), 0 12px 16px rgb(0 0 0 / 0.1)',
         'inner': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
         'none':  'none',
       },
@@ -145,12 +221,17 @@ export default {
           '0%':   { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        'slide-right': {
+          '0%':   { opacity: '0', transform: 'translateX(-12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
       },
       animation: {
-        'fade-in':    'fade-in 200ms ease-out',
-        'slide-up':   'slide-up 250ms ease-out',
-        'slide-down': 'slide-down 250ms ease-out',
-        'scale-in':   'scale-in 200ms ease-out',
+        'fade-in':     'fade-in 200ms ease-out',
+        'slide-up':    'slide-up 250ms ease-out',
+        'slide-down':  'slide-down 250ms ease-out',
+        'scale-in':    'scale-in 200ms ease-out',
+        'slide-right': 'slide-right 250ms ease-out',
       },
     },
   },
