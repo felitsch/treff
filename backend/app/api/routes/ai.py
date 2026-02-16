@@ -478,6 +478,8 @@ async def generate_text(
     - slide_count (int, optional): Number of slides (default: 1)
     - student_id (int, optional): If provided, load the student's personality_preset
       and use it to customize the AI generation tone and style.
+    - buyer_journey_stage (str, optional): awareness, consideration, or decision.
+      Adapts tone and CTA based on content-strategy.json buyer journey definitions.
 
     Returns structured content for all slides, captions, and hashtags.
     Includes 'source' field: "gemini" or "rule_based".
@@ -494,6 +496,7 @@ async def generate_text(
         platform = request.get("platform", "instagram_feed")
         slide_count = request.get("slide_count", 1)
         student_id = request.get("student_id")
+        buyer_journey_stage = request.get("buyer_journey_stage")
 
         if slide_count < 1:
             slide_count = 1
@@ -537,6 +540,7 @@ async def generate_text(
             slide_count=slide_count,
             api_key=api_key,
             personality_preset=personality_preset,
+            buyer_journey_stage=buyer_journey_stage,
         )
 
         return result
@@ -5473,3 +5477,49 @@ Wichtig: Antworte NUR mit dem JSON, kein anderer Text."""
         "format_icon": fmt.icon,
         "source": "rule_based",
     }
+
+
+@router.get("/strategy-context")
+async def get_strategy_context(
+    platform: str = "instagram_feed",
+    category: str = "",
+    buyer_journey_stage: str = "",
+    user_id: int = Depends(get_current_user_id),
+):
+    """Return the current dynamic strategy context for debugging/preview.
+
+    Shows what hook formulas, CTAs, buyer journey stage, seasonal phase,
+    content pillar, and platform best practices would be injected into
+    the Gemini prompt for a given combination of parameters.
+
+    Query params:
+    - platform: Target platform (instagram_feed, instagram_reels, tiktok, etc.)
+    - category: Content category (laender_spotlight, erfahrungsberichte, etc.)
+    - buyer_journey_stage: awareness, consideration, or decision
+    """
+    from app.core.strategy_loader import StrategyLoader
+
+    try:
+        strategy = StrategyLoader.instance()
+
+        result = {
+            "current_seasonal_phase": strategy.get_current_seasonal_phase(),
+            "country_weights": strategy.get_country_weights(),
+            "hook_formulas_count": len(strategy.get_hook_formulas(platform or None)),
+            "cta_strategies_count": len(strategy.get_cta_strategies(platform or None)),
+            "tone_of_voice": strategy.get_tone_of_voice(),
+            "buyer_journey_stage": (
+                strategy.get_buyer_journey_stage(buyer_journey_stage) if buyer_journey_stage else None
+            ),
+            "content_pillar": (
+                strategy.get_content_pillar_prompt_section(category) if category else None
+            ),
+            "combined_prompt_sections": strategy.build_strategy_prompt_sections(
+                platform=platform or None,
+                category=category or None,
+                buyer_journey_stage=buyer_journey_stage or None,
+            ),
+        }
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Strategy context failed: {str(e)}")
