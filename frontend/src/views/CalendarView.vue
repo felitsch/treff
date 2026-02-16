@@ -2,7 +2,9 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
 import ContentMixPanel from '@/components/calendar/ContentMixPanel.vue'
+import CalendarExportImport from '@/components/calendar/CalendarExportImport.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -13,6 +15,7 @@ import BaseCard from '@/components/common/BaseCard.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const toast = useToast()
 
 // State
 const loading = ref(false)
@@ -37,6 +40,13 @@ const currentYear = ref(new Date().getFullYear())
 const currentMonth = ref(new Date().getMonth() + 1) // 1-based
 const postsByDate = ref({})
 const totalPosts = ref(0)
+
+// Multi-select state for batch drag-and-drop
+const selectedPostIds = ref(new Set())
+const isMultiSelectMode = ref(false)
+const showMultiMoveDialog = ref(false)
+const multiMoveTargetDate = ref(null)
+const multiMoveTime = ref('10:00')
 
 // View mode: 'month', 'week', or 'queue'
 const viewMode = ref('month')
@@ -840,12 +850,188 @@ const episodeInfo = ref(null)
 const shiftFollowing = ref(false)
 const validatingOrder = ref(false)
 
+// ========== MULTI-SELECT FUNCTIONS ==========
+
+function togglePostSelection(post, event) {
+  if (event) event.stopPropagation()
+  const id = post.id
+  const newSet = new Set(selectedPostIds.value)
+  if (newSet.has(id)) {
+    newSet.delete(id)
+  } else {
+    newSet.add(id)
+  }
+  selectedPostIds.value = newSet
+  // Auto-enable multi-select mode when 2+ selected
+  if (newSet.size >= 2) {
+    isMultiSelectMode.value = true
+  } else if (newSet.size === 0) {
+    isMultiSelectMode.value = false
+  }
+}
+
+function isPostSelected(postId) {
+  return selectedPostIds.value.has(postId)
+}
+
+function clearSelection() {
+  selectedPostIds.value = new Set()
+  isMultiSelectMode.value = false
+}
+
+function selectAllPostsOnDate(dateStr) {
+  const posts = postsByDate.value[dateStr] || []
+  const newSet = new Set(selectedPostIds.value)
+  posts.forEach(p => newSet.add(p.id))
+  selectedPostIds.value = newSet
+  if (newSet.size >= 2) isMultiSelectMode.value = true
+}
+
+// Get all selected posts as objects
+const selectedPosts = computed(() => {
+  if (selectedPostIds.value.size === 0) return []
+  const allPosts = []
+  Object.values(postsByDate.value).forEach(datePosts => {
+    datePosts.forEach(p => {
+      if (selectedPostIds.value.has(p.id)) allPosts.push(p)
+    })
+  })
+  // Also check unscheduled posts
+  unscheduledPosts.value.forEach(p => {
+    if (selectedPostIds.value.has(p.id)) allPosts.push(p)
+  })
+  return allPosts
+})
+
+function openMultiMoveDialog() {
+  if (selectedPostIds.value.size === 0) return
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  multiMoveTargetDate.value = tomorrow.toISOString().split('T')[0]
+  multiMoveTime.value = '10:00'
+  showMultiMoveDialog.value = true
+}
+
+async function confirmMultiMove() {
+  if (!multiMoveTargetDate.value || selectedPostIds.value.size === 0) return
+  if (isPastDate(multiMoveTargetDate.value)) return
+
+  const postsToMove = [...selectedPosts.value]
+  const targetDate = multiMoveTargetDate.value
+  const targetTime = multiMoveTime.value
+
+  // Optimistic update: store originals and immediately move posts in UI
+  const originals = postsToMove.map(p => ({
+    id: p.id,
+    scheduled_date: p.scheduled_date,
+    scheduled_time: p.scheduled_time,
+    status: p.status,
+  }))
+
+  // Apply optimistic update
+  postsToMove.forEach(p => {
+    optimisticMovePost(p, targetDate, targetTime)
+  })
+
+  showMultiMoveDialog.value = false
+  const movedCount = postsToMove.length
+  toast.info(`${movedCount} Posts werden verschoben...`)
+
+  // Send API requests
+  let failedCount = 0
+  const results = await Promise.allSettled(
+    postsToMove.map(p =>
+      fetch(`/api/posts/${p.id}/schedule`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          scheduled_date: targetDate,
+          scheduled_time: targetTime,
+        }),
+      }).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+    )
+  )
+
+  results.forEach((result, idx) => {
+    if (result.status === 'rejected') {
+      failedCount++
+      // Rollback this post
+      rollbackPost(originals[idx])
+    }
+  })
+
+  // Refresh data to ensure consistency
+  await Promise.all([fetchData(), fetchUnscheduled()])
+
+  if (failedCount === 0) {
+    toast.success(`${movedCount} Posts erfolgreich verschoben`)
+  } else {
+    toast.error(`${failedCount} von ${movedCount} Posts konnten nicht verschoben werden`)
+  }
+
+  clearSelection()
+}
+
+function cancelMultiMoveDialog() {
+  showMultiMoveDialog.value = false
+}
+
+// ========== OPTIMISTIC UPDATE HELPERS ==========
+
+function optimisticMovePost(post, newDate, newTime) {
+  // Remove from old date in postsByDate
+  const oldDateStr = post.scheduled_date
+  if (oldDateStr && postsByDate.value[oldDateStr]) {
+    postsByDate.value[oldDateStr] = postsByDate.value[oldDateStr].filter(p => p.id !== post.id)
+  }
+  // Remove from unscheduled
+  unscheduledPosts.value = unscheduledPosts.value.filter(p => p.id !== post.id)
+
+  // Add to new date
+  if (!postsByDate.value[newDate]) {
+    postsByDate.value[newDate] = []
+  }
+  const movedPost = { ...post, scheduled_date: newDate, scheduled_time: newTime, status: 'scheduled' }
+  postsByDate.value[newDate].push(movedPost)
+}
+
+function rollbackPost(original) {
+  // Remove from all dates (it might be in the wrong place)
+  Object.keys(postsByDate.value).forEach(dateStr => {
+    postsByDate.value[dateStr] = postsByDate.value[dateStr].filter(p => p.id !== original.id)
+  })
+  // Re-add to original date or unscheduled
+  if (original.scheduled_date) {
+    if (!postsByDate.value[original.scheduled_date]) {
+      postsByDate.value[original.scheduled_date] = []
+    }
+    postsByDate.value[original.scheduled_date].push({
+      id: original.id,
+      scheduled_date: original.scheduled_date,
+      scheduled_time: original.scheduled_time,
+      status: original.status,
+    })
+  }
+}
+
 // ========== DRAG AND DROP ==========
 
 function onDragStart(event, post) {
-  draggedPost.value = post
+  // If multi-select mode and this post is selected, drag all selected
+  if (isMultiSelectMode.value && isPostSelected(post.id) && selectedPostIds.value.size > 1) {
+    draggedPost.value = { ...post, _isMultiDrag: true, _selectedIds: [...selectedPostIds.value] }
+    event.dataTransfer.setData('text/plain', JSON.stringify({ postIds: [...selectedPostIds.value] }))
+  } else {
+    draggedPost.value = post
+    event.dataTransfer.setData('text/plain', JSON.stringify({ postId: post.id }))
+  }
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', JSON.stringify({ postId: post.id }))
   event.target.classList.add('opacity-50')
 }
 
@@ -885,9 +1071,19 @@ async function onDrop(event, dateStr) {
   // Prevent scheduling on past dates
   if (isPastDate(dateStr)) return
 
+  // Multi-drag: if multiple posts selected, open multi-move dialog
+  if (draggedPost.value._isMultiDrag && draggedPost.value._selectedIds?.length > 1) {
+    multiMoveTargetDate.value = dateStr
+    multiMoveTime.value = '10:00'
+    showMultiMoveDialog.value = true
+    draggedPost.value = null
+    return
+  }
+
   schedulingPost.value = draggedPost.value
   scheduleTargetDate.value = dateStr
-  scheduleTime.value = '10:00'
+  // Keep existing time if post already has one, else default to 10:00
+  scheduleTime.value = draggedPost.value.scheduled_time || '10:00'
   scheduleError.value = null
   episodeConflicts.value = []
   episodeWarnings.value = []
@@ -941,13 +1137,32 @@ async function confirmSchedule() {
 
   scheduleError.value = null
 
+  // Store original state for rollback
+  const post = schedulingPost.value
+  const originalState = {
+    id: post.id,
+    scheduled_date: post.scheduled_date,
+    scheduled_time: post.scheduled_time,
+    status: post.status,
+  }
+  const newDate = scheduleTargetDate.value
+  const newTime = scheduleTime.value
+
+  // Optimistic update: immediately move post in UI
+  optimisticMovePost(post, newDate, newTime)
+
+  // Close dialog immediately for snappy UX
+  showTimeDialog.value = false
+  const postTitle = post.title || 'Unbenannt'
+
   try {
     // Use episode-aware scheduling for arc posts, regular for others
-    const isArcPost = schedulingPost.value.story_arc_id
+    const isArcPost = post.story_arc_id
     let res
 
     if (isArcPost) {
-      // Use episode-aware schedule endpoint
+      // Re-open dialog for arc posts to handle conflicts
+      // (optimistic update already applied, will rollback on failure)
       res = await fetch('/api/calendar/schedule-episode', {
         method: 'POST',
         headers: {
@@ -955,10 +1170,10 @@ async function confirmSchedule() {
           Authorization: `Bearer ${auth.accessToken}`,
         },
         body: JSON.stringify({
-          post_id: schedulingPost.value.id,
-          scheduled_date: scheduleTargetDate.value,
-          scheduled_time: scheduleTime.value,
-          force: episodeConflicts.value.length > 0, // force if user proceeds despite conflicts
+          post_id: post.id,
+          scheduled_date: newDate,
+          scheduled_time: newTime,
+          force: episodeConflicts.value.length > 0,
           shift_following: shiftFollowing.value,
         }),
       })
@@ -966,24 +1181,29 @@ async function confirmSchedule() {
       if (res.ok) {
         const data = await res.json()
         if (!data.success) {
-          // Order conflict - show error but don't close dialog
+          // Order conflict - rollback optimistic update and re-show dialog
+          rollbackPost(originalState)
           scheduleError.value = data.message || 'Reihenfolge-Konflikt'
           episodeConflicts.value = data.conflicts || []
           episodeWarnings.value = data.warnings || []
+          schedulingPost.value = post
+          scheduleTargetDate.value = newDate
+          scheduleTime.value = newTime
+          showTimeDialog.value = true
           return
         }
       }
     } else {
       // Regular scheduling for non-arc posts
-      res = await fetch(`/api/posts/${schedulingPost.value.id}/schedule`, {
+      res = await fetch(`/api/posts/${post.id}/schedule`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.accessToken}`,
         },
         body: JSON.stringify({
-          scheduled_date: scheduleTargetDate.value,
-          scheduled_time: scheduleTime.value,
+          scheduled_date: newDate,
+          scheduled_time: newTime,
         }),
       })
     }
@@ -993,13 +1213,17 @@ async function confirmSchedule() {
       throw new Error(errData.detail || `HTTP ${res.status}`)
     }
 
-    // Refresh both calendar and unscheduled list
+    // Success! Show toast and refresh to ensure consistency
+    toast.success(`"${postTitle}" auf ${formatDateForDisplay(newDate)} verschoben`)
     await Promise.all([fetchData(), fetchUnscheduled()])
   } catch (err) {
     console.error('Schedule error:', err)
-    error.value = `Fehler beim Planen: ${err.message}`
+    // Rollback optimistic update on failure
+    rollbackPost(originalState)
+    toast.error(`Fehler beim Verschieben: ${err.message}`)
+    // Refresh to ensure UI matches server state
+    await Promise.all([fetchData(), fetchUnscheduled()])
   } finally {
-    showTimeDialog.value = false
     schedulingPost.value = null
     scheduleTargetDate.value = null
     scheduleError.value = null
@@ -1731,16 +1955,27 @@ onMounted(() => {
               draggable="true"
               @dragstart="onDragStart($event, post)"
               @dragend="onDragEnd"
+              @click.ctrl="togglePostSelection(post, $event)"
+              @click.meta="togglePostSelection(post, $event)"
               class="rounded-md px-1.5 py-1 border-l-3 text-xs cursor-grab active:cursor-grabbing truncate"
               :class="[
                 getCategoryStyle(post.category).bg,
                 getCategoryStyle(post.category).text,
                 'border-l-[3px]',
                 getCategoryStyle(post.category).border,
+                isPostSelected(post.id) ? 'ring-2 ring-blue-500 ring-offset-1' : '',
               ]"
-              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''}`"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''} – ${isMultiSelectMode ? 'Cmd+Klick zum Aus-/Abwaehlen' : 'Cmd+Klick fuer Mehrfachauswahl'}`"
             >
               <div class="flex items-center gap-1">
+                <!-- Selection checkbox in multi-select mode -->
+                <input
+                  v-if="isMultiSelectMode"
+                  type="checkbox"
+                  :checked="isPostSelected(post.id)"
+                  @click.stop="togglePostSelection(post, $event)"
+                  class="w-3 h-3 rounded border-gray-400 text-blue-600 focus:ring-blue-500 flex-shrink-0 cursor-pointer"
+                />
                 <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
                 <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
                 <span
@@ -1820,22 +2055,42 @@ onMounted(() => {
         <div
           v-for="(day, idx) in weekDays"
           :key="'allday-' + day.dateStr"
-          class="py-1 px-1 border-r border-gray-200 dark:border-gray-700 last:border-r-0 min-h-[32px]"
-          :class="day.isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : (idx >= 5 ? 'bg-gray-50/30 dark:bg-gray-800/30' : '')"
+          class="py-1 px-1 border-r border-gray-200 dark:border-gray-700 last:border-r-0 min-h-[32px] transition-colors"
+          :class="[
+            day.isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : (idx >= 5 ? 'bg-gray-50/30 dark:bg-gray-800/30' : ''),
+            dragOverDate === day.dateStr && !isPastDate(day.dateStr) ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
+            isPastDate(day.dateStr) && draggedPost ? 'opacity-50 cursor-not-allowed' : '',
+          ]"
+          @dragover="onDragOver($event, day.dateStr)"
+          @dragleave="onDragLeave($event, day.dateStr)"
+          @drop="onDrop($event, day.dateStr)"
         >
           <div
             v-for="post in getAllDayPosts(day.dateStr)"
             :key="'allday-post-' + post.id"
-            class="rounded-md px-1.5 py-0.5 text-xs truncate mb-0.5 border-l-[3px]"
+            draggable="true"
+            @dragstart="onDragStart($event, post)"
+            @dragend="onDragEnd"
+            class="rounded-md px-1.5 py-0.5 text-xs truncate mb-0.5 border-l-[3px] cursor-grab active:cursor-grabbing"
             :class="[
               getCategoryStyle(post.category).bg,
               getCategoryStyle(post.category).text,
               getCategoryStyle(post.category).border,
+              isPostSelected(post.id) ? 'ring-2 ring-blue-500 ring-offset-1' : '',
             ]"
             :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}`"
+            @click.ctrl="togglePostSelection(post, $event)"
+            @click.meta="togglePostSelection(post, $event)"
           >
             <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
             <span class="truncate font-medium ml-1">{{ post.title || 'Unbenannt' }}</span>
+          </div>
+          <!-- Drop zone indicator for weekly all-day row -->
+          <div
+            v-if="draggedPost && dragOverDate === day.dateStr && !isPastDate(day.dateStr)"
+            class="rounded-md border-2 border-dashed border-blue-400 bg-blue-50 dark:bg-blue-900/20 px-1 py-0.5 text-[10px] text-blue-600 dark:text-blue-400 text-center"
+          >
+            Ablegen
           </div>
         </div>
       </div>
@@ -1859,18 +2114,29 @@ onMounted(() => {
             class="min-h-[48px] py-0.5 px-1 border-r border-gray-100 dark:border-gray-700/30 last:border-r-0 transition-colors"
             :class="[
               day.isToday ? 'bg-blue-50/30 dark:bg-blue-900/5' : (idx >= 5 ? 'bg-gray-50/20 dark:bg-gray-800/20' : ''),
+              dragOverDate === day.dateStr && !isPastDate(day.dateStr) ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-400' : '',
+              isPastDate(day.dateStr) && draggedPost ? 'opacity-50 cursor-not-allowed' : '',
             ]"
+            @dragover="onDragOver($event, day.dateStr)"
+            @dragleave="onDragLeave($event, day.dateStr)"
+            @drop="onDrop($event, day.dateStr)"
           >
             <div
               v-for="post in getPostsAtTimeSlot(day.dateStr, slot.hour)"
               :key="'wk-' + post.id"
-              class="rounded-md px-1.5 py-1 text-xs cursor-default mb-0.5 border-l-[3px]"
+              draggable="true"
+              @dragstart="onDragStart($event, post)"
+              @dragend="onDragEnd"
+              class="rounded-md px-1.5 py-1 text-xs cursor-grab active:cursor-grabbing mb-0.5 border-l-[3px]"
               :class="[
                 getCategoryStyle(post.category).bg,
                 getCategoryStyle(post.category).text,
                 getCategoryStyle(post.category).border,
+                isPostSelected(post.id) ? 'ring-2 ring-blue-500 ring-offset-1' : '',
               ]"
               :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label} - ${post.scheduled_time || ''}`"
+              @click.ctrl="togglePostSelection(post, $event)"
+              @click.meta="togglePostSelection(post, $event)"
             >
               <div class="flex items-center gap-1">
                 <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
@@ -2453,6 +2719,120 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Multi-select floating toolbar -->
+    <Teleport to="body">
+      <Transition name="slide-up">
+        <div
+          v-if="selectedPostIds.size > 0"
+          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 px-5 py-3 flex items-center gap-4"
+          data-testid="multi-select-toolbar"
+        >
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+              <span class="text-sm font-bold text-blue-700 dark:text-blue-300">{{ selectedPostIds.size }}</span>
+            </div>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ selectedPostIds.size === 1 ? 'Post' : 'Posts' }} ausgewaehlt
+            </span>
+          </div>
+          <div class="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
+          <button
+            @click="openMultiMoveDialog"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            Verschieben
+          </button>
+          <button
+            @click="clearSelection"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Abbrechen
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Multi-move dialog (modal) -->
+    <div
+      v-if="showMultiMoveDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="cancelMultiMoveDialog"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
+          {{ selectedPostIds.size }} Posts verschieben
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Alle ausgewaehlten Posts auf ein neues Datum verschieben.
+        </p>
+
+        <!-- Selected posts preview -->
+        <div class="mb-4 max-h-[120px] overflow-y-auto space-y-1">
+          <div
+            v-for="post in selectedPosts"
+            :key="'multi-' + post.id"
+            class="flex items-center gap-2 px-2 py-1 rounded-md text-xs"
+            :class="[getCategoryStyle(post.category).bg, getCategoryStyle(post.category).text]"
+          >
+            <span>{{ getCategoryIcon(post.category) }}</span>
+            <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
+            <span class="ml-auto text-[10px] opacity-70">{{ post.scheduled_date || 'ungeplant' }}</span>
+          </div>
+        </div>
+
+        <!-- Target date -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="multi-move-date">Neues Datum</label>
+          <input
+            id="multi-move-date"
+            v-model="multiMoveTargetDate"
+            type="date"
+            :min="getTodayStr()"
+            class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :class="isPastDate(multiMoveTargetDate) ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'"
+          />
+          <p v-if="isPastDate(multiMoveTargetDate)" class="mt-1 text-xs text-red-500 dark:text-red-400">
+            Vergangene Daten koennen nicht ausgewaehlt werden.
+          </p>
+        </div>
+
+        <!-- Target time -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="multi-move-time">Uhrzeit</label>
+          <input
+            id="multi-move-time"
+            v-model="multiMoveTime"
+            type="time"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <button
+            @click="cancelMultiMoveDialog"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Abbrechen
+          </button>
+          <button
+            @click="confirmMultiMove"
+            :disabled="isPastDate(multiMoveTargetDate)"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+            :class="isPastDate(multiMoveTargetDate) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+          >
+            {{ selectedPostIds.size }} Posts verschieben
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Episode Tooltip (floating, follows mouse) -->
     <Teleport to="body">
       <div
@@ -2487,3 +2867,21 @@ onMounted(() => {
     <TourSystem ref="tourRef" page-key="calendar" />
   </div>
 </template>
+
+<style scoped>
+/* Multi-select toolbar slide-up animation */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease-out;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+.slide-up-enter-to,
+.slide-up-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
