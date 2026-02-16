@@ -1,5 +1,101 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #288: I-11: Backend - Content Pipeline Endpoints
+**Date:** 2026-02-16
+**Feature ID:** #288
+**Status:** PASSING
+
+### What was implemented:
+Complete Smart Content Pipeline with 4 new API endpoints for media analysis, student content inbox, processing, and content multiplication.
+
+### Backend files created:
+1. **PipelineItem Model** (`backend/app/models/pipeline_item.py`) - SQLAlchemy model with id, user_id, student_id, asset_id, suggested_post_type, suggested_caption_seeds (JSON), suggested_platforms (JSON), detected_country, analysis_summary, status (pending/analyzed/processing/processed/failed), result_post_id, error_message, source_description, timestamps
+2. **Pydantic Schemas** (`backend/app/schemas/pipeline.py`) - AnalyzeMediaResponse, InboxItemResponse, InboxListResponse, ProcessRequest, ProcessResponse, MultiplyRequest, DerivativePostInfo, MultiplyResponse
+3. **Content Analyzer Service** (`backend/app/services/content_analyzer.py`) - AI media analysis using Gemini Vision API with rule-based fallback. Country detection from 5 countries, POST_TYPE_RULES for 8 content types, fallback German caption generation
+4. **Content Multiplier Service** (`backend/app/services/content_multiplier.py`) - Derivative content generation with platform-specific adaptation rules for instagram_feed, instagram_story, tiktok, carousel. AI-powered adaptation via Gemini with rule-based fallback
+5. **Pipeline Router** (`backend/app/api/routes/pipeline.py`) - 4 endpoints:
+   - POST /api/pipeline/analyze-media: Upload image/video, AI suggests post type, captions, platforms, country
+   - GET /api/pipeline/inbox: Paginated inbox with student_id/status filters
+   - POST /api/pipeline/process: Convert inbox item to draft post with AI-generated title and caption
+   - POST /api/pipeline/multiply: Generate derivative posts from source post for different platforms
+
+### Backend files modified:
+- backend/app/models/__init__.py - Added PipelineItem import
+- backend/app/main.py - Added pipeline router (modified by orchestrator)
+
+### Verification completed:
+- API: All 4 endpoints tested with automated test script (10 test steps)
+- API: analyze-media creates asset + pipeline item with analysis results
+- API: inbox returns paginated items with student names and asset info
+- API: process converts analyzed item to draft post with correct category/platform/country
+- API: multiply creates 2 derivatives (instagram_story + tiktok) from instagram_feed source
+- API: Error cases verified: re-process blocked (400), non-existent post (404), no auth (401), invalid format (400)
+- Swagger: All 4 endpoints visible and documented in /docs
+- Console: Zero JavaScript errors
+- Mock data: No globalThis/devStore/mockDb/testData patterns found
+- Persistence: Data survives server restart (2 inbox items + 3 posts persist)
+- Git commit: 4c17166
+
+### Current state:
+- Feature #288 marked as PASSING
+
+---
+
+## Session - Feature #277: TREFF Content Strategy entwickeln
+**Date:** 2026-02-16
+**Feature ID:** #277
+**Status:** PASSING
+
+### What was implemented:
+Complete TREFF Sprachreisen content strategy as the foundation for all AI-powered content features.
+
+### Files created:
+1. **frontend/src/config/content-strategy.json** (machine-readable, ~500 lines)
+   - Brand identity, tone of voice, USPs
+   - Target audience profiles (Schueler 14-18, Eltern 40-55) with pain points and motivations
+   - 7 Content Pillars: Erfahrungsberichte (30%), Laender-Spotlights (20%), Tipps & Tricks (20%), Fristen/CTAs (10%), FAQ (10%), Behind the Scenes (5%), Infografiken (5%)
+   - 3-stage Buyer Journey: Awareness (40%), Consideration (35%), Decision (25%)
+   - Content Calendar: Weekly rhythm (Mo-So themes), 4 seasonal phases, country rotation (USA 30%, Canada 20%, Australia 20%, NZ 15%, Ireland 15%)
+   - Hub-and-Spoke: 8 evergreen hubs, 4 spoke types
+   - Competitor Analysis: 5 competitors (EF, AIFS, Stepin, iSt, YFU)
+   - Platform Strategy: Instagram (Reels 40%, Carousels 35%, Stories 15%, Single 10%) + TikTok
+   - KPI Targets: 1,047 -> 5,000 followers in 12 months
+
+2. **docs/content-strategy.md** (human-readable, ~300 lines)
+   - Full strategy document in German
+   - 11 sections covering all aspects
+
+3. **backend/app/api/routes/content_strategy.py** (API, ~344 lines)
+   - GET /api/content-strategy - Full strategy
+   - GET /api/content-strategy/pillars - Pillars with distribution %
+   - GET /api/content-strategy/buyer-journey - 3 journey stages
+   - GET /api/content-strategy/seasonal - Current seasonal phase (auto-detected)
+   - GET /api/content-strategy/competitors - 5 competitor analyses
+   - GET /api/content-strategy/hub-and-spoke - 8 hubs + spoke types
+   - GET /api/content-strategy/platform/{platform} - Instagram/TikTok strategies
+   - GET /api/content-strategy/kpis - Growth targets
+   - GET /api/content-strategy/tone-of-voice - Brand voice guidelines
+   - Also includes social-strategy endpoints (added by another agent)
+
+4. **backend/app/main.py** (modified) - Registered content_strategy router
+
+### Verification completed:
+- API: All 8 sub-endpoints return correct structured JSON
+- API: Full strategy returns 11 top-level keys (version, brand, target_audience, content_pillars, buyer_journey, content_calendar, hub_and_spoke, competitor_analysis, platform_strategy, kpi_targets)
+- API: Pillars returns 7 pillars totaling 100%
+- API: Seasonal correctly identifies February as "Winter - Community & Vorfreude"
+- API: Competitors returns 5 entries
+- API: Platform/instagram returns priority 1 with 4 format types
+- API: Auth protected (401 for unauthenticated)
+- Browser: App loads, login works, zero console errors
+- Mock data grep: Zero matches in all new files
+- Git commit: 50522db
+
+### Current state:
+- Feature #277 marked as PASSING
+
+---
+
 ## Session - Feature #219: Settings Tour
 **Date:** 2026-02-13
 **Feature ID:** #219
