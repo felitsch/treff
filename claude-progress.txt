@@ -1,5 +1,69 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #227: Design-System & Tailwind Config Ueberarbeitung
+**Date:** 2026-02-16
+**Feature ID:** #227
+**Status:** PASSING
+
+### What was implemented:
+Complete design system overhaul with consistent design tokens, component utility classes, dark mode support, and a visual reference page.
+
+### 1. tailwind.config.js Overhaul:
+- **Brand Colors**: Primary (#3B7AB1 TREFF Blue) with 11 shade variants (50-950), Secondary (#FDD000 TREFF Yellow) with 11 shade variants
+- **Legacy Aliases**: Preserved treff-blue, treff-yellow, treff-dark, treff-light for backward compatibility
+- **Typography Scale**: text-xs through text-4xl with explicit line-heights (e.g., 12px/16px, 36px/40px)
+- **Spacing Scale**: Extended with 4.5, 13, 15, 18, 22, 26, 30, 34, 128, 144 values
+- **Border Radius**: 6-tier system (sm=4px, md=8px, lg=12px, xl=16px, 2xl=20px, 3xl=24px)
+- **Box Shadow**: 8 levels including card, card-hover, dialog, inner, plus standard sm/md/lg/xl/2xl
+- **Z-Index Scale**: dropdown(50), sticky(60), overlay(70), modal(80), toast(90), tooltip(100)
+- **Animations**: fade-in, slide-up, slide-down, scale-in keyframes
+- **Max Width**: content(72rem), narrow(48rem) for content areas
+
+### 2. main.css Component Classes (@layer components):
+- **Buttons**: btn-base, btn-primary, btn-secondary, btn-ghost, btn-danger + btn-sm, btn-lg, btn-icon sizes
+- **Cards**: card (default with border+shadow), card-hover (interactive), card-flat (borderless)
+- **Inputs**: input-field, input-label, input-hint, input-error, input-error-text
+- **Badges**: badge-primary, badge-secondary, badge-success, badge-warning, badge-danger, badge-neutral
+- **Layout**: page-header, page-title, section-title, divider, overlay-backdrop
+- **Utilities**: focus-ring (updated to use primary), transition-base, text-truncate, scrollbar-thin
+
+### 3. Dark Mode Support:
+- All component classes have .dark variants
+- Focus-visible ring-offset adjusted for dark backgrounds
+- Base layer sets body colors for both light/dark modes
+
+### 4. Design-System Reference Page:
+- DesignSystemView.vue — Visual documentation of all design tokens
+- 9 interactive sections: Farben, Typografie, Buttons, Cards, Inputs, Badges, Shadows, Spacing, Radius
+- Section navigation tabs with scroll-to behavior
+- Design-Richtlinien section with usage guidelines
+- Route: /design-system with sidebar navigation entry
+
+### Files created/modified:
+- frontend/tailwind.config.js (MODIFIED) — Expanded from 23 to 158 lines with full design token system
+- frontend/src/assets/main.css (MODIFIED) — Expanded from 41 to 368 lines with @layer components/utilities
+- frontend/src/views/DesignSystemView.vue (NEW) — ~400 lines, visual reference page
+- frontend/src/router/index.js (MODIFIED) — Added /design-system route
+- frontend/src/components/layout/SidebarNav.vue (MODIFIED) — Added Design-System nav item
+
+### Browser Verification:
+- Design-System page renders all 9 sections correctly with proper colors and styling
+- Primary color palette (50-950) displays correct hex values matching TREFF Blue
+- Secondary color palette (50-950) displays correct hex values matching TREFF Yellow
+- Button variants (primary/secondary/ghost/danger) render with correct colors and states
+- Cards, inputs, badges, shadows, spacing, radius all display correctly
+- Dashboard page works normally with no visual regressions
+- Zero JavaScript console errors
+- Zero mock data patterns in new files
+- Navigation and sidebar link working correctly
+
+### Git commit: b6e2ddc
+
+### Current state:
+- Feature #227 marked as PASSING
+
+---
+
 ## Session - Feature #288: I-11: Backend - Content Pipeline Endpoints
 **Date:** 2026-02-16
 **Feature ID:** #288
