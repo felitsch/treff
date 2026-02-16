@@ -28,6 +28,7 @@ from app.models.pipeline_item import PipelineItem
 from app.models.campaign import Campaign
 from app.models.campaign_post import CampaignPost
 from app.models.template_favorite import TemplateFavorite
+from app.models.video_script import VideoScript
 
 __all__ = [
     "User",
@@ -58,4 +59,5 @@ __all__ = [
     "Campaign",
     "CampaignPost",
     "TemplateFavorite",
+    "VideoScript",
 ]

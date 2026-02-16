@@ -25,8 +25,9 @@ from app.core.seed_hashtag_sets import seed_hashtag_sets
 from app.core.seed_ctas import seed_default_ctas
 from app.core.seed_music_tracks import seed_music_tracks
 from app.core.seed_video_templates import seed_video_templates
+from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations, pipeline, content_strategy, campaigns, template_favorites
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} story-series templates")
         except Exception as e:
             logger.error(f"Failed to seed story-series templates: {e}")
+
+    # Seed TREFF Standard-Templates (10 production-ready templates)
+    async with async_session() as session:
+        try:
+            count = await seed_treff_standard_templates(session)
+            if count > 0:
+                logger.info(f"Seeded {count} TREFF standard templates")
+        except Exception as e:
+            logger.error(f"Failed to seed TREFF standard templates: {e}")
 
     # Seed default content suggestions if not already present
     async with async_session() as session:
@@ -378,6 +388,7 @@ app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Content Pipel
 app.include_router(content_strategy.router, prefix="/api/content-strategy", tags=["Content Strategy"])
 app.include_router(campaigns.router, prefix="/api/campaigns", tags=["Campaigns"])
 app.include_router(template_favorites.router, prefix="/api/template-favorites", tags=["Template Favorites"])
+app.include_router(video_scripts.router, prefix="/api/video-scripts", tags=["Video Scripts"])
 
 
 if __name__ == "__main__":
