@@ -1,5 +1,143 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #241: Multi-Slide / Carousel Post Support
+**Date:** 2026-02-16
+**Feature ID:** #241
+**Status:** PASSING
+
+### What was implemented:
+Enhanced the existing post creator with full carousel/multi-slide support:
+
+1. **SlideManager.vue** - Reusable component with visual thumbnail strip showing mini-previews, drag-and-drop reordering, add/remove/duplicate per slide
+2. **Duplicate Slide Function** - `duplicateSlide()` with deep clone, "(Kopie)" suffix, auto-navigate to new slide
+3. **Max 10 Slides Limit** - Enforced in both `addSlide()` and `duplicateSlide()` with warning toast
+4. **Per-Slide Image** - Inline image indicator in slide editor, quick-assign from image assets, remove image button
+5. **Template Application** - "Template-Stil auf alle Slides anwenden" button applies template colors/fonts to all slides
+6. **ImageUploader Integration** - Replaced raw file upload with ImageUploader component in Step 8
+
+### Verification:
+- Browser: SlideManager renders with thumbnail previews for all slides
+- Browser: Add slide (5->6), duplicate slide (6->7) both work correctly
+- Browser: Slide switching, dot navigation, drag-and-drop all functional
+- Browser: "(Kopie)" suffix appears on duplicated slides
+- Browser: "Slide dupliziert" toast confirmation
+- Console: Zero JavaScript errors
+- Mock data: Zero matches
+
+### Git commit: 6b7dac7
+
+---
+
+## Session - Feature #234: 3-Schritt Post-Creator statt 9-Schritt Wizard
+**Date:** 2026-02-16
+**Feature ID:** #234
+**Status:** PASSING
+
+### What was implemented:
+Complete replacement of the 9-step wizard with a simplified 3-step flow:
+
+1. **PostCreatorView.vue** - New orchestrator view with step transitions, keyboard shortcuts (Ctrl+Enter), unsaved changes guard
+2. **StepIndicator.vue** - Reusable horizontal step indicator with clickable navigation, green checkmarks for completed steps, aria-current for accessibility
+3. **usePostCreator.js** - Shared composable bridging the contentDraft Pinia store with the 3-step UI, providing step validation and navigation
+4. **Step1Content.vue** - Category chips, topic/key points textareas, country & tone selection, AI text generation, image upload + AI image generation
+5. **Step2Design.vue** - Template thumbnail grid (category-filtered), SlideManager integration, live preview panel, slide editing (headline/subheadline/body/CTA/colors)
+6. **Step3Finalize.vue** - Platform multi-select cards, Instagram/TikTok caption editors, hashtag auto-suggest, export quality toggle (1080p/4K), save & export with ZIP download
+
+### Step mapping (old 9 -> new 3):
+- Old Steps 1+4 (Category/Topic) -> New Step 1 (Inhalt)
+- Old Steps 2+6+7 (Template/Preview/Edit) -> New Step 2 (Design)
+- Old Steps 3+9 (Platform/Export) -> New Step 3 (Fertigstellen)
+- Old Step 5 (Generate) -> Integrated into Step 1
+- Old Step 8 (Image) -> Integrated into Step 1
+
+### Router changes:
+- `/create/quick` now loads PostCreatorView.vue (3-step)
+- `/create/smart` now loads PostCreatorView.vue (3-step)
+- `/create/advanced` new route for legacy 9-step wizard (CreatePostView.vue)
+
+### Files created:
+- frontend/src/components/common/StepIndicator.vue (107 lines)
+- frontend/src/components/creator/Step1Content.vue (288 lines)
+- frontend/src/components/creator/Step2Design.vue (348 lines)
+- frontend/src/components/creator/Step3Finalize.vue (297 lines)
+- frontend/src/composables/usePostCreator.js (184 lines)
+- frontend/src/views/PostCreatorView.vue (172 lines)
+- frontend/src/router/index.js (modified - updated routes)
+
+### Verification (32/32 assertions passed):
+- Login flow works
+- StepIndicator renders all 3 steps with correct labels and icons
+- Step 1: Category selection, topic input, country/tone selection, AI generation (3 slides produced)
+- Step 2: Template grid loads (5 templates), selection highlights, live preview updates, SlideManager with drag-and-drop
+- Step 3: Platform multi-select, pre-filled captions/hashtags, export quality toggle, save & export button
+- Navigation back via StepIndicator preserves all state
+- State preservation confirmed across step transitions
+- Zero JavaScript console errors
+- Zero console warnings
+- Zero compile/import errors
+- Mock data grep: zero matches
+
+### Git commit: f520dc4
+
+---
+
+## Session - Feature #231: Leere-Zustaende (Empty States) fuer alle Listen
+**Date:** 2026-02-16
+**Feature ID:** #231
+**Status:** PASSING
+**Commit:** `8c81196`
+
+### What was implemented:
+Added `svgIcon` prop to EmptyState.vue to render Heroicon outline SVGs instead of emoji fallback icons. EmptyState was already in use across 17 views (24 instances from Feature #225), but the `svgIcon` prop was being passed silently without being defined.
+
+### Changes:
+- `frontend/src/components/common/EmptyState.vue` — Added:
+  - `svgIcon` prop (String) — Heroicon name for SVG illustration
+  - `svgPaths` map with 16 Heroicon outline SVG path definitions
+  - `hasSvgIcon` / `svgPath` computed properties
+  - SVG rendering in circular `bg-gray-100 dark:bg-gray-700/50` container
+  - Responsive sizing: `w-20 h-20` normal, `w-14 h-14` compact mode
+  - Falls back to emoji `icon` prop when `svgIcon` is not provided or invalid
+  - Comprehensive JSDoc comment documenting all props and supported icons
+
+### Supported svgIcon values:
+document-text, magnifying-glass, calendar-days, chart-bar, photo, film, musical-note, book-open, academic-cap, squares-2x2, sparkles, arrow-path, globe-alt, device-phone-mobile, clipboard-document-list, plus-circle
+
+### Also fixed:
+- `frontend/src/components/templates/TemplatePreviewModal.vue` — Fixed build error: unterminated string constant in template expression for placeholder fields
+
+### Verification:
+- Production build (`npx vite build`): PASS (zero errors)
+- No mock data: PASS
+- Feature #231 marked as PASSING
+
+---
+
+## Session - Feature #230: Konsistente Card-Komponente (BaseCard.vue)
+**Date:** 2026-02-16
+**Feature ID:** #230
+**Status:** PASSING
+**Commit:** `c2bbc22`
+
+### What was implemented:
+Refactored 6 views to use the existing BaseCard.vue component, replacing inline card styling with consistent reusable components. BaseCard was already fully implemented and used in 5 views; this work extended it to 11 views with 50+ instances total.
+
+### Views refactored:
+- HistoryView.vue — Filters section, skeleton loading cards
+- StudentsView.vue — Student profile cards
+- StoryArcsView.vue — 5 stats cards, arc grid cards
+- RecurringFormatsView.vue — Create form card, format cards
+- CalendarView.vue — 7 card containers (weekly goal, month/week views, stats, lanes, queue, legend)
+- WeekPlannerView.vue — Controls section, legend section
+
+### Verification:
+- Production build: PASS (zero errors)
+- No mock data: PASS
+- 50 BaseCard instances across 11 views
+- Feature #230 marked as PASSING
+
+---
+
 ## Session - Feature #233: Breadcrumb-Navigation
 **Date:** 2026-02-16
 **Feature ID:** #233
