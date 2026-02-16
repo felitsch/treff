@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import { usePostCreator } from '@/composables/usePostCreator'
 import api from '@/utils/api'
+import SmartScheduler from '@/components/creator/SmartScheduler.vue'
 
 const router = useRouter()
 
@@ -42,6 +43,9 @@ const {
   toast,
   resetCreator,
 } = usePostCreator()
+
+// Smart scheduling state
+const scheduleSelection = ref({ date: '', time: '' })
 
 const platforms = [
   { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷', format: '1:1' },
@@ -201,12 +205,16 @@ async function saveAndExport() {
   try {
     // Save post to DB
     const cleanSlides = slides.value.map(({ dragId, _templateColors, _templateFonts, _templateId, ...rest }) => rest)
+    // Determine status based on scheduling
+    const hasSchedule = scheduleSelection.value.date && scheduleSelection.value.time
+    const postStatus = hasSchedule ? 'scheduled' : 'draft'
+
     const postData = {
       category: selectedCategory.value || 'laender_spotlight',
       country: country.value || null,
       platform: selectedPlatform.value || 'instagram_feed',
       title: slides.value[0]?.headline || topic.value || 'Post',
-      status: 'draft',
+      status: postStatus,
       slide_data: JSON.stringify(cleanSlides),
       caption_instagram: captionInstagram.value,
       caption_tiktok: captionTiktok.value,
@@ -214,6 +222,8 @@ async function saveAndExport() {
       hashtags_tiktok: hashtagsTiktok.value,
       cta_text: ctaText.value || slides.value[slides.value.length - 1]?.cta_text || '',
       template_id: selectedTemplate.value?.id || null,
+      scheduled_date: hasSchedule ? scheduleSelection.value.date : null,
+      scheduled_time: hasSchedule ? scheduleSelection.value.time : null,
     }
 
     const response = await api.post('/api/posts', postData)
@@ -379,6 +389,14 @@ function startNewPost() {
             ></textarea>
           </div>
         </div>
+      </div>
+
+      <!-- Smart Scheduling -->
+      <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" data-testid="smart-scheduling-section">
+        <SmartScheduler
+          :platform="selectedPlatform"
+          v-model="scheduleSelection"
+        />
       </div>
 
       <!-- Export Quality -->

@@ -27,7 +27,7 @@ from app.core.seed_music_tracks import seed_music_tracks
 from app.core.seed_video_templates import seed_video_templates
 from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,17 @@ async def lifespan(app: FastAPI):
         try:
             await conn.execute(text("ALTER TABLE content_suggestions ADD COLUMN suggested_format VARCHAR"))
             logger.info("Added suggested_format column to content_suggestions table")
+        except Exception:
+            pass
+        # Recurring posts columns
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN recurring_rule_id INTEGER REFERENCES recurring_post_rules(id) ON DELETE SET NULL"))
+            logger.info("Added recurring_rule_id column to posts table")
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN is_recurring_instance INTEGER"))
+            logger.info("Added is_recurring_instance column to posts table")
         except Exception:
             pass
 
@@ -388,6 +399,7 @@ app.include_router(video_composer.router, prefix="/api/video-composer", tags=["V
 app.include_router(video_templates.router, prefix="/api/video-templates", tags=["Video Templates"])
 app.include_router(video_export.router, prefix="/api/video-export", tags=["Video Export"])
 app.include_router(recurring_formats.router, prefix="/api/recurring-formats", tags=["Recurring Formats"])
+app.include_router(recurring_posts.router, prefix="/api/recurring-posts", tags=["Recurring Posts"])
 app.include_router(post_relations.router, prefix="/api/posts", tags=["Post Relations"])
 app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Content Pipeline"])
 app.include_router(content_strategy.router, prefix="/api/content-strategy", tags=["Content Strategy"])
@@ -395,6 +407,7 @@ app.include_router(campaigns.router, prefix="/api/campaigns", tags=["Campaigns"]
 app.include_router(template_favorites.router, prefix="/api/template-favorites", tags=["Template Favorites"])
 app.include_router(video_scripts.router, prefix="/api/video-scripts", tags=["Video Scripts"])
 app.include_router(prompt_history.router, prefix="/api/ai", tags=["AI Prompt History"])
+app.include_router(smart_scheduling.router, prefix="/api/ai", tags=["Smart Scheduling"])
 
 
 if __name__ == "__main__":
