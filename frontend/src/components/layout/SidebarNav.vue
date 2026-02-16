@@ -70,6 +70,13 @@ const navGroups = [
     ],
   },
   {
+    label: 'KI-Tools',
+    key: 'ai',
+    items: [
+      { name: 'Prompt-History', path: '/ai/prompt-history', icon: '🧠' },
+    ],
+  },
+  {
     label: 'Analyse & Einstellungen',
     key: 'analytics',
     items: [

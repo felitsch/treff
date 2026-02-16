@@ -366,6 +366,22 @@ const routes = [
       },
 
       // ═══════════════════════════════════════════════════════
+      // SECTION 6b: KI-TOOLS
+      // ═══════════════════════════════════════════════════════
+      {
+        path: 'ai/prompt-history',
+        name: 'PromptHistory',
+        component: () => import('@/views/PromptHistoryView.vue'),
+        meta: {
+          requiresAuth: true,
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'KI-History', path: '/ai/prompt-history' },
+          ],
+        },
+      },
+
+      // ═══════════════════════════════════════════════════════
       // SECTION 7: SETTINGS
       // ═══════════════════════════════════════════════════════
       {

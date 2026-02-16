@@ -29,6 +29,7 @@ from app.models.campaign import Campaign
 from app.models.campaign_post import CampaignPost
 from app.models.template_favorite import TemplateFavorite
 from app.models.video_script import VideoScript
+from app.models.prompt_history import PromptHistory
 
 __all__ = [
     "User",
@@ -60,4 +61,5 @@ __all__ = [
     "CampaignPost",
     "TemplateFavorite",
     "VideoScript",
+    "PromptHistory",
 ]
