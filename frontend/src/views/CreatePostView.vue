@@ -3268,20 +3268,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div class="relative flex justify-center"><span class="bg-white dark:bg-gray-900 px-3 text-sm text-gray-400">oder</span></div>
           </div>
 
-          <!-- Upload -->
-          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-[#3B7AB1] transition-colors">
-            <div class="text-4xl mb-3">📷</div>
-            <p class="text-gray-600 dark:text-gray-400 mb-3">Hintergrundbild hochladen</p>
-            <label class="inline-block px-6 py-2.5 bg-[#3B7AB1] text-white rounded-lg cursor-pointer hover:bg-[#2E6A9E] transition-colors font-medium">
-              <span v-if="uploadingImage" class="flex items-center gap-2">
-                <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                Hochladen...
-              </span>
-              <span v-else>Datei waehlen</span>
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="uploadBackgroundImage" :disabled="uploadingImage" />
-            </label>
-            <p class="text-xs text-gray-400 mt-2">JPG, PNG oder WebP (max. 20 MB)</p>
-          </div>
+          <!-- Drag & Drop Image Upload -->
+          <ImageUploader
+            :max-images="10"
+            :max-file-size="10 * 1024 * 1024"
+            :accepted-types="['image/jpeg', 'image/png', 'image/webp']"
+            category="background"
+            :enable-crop="true"
+            :crop-aspect-ratio="selectedPlatform === 'instagram_feed' ? '1:1' : selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok' ? '9:16' : ''"
+            :carousel="slides.length > 1"
+            @upload="onImageUploaderUpload"
+            @remove="onImageUploaderRemove"
+            @reorder="onImageUploaderReorder"
+            data-testid="step8-image-uploader"
+          />
 
           <!-- Existing assets -->
           <div v-if="assets.length > 0">

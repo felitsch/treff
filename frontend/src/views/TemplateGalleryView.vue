@@ -509,5 +509,19 @@ onMounted(async () => {
         </div>
       </main>
     </div>
+
+    <!-- Template Preview Modal (Feature #243) -->
+    <TemplatePreviewModal
+      :show="showPreviewModal"
+      :template="previewTemplate"
+      :is-favorite="previewTemplate ? favoriteIds.has(previewTemplate.id) : false"
+      :template-list="filteredTemplates"
+      :categories="categories"
+      :platform-labels="platformLabels"
+      :country-flags="countryFlags"
+      @close="closePreviewModal"
+      @toggle-favorite="toggleFavorite"
+      @navigate="navigatePreview"
+    />
   </div>
 </template>
