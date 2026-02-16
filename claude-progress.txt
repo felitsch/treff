@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #289: I-12: Backend — Campaign Endpoints
+**Date:** 2026-02-16
+**Feature ID:** #289
+**Status:** PASSING
+
+### What was implemented:
+Complete Campaign Management API with CRUD operations and AI-powered post plan generation.
+
+### Backend (FastAPI):
+1. **Campaign model** (`backend/app/models/campaign.py`) — SQLAlchemy model: id, user_id, title, description, goal (awareness/engagement/conversion/traffic), start_date, end_date, platforms (JSON), status (draft/active/completed), created_at, updated_at
+2. **CampaignPost model** (`backend/app/models/campaign_post.py`) — SQLAlchemy model: id, campaign_id (FK), post_id (FK), order, scheduled_date, status (planned/draft_created/scheduled/posted), created_at
+3. **Campaigns API** (`backend/app/api/routes/campaigns.py`) — Full REST API:
+   - `POST /api/campaigns` — Create campaign with Pydantic validation (CampaignCreate schema)
+   - `GET /api/campaigns` — List campaigns with status/goal filters, enriched with post_count
+   - `GET /api/campaigns/{id}` — Detail with all linked CampaignPosts and post info
+   - `PUT /api/campaigns/{id}` — Update campaign (CampaignUpdate schema)
+   - `DELETE /api/campaigns/{id}` — Delete with cascade (campaign_posts auto-deleted)
+   - `POST /api/campaigns/{id}/generate` — AI post plan generation based on goal, date range, content pillars
+4. **Pydantic schemas** — CampaignCreate, CampaignUpdate with field validation
+5. **Content pillars** — Goal-specific content category mapping (awareness→laender_spotlight/erfahrungsbericht/etc.)
+6. **AI generation logic** — Spreads posts evenly across campaign period, cycles through content pillars, platforms, and countries
+
+### Files created/modified:
+- backend/app/models/campaign.py (NEW) — Campaign SQLAlchemy model
+- backend/app/models/campaign_post.py (NEW) — CampaignPost SQLAlchemy model
+- backend/app/api/routes/campaigns.py (NEW) — Full CRUD + generate API (~510 lines)
+- backend/app/models/__init__.py (modified) — Added Campaign, CampaignPost imports
+- backend/app/main.py (modified) — Registered campaigns router at /api/campaigns
+
+### Verification completed:
+- API: POST /api/campaigns creates campaign (201, returns full object with post_count=0)
+- API: GET /api/campaigns returns list with post_count enrichment
+- API: GET /api/campaigns/1 returns detail with posts array
+- API: PUT /api/campaigns/1 updates title and status correctly
+- API: POST /api/campaigns/1/generate creates 6 posts across 14-day range
+- API: DELETE /api/campaigns/1 deletes campaign and cascade-deletes campaign_posts
+- API: GET /api/campaigns/999 returns 404 "Campaign not found"
+- API: GET /api/campaigns without auth returns 401 "Could not validate credentials"
+- Browser: Swagger docs show all 6 Campaign endpoints under "Campaigns" section
+- Console: 0 errors, 0 warnings
+- Mock data: Zero matches for globalThis/devStore/mockDb/etc. in all new files
+- Persistence: Campaign with 6 posts survives server restart
+- Git commit: f7c7ee9
+
+### Current state:
+- Feature #289 marked as PASSING
+
+---
+
 ## Session - Feature #307: Country-Paletten, Gradients & Animations in Design Tokens
 **Date:** 2026-02-16
 **Feature ID:** #307
