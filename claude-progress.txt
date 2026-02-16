@@ -1,5 +1,60 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #247: Template-Variablen & Platzhalter
+**Date:** 2026-02-16
+**Feature ID:** #247
+**Status:** PASSING
+
+### What was implemented:
+Enhanced the LivePreview component with real-time placeholder substitution. The template placeholder system was already partially implemented (syntax, editor toolbar, input fields, validation). The missing piece was live preview replacement.
+
+### Changes made:
+
+1. **LivePreview.vue** — Added real-time placeholder substitution:
+   - New props: `templatePlaceholderValues` (Object) and `selectedTemplate` (Object)
+   - `substitutePlaceholders(text)` function: replaces `{{variable}}` patterns with user-entered values
+   - `resolvedSlide` computed: returns slide with all text fields resolved (headline, subheadline, body_text, cta_text, bullet_points)
+   - `resolvedCaption`, `resolvedHashtags`, `resolvedCta` computeds for caption/hashtag substitution
+   - `resolvedTemplateHtml` computed: renders template HTML with placeholders replaced (including image placeholder handling)
+   - Updated all 3 platform mockups (IG Feed, IG Story, TikTok) + mobile variants to use `resolvedSlide` instead of `currentSlide`
+
+2. **CreatePostView.vue** — Passed new props to LivePreview:
+   - Added `:template-placeholder-values="templatePlaceholderValues"` prop
+   - Added `:selected-template="selectedTemplate"` prop
+
+### Already existing (verified working):
+- Placeholder syntax `{{variable_name}}` in template HTML/CSS
+- Template Editor toolbar button with dropdown (13 standard placeholders)
+- Standard variables: headline, subheadline, body_text, cta_text, name, land, stadt, datum, quote, quote_text, quote_author, zahl, image
+- Post-Creator Step 2: auto-generated input fields with labels, icons, {{variable}} mono text
+- Validation: amber badge "X offen" / green "Alle ausgefuellt" badge
+- Placeholder documentation: HelpTooltip explaining Standard-Variablen
+- Image placeholder filtering ({{bild}}/{{image}} excluded from text inputs)
+
+### Browser verification:
+1. Login and navigate to /create/advanced - PASS
+2. Select "Erfahrungsberichte" category - PASS
+3. Step 2: 3 templates loaded with placeholder support - PASS
+4. Selected "Erfahrungsbericht Carousel" (5 placeholder fields: headline, subheadline, body_text, quote_text, quote_author) - PASS
+5. All 5 input fields displayed with icons, labels, {{variable}} notation - PASS
+6. Filled all fields - green borders on filled inputs - PASS
+7. "Alle ausgefuellt" badge visible - PASS
+8. Warning text gone after filling - PASS
+9. Font-mono labels showing {{variable}} syntax: 5 found - PASS
+10. Template Editor: "Platzhalter einfuegen" dropdown with 13 options - PASS
+11. Console errors: 0 - PASS
+12. Frontend build: clean, zero errors - PASS
+13. Mock data grep: zero matches (excluding MOCKUP UI comments) - PASS
+
+### Screenshots:
+- f247-5-filled.png: Step 2 with all placeholder fields filled and "Alle ausgefuellt" badge
+- f247-5-dropdown.png: Template Editor with placeholder insertion dropdown (13 options)
+- f247-5-step1.png: Category selection view
+- f247-5-step2.png: Template selection grid
+
+### Current state:
+- Feature #247 marked as PASSING
+
 ## Session - Feature #268: Background Tasks fuer lange Operationen
 **Date:** 2026-02-16
 **Feature ID:** #268
