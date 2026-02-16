@@ -1,15 +1,21 @@
 """Health check and API documentation endpoints.
 
 Provides server health monitoring, database schema inspection,
-and a machine-readable API endpoint audit.
+migration status, and a machine-readable API endpoint audit.
 """
+
+import logging
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
+from sqlalchemy.pool import NullPool
 
 from app.core.database import get_db
 from app.core.cache import api_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -205,6 +211,136 @@ async def api_audit(request: Request):
         "openapi_url": "/openapi.json",
         "endpoints": endpoints,
     }
+
+
+@router.get(
+    "/health/migrations",
+    summary="Database Migration Status",
+    description="Returns the current Alembic migration revision, head revision, pending migrations, and full migration history. Useful for deployment checks and debugging schema drift.",
+    response_description="Migration status with current/head revision and history",
+    responses={
+        200: {
+            "description": "Migration status report",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "up_to_date",
+                        "current_revision": "1dd2f40ff200",
+                        "head_revision": "1dd2f40ff200",
+                        "pending_count": 0,
+                        "pending_migrations": [],
+                        "history": [
+                            {
+                                "revision": "1dd2f40ff200",
+                                "down_revision": "a1b2c3d4e5f6",
+                                "description": "Add FK constraint fix",
+                                "is_current": True,
+                                "is_head": True,
+                            }
+                        ],
+                    }
+                }
+            },
+        }
+    },
+)
+async def migration_status():
+    """Check database migration status.
+
+    Returns:
+    - current_revision: The revision the database is currently at
+    - head_revision: The latest available migration revision
+    - pending_count: Number of pending (unapplied) migrations
+    - pending_migrations: Details of each pending migration
+    - history: Full migration history with current/head markers
+    """
+    try:
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from alembic.runtime.migration import MigrationContext
+
+        backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+        alembic_ini = backend_dir / "alembic.ini"
+
+        if not alembic_ini.exists():
+            return {
+                "status": "not_configured",
+                "error": "alembic.ini not found",
+                "current_revision": None,
+                "head_revision": None,
+                "pending_count": 0,
+                "pending_migrations": [],
+                "history": [],
+            }
+
+        config = Config(str(alembic_ini))
+        config.set_main_option("script_location", str(backend_dir / "migrations"))
+
+        script = ScriptDirectory.from_config(config)
+        head = script.get_current_head()
+
+        # Get current revision from DB (sync connection for Alembic)
+        db_path = str(backend_dir / "treff.db")
+        sync_engine = create_engine(f"sqlite:///{db_path}", poolclass=NullPool)
+        with sync_engine.connect() as conn:
+            context = MigrationContext.configure(conn)
+            current = context.get_current_revision()
+        sync_engine.dispose()
+
+        # Build history
+        history = []
+        for rev in script.walk_revisions():
+            history.append({
+                "revision": rev.revision,
+                "down_revision": rev.down_revision if isinstance(rev.down_revision, str) else (rev.down_revision[0] if rev.down_revision else None),
+                "description": rev.doc or "",
+                "is_current": rev.revision == current,
+                "is_head": rev.revision == head,
+            })
+
+        # Calculate pending migrations
+        pending = []
+        if current != head:
+            for rev in script.walk_revisions(head, current):
+                pending.append({
+                    "revision": rev.revision,
+                    "description": rev.doc or "",
+                })
+
+        status = "up_to_date" if current == head else "pending_migrations"
+        if current is None:
+            status = "no_revision"
+
+        return {
+            "status": status,
+            "current_revision": current,
+            "head_revision": head,
+            "pending_count": len(pending),
+            "pending_migrations": list(reversed(pending)),
+            "history": history,
+        }
+
+    except ImportError:
+        return {
+            "status": "not_installed",
+            "error": "Alembic is not installed",
+            "current_revision": None,
+            "head_revision": None,
+            "pending_count": 0,
+            "pending_migrations": [],
+            "history": [],
+        }
+    except Exception as e:
+        logger.error(f"Migration status check failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "current_revision": None,
+            "head_revision": None,
+            "pending_count": 0,
+            "pending_migrations": [],
+            "history": [],
+        }
 
 
 @router.get(

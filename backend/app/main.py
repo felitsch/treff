@@ -52,6 +52,39 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
 
+    # Check Alembic migration status
+    try:
+        from pathlib import Path as _Path
+        from alembic.config import Config as _AlembicConfig
+        from alembic.script import ScriptDirectory as _ScriptDir
+        from alembic.runtime.migration import MigrationContext as _MigCtx
+        from sqlalchemy import create_engine as _create_engine
+        from sqlalchemy.pool import NullPool as _NullPool
+
+        _backend_dir = _Path(__file__).resolve().parent.parent
+        _ini = _backend_dir / "alembic.ini"
+        if _ini.exists():
+            _cfg = _AlembicConfig(str(_ini))
+            _cfg.set_main_option("script_location", str(_backend_dir / "migrations"))
+            _script = _ScriptDir.from_config(_cfg)
+            _head = _script.get_current_head()
+            _db_path = str(_backend_dir / "treff.db")
+            _eng = _create_engine(f"sqlite:///{_db_path}", poolclass=_NullPool)
+            with _eng.connect() as _conn:
+                _ctx = _MigCtx.configure(_conn)
+                _current = _ctx.get_current_revision()
+            _eng.dispose()
+            if _current == _head:
+                logger.info("Alembic migrations: up to date (revision %s)", _current)
+            elif _current is None:
+                logger.warning("Alembic migrations: no revision stamped yet. Run 'python migrate.py stamp head'")
+            else:
+                logger.warning("Alembic migrations: PENDING! Current=%s, Head=%s. Run 'python migrate.py upgrade'", _current, _head)
+    except ImportError:
+        pass  # Alembic not installed, skip check
+    except Exception as e:
+        logger.debug("Alembic migration check skipped: %s", e)
+
     # Migrate: add video-specific columns to assets table if missing
     async with engine.begin() as conn:
         from sqlalchemy import text

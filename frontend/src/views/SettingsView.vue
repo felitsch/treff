@@ -7,6 +7,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import { useTour } from '@/composables/useTour'
 import BaseCard from '@/components/common/BaseCard.vue'
+import TaskHistoryPanel from '@/components/tasks/TaskHistoryPanel.vue'
 
 const tourRef = ref(null)
 const { seenTours, loadTourProgress, resetTour, resetAllTours } = useTour()
@@ -1273,6 +1274,11 @@ onMounted(() => {
           </div>
         </div>
       </BaseCard>
+
+      <!-- ======================== -->
+      <!-- SECTION 8: Background Tasks History -->
+      <!-- ======================== -->
+      <TaskHistoryPanel />
 
       <!-- Save Button -->
       <div class="flex justify-end">

@@ -1,1 +1,80 @@
-Generic single-database configuration.
+TREFF Post-Generator - Database Migrations
+==========================================
+
+This directory contains Alembic database migrations for the TREFF Post-Generator.
+
+Overview
+--------
+- Uses Alembic with SQLAlchemy for versioned schema management
+- Supports local SQLite and Turso (hosted SQLite) databases
+- Uses batch mode for SQLite ALTER TABLE compatibility
+- All models are defined in backend/app/models/
+
+Migration Commands
+------------------
+All commands are run from the backend/ directory using the migrate.py script:
+
+    # Show current database revision
+    python migrate.py current
+
+    # Check for pending migrations
+    python migrate.py check
+
+    # Show full migration history
+    python migrate.py history
+
+    # Upgrade to latest version
+    python migrate.py upgrade
+
+    # Upgrade to a specific revision
+    python migrate.py upgrade <revision>
+
+    # Downgrade by one revision
+    python migrate.py downgrade -1
+
+    # Downgrade to a specific revision
+    python migrate.py downgrade <revision>
+
+    # Generate a new migration (autogenerate from model changes)
+    python migrate.py generate "description of schema change"
+
+    # Stamp database at a revision (without running migrations)
+    python migrate.py stamp <revision>
+
+API Endpoint
+------------
+Migration status is also available via the REST API:
+
+    GET /api/health/migrations
+
+Returns: current revision, head revision, pending migration count, and full history.
+
+Creating a New Migration
+------------------------
+1. Modify the SQLAlchemy model in backend/app/models/
+2. Run: python migrate.py generate "describe your change"
+3. Review the generated migration in migrations/versions/
+4. Run: python migrate.py upgrade
+5. Test the application to verify the schema change works
+6. Commit the migration file to Git
+
+Deployment Workflow
+-------------------
+1. Before deploying, check: python migrate.py check
+2. If pending migrations, run: python migrate.py upgrade
+3. The app logs migration status on startup (INFO/WARNING)
+
+Existing Database Setup
+-----------------------
+For an existing database without Alembic tracking:
+
+    python migrate.py stamp head
+
+This marks the database as being at the latest migration without
+running any schema changes. Use this when the database was created
+by SQLAlchemy's create_all() (which is the current behavior on startup).
+
+Migration History
+-----------------
+- a1b2c3d4e5f6: Initial schema (32 tables, baseline)
+- 1dd2f40ff200: FK constraint fix for posts.recurring_rule_id

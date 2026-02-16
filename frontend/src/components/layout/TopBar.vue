@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTour } from '@/composables/useTour'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
+import ProgressIndicator from '@/components/common/ProgressIndicator.vue'
 import tourConfigs from '@/tours/tourConfigs'
 
 defineEmits(['toggle-sidebar'])
@@ -140,6 +141,9 @@ if (localStorage.getItem('darkMode') === 'true') {
     </div>
 
     <div class="flex items-center gap-4">
+      <!-- Background Task Progress Indicator -->
+      <ProgressIndicator />
+
       <!-- Series Notification Bell -->
       <NotificationPanel />
 
