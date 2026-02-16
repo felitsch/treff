@@ -25,6 +25,8 @@ from app.models.video_export import VideoExport
 from app.models.recurring_format import RecurringFormat
 from app.models.post_relation import PostRelation
 from app.models.pipeline_item import PipelineItem
+from app.models.campaign import Campaign
+from app.models.campaign_post import CampaignPost
 
 __all__ = [
     "User",
@@ -52,4 +54,6 @@ __all__ = [
     "RecurringFormat",
     "PostRelation",
     "PipelineItem",
+    "Campaign",
+    "CampaignPost",
 ]
