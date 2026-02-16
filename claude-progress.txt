@@ -1,5 +1,64 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #284: Router-Restrukturierung (7 Sektionen)
+**Date:** 2026-02-16
+**Feature ID:** #284
+**Status:** PASSING
+
+### What was implemented:
+Complete restructuring of the Vue Router from 25+ flat routes into 7 hierarchical sections with nested routes, backward-compatible redirects, breadcrumb metadata, and lazy loading.
+
+### 1. New Router Structure (frontend/src/router/index.js):
+- **7 Sections**: /home, /create, /calendar, /library, /students, /video, /analytics+settings
+- **Nested routes**: Library uses tabbed wrapper (LibraryView.vue) with router-view for child content
+- **17 redirect rules**: All old flat routes (/dashboard, /create-post, /templates, etc.) redirect to new paths
+- **meta.breadcrumb**: Array-based breadcrumbs on all routes for navigation trail
+- **meta.requiresAuth**: All routes protected, navigation guard uses to.matched.some() for hierarchical checking
+- **Lazy loading**: All view components use dynamic imports
+
+### 2. New Hub Views:
+- **CreateHubView.vue**: Hub with 4 creation options (Quick Post, Smart Post, Video, Campaign) as colored cards
+- **LibraryView.vue**: Tabbed wrapper with Templates/Assets/History tabs, renders child via router-view
+- **StudentsHubView.vue**: Simple pass-through for nested student routes
+
+### 3. Updated Internal Links (24 files):
+- All /dashboard references → /home
+- All /create-post → /create/quick
+- All /posts/:id/edit → /create/post/:id/edit
+- All /templates → /library/templates, /assets → /library/assets, /history → /library/history
+- All /week-planner → /calendar/week-planner, /story-arcs → /calendar/story-arcs
+- All video tool paths → /video/* prefix
+- Components updated: TopBar, VideoWorkflowTour, RecyclingPanel, RelatedPostsPanel
+
+### 4. Route Mapping:
+| Old Path | New Path |
+|---|---|
+| /dashboard | /home |
+| /create-post | /create/quick |
+| /templates | /library/templates |
+| /assets | /library/assets |
+| /history | /library/history |
+| /week-planner | /calendar/week-planner |
+| /story-arcs | /calendar/story-arcs |
+| /thumbnail-generator | /video/thumbnails |
+| /video-overlays | /video/overlays |
+| /video-composer | /video/composer |
+| /video-templates | /video/templates |
+| /video-export | /video/export |
+| /audio-mixer | /video/audio-mixer |
+
+### 5. Browser Testing Results:
+- /home renders Dashboard correctly
+- /create renders CreateHub with 4 options
+- /create/quick renders CreatePostView wizard
+- /library/templates renders tabbed LibraryView with TemplatesView
+- /library/assets renders via tab switch
+- Redirects verified: /dashboard→/home, /create-post→/create/quick
+- Sidebar navigation shows correct grouped sections
+- Auth guard properly redirects unauthenticated users to /login
+
+---
+
 ## Session - Feature #278: Social-Media-Optimierung mit social-content Strategie
 **Date:** 2026-02-16
 **Feature ID:** #278
