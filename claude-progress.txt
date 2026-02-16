@@ -1,5 +1,75 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #307: Country-Paletten, Gradients & Animations in Design Tokens
+**Date:** 2026-02-16
+**Feature ID:** #307
+**Status:** PASSING
+
+### What was implemented:
+Extended the Design System (Feature #227) with country-specific palettes, gradients, animations, shadows, typography scale, and a JS export file.
+
+### Changes:
+
+1. **Country Palettes** (tailwind.config.js):
+   - treff-usa: red (#B22234), navy (#002147), white, sky (#6B9BD2), gold (#FFD700)
+   - treff-canada: red (#FF0000), white, maple (#C41E3A), cream (#FFF5E1), forest (#2E5A36)
+   - treff-australia: earth (#8B4513), ochre (#CC7722), ocean (#006994), sand (#F4D8A5), sky (#87CEEB)
+   - treff-nz: forest (#1B4D3E), fern (#4CAF50), sky (#5CB8E6), cream (#FAF3E0), earth (#8B6F47)
+   - treff-ireland: green (#169B62), gold (#FF8C00), stone (#A9A9A9), white, moss (#3D5A3E)
+
+2. **Extended Brand Scale** (tailwind.config.js):
+   - treff-blue-50 through treff-blue-900
+   - treff-yellow-50 through treff-yellow-900
+
+3. **Gradient Utilities** (main.css):
+   - bg-gradient-usa, bg-gradient-canada, bg-gradient-australia, bg-gradient-nz, bg-gradient-ireland, bg-gradient-adventure
+   - Dark mode variants for all gradients (slightly muted)
+
+4. **Animation Presets** (tailwind.config.js):
+   - animate-slide-right (translateX, 250ms ease-out) — added to existing presets
+
+5. **Shadow System** (tailwind.config.js):
+   - shadow-modal (medium elevation) — 12px/28px blur
+   - shadow-popup (high elevation) — 20px/40px blur
+   - (shadow-card already existed from Feature #227)
+
+6. **Typography Scale** (main.css @layer components):
+   - text-display: 2xl bold, dark mode variant
+   - text-heading: xl semibold, dark mode variant
+   - text-body: base regular, dark mode variant
+   - text-caption: sm regular, dark mode variant
+
+7. **designTokens.js** (NEW: frontend/src/config/designTokens.js):
+   - Exports: colors, countryPalettes, gradients, gradientsDark, shadows, typography, animations, spacing, borderRadius, zIndex
+   - Default export bundles all tokens as single object
+   - Usage: `import { countryPalettes } from '@/config/designTokens'`
+
+### Files created/modified:
+- frontend/tailwind.config.js (modified) — +93 lines: country palettes, extended brand scale, shadow-modal/popup, slide-right animation
+- frontend/src/assets/main.css (modified) — +76 lines: gradient utilities with dark mode, typography scale components
+- frontend/src/config/designTokens.js (NEW) — ~340 lines: complete JS export of all design tokens
+
+### Verification completed:
+- Browser: Test page rendered all 8 sections (palettes, brand scale, gradients, animations, shadows, typography, JS export, text colors)
+- Browser: All 5 country palettes show correct distinct colors (25 swatches total)
+- Browser: Both brand scales (treff-blue, treff-yellow) show smooth 50-900 gradients
+- Browser: 6 gradient utilities render with correct color transitions
+- Browser: 5 animation presets display correctly (including new slide-right)
+- Browser: 3-level shadow system shows increasing elevation
+- Browser: Typography scale shows 4 distinct sizes with correct weights
+- Browser: JS export loaded with 10 keys, USA palette returned #B22234
+- Browser: Dark mode toggle works — all elements adapt correctly
+- Console: Zero application JS errors (only Vite HMR WebSocket reconnects from server restart)
+- Mock data: Zero matches for globalThis/devStore/mockDb/testData/etc.
+- Test page cleaned up after verification (route and view removed)
+
+### Git commit: 1b8ca3e
+
+### Current state:
+- Feature #307 marked as PASSING
+
+---
+
 ## Session - Feature #284: Router-Restrukturierung (7 Sektionen)
 **Date:** 2026-02-16
 **Feature ID:** #284
