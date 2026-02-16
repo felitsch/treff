@@ -11,6 +11,7 @@ import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -675,6 +676,19 @@ onMounted(() => {
           </div>
         </BaseCard>
       </div>
+
+      <!-- ─── Activity Heatmap (mini, optional on Dashboard) ─── -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="dashboard-heatmap">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Aktivitaets-Heatmap</h2>
+        </template>
+        <template #headerAction>
+          <router-link to="/analytics" class="text-xs text-[#3B7AB1] hover:text-[#2d6a9e] dark:text-sky-400 font-medium">
+            Mehr Analytics &rarr;
+          </router-link>
+        </template>
+        <ActivityHeatmap />
+      </BaseCard>
 
       <!-- ─── Series Status Widget ─── -->
       <div data-tour="dashboard-series-status">

@@ -535,7 +535,25 @@ async def upload_asset(
         except Exception:
             pass  # Pillow not available or invalid image - skip dimensions
 
+    # Image-specific: generate thumbnails and extract EXIF
+    thumb_small = None
+    thumb_medium = None
+    thumb_large = None
+    exif_json = None
+
+    is_image = file.content_type in ALLOWED_IMAGE_TYPES
+    if is_image:
+        # Generate 3 thumbnail sizes
+        thumbs = _generate_image_thumbnails(content, file.filename or "img.jpg")
+        thumb_small = thumbs.get("thumbnail_small")
+        thumb_medium = thumbs.get("thumbnail_medium")
+        thumb_large = thumbs.get("thumbnail_large")
+
+        # Extract EXIF metadata
+        exif_json = _extract_exif_data(content)
+
     # Create asset record
+    from datetime import datetime as _dt, timezone as _tz
     asset = Asset(
         user_id=user_id,
         filename=unique_filename,
@@ -551,6 +569,11 @@ async def upload_asset(
         tags=tags,
         duration_seconds=duration_seconds,
         thumbnail_path=thumbnail_path,
+        thumbnail_small=thumb_small,
+        thumbnail_medium=thumb_medium,
+        thumbnail_large=thumb_large,
+        exif_data=exif_json,
+        last_used_at=_dt.now(_tz.utc),
         file_data=b64,
     )
     db.add(asset)
@@ -1221,3 +1244,340 @@ async def import_stock(
     await db.refresh(asset)
 
     return asset_to_dict(asset)
+
+
+# ─── Chunked Upload ───────────────────────────────────────────────────────────
+
+# In-memory store for chunk upload sessions (keyed by upload_id)
+_chunk_sessions: dict = {}
+
+
+@router.post("/upload/init-chunked")
+async def init_chunked_upload(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Initialize a chunked upload session.
+
+    Request body:
+    {
+        "filename": "video.mp4",
+        "file_type": "video/mp4",
+        "file_size": 52428800,  // total size in bytes
+        "chunk_size": 5242880,  // size per chunk in bytes (default: 5 MB)
+        "category": "video",
+        "country": "usa",
+        "tags": "summer, campus"
+    }
+
+    Returns upload_id and expected chunk count.
+    """
+    filename = request.get("filename", "file")
+    file_type = request.get("file_type", "application/octet-stream")
+    total_size = request.get("file_size", 0)
+    chunk_size = request.get("chunk_size", 5 * 1024 * 1024)  # 5 MB default
+
+    if file_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type {file_type} not allowed.",
+        )
+
+    # Validate total file size
+    is_video = file_type in ALLOWED_VIDEO_TYPES
+    is_audio = file_type in ALLOWED_AUDIO_TYPES
+    if is_video and total_size > MAX_VIDEO_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 500 MB)")
+    elif is_audio and total_size > MAX_AUDIO_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 50 MB)")
+    elif not is_video and not is_audio and total_size > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 20 MB)")
+
+    upload_id = str(uuid.uuid4())
+    import math
+    total_chunks = max(1, math.ceil(total_size / chunk_size)) if total_size > 0 else 1
+
+    _chunk_sessions[upload_id] = {
+        "user_id": user_id,
+        "filename": filename,
+        "file_type": file_type,
+        "total_size": total_size,
+        "chunk_size": chunk_size,
+        "total_chunks": total_chunks,
+        "received_chunks": set(),
+        "category": request.get("category"),
+        "country": request.get("country"),
+        "tags": request.get("tags"),
+    }
+
+    return {
+        "upload_id": upload_id,
+        "chunk_size": chunk_size,
+        "total_chunks": total_chunks,
+    }
+
+
+@router.post("/upload/chunk")
+async def upload_chunk(
+    upload_id: str = Form(...),
+    chunk_index: int = Form(...),
+    chunk: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Upload a single chunk for a chunked upload session.
+
+    Form data:
+        upload_id: The session ID from init-chunked
+        chunk_index: 0-based index of this chunk
+        chunk: The chunk file data
+    """
+    session = _chunk_sessions.get(upload_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Upload session not found or expired")
+    if session["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized for this upload session")
+    if chunk_index < 0 or chunk_index >= session["total_chunks"]:
+        raise HTTPException(status_code=400, detail=f"Invalid chunk_index {chunk_index}")
+
+    # Save chunk to temporary directory
+    chunk_dir = get_upload_dir("chunks") / upload_id
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+
+    chunk_data = await chunk.read()
+    chunk_path = chunk_dir / f"chunk_{chunk_index:06d}"
+    chunk_path.write_bytes(chunk_data)
+
+    session["received_chunks"].add(chunk_index)
+
+    return {
+        "upload_id": upload_id,
+        "chunk_index": chunk_index,
+        "received": len(session["received_chunks"]),
+        "total_chunks": session["total_chunks"],
+        "complete": len(session["received_chunks"]) == session["total_chunks"],
+    }
+
+
+@router.post("/upload/complete-chunked", status_code=201)
+async def complete_chunked_upload(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Complete a chunked upload by assembling all chunks into the final file.
+
+    Request body:
+    {
+        "upload_id": "uuid..."
+    }
+    """
+    upload_id = request.get("upload_id")
+    if not upload_id:
+        raise HTTPException(status_code=400, detail="upload_id is required")
+
+    session = _chunk_sessions.get(upload_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Upload session not found or expired")
+    if session["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized for this upload session")
+
+    # Verify all chunks received
+    if len(session["received_chunks"]) < session["total_chunks"]:
+        missing = set(range(session["total_chunks"])) - session["received_chunks"]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing chunks: {sorted(missing)[:10]}{'...' if len(missing) > 10 else ''}",
+        )
+
+    # Assemble chunks
+    chunk_dir = get_upload_dir("chunks") / upload_id
+    ext = os.path.splitext(session["filename"])[1] or ".bin"
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    final_path = ASSETS_UPLOAD_DIR / unique_filename
+
+    assembled_bytes = bytearray()
+    for i in range(session["total_chunks"]):
+        chunk_path = chunk_dir / f"chunk_{i:06d}"
+        if not chunk_path.exists():
+            raise HTTPException(status_code=500, detail=f"Chunk {i} file missing on disk")
+        assembled_bytes.extend(chunk_path.read_bytes())
+
+    content = bytes(assembled_bytes)
+    file_size = len(content)
+
+    from app.core.paths import save_and_encode
+    b64 = save_and_encode(content, final_path)
+
+    # Clean up chunk directory
+    import shutil
+    try:
+        shutil.rmtree(str(chunk_dir))
+    except Exception:
+        pass
+
+    # Extract metadata (reuse same logic as regular upload)
+    file_type = session["file_type"]
+    is_video = file_type in ALLOWED_VIDEO_TYPES
+    is_audio = file_type in ALLOWED_AUDIO_TYPES
+    is_image = file_type in ALLOWED_IMAGE_TYPES
+
+    width = None
+    height = None
+    duration_seconds = None
+    thumbnail_path = None
+    thumb_small = None
+    thumb_medium = None
+    thumb_large = None
+    exif_json = None
+
+    if is_video:
+        meta = _extract_video_metadata(final_path)
+        width = meta["width"]
+        height = meta["height"]
+        duration_seconds = meta["duration_seconds"]
+        thumb_filename = f"{uuid.uuid4()}.jpg"
+        thumbnail_path = _generate_video_thumbnail(final_path, thumb_filename)
+    elif is_audio:
+        meta = _extract_audio_metadata(final_path)
+        duration_seconds = meta["duration_seconds"]
+    elif is_image:
+        try:
+            from PIL import Image
+            import io
+            img = Image.open(io.BytesIO(content))
+            width, height = img.size
+        except Exception:
+            pass
+        thumbs = _generate_image_thumbnails(content, session["filename"])
+        thumb_small = thumbs.get("thumbnail_small")
+        thumb_medium = thumbs.get("thumbnail_medium")
+        thumb_large = thumbs.get("thumbnail_large")
+        exif_json = _extract_exif_data(content)
+
+    from datetime import datetime as _dt, timezone as _tz
+    asset = Asset(
+        user_id=user_id,
+        filename=unique_filename,
+        original_filename=session["filename"],
+        file_path=f"/uploads/assets/{unique_filename}",
+        file_type=file_type,
+        file_size=file_size,
+        width=width,
+        height=height,
+        source="upload",
+        category=session.get("category"),
+        country=session.get("country"),
+        tags=session.get("tags"),
+        duration_seconds=duration_seconds,
+        thumbnail_path=thumbnail_path,
+        thumbnail_small=thumb_small,
+        thumbnail_medium=thumb_medium,
+        thumbnail_large=thumb_large,
+        exif_data=exif_json,
+        last_used_at=_dt.now(_tz.utc),
+        file_data=b64,
+    )
+    db.add(asset)
+    await db.flush()
+    await db.refresh(asset)
+
+    # Clean up session
+    del _chunk_sessions[upload_id]
+
+    return asset_to_dict(asset)
+
+
+# ─── Garbage Collection ──────────────────────────────────────────────────────
+
+@router.post("/garbage-collect")
+async def garbage_collect_assets(
+    request: dict = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark unused assets after X days.
+
+    Request body (optional):
+    {
+        "days_threshold": 30  // Assets unused for this many days get flagged (default: 30)
+    }
+
+    Assets are only *flagged* as unused, not deleted. Use the DELETE endpoint to actually remove them.
+    Returns the list of newly flagged assets and a summary.
+    """
+    from datetime import datetime as _dt, timezone as _tz, timedelta
+
+    days = 30
+    if request:
+        days = request.get("days_threshold", 30)
+
+    cutoff = _dt.now(_tz.utc) - timedelta(days=days)
+
+    # Find assets that have not been used since the cutoff
+    # An asset is considered "unused" if:
+    # 1. usage_count == 0 AND
+    # 2. last_used_at is NULL or before cutoff AND
+    # 3. created_at is before cutoff AND
+    # 4. not already marked as unused
+    result = await db.execute(
+        select(Asset).where(
+            Asset.user_id == user_id,
+            Asset.usage_count == 0,
+            Asset.created_at < cutoff,
+            (Asset.marked_unused.is_(None)) | (Asset.marked_unused == 0),
+        ).where(
+            (Asset.last_used_at.is_(None)) | (Asset.last_used_at < cutoff)
+        )
+    )
+    unused_assets = result.scalars().all()
+
+    flagged = []
+    for asset in unused_assets:
+        asset.marked_unused = True
+        flagged.append(asset_to_dict(asset))
+
+    await db.flush()
+
+    return {
+        "flagged_count": len(flagged),
+        "days_threshold": days,
+        "cutoff_date": cutoff.isoformat(),
+        "flagged_assets": flagged,
+    }
+
+
+@router.get("/garbage-collect/summary")
+async def garbage_collect_summary(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a summary of assets flagged as unused by garbage collection."""
+    from sqlalchemy import func
+
+    result = await db.execute(
+        select(func.count(Asset.id)).where(
+            Asset.user_id == user_id,
+            Asset.marked_unused == 1,
+        )
+    )
+    flagged_count = result.scalar() or 0
+
+    result2 = await db.execute(
+        select(func.count(Asset.id)).where(Asset.user_id == user_id)
+    )
+    total_count = result2.scalar() or 0
+
+    result3 = await db.execute(
+        select(func.sum(Asset.file_size)).where(
+            Asset.user_id == user_id,
+            Asset.marked_unused == 1,
+        )
+    )
+    flagged_size = result3.scalar() or 0
+
+    return {
+        "total_assets": total_count,
+        "flagged_unused": flagged_count,
+        "flagged_size_bytes": flagged_size,
+        "flagged_size_mb": round(flagged_size / (1024 * 1024), 2) if flagged_size else 0,
+    }

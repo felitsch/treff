@@ -285,7 +285,7 @@ const hasTemplateHtml = computed(() => {
                   alt=""
                 />
 
-                <div v-if="currentSlide" class="absolute inset-0 p-4 flex flex-col justify-between z-10">
+                <div v-if="resolvedSlide" class="absolute inset-0 p-4 flex flex-col justify-between z-10">
                   <!-- TREFF badge + Episode -->
                   <div class="flex items-center gap-1.5">
                     <div class="bg-[#3B7AB1] rounded px-2 py-0.5">
@@ -302,17 +302,17 @@ const hasTemplateHtml = computed(() => {
                   <!-- Content -->
                   <div class="flex-1 flex flex-col justify-center py-2">
                     <h4 class="text-[#3B7AB1] text-sm font-extrabold leading-tight mb-1 line-clamp-3">
-                      {{ currentSlide.headline || '' }}
+                      {{ resolvedSlide.headline || '' }}
                     </h4>
-                    <p v-if="currentSlide.subheadline" class="text-[#FDD000] text-[9px] font-semibold mb-1 line-clamp-2">
-                      {{ currentSlide.subheadline }}
+                    <p v-if="resolvedSlide.subheadline" class="text-[#FDD000] text-[9px] font-semibold mb-1 line-clamp-2">
+                      {{ resolvedSlide.subheadline }}
                     </p>
-                    <p v-if="currentSlide.body_text" class="text-gray-300 text-[8px] leading-relaxed line-clamp-4">
-                      {{ currentSlide.body_text }}
+                    <p v-if="resolvedSlide.body_text" class="text-gray-300 text-[8px] leading-relaxed line-clamp-4">
+                      {{ resolvedSlide.body_text }}
                     </p>
-                    <ul v-if="currentSlide.bullet_points?.length" class="mt-1 space-y-0.5">
+                    <ul v-if="resolvedSlide.bullet_points?.length" class="mt-1 space-y-0.5">
                       <li
-                        v-for="(bp, bpIdx) in (Array.isArray(currentSlide.bullet_points) ? currentSlide.bullet_points : []).slice(0, 4)"
+                        v-for="(bp, bpIdx) in (Array.isArray(resolvedSlide.bullet_points) ? resolvedSlide.bullet_points : []).slice(0, 4)"
                         :key="bpIdx"
                         class="text-gray-300 text-[8px] flex items-start gap-1"
                       >
@@ -328,9 +328,9 @@ const hasTemplateHtml = computed(() => {
                   </div>
 
                   <!-- CTA -->
-                  <div v-if="currentSlide.cta_text || ctaText" class="mt-1">
+                  <div v-if="resolvedSlide.cta_text || resolvedCta" class="mt-1">
                     <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-3 py-1 rounded-full font-bold text-[8px]">
-                      {{ currentSlide.cta_text || ctaText }}
+                      {{ resolvedSlide.cta_text || resolvedCta }}
                     </div>
                   </div>
                 </div>
@@ -360,8 +360,8 @@ const hasTemplateHtml = computed(() => {
               <!-- IG Caption preview -->
               <div class="px-3 py-1.5 bg-white dark:bg-gray-900 text-[8px] max-h-[50px] overflow-hidden">
                 <span class="font-semibold text-gray-900 dark:text-white">treff_sprachreisen</span>
-                <span class="text-gray-600 dark:text-gray-400 ml-1">{{ dCaption ? dCaption.slice(0, 80) : '' }}{{ dCaption?.length > 80 ? '...' : '' }}</span>
-                <div v-if="dHashtags" class="text-blue-500 dark:text-blue-400 mt-0.5 line-clamp-1">{{ dHashtags.slice(0, 60) }}</div>
+                <span class="text-gray-600 dark:text-gray-400 ml-1">{{ resolvedCaption ? resolvedCaption.slice(0, 80) : '' }}{{ resolvedCaption?.length > 80 ? '...' : '' }}</span>
+                <div v-if="resolvedHashtags" class="text-blue-500 dark:text-blue-400 mt-0.5 line-clamp-1">{{ resolvedHashtags.slice(0, 60) }}</div>
               </div>
             </div>
 
@@ -395,7 +395,7 @@ const hasTemplateHtml = computed(() => {
                   class="absolute inset-0 w-full h-full object-cover opacity-30"
                   alt=""
                 />
-                <div v-if="currentSlide" class="absolute inset-0 flex flex-col justify-center p-5 pt-14 z-10">
+                <div v-if="resolvedSlide" class="absolute inset-0 flex flex-col justify-center p-5 pt-14 z-10">
                   <!-- Episode badge -->
                   <div v-if="episodeNumber" class="mb-2">
                     <span class="bg-[#FDD000] text-[#1A1A2E] px-2 py-0.5 rounded-full text-[8px] font-bold">Episode {{ episodeNumber }}</span>
@@ -407,17 +407,17 @@ const hasTemplateHtml = computed(() => {
                   </div>
 
                   <h4 class="text-white text-base font-extrabold leading-tight mb-2 drop-shadow line-clamp-3">
-                    {{ currentSlide.headline || '' }}
+                    {{ resolvedSlide.headline || '' }}
                   </h4>
-                  <p v-if="currentSlide.subheadline" class="text-[#FDD000] text-[10px] font-semibold mb-2 drop-shadow line-clamp-2">
-                    {{ currentSlide.subheadline }}
+                  <p v-if="resolvedSlide.subheadline" class="text-[#FDD000] text-[10px] font-semibold mb-2 drop-shadow line-clamp-2">
+                    {{ resolvedSlide.subheadline }}
                   </p>
-                  <p v-if="currentSlide.body_text" class="text-white/80 text-[9px] leading-relaxed line-clamp-5 drop-shadow">
-                    {{ currentSlide.body_text }}
+                  <p v-if="resolvedSlide.body_text" class="text-white/80 text-[9px] leading-relaxed line-clamp-5 drop-shadow">
+                    {{ resolvedSlide.body_text }}
                   </p>
-                  <ul v-if="currentSlide.bullet_points?.length" class="mt-2 space-y-1">
+                  <ul v-if="resolvedSlide.bullet_points?.length" class="mt-2 space-y-1">
                     <li
-                      v-for="(bp, bpIdx) in (Array.isArray(currentSlide.bullet_points) ? currentSlide.bullet_points : []).slice(0, 4)"
+                      v-for="(bp, bpIdx) in (Array.isArray(resolvedSlide.bullet_points) ? resolvedSlide.bullet_points : []).slice(0, 4)"
                       :key="bpIdx"
                       class="text-white/80 text-[8px] flex items-start gap-1 drop-shadow"
                     >
@@ -432,9 +432,9 @@ const hasTemplateHtml = computed(() => {
                   </div>
 
                   <!-- CTA button -->
-                  <div v-if="currentSlide.cta_text || ctaText" class="mt-3">
+                  <div v-if="resolvedSlide.cta_text || resolvedCta" class="mt-3">
                     <div class="inline-block bg-[#FDD000] text-[#1A1A2E] px-4 py-1.5 rounded-full font-bold text-[9px] shadow-lg">
-                      {{ currentSlide.cta_text || ctaText }}
+                      {{ resolvedSlide.cta_text || resolvedCta }}
                     </div>
                   </div>
                 </div>
@@ -442,7 +442,7 @@ const hasTemplateHtml = computed(() => {
 
               <!-- Story bottom: reply bar + swipe-up hint -->
               <div class="absolute bottom-3 left-3 right-3 z-20">
-                <div v-if="currentSlide?.cta_text || ctaText" class="text-center mb-2">
+                <div v-if="resolvedSlide?.cta_text || resolvedCta" class="text-center mb-2">
                   <div class="inline-flex items-center gap-1 text-white/70 text-[8px] animate-bounce">
                     <span>&#8679;</span>
                     <span>Mehr erfahren</span>
@@ -466,29 +466,29 @@ const hasTemplateHtml = computed(() => {
                   class="absolute inset-0 w-full h-full object-cover opacity-30"
                   alt=""
                 />
-                <div v-if="currentSlide" class="absolute inset-0 flex flex-col justify-end p-4 pb-16 z-10">
+                <div v-if="resolvedSlide" class="absolute inset-0 flex flex-col justify-end p-4 pb-16 z-10">
                   <!-- Episode badge -->
                   <div v-if="episodeNumber" class="mb-2">
                     <span class="bg-[#FDD000] text-[#1A1A2E] px-2 py-0.5 rounded-full text-[8px] font-bold">Ep. {{ episodeNumber }}</span>
                   </div>
 
                   <h4 class="text-white text-sm font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">
-                    {{ currentSlide.headline || '' }}
+                    {{ resolvedSlide.headline || '' }}
                   </h4>
-                  <p v-if="currentSlide.subheadline" class="text-[#FDD000] text-[9px] font-semibold mb-1 drop-shadow line-clamp-1">
-                    {{ currentSlide.subheadline }}
+                  <p v-if="resolvedSlide.subheadline" class="text-[#FDD000] text-[9px] font-semibold mb-1 drop-shadow line-clamp-1">
+                    {{ resolvedSlide.subheadline }}
                   </p>
-                  <p v-if="currentSlide.body_text" class="text-white/80 text-[8px] leading-relaxed line-clamp-3 drop-shadow">
-                    {{ currentSlide.body_text }}
+                  <p v-if="resolvedSlide.body_text" class="text-white/80 text-[8px] leading-relaxed line-clamp-3 drop-shadow">
+                    {{ resolvedSlide.body_text }}
                   </p>
 
                   <!-- Caption + hashtags at bottom -->
                   <div class="mt-2">
                     <p class="text-white text-[8px] leading-relaxed line-clamp-2">
                       <span class="font-semibold">@treff_sprachreisen</span>
-                      {{ dCaption ? ' ' + dCaption.slice(0, 60) : '' }}
+                      {{ resolvedCaption ? ' ' + resolvedCaption.slice(0, 60) : '' }}
                     </p>
-                    <p v-if="dHashtags" class="text-white/70 text-[7px] mt-0.5 line-clamp-1">{{ dHashtags.slice(0, 50) }}</p>
+                    <p v-if="resolvedHashtags" class="text-white/70 text-[7px] mt-0.5 line-clamp-1">{{ resolvedHashtags.slice(0, 50) }}</p>
                   </div>
 
                   <!-- Music ticker -->
@@ -668,14 +668,14 @@ const hasTemplateHtml = computed(() => {
                   </div>
                   <div class="flex-1 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]">
                     <img v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
-                    <div v-if="currentSlide" class="absolute inset-0 p-3 flex flex-col justify-center z-10">
-                      <h4 class="text-[#3B7AB1] text-[11px] font-extrabold leading-tight mb-1 line-clamp-2">{{ currentSlide.headline }}</h4>
-                      <p v-if="currentSlide.body_text" class="text-gray-300 text-[7px] line-clamp-3">{{ currentSlide.body_text }}</p>
+                    <div v-if="resolvedSlide" class="absolute inset-0 p-3 flex flex-col justify-center z-10">
+                      <h4 class="text-[#3B7AB1] text-[11px] font-extrabold leading-tight mb-1 line-clamp-2">{{ resolvedSlide.headline }}</h4>
+                      <p v-if="resolvedSlide.body_text" class="text-gray-300 text-[7px] line-clamp-3">{{ resolvedSlide.body_text }}</p>
                     </div>
                   </div>
                   <div class="px-2 py-1 bg-white dark:bg-gray-900 text-[7px]">
                     <span class="font-semibold text-gray-900 dark:text-white">treff_sprachreisen</span>
-                    <span class="text-gray-500 ml-1">{{ dCaption?.slice(0, 40) }}...</span>
+                    <span class="text-gray-500 ml-1">{{ resolvedCaption?.slice(0, 40) }}...</span>
                   </div>
                 </div>
 
@@ -685,18 +685,18 @@ const hasTemplateHtml = computed(() => {
                   <div class="absolute top-2 left-2 right-2 flex gap-0.5 z-20">
                     <div v-for="(s, i) in (dSlides.length > 0 ? dSlides : [{}])" :key="i" class="flex-1 h-0.5 rounded-full" :class="i <= props.currentSlideIndex ? 'bg-white' : 'bg-white/30'"></div>
                   </div>
-                  <div v-if="currentSlide" class="absolute inset-0 flex flex-col justify-center p-4 pt-8 z-10">
-                    <h4 class="text-white text-[11px] font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">{{ currentSlide.headline }}</h4>
-                    <p v-if="currentSlide.body_text" class="text-white/70 text-[7px] line-clamp-3 drop-shadow">{{ currentSlide.body_text }}</p>
+                  <div v-if="resolvedSlide" class="absolute inset-0 flex flex-col justify-center p-4 pt-8 z-10">
+                    <h4 class="text-white text-[11px] font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">{{ resolvedSlide.headline }}</h4>
+                    <p v-if="resolvedSlide.body_text" class="text-white/70 text-[7px] line-clamp-3 drop-shadow">{{ resolvedSlide.body_text }}</p>
                   </div>
                 </div>
 
                 <!-- TikTok mobile -->
                 <div v-else-if="activePlatform === 'tiktok'" class="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] to-[#010101]">
                   <img v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
-                  <div v-if="currentSlide" class="absolute inset-0 flex flex-col justify-end p-3 pb-10 z-10">
-                    <h4 class="text-white text-[10px] font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">{{ currentSlide.headline }}</h4>
-                    <p class="text-white/70 text-[7px] line-clamp-2">@treff_sprachreisen {{ dCaption?.slice(0, 40) }}</p>
+                  <div v-if="resolvedSlide" class="absolute inset-0 flex flex-col justify-end p-3 pb-10 z-10">
+                    <h4 class="text-white text-[10px] font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">{{ resolvedSlide.headline }}</h4>
+                    <p class="text-white/70 text-[7px] line-clamp-2">@treff_sprachreisen {{ resolvedCaption?.slice(0, 40) }}</p>
                   </div>
                   <div class="absolute right-1.5 bottom-14 flex flex-col items-center gap-2 z-20">
                     <div class="w-6 h-6 rounded-full bg-[#3B7AB1] ring-1 ring-white flex items-center justify-center">

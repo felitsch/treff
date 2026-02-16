@@ -3838,6 +3838,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       :episode-previously-text="episodePreviouslyText"
       :episode-cliffhanger-text="episodeCliffhangerText"
       :episode-next-hint="episodeNextHint"
+      :template-placeholder-values="templatePlaceholderValues"
+      :selected-template="selectedTemplate"
       @update:platform="previewPlatform = $event"
       @update:current-slide-index="currentPreviewSlide = $event"
       data-testid="live-preview-panel"
