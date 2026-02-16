@@ -1,0 +1,572 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-02-16",
+  "brand": {
+    "name": "TREFF Sprachreisen",
+    "founded": 1984,
+    "tagline": "Dein Auslandsjahr beginnt hier.",
+    "mission": "Deutsche Schueler auf ihr Abenteuer Highschool-Aufenthalt im Ausland vorbereiten und begleiten.",
+    "unique_selling_points": [
+      "40+ Jahre Erfahrung seit 1984",
+      "Persoenliche Betreuung durch kleines Team",
+      "5 Ziellaender: USA, Kanada, Australien, Neuseeland, Irland",
+      "Circa 200 Teilnehmer pro Jahr — familiaeere Atmosphaere",
+      "Standort in Baden-Wuerttemberg (Eningen/Pfullingen)"
+    ],
+    "tone_of_voice": {
+      "primary": "Jugendlich aber serioess",
+      "description": "Die Zielgruppe sind Teenager (14-18), aber Eltern lesen mit und muessen Vertrauen fassen. Kein Slang, aber auch nicht steif. Authentisch, nahbar, kompetent.",
+      "do": [
+        "Du-Anrede fuer Schueler",
+        "Echte Geschichten und Emotionen",
+        "Konkrete Tipps und Fakten",
+        "Fragen stellen und zum Mitmachen einladen",
+        "Emojis dosiert einsetzen (2-4 pro Post)"
+      ],
+      "dont": [
+        "Slang oder Jugendsprache erzwingen",
+        "Zu werblich oder aggressiv",
+        "Versprechen die nicht gehalten werden koennen",
+        "Andere Organisationen schlecht machen",
+        "Ueber Preise auf Social Media sprechen (nur auf Website)"
+      ]
+    }
+  },
+  "target_audience": {
+    "primary": {
+      "label": "Schueler",
+      "age_range": "14-18 Jahre",
+      "description": "Deutsche Gymnasiasten und Realschueler, die ein Auslandsjahr in Erwaegung ziehen oder sich gerade bewerben.",
+      "pain_points": [
+        "Angst vor dem Unbekannten (neue Kultur, Sprache, Gastfamilie)",
+        "Unsicherheit ueber Bewerbungsprozess und Fristen",
+        "FOMO — Freunde gehen auch, soll ich auch?",
+        "Schulische Sorgen (Anerkennung, Nachholbedarf)",
+        "Heimweh-Angst"
+      ],
+      "motivations": [
+        "Abenteuer und neue Erfahrungen",
+        "Englisch verbessern",
+        "Selbststaendigkeit und persoenliches Wachstum",
+        "Neue Freundschaften weltweit",
+        "Coole Insta-Stories und TikToks"
+      ],
+      "platforms": ["Instagram (Reels, Stories)", "TikTok"],
+      "content_preferences": ["Kurze Videos", "Carousel-Posts", "Erfahrungsberichte", "Memes/Humor", "Behind-the-Scenes"]
+    },
+    "secondary": {
+      "label": "Eltern",
+      "age_range": "40-55 Jahre",
+      "description": "Eltern der Zielgruppe, die ueber Sicherheit, Kosten und Organisation informiert werden muessen.",
+      "pain_points": [
+        "Sicherheitsbedenken (Kind allein im Ausland)",
+        "Hohe Kosten (13.800-22.400 EUR)",
+        "Angst vor schulischen Nachteilen",
+        "Unklarheit ueber Versicherung, Visum, Betreuung",
+        "Vertrauen in die Organisation"
+      ],
+      "motivations": [
+        "Beste Chancen fuer ihr Kind",
+        "Sprachkenntnisse und interkulturelle Kompetenz",
+        "Charakterentwicklung und Selbststaendigkeit",
+        "Sicherheit und professionelle Betreuung"
+      ],
+      "platforms": ["Instagram (Feed)", "Facebook"],
+      "content_preferences": ["Detaillierte Infos", "Testimonials anderer Eltern", "FAQ-Posts", "Infografiken"]
+    }
+  },
+  "content_pillars": [
+    {
+      "id": "erfahrungsberichte",
+      "name": "Erfahrungsberichte & Testimonials",
+      "emoji": "\ud83d\udcdd",
+      "distribution_percent": 30,
+      "description": "Echte Geschichten von TREFF-Teilnehmern: Vor, waehrend und nach dem Auslandsjahr. Der emotionale Kern unserer Strategie.",
+      "buyer_journey_stage": ["awareness", "consideration"],
+      "formats": ["Carousel", "Reel", "Story-Serie", "Interview-Clip"],
+      "example_topics": [
+        "Mein erster Tag an der High School",
+        "Gastfamilie: Erwartung vs. Realitaet",
+        "Was ich nach 3 Monaten gelernt habe",
+        "Abschied nehmen — und warum es sich lohnt",
+        "5 Dinge die ich vermisse (und 5 die ich liebe)",
+        "Rueckkehrer-Interview: Ein Jahr spaeter"
+      ],
+      "kpis": ["Saves", "Shares", "Comments", "Story Replies"]
+    },
+    {
+      "id": "laender_spotlight",
+      "name": "Laender-Spotlights & Destination Content",
+      "emoji": "\ud83c\udf0d",
+      "distribution_percent": 20,
+      "description": "Informative und inspirierende Inhalte ueber unsere 5 Ziellaender. Fakten, Highlights, Vergleiche.",
+      "buyer_journey_stage": ["awareness", "consideration"],
+      "formats": ["Carousel", "Infografik", "Reel", "Quiz-Story"],
+      "example_topics": [
+        "USA vs. Kanada: Welches Land passt zu dir?",
+        "10 Fakten ueber Australien die du nicht wusstest",
+        "So sieht ein typischer Schultag in Neuseeland aus",
+        "Irland: Mehr als nur Regen und Kobolde",
+        "Kanada-Special: Englisch ODER Franzoesisch?",
+        "Die schoensten Highschool-Campusse der Welt"
+      ],
+      "kpis": ["Reach", "Saves", "Profile Visits"]
+    },
+    {
+      "id": "tipps_tricks",
+      "name": "Tipps, Tricks & Guides",
+      "emoji": "\ud83d\udca1",
+      "distribution_percent": 20,
+      "description": "Praktische Ratschlaege fuer Bewerbung, Vorbereitung, Packliste, Alltag im Ausland. Mehrwert-Content der geteilt wird.",
+      "buyer_journey_stage": ["consideration", "decision"],
+      "formats": ["Carousel", "Listicle", "How-To Reel", "Checklisten-Story"],
+      "example_topics": [
+        "Packliste Auslandsjahr: Das muss mit!",
+        "Bewerbung Schritt fuer Schritt erklaert",
+        "So findest du die perfekte Gastfamilie",
+        "Heimweh? 5 Tipps die wirklich helfen",
+        "Schule im Ausland: So funktioniert die Anerkennung",
+        "Budget-Guide: So viel Taschengeld brauchst du"
+      ],
+      "kpis": ["Saves", "Shares", "Website Clicks"]
+    },
+    {
+      "id": "fristen_cta",
+      "name": "Fristen, CTAs & Conversion",
+      "emoji": "\u23f0",
+      "distribution_percent": 10,
+      "description": "Bewerbungsfristen, Stipendien-Infos, direkte Handlungsaufforderungen. Conversion-optimiert aber nicht aufdringlich.",
+      "buyer_journey_stage": ["decision"],
+      "formats": ["Single Image", "Story mit Countdown", "Reel"],
+      "example_topics": [
+        "Bewerbungsfrist USA Classic: Noch 30 Tage!",
+        "Stipendium sichern — jetzt bewerben",
+        "Platze fuer Kanada 2027 fast vergeben",
+        "Infoveranstaltung: Komm vorbei!",
+        "Elternabend online: Alle Fragen beantwortet"
+      ],
+      "kpis": ["Website Clicks", "Link Taps", "DM Inquiries"]
+    },
+    {
+      "id": "faq",
+      "name": "FAQ & Wissenswertes",
+      "emoji": "\u2753",
+      "distribution_percent": 10,
+      "description": "Haeufig gestellte Fragen beantwortet. Baut Vertrauen auf und reduziert Hemmschwelle zur Kontaktaufnahme.",
+      "buyer_journey_stage": ["consideration", "decision"],
+      "formats": ["Carousel", "Story-Highlight", "Reel"],
+      "example_topics": [
+        "Wie viel kostet ein Auslandsjahr?",
+        "Brauche ich ein Visum?",
+        "Was passiert wenn ich krank werde?",
+        "Kann ich mir die Gastfamilie aussuchen?",
+        "Werde ich die Klasse wiederholen muessen?",
+        "Ab welchem Alter kann ich teilnehmen?"
+      ],
+      "kpis": ["Saves", "DM Inquiries", "Website Clicks"]
+    },
+    {
+      "id": "behind_the_scenes",
+      "name": "Behind the Scenes & Team",
+      "emoji": "\ud83c\udfac",
+      "distribution_percent": 5,
+      "description": "Einblicke ins TREFF-Team, Bueroalltag, Events, Messen. Macht die Marke menschlich und nahbar.",
+      "buyer_journey_stage": ["awareness", "consideration"],
+      "formats": ["Story", "Reel", "Foto-Post"],
+      "example_topics": [
+        "Ein Tag im TREFF-Buero",
+        "Wir auf der JuBi Messe",
+        "Team-Vorstellung: Wer steckt hinter TREFF?",
+        "So bereiten wir eure Unterlagen vor",
+        "Unser Lieblingsland (Team-Voting)"
+      ],
+      "kpis": ["Engagement Rate", "Follower Growth", "Story Views"]
+    },
+    {
+      "id": "infografiken",
+      "name": "Infografiken & Daten",
+      "emoji": "\ud83d\udcca",
+      "distribution_percent": 5,
+      "description": "Visuelle Aufbereitung von Statistiken, Vergleichen, Prozessen. Hochgradig teilbar und speicherbar.",
+      "buyer_journey_stage": ["awareness", "consideration"],
+      "formats": ["Carousel", "Single Image", "Story"],
+      "example_topics": [
+        "Highschool-Aufenthalt in Zahlen",
+        "Kostenvergleich: 5 Laender im Ueberblick",
+        "Timeline: Vom Traum zum Abflug",
+        "Sprachfortschritt-Kurve: Monat 1-10",
+        "Beliebteste Ziellaender deutscher Schueler"
+      ],
+      "kpis": ["Saves", "Shares", "Reach"]
+    }
+  ],
+  "buyer_journey": {
+    "stages": [
+      {
+        "id": "awareness",
+        "name": "Awareness — Fernweh wecken",
+        "description": "Der Schueler hat vielleicht schon mal von Auslandsjahr gehoert, aber noch keine konkreten Plaene. Ziel: Interesse wecken, Emotionen ansprechen, TREFF als Marke bekannt machen.",
+        "target_share": 40,
+        "content_types": ["Erfahrungsberichte", "Laender-Spotlights", "Reels mit Wow-Faktor", "Memes/Humor"],
+        "pillars": ["erfahrungsberichte", "laender_spotlight", "behind_the_scenes", "infografiken"],
+        "metrics": ["Reach", "Impressions", "Profile Visits", "Follower Growth"],
+        "example_hooks": [
+          "Stell dir vor du wachst auf und...",
+          "Das haette ich nie erwartet",
+          "3 Gruende warum du ein Auslandsjahr machen solltest",
+          "POV: Dein erster Tag an einer amerikanischen High School"
+        ]
+      },
+      {
+        "id": "consideration",
+        "name": "Consideration — Vergleichen & Informieren",
+        "description": "Der Schueler ist interessiert und vergleicht Organisationen, Laender, Programme. Ziel: Vertrauen aufbauen, Fragen beantworten, TREFF als beste Wahl positionieren.",
+        "target_share": 35,
+        "content_types": ["FAQ-Carousels", "Laender-Vergleiche", "Tipps & Guides", "Testimonials"],
+        "pillars": ["tipps_tricks", "faq", "laender_spotlight", "erfahrungsberichte"],
+        "metrics": ["Saves", "Shares", "Website Clicks", "DM Inquiries"],
+        "example_hooks": [
+          "Die 5 haeufigsten Fehler bei der Bewerbung",
+          "USA vs. Kanada — ehrlicher Vergleich",
+          "Das sagen unsere Rueckkehrer wirklich",
+          "Checkliste: Bist du bereit fuer ein Auslandsjahr?"
+        ]
+      },
+      {
+        "id": "decision",
+        "name": "Decision — Bewerben & Buchen",
+        "description": "Der Schueler (und die Eltern) sind fast entschieden. Ziel: Letzten Anstoss geben, Fristen kommunizieren, Hemmschwelle senken, Conversion erzielen.",
+        "target_share": 25,
+        "content_types": ["Fristen-Reminder", "Stipendien-Info", "Eltern-Content", "CTAs", "Success Stories"],
+        "pillars": ["fristen_cta", "faq", "tipps_tricks"],
+        "metrics": ["Link Clicks", "DM Inquiries", "Bewerbungen", "Conversion Rate"],
+        "example_hooks": [
+          "Nur noch 30 Tage bis zur Bewerbungsfrist",
+          "Stipendium sichern — so gehts",
+          "Deine Eltern haben Fragen? Wir haben Antworten",
+          "Jetzt bewerben — in 12 Monaten bist du da"
+        ]
+      }
+    ]
+  },
+  "content_calendar": {
+    "posting_frequency": {
+      "minimum": 3,
+      "optimal": 5,
+      "maximum": 7,
+      "unit": "posts_per_week"
+    },
+    "best_posting_times": {
+      "instagram": {
+        "weekdays": ["17:00", "18:00", "20:00"],
+        "weekends": ["10:00", "11:00", "14:00"]
+      },
+      "tiktok": {
+        "weekdays": ["16:00", "19:00", "21:00"],
+        "weekends": ["11:00", "15:00", "19:00"]
+      }
+    },
+    "weekly_rhythm": [
+      {"day": "Montag", "day_index": 0, "theme": "Motivation Monday", "pillar": "tipps_tricks", "description": "Motivierende Inhalte zum Wochenstart — Zitate, Tipps, Push-Content"},
+      {"day": "Dienstag", "day_index": 1, "theme": "Story-/Serien-Tag", "pillar": "erfahrungsberichte", "description": "Erfahrungsberichte und Story-Arc Episoden"},
+      {"day": "Mittwoch", "day_index": 2, "theme": "Laender-Spotlight", "pillar": "laender_spotlight", "description": "Wechselndes Laender-Spotlight (Rotation: USA, Kanada, Australien, Neuseeland, Irland)"},
+      {"day": "Donnerstag", "day_index": 3, "theme": "Throwback Thursday", "pillar": "erfahrungsberichte", "description": "Rueckblicke, Vergleiche vorher/nachher, Foto-Posts"},
+      {"day": "Freitag", "day_index": 4, "theme": "Fun Friday", "pillar": "faq", "description": "Lockere Inhalte — Fun Facts, Fails, Memes, Quiz"},
+      {"day": "Samstag", "day_index": 5, "theme": "Behind the Scenes", "pillar": "behind_the_scenes", "description": "Team-Einblicke, Events, Bueroalltag"},
+      {"day": "Sonntag", "day_index": 6, "theme": "Wochen-Teaser", "pillar": "tipps_tricks", "description": "Vorschau auf die kommende Woche, Cliffhanger"}
+    ],
+    "seasonal_strategy": {
+      "phases": [
+        {
+          "id": "fruehling_awareness",
+          "months": [3, 4, 5],
+          "name": "Fruehling — Fernweh-Saison",
+          "focus": "Awareness & Inspiration",
+          "description": "Schueler traeumen vom naechsten Schuljahr. Maximales Fernweh wecken, Laender vorstellen, erste Infos streuen.",
+          "priority_pillars": ["laender_spotlight", "erfahrungsberichte", "behind_the_scenes"],
+          "key_events": [
+            {"label": "Bewerbungsfrist USA Classic", "date_hint": "31. Maerz"},
+            {"label": "Bewerbungsfrist USA Select", "date_hint": "15. April"},
+            {"label": "Bewerbungsfrist Kanada", "date_hint": "30. April"},
+            {"label": "JuBi Messe Fruehling", "date_hint": "Anfang Maerz"},
+            {"label": "Bewerbungsfrist Irland", "date_hint": "15. Mai"},
+            {"label": "Bewerbungsfrist Australien/NZ", "date_hint": "31. Mai"}
+          ],
+          "content_mix": {"awareness": 50, "consideration": 30, "decision": 20}
+        },
+        {
+          "id": "sommer_vorbereitung",
+          "months": [6, 7, 8],
+          "name": "Sommer — Vorbereitungs-Phase",
+          "focus": "Preparation & Goodbye Content",
+          "description": "Teilnehmer bereiten sich auf den Abflug vor. Packlisten, Abschiedsmomente, letzte Tipps. Gleichzeitig Rueckkehrer-Content von letztem Jahrgang.",
+          "priority_pillars": ["tipps_tricks", "erfahrungsberichte", "fristen_cta"],
+          "key_events": [
+            {"label": "Rueckkehr USA/Kanada/Irland", "date_hint": "Mitte Juni"},
+            {"label": "Abflug USA/Kanada/Irland", "date_hint": "Mitte August"},
+            {"label": "Sommerferien", "date_hint": "Juli-August"}
+          ],
+          "content_mix": {"awareness": 30, "consideration": 40, "decision": 30}
+        },
+        {
+          "id": "herbst_bewerbung",
+          "months": [9, 10, 11],
+          "name": "Herbst — Bewerbungs-Hochsaison",
+          "focus": "Conversion & Decision",
+          "description": "Hoechste Conversion-Phase. Bewerbungsfristen kommunizieren, Stipendien promoten, Eltern-Content staerken. Aktuell im Ausland befindliche Schueler als Live-Content.",
+          "priority_pillars": ["fristen_cta", "faq", "erfahrungsberichte"],
+          "key_events": [
+            {"label": "Schulstart USA/Kanada/Irland", "date_hint": "1. September"},
+            {"label": "Stipendien-Bewerbungsfrist", "date_hint": "15. Oktober"},
+            {"label": "JuBi Messe Herbst", "date_hint": "Anfang November"}
+          ],
+          "content_mix": {"awareness": 25, "consideration": 35, "decision": 40}
+        },
+        {
+          "id": "winter_community",
+          "months": [12, 1, 2],
+          "name": "Winter — Community & Vorfreude",
+          "focus": "Community Building & Early Bird",
+          "description": "Feiertags-Content, Rueckblicke aufs Jahr, Vorfreude auf neue Abreisen (Australien/NZ im Januar). Fruehe Planung fuer naechstes Jahr anschieben.",
+          "priority_pillars": ["erfahrungsberichte", "laender_spotlight", "infografiken"],
+          "key_events": [
+            {"label": "Weihnachten im Ausland", "date_hint": "25. Dezember"},
+            {"label": "Abflug Australien/Neuseeland", "date_hint": "20. Januar"},
+            {"label": "Schulstart Australien/Neuseeland", "date_hint": "1. Februar"},
+            {"label": "Rueckkehr Australien/NZ", "date_hint": "10. Dezember"}
+          ],
+          "content_mix": {"awareness": 45, "consideration": 35, "decision": 20}
+        }
+      ]
+    },
+    "country_rotation": {
+      "description": "Jedes Land sollte mindestens 1x pro Woche in irgendeiner Form vorkommen. Die Verteilung spiegelt die Nachfrage wider.",
+      "distribution": {
+        "usa": 30,
+        "canada": 20,
+        "australia": 20,
+        "newzealand": 15,
+        "ireland": 15
+      }
+    }
+  },
+  "hub_and_spoke": {
+    "description": "Hub-Inhalte sind zeitlose Evergreen-Stuecke die langfristig Traffic und Saves generieren. Spoke-Inhalte sind aktuelle, saisonale oder trending Posts die auf Hub-Inhalte verlinken.",
+    "hubs": [
+      {
+        "id": "hub_laendervergleich",
+        "title": "Der grosse Laender-Vergleich: USA vs. Kanada vs. Australien vs. Neuseeland vs. Irland",
+        "pillar": "laender_spotlight",
+        "format": "Carousel (10 Slides)",
+        "refresh_interval_months": 6
+      },
+      {
+        "id": "hub_bewerbungsguide",
+        "title": "Bewerbungs-Guide: Schritt fuer Schritt zum Auslandsjahr",
+        "pillar": "tipps_tricks",
+        "format": "Carousel (8-10 Slides)",
+        "refresh_interval_months": 12
+      },
+      {
+        "id": "hub_packliste",
+        "title": "Die ultimative Packliste fuer dein Auslandsjahr",
+        "pillar": "tipps_tricks",
+        "format": "Carousel + Story-Highlight",
+        "refresh_interval_months": 12
+      },
+      {
+        "id": "hub_faq_kosten",
+        "title": "Was kostet ein Auslandsjahr? Alle Kosten im Ueberblick",
+        "pillar": "faq",
+        "format": "Carousel (6-8 Slides)",
+        "refresh_interval_months": 12
+      },
+      {
+        "id": "hub_faq_visum",
+        "title": "Visum, Versicherung, Flug: Alles was du wissen musst",
+        "pillar": "faq",
+        "format": "Carousel + Story-Highlight",
+        "refresh_interval_months": 12
+      },
+      {
+        "id": "hub_erfahrungsbericht_sammlung",
+        "title": "Unsere Rueckkehrer erzaehlen: 10 echte Geschichten",
+        "pillar": "erfahrungsberichte",
+        "format": "Reel-Serie oder Carousel",
+        "refresh_interval_months": 6
+      },
+      {
+        "id": "hub_schulalltag",
+        "title": "So sieht ein Schultag im Ausland wirklich aus",
+        "pillar": "erfahrungsberichte",
+        "format": "Carousel oder Reel",
+        "refresh_interval_months": 12
+      },
+      {
+        "id": "hub_gastfamilie",
+        "title": "Gastfamilie: Alles was du wissen musst",
+        "pillar": "tipps_tricks",
+        "format": "Carousel (8 Slides)",
+        "refresh_interval_months": 12
+      }
+    ],
+    "spoke_types": [
+      {
+        "type": "seasonal",
+        "description": "Saisonale Inhalte die auf Hub-Content verlinken (z.B. Fristen-Reminder -> Bewerbungs-Guide)",
+        "frequency": "Woechentlich"
+      },
+      {
+        "type": "trending",
+        "description": "Aktuelle Trends (TikTok Sounds, Meme-Formate) adaptiert fuer TREFF-Themen",
+        "frequency": "1-2x pro Woche"
+      },
+      {
+        "type": "user_generated",
+        "description": "Repost/Remix von Teilnehmer-Content mit Verlinkung auf Hub-Content",
+        "frequency": "1-2x pro Woche"
+      },
+      {
+        "type": "behind_the_scenes",
+        "description": "Spontane Einblicke, Team-Content, Event-Dokumentation",
+        "frequency": "1x pro Woche"
+      }
+    ]
+  },
+  "competitor_analysis": {
+    "description": "Analyse der wichtigsten Wettbewerber im deutschsprachigen Highschool-Austausch Markt auf Social Media.",
+    "competitors": [
+      {
+        "name": "Stepin",
+        "instagram_handle": "@stepin_de",
+        "estimated_followers": 15000,
+        "strengths": ["Grosse Community", "Viel UGC (User Generated Content)", "Regelmaessige Postings"],
+        "weaknesses": ["Wenig Video-Content", "Generisches Branding"],
+        "learnings": "UGC funktioniert — Teilnehmer-Takeovers einbauen"
+      },
+      {
+        "name": "EF (Education First)",
+        "instagram_handle": "@ef_deutschland",
+        "estimated_followers": 80000,
+        "strengths": ["Professionelle Produktion", "Starkes Branding", "Grosses Budget"],
+        "weaknesses": ["Wenig persoenlich", "Massenabfertigung-Eindruck"],
+        "learnings": "Qualitaet schlaegt Quantitaet — aber Konsistenz ist entscheidend"
+      },
+      {
+        "name": "AIFS",
+        "instagram_handle": "@aifs_de",
+        "estimated_followers": 25000,
+        "strengths": ["Gute Reels", "Aktive Story-Nutzung", "Klare Zielgruppen-Ansprache"],
+        "weaknesses": ["Zu viele Programme (nicht nur Highschool)", "Verwaeresserte Marke"],
+        "learnings": "Fokus auf EINE Nische (Highschool) ist TREFFs Vorteil"
+      },
+      {
+        "name": "YFU (Youth For Understanding)",
+        "instagram_handle": "@yfu_deutschland",
+        "estimated_followers": 8000,
+        "strengths": ["Authentische Geschichten", "Starke Community-Bindung"],
+        "weaknesses": ["Wenig moderne Formate", "Langsame Posting-Frequenz"],
+        "learnings": "Authentizitaet > Perfektion, aber Konsistenz fehlt"
+      },
+      {
+        "name": "iSt Sprachreisen",
+        "instagram_handle": "@ist_sprachreisen",
+        "estimated_followers": 12000,
+        "strengths": ["Breites Angebot", "Schoene Bildsprache"],
+        "weaknesses": ["Generisch", "Wenig Storytelling"],
+        "learnings": "Storytelling und Serien-Formate differenzieren"
+      }
+    ],
+    "treff_positioning": {
+      "differentiator": "Persoenlich, familiaeir, spezialisiert auf Highschool. 40 Jahre Erfahrung, aber frischer Online-Auftritt.",
+      "competitive_advantages": [
+        "Spezialisierung auf Highschool-Aufenthalte (nicht Au Pair, Work&Travel etc.)",
+        "Kleine Organisation = persoenliche Betreuung",
+        "40+ Jahre Erfahrung = Vertrauen und Kompetenz",
+        "Lokale Praesenz in Baden-Wuerttemberg"
+      ],
+      "growth_opportunity": "Von ~1.047 auf 5.000+ Follower in 12 Monaten durch konsistentes Posten (5x/Woche), Story-Serien und Reels-First-Strategie"
+    }
+  },
+  "platform_strategy": {
+    "instagram": {
+      "priority": 1,
+      "formats": {
+        "reels": {
+          "share": 40,
+          "description": "Kurzvideos (15-60s) fuer maximale Reichweite. TikTok-Reposts, Transitions, Storytelling.",
+          "best_length": "15-30 Sekunden",
+          "tips": ["Untertitel immer einblenden", "Hook in den ersten 2 Sekunden", "Trending Audio nutzen"]
+        },
+        "carousels": {
+          "share": 35,
+          "description": "Swipe-Posts (3-10 Slides) fuer Tiefe und Saves. Ideal fuer Tipps, FAQs, Laender-Infos.",
+          "best_slides": "5-7 Slides",
+          "tips": ["Erste Slide = Hook/Frage", "Letzte Slide = CTA", "Konsistentes Template-Design"]
+        },
+        "stories": {
+          "share": 15,
+          "description": "Taegliche Stories fuer Naehe und Interaktion. Polls, Quizzes, Behind-the-Scenes.",
+          "frequency": "3-5 Stories pro Tag",
+          "tips": ["Interaktive Sticker nutzen", "Countdown fuer Fristen", "Story-Highlights pflegen"]
+        },
+        "single_image": {
+          "share": 10,
+          "description": "Einzelbilder fuer besondere Momente, Zitate, Ankuendigungen.",
+          "tips": ["Hohe Bildqualitaet", "Brand-Farben einhalten", "Klarer Text-Overlay"]
+        }
+      },
+      "hashtag_strategy": {
+        "per_post": "15-20 Hashtags",
+        "mix": {
+          "branded": ["#treffsprachreisen", "#treffauslandsjahr", "#meintreffmoment"],
+          "niche": ["#auslandsjahr", "#highschoolabroad", "#schueleraustausch", "#gastfamilie", "#highschooljahr"],
+          "broad": ["#wanderlust", "#travelgram", "#studyabroad", "#exchangestudent"],
+          "country_specific": {
+            "usa": ["#usaauslandsjahr", "#highschoolusa", "#americandream"],
+            "canada": ["#kanadaaustausch", "#highschoolcanada", "#okanada"],
+            "australia": ["#australienauslandsjahr", "#highschoolaustralia", "#downunder"],
+            "newzealand": ["#neuseelandjahr", "#highschoolnz", "#kiwilife"],
+            "ireland": ["#irlandaustausch", "#highschoolireland", "#greenisland"]
+          }
+        }
+      }
+    },
+    "tiktok": {
+      "priority": 2,
+      "formats": {
+        "short_video": {
+          "share": 70,
+          "description": "15-60s Videos mit Trending Sounds, Transitions, POV-Format.",
+          "tips": ["Trending Sounds nutzen", "Text-Overlays fuer Barrierefreiheit", "Duett/Stitch Features"]
+        },
+        "story_time": {
+          "share": 20,
+          "description": "Laengere Geschichten (1-3 Min) — Erfahrungsberichte als Talking-Head oder Voiceover.",
+          "tips": ["Persoenlich und authentisch", "Keine ueberproduzierten Videos", "Cliffhanger fuer Part 2"]
+        },
+        "slideshow": {
+          "share": 10,
+          "description": "Foto-Slideshows mit Musik — einfach zu erstellen, gut fuer Vorher/Nachher.",
+          "tips": ["Emotionale Musik waehlen", "5-8 Bilder maximal", "Text-Overlay auf jedem Bild"]
+        }
+      }
+    }
+  },
+  "kpi_targets": {
+    "timeline": "12 Monate",
+    "instagram": {
+      "follower_growth": {"current": 1047, "target_3m": 2000, "target_6m": 3500, "target_12m": 5000},
+      "engagement_rate": {"current_estimate": 1.5, "target": 4.0, "unit": "percent"},
+      "reach_per_post": {"target": 2000, "unit": "accounts"},
+      "saves_per_post": {"target": 50, "unit": "saves"},
+      "posting_frequency": {"target": 5, "unit": "posts_per_week"},
+      "story_views": {"target": 300, "unit": "views_per_story"}
+    },
+    "tiktok": {
+      "follower_growth": {"current": 0, "target_3m": 500, "target_6m": 2000, "target_12m": 5000},
+      "views_per_video": {"target": 5000, "unit": "views"},
+      "posting_frequency": {"target": 3, "unit": "posts_per_week"}
+    }
+  }
+}
