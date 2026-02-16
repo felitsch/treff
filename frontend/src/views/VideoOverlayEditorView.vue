@@ -506,7 +506,7 @@ onUnmounted(() => {
           title="Keine Videos vorhanden"
           description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Overlays und Text-Layer hinzuzufuegen."
           actionLabel="Zu Assets"
-          actionTo="/assets"
+          actionTo="/library/assets"
         />
 
         <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

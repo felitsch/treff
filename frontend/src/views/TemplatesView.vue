@@ -747,7 +747,7 @@ onMounted(() => {
         title="Keine Templates vorhanden"
         description="Templates sind die Basis fuer deine Posts. Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
         actionLabel="Post erstellen"
-        actionTo="/create-post"
+        actionTo="/create/quick"
       />
       <EmptyState
         v-else-if="filteredTemplates.length === 0"
@@ -943,7 +943,7 @@ onMounted(() => {
           Diese findest du auf einer separaten Seite.
         </p>
         <router-link
-          to="/video-templates"
+          to="/video/templates"
           class="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
         >
           Zu den Video-Templates

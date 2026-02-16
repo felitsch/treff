@@ -79,7 +79,7 @@ async function refreshPost(suggestion) {
     const res = await api.post(`/api/recycling/${suggestion.id}/refresh`, {})
     // Navigate to edit the new draft post
     if (res.data && res.data.id) {
-      router.push(`/posts/${res.data.id}/edit`)
+      router.push(`/create/post/${res.data.id}/edit`)
     }
   } catch (err) {
     console.error('Failed to refresh post:', err)
@@ -89,7 +89,7 @@ async function refreshPost(suggestion) {
 }
 
 function viewOriginal(suggestion) {
-  router.push(`/posts/${suggestion.id}/edit`)
+  router.push(`/create/post/${suggestion.id}/edit`)
 }
 
 onMounted(() => {

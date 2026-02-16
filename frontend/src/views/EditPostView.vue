@@ -485,7 +485,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <button
-          @click="router.push('/history')"
+          @click="router.push('/library/history')"
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
           &#8592; Zurueck
@@ -585,7 +585,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <router-link
               v-for="sib in siblingPosts"
               :key="sib.id"
-              :to="`/posts/${sib.id}/edit`"
+              :to="`/create/post/${sib.id}/edit`"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
               :class="{
                 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-200 dark:hover:bg-pink-900/50': sib.platform === 'instagram_feed',
@@ -770,7 +770,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 >{{ ep.episode_number }}</span>
                 <span>{{ ep.episode_title }}</span>
                 <span v-if="ep.post_id === Number(postId)" class="text-[10px]">(dieser Post)</span>
-                <router-link v-else-if="ep.post_id" :to="`/posts/${ep.post_id}/edit`" class="text-[10px] text-[#3B7AB1] hover:underline">bearbeiten</router-link>
+                <router-link v-else-if="ep.post_id" :to="`/create/post/${ep.post_id}/edit`" class="text-[10px] text-[#3B7AB1] hover:underline">bearbeiten</router-link>
               </div>
             </div>
           </div>
@@ -1088,10 +1088,10 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post nicht gefunden</h2>
       <p class="text-gray-500 dark:text-gray-400 mb-6">Der Post mit ID #{{ postId }} existiert nicht, wurde geloescht oder gehoert dir nicht.</p>
       <div class="flex items-center justify-center gap-3">
-        <button @click="router.push('/history')" class="px-6 py-3 bg-[#3B7AB1] text-white rounded-lg font-medium hover:bg-[#2E6A9E] transition-colors" data-testid="back-to-history-btn">
+        <button @click="router.push('/library/history')" class="px-6 py-3 bg-[#3B7AB1] text-white rounded-lg font-medium hover:bg-[#2E6A9E] transition-colors" data-testid="back-to-history-btn">
           Zur History
         </button>
-        <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-testid="back-to-dashboard-btn">
+        <button @click="router.push('/home')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-testid="back-to-dashboard-btn">
           Zum Dashboard
         </button>
       </div>
@@ -1106,7 +1106,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <button @click="loadPost()" class="px-6 py-3 bg-[#3B7AB1] text-white rounded-lg font-medium hover:bg-[#2E6A9E] transition-colors">
           Erneut versuchen
         </button>
-        <button @click="router.push('/dashboard')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+        <button @click="router.push('/home')" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           Zum Dashboard
         </button>
       </div>

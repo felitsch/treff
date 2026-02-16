@@ -563,7 +563,7 @@ function hideEpisodeTooltip() {
 function onEpisodeClick(episode) {
   hideEpisodeTooltip()
   if (episode.id) {
-    router.push(`/posts/${episode.id}/edit`)
+    router.push(`/create/post/${episode.id}/edit`)
   }
 }
 
@@ -1425,7 +1425,7 @@ onMounted(() => {
       hint-id="calendar-recurring-formats"
       message="Keine wiederkehrenden Formate eingerichtet? Richte Formate ein, um deinen Kalender automatisch zu fuellen."
       link-text="Formate einrichten"
-      link-to="/recurring-formats"
+      link-to="/calendar/recurring-formats"
       icon="🔄"
       :show="showRecurringFormatsHint"
     />
@@ -1433,7 +1433,7 @@ onMounted(() => {
       hint-id="calendar-week-planner"
       message="Dein Kalender ist noch leer. Nutze den KI-Wochenplaner, um schnell eine ganze Woche zu planen."
       link-text="Wochenplaner"
-      link-to="/week-planner"
+      link-to="/calendar/week-planner"
       icon="🗓️"
       :show="showWeekPlannerHint"
     />
@@ -1690,7 +1690,7 @@ onMounted(() => {
               :key="'rp-' + rpIdx + '-' + dayObj.dateStr"
               class="rounded-md px-1.5 py-0.5 text-[10px] font-medium border-l-[3px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
               :title="rp.format_name + (rp.preferred_time ? ' um ' + rp.preferred_time : '')"
-              @click="$router.push('/create-post')"
+              @click="$router.push('/create/quick')"
             >
               <span class="flex-shrink-0">{{ rp.format_icon || '🔄' }}</span>
               <span class="truncate">{{ rp.format_name }}</span>
@@ -2048,7 +2048,7 @@ onMounted(() => {
                   getCategoryStyle(post.category).border,
                 ]"
                 :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' 🔗 Verknuepft' : ''}`"
-                @click="router.push(`/posts/${post.id}/edit`)"
+                @click="router.push(`/create/post/${post.id}/edit`)"
               >
                 <div class="flex items-center gap-0.5">
                   <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
@@ -2157,7 +2157,7 @@ onMounted(() => {
           Plane Posts ein, um sie in der Warteschlange zu sehen.
         </p>
         <router-link
-          to="/create-post"
+          to="/create/quick"
           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2268,9 +2268,9 @@ onMounted(() => {
       title="Dein Kalender ist noch leer"
       description="Nutze den KI-Wochenplaner, um automatisch Content fuer eine ganze Woche zu planen. Oder erstelle einzelne Posts und plane sie manuell ein."
       actionLabel="Zum Wochenplaner"
-      actionTo="/week-planner"
+      actionTo="/calendar/week-planner"
       secondaryLabel="Post erstellen"
-      secondaryTo="/create-post"
+      secondaryTo="/create/quick"
     />
 
       </div><!-- end flex-1 calendar content area -->

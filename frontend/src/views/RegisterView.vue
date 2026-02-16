@@ -56,7 +56,7 @@ const handleRegister = async () => {
   try {
     await auth.register(email.value, password.value, displayName.value)
     await auth.login(email.value, password.value)
-    router.push('/dashboard')
+    router.push('/home')
   } catch (err) {
     const detail = err.response?.data?.detail
     if (Array.isArray(detail)) {

@@ -367,7 +367,7 @@ onMounted(() => {
               title="Keine Videos vorhanden"
               description="Lade zuerst Videos in der Asset-Bibliothek hoch, um sie hier zu exportieren."
               actionLabel="Zu Assets"
-              actionTo="/assets"
+              actionTo="/library/assets"
               :compact="true"
             />
             <div

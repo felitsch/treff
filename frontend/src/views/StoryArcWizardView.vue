@@ -341,7 +341,7 @@ async function saveWizard() {
     } else if (selectedStudentId.value) {
       router.push(`/students/${selectedStudentId.value}`)
     } else {
-      router.push('/dashboard')
+      router.push('/home')
     }
   } catch (err) {
     toast.error(err.response?.data?.detail || 'Fehler beim Erstellen des Story-Arcs')

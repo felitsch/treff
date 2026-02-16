@@ -199,7 +199,7 @@ const selectedType = ref('cross_reference')
           <!-- Related post info -->
           <div v-if="rel.related_post" class="flex-1 min-w-0">
             <router-link
-              :to="`/posts/${rel.related_post.id}/edit`"
+              :to="`/create/post/${rel.related_post.id}/edit`"
               class="text-xs font-medium text-[#3B7AB1] hover:underline truncate block"
               :title="rel.related_post.title"
             >

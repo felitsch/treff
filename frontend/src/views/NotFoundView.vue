@@ -9,10 +9,10 @@ import { RouterLink } from 'vue-router'
       <p class="mt-4 text-xl text-gray-600 dark:text-gray-400">Seite nicht gefunden</p>
       <p class="mt-2 text-gray-500 dark:text-gray-500">Die angeforderte Seite existiert nicht.</p>
       <router-link
-        to="/dashboard"
+        to="/home"
         class="mt-6 inline-block rounded-lg bg-treff-blue px-6 py-2.5 text-sm font-medium text-white hover:bg-treff-blue/90 focus-ring no-underline"
       >
-        Zurueck zum Dashboard
+        Zurueck zur Startseite
       </router-link>
     </div>
   </div>

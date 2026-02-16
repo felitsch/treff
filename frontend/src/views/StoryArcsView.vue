@@ -103,11 +103,11 @@ function formatDate(isoStr) {
 }
 
 function openArcDetail(arc) {
-  router.push(`/story-arcs/${arc.id}`)
+  router.push(`/calendar/story-arcs/${arc.id}`)
 }
 
 function openWizard() {
-  router.push('/story-arc-wizard')
+  router.push('/calendar/story-arc-wizard')
 }
 
 // Workflow hint: suggest creating students when none exist

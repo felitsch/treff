@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
@@ -26,6 +26,7 @@ const apiKeysMissing = ref(false)
 const stats = ref({
   posts_this_week: 0,
   scheduled_posts: 0,
+  draft_posts: 0,
   total_assets: 0,
   total_posts: 0,
 })
@@ -35,6 +36,29 @@ const suggestions = ref([])
 const acceptingId = ref(null)
 const dismissingId = ref(null)
 const generatingSuggestions = ref(false)
+
+// Animated counters
+const animatedStats = ref({
+  posts_this_week: 0,
+  scheduled_posts: 0,
+  draft_posts: 0,
+})
+
+function animateCounter(target, key, duration = 800) {
+  const start = animatedStats.value[key]
+  const end = target
+  if (start === end) return
+  const startTime = Date.now()
+  const tick = () => {
+    const elapsed = Date.now() - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    // easeOutQuart for smooth deceleration
+    const eased = 1 - Math.pow(1 - progress, 4)
+    animatedStats.value[key] = Math.round(start + (end - start) * eased)
+    if (progress < 1) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
 
 // Mini calendar: next 7 days
 const next7Days = computed(() => {
@@ -78,6 +102,18 @@ function statusColor(status) {
   }
 }
 
+// Status label in German
+function statusLabel(status) {
+  const labels = {
+    draft: 'Entwurf',
+    scheduled: 'Geplant',
+    exported: 'Exportiert',
+    posted: 'Gepostet',
+    reminded: 'Erinnert',
+  }
+  return labels[status] || status
+}
+
 // Category display names
 function categoryLabel(cat) {
   const labels = {
@@ -94,6 +130,22 @@ function categoryLabel(cat) {
   return labels[cat] || cat
 }
 
+// Category colors for thumbnail grid
+function categoryColor(cat) {
+  const colors = {
+    laender_spotlight: 'bg-blue-500',
+    erfahrungsberichte: 'bg-purple-500',
+    infografiken: 'bg-teal-500',
+    fristen_cta: 'bg-red-500',
+    tipps_tricks: 'bg-amber-500',
+    faq: 'bg-indigo-500',
+    foto_posts: 'bg-pink-500',
+    reel_tiktok_thumbnails: 'bg-rose-500',
+    story_posts: 'bg-violet-500',
+  }
+  return colors[cat] || 'bg-gray-500'
+}
+
 // Platform icons
 function platformIcon(platform) {
   switch (platform) {
@@ -108,6 +160,20 @@ function platformIcon(platform) {
   }
 }
 
+// Platform label
+function platformLabel(platform) {
+  switch (platform) {
+    case 'instagram_feed':
+      return 'Instagram Feed'
+    case 'instagram_story':
+      return 'Instagram Story'
+    case 'tiktok':
+      return 'TikTok'
+    default:
+      return 'Post'
+  }
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
@@ -115,6 +181,15 @@ function formatDate(dateStr) {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+  })
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: 'short',
   })
 }
 
@@ -191,7 +266,7 @@ async function acceptSuggestion(suggestion) {
     suggestions.value = suggestions.value.filter((s) => s.id !== suggestion.id)
     // Navigate to create post with pre-filled data
     router.push({
-      path: '/create-post',
+      path: '/create/quick',
       query: {
         category: suggestion.suggested_category || '',
         country: suggestion.suggested_country || '',
@@ -242,6 +317,13 @@ async function fetchDashboardData() {
     recentPosts.value = res.data.recent_posts
     calendarEntries.value = res.data.calendar_entries
     suggestions.value = res.data.suggestions || []
+
+    // Trigger animated counters after data load
+    setTimeout(() => {
+      animateCounter(stats.value.posts_this_week, 'posts_this_week')
+      animateCounter(stats.value.scheduled_posts, 'scheduled_posts')
+      animateCounter(stats.value.draft_posts || 0, 'draft_posts')
+    }, 100)
   } catch (err) {
     console.error('Failed to load dashboard data:', err)
     error.value = 'Dashboard-Daten konnten nicht geladen werden.'
@@ -297,6 +379,24 @@ async function handleWelcomeSkip() {
   }, 400)
 }
 
+// Current greeting based on time of day
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Guten Morgen'
+  if (hour < 18) return 'Guten Tag'
+  return 'Guten Abend'
+})
+
+// Current date display
+const todayFormatted = computed(() => {
+  return new Date().toLocaleDateString('de-DE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+})
+
 onMounted(() => {
   fetchDashboardData()
   checkWelcomeStatus()
@@ -306,11 +406,11 @@ onMounted(() => {
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-8 flex items-start justify-between">
+    <div class="mb-6 flex items-start justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ greeting }}!</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Willkommen zurueck! Hier ist dein Content-Ueberblick.
+          {{ todayFormatted }} &mdash; Hier ist dein Content-Ueberblick.
         </p>
       </div>
       <button
@@ -332,23 +432,55 @@ onMounted(() => {
       :show="apiKeysMissing"
     />
 
-    <!-- Loading State -->
+    <!-- ═══ SKELETON LOADING STATE ═══ -->
     <div v-if="loading" class="space-y-6">
-      <!-- Skeleton stat cards -->
+      <!-- Skeleton: Quick Actions -->
+      <div class="flex flex-wrap gap-3">
+        <div v-for="i in 3" :key="'qa-sk-'+i" class="h-14 w-44 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+      </div>
+
+      <!-- Skeleton: Stat Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="i in 3" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-3"></div>
-          <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+        <div v-for="i in 3" :key="'stat-sk-'+i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+          <div class="flex items-center justify-between">
+            <div class="space-y-3">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+            </div>
+            <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+          </div>
         </div>
       </div>
-      <!-- Skeleton content blocks -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse h-48"></div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse h-48"></div>
+
+      <!-- Skeleton: Main Grid (3 columns) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Skeleton: Recent Posts Grid -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+          <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div v-for="i in 8" :key="'post-sk-'+i" class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          </div>
+        </div>
+
+        <!-- Skeleton: Mini Calendar -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+          <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-36 mb-4"></div>
+          <div class="space-y-3">
+            <div v-for="i in 7" :key="'cal-sk-'+i" class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton: Suggestions -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+        <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div v-for="i in 4" :key="'sug-sk-'+i" class="h-28 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Error State -->
+    <!-- ═══ ERROR STATE ═══ -->
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
       <p class="text-red-600 dark:text-red-400">{{ error }}</p>
       <button
@@ -359,133 +491,135 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Dashboard Content -->
+    <!-- ═══ DASHBOARD CONTENT ═══ -->
     <div v-else class="space-y-6">
-      <!-- Quick Stats Cards -->
+
+      <!-- ─── Quick Actions Bar ─── -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" data-tour="quick-actions">
+        <button
+          @click="router.push('/create/quick')"
+          class="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4C8BC2] to-[#3B7AB1] text-white font-semibold rounded-xl hover:from-[#3B7AB1] hover:to-[#2D6A9F] transition-all shadow-sm hover:shadow-md group"
+        >
+          <span class="text-2xl group-hover:scale-110 transition-transform">✏️</span>
+          <div class="text-left">
+            <span class="block text-sm font-bold">Neuer Post</span>
+            <span class="block text-xs opacity-80">Quick Post erstellen</span>
+          </div>
+        </button>
+        <button
+          @click="router.push('/library/templates')"
+          class="flex items-center gap-3 px-5 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] dark:hover:border-[#4C8BC2] hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all shadow-sm hover:shadow-md group"
+        >
+          <span class="text-2xl group-hover:scale-110 transition-transform">📄</span>
+          <div class="text-left">
+            <span class="block text-sm font-bold">Aus Template</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400">Vorlage waehlen</span>
+          </div>
+        </button>
+        <button
+          @click="generateSuggestions"
+          :disabled="generatingSuggestions"
+          class="flex items-center gap-3 px-5 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#FDD000] dark:hover:border-[#FDD000] hover:bg-yellow-50/50 dark:hover:bg-yellow-900/10 transition-all shadow-sm hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span class="text-2xl group-hover:scale-110 transition-transform" :class="{ 'animate-spin': generatingSuggestions }">{{ generatingSuggestions ? '⏳' : '✨' }}</span>
+          <div class="text-left">
+            <span class="block text-sm font-bold">KI-Vorschlag</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400">{{ generatingSuggestions ? 'Generiere...' : 'Content-Idee generieren' }}</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- ─── Stat Cards with Animated Counters ─── -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="dashboard-stats">
         <!-- Posts this week -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
+          @click="router.push('/library/history')"
+        >
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Posts diese Woche <HelpTooltip :text="tooltipTexts.dashboard.postsThisWeek" size="sm" /></p>
-              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.posts_this_week }}</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                Posts diese Woche
+                <HelpTooltip :text="tooltipTexts.dashboard.postsThisWeek" size="sm" />
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1 tabular-nums">
+                {{ animatedStats.posts_this_week }}
+              </p>
             </div>
             <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
               <span class="text-2xl">📝</span>
             </div>
           </div>
+          <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+            <span>{{ stats.total_posts }} Posts gesamt</span>
+          </div>
         </div>
 
         <!-- Scheduled Posts -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
+          @click="router.push('/calendar')"
+        >
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Geplante Posts <HelpTooltip :text="tooltipTexts.dashboard.scheduledPosts" size="sm" /></p>
-              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.scheduled_posts }}</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                Geplante Posts
+                <HelpTooltip :text="tooltipTexts.dashboard.scheduledPosts" size="sm" />
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1 tabular-nums">
+                {{ animatedStats.scheduled_posts }}
+              </p>
             </div>
             <div class="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
               <span class="text-2xl">📅</span>
             </div>
           </div>
+          <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+            <span>Im Kalender eingeplant</span>
+          </div>
         </div>
 
-        <!-- Total Assets -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+        <!-- Drafts -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
+          @click="router.push('/library/history?status=draft')"
+        >
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">Gesamt Assets <HelpTooltip :text="tooltipTexts.dashboard.totalAssets" size="sm" /></p>
-              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.total_assets }}</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                Entwuerfe
+                <HelpTooltip :text="tooltipTexts.dashboard.draftPosts || 'Posts im Entwurf-Status, die noch bearbeitet oder geplant werden koennen.'" size="sm" />
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1 tabular-nums">
+                {{ animatedStats.draft_posts }}
+              </p>
             </div>
-            <div class="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">🖼️</span>
+            <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+              <span class="text-2xl">📋</span>
             </div>
+          </div>
+          <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+            <span>Bereit zur Bearbeitung</span>
           </div>
         </div>
       </div>
 
-      <!-- Quick Action Buttons -->
-      <div class="flex flex-wrap gap-3" data-tour="quick-actions">
-        <button
-          @click="router.push('/create-post')"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-treff-blue text-white font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-        >
-          <span>✏️</span>
-          Post erstellen
-        </button>
-        <button
-          @click="router.push('/calendar')"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-        >
-          <span>📅</span>
-          Kalender anzeigen
-        </button>
-      </div>
+      <!-- ─── Main Content Grid: 3 cols desktop, 2 tablet, 1 mobile ─── -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <!-- Middle Row: Mini Calendar + Recent Posts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Mini Calendar (Next 7 Days) -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-calendar">
-          <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📅</span> Naechste 7 Tage <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
-            </h2>
-          </div>
-          <div class="p-5">
-            <div class="grid grid-cols-7 gap-2">
-              <div
-                v-for="day in next7Days"
-                :key="day.dateStr"
-                class="flex flex-col items-center rounded-lg p-2 text-center transition-colors"
-                :class="[
-                  day.isToday
-                    ? 'bg-treff-blue/10 dark:bg-treff-blue/20 ring-2 ring-treff-blue'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
-                ]"
-              >
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  {{ day.dayName }}
-                </span>
-                <span
-                  class="text-lg font-bold mt-0.5"
-                  :class="
-                    day.isToday
-                      ? 'text-treff-blue'
-                      : 'text-gray-900 dark:text-white'
-                  "
-                >
-                  {{ day.dayNum }}
-                </span>
-                <span class="text-xs text-gray-400 dark:text-gray-500">
-                  {{ day.month }}
-                </span>
-                <!-- Indicator dot for scheduled entries -->
-                <div class="mt-1 h-1.5">
-                  <div
-                    v-if="getEntriesForDate(day.dateStr).length > 0"
-                    class="w-1.5 h-1.5 rounded-full bg-treff-blue"
-                  ></div>
-                </div>
-              </div>
-            </div>
-            <!-- No scheduled posts hint -->
-            <div v-if="calendarEntries.length === 0" class="mt-4 text-center text-sm text-gray-400 dark:text-gray-500">
-              Keine geplanten Posts in den naechsten 7 Tagen
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Posts -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-recent-posts">
+        <!-- Recent Posts Thumbnail Grid (spans 2 columns on lg) -->
+        <div class="md:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-recent-posts">
           <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📋</span> Letzte Posts <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
+              <span>📋</span> Letzte Posts
+              <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
             </h2>
             <button
               v-if="recentPosts.length > 0"
-              @click="router.push('/history')"
-              class="text-sm text-treff-blue hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+              @click="router.push('/library/history')"
+              class="text-sm text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium"
             >
-              Alle anzeigen
+              Alle anzeigen &rarr;
             </button>
           </div>
           <div class="p-5">
@@ -496,57 +630,168 @@ onMounted(() => {
               title="Noch keine Posts erstellt"
               description="Erstelle deinen ersten Social-Media-Post fuer TREFF und starte mit deinem Content-Plan!"
               actionLabel="Ersten Post erstellen"
-              actionTo="/create-post"
+              actionTo="/create/quick"
               secondaryLabel="Einstellungen pruefen"
               secondaryTo="/settings"
               :compact="true"
             />
 
-            <!-- Posts list -->
-            <div v-else class="space-y-3">
+            <!-- Thumbnail Grid -->
+            <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               <div
                 v-for="post in recentPosts"
                 :key="post.id"
-                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
-                @click="router.push(`/posts/${post.id}/edit`)"
+                class="group relative rounded-lg overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-700 hover:border-[#4C8BC2]/50 dark:hover:border-[#4C8BC2]/50 transition-all hover:shadow-md hover:-translate-y-0.5"
+                @click="router.push(`/create/post/${post.id}/edit`)"
               >
-                <!-- Platform icon -->
-                <div class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span class="text-lg">{{ platformIcon(post.platform) }}</span>
+                <!-- Thumbnail or Category Placeholder -->
+                <div class="aspect-square relative">
+                  <img
+                    v-if="post.thumbnail_url"
+                    :src="post.thumbnail_url"
+                    :alt="post.title || 'Post Thumbnail'"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex flex-col items-center justify-center gap-1.5"
+                    :class="categoryColor(post.category)"
+                  >
+                    <span class="text-3xl opacity-90">{{ platformIcon(post.platform) }}</span>
+                    <span class="text-xs text-white/80 font-medium px-2 text-center leading-tight">{{ categoryLabel(post.category) }}</span>
+                  </div>
+
+                  <!-- Hover Overlay -->
+                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                    <p class="text-white text-xs font-semibold text-center line-clamp-2 mb-1">{{ post.title || 'Ohne Titel' }}</p>
+                    <p class="text-white/70 text-[10px] text-center">{{ formatDateShort(post.created_at) }}</p>
+                  </div>
+
+                  <!-- Status badge (top right) -->
+                  <span
+                    class="absolute top-1.5 right-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm"
+                    :class="statusColor(post.status)"
+                  >
+                    {{ statusLabel(post.status) }}
+                  </span>
+
+                  <!-- Platform icon (top left) -->
+                  <span class="absolute top-1.5 left-1.5 text-sm bg-white/80 dark:bg-gray-900/80 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
+                    {{ platformIcon(post.platform) }}
+                  </span>
+
+                  <!-- Slide count badge (bottom right) -->
+                  <span
+                    v-if="post.slide_count > 1"
+                    class="absolute bottom-1.5 right-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-black/60 text-white shadow-sm"
+                  >
+                    {{ post.slide_count }} Slides
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini Calendar Widget (right column on lg) -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-calendar">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📅</span> Naechste 7 Tage
+              <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
+            </h2>
+            <button
+              @click="router.push('/calendar')"
+              class="text-xs text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+            >
+              Kalender &rarr;
+            </button>
+          </div>
+          <div class="p-4">
+            <div class="space-y-1">
+              <div
+                v-for="day in next7Days"
+                :key="day.dateStr"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
+                :class="[
+                  day.isToday
+                    ? 'bg-[#4C8BC2]/10 dark:bg-[#4C8BC2]/20 ring-1 ring-[#4C8BC2]/30'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
+                ]"
+              >
+                <!-- Day name + number -->
+                <div class="w-10 text-center flex-shrink-0">
+                  <span class="block text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase leading-none">
+                    {{ day.dayName }}
+                  </span>
+                  <span
+                    class="block text-lg font-bold leading-tight mt-0.5"
+                    :class="
+                      day.isToday
+                        ? 'text-[#4C8BC2]'
+                        : 'text-gray-900 dark:text-white'
+                    "
+                  >
+                    {{ day.dayNum }}
+                  </span>
                 </div>
 
-                <!-- Post info -->
+                <!-- Entries or empty -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-treff-blue transition-colors">
-                    {{ post.title || 'Ohne Titel' }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {{ categoryLabel(post.category) }}
-                    <span v-if="post.country" class="ml-1">· {{ post.country }}</span>
-                    · {{ formatDate(post.created_at) }}
-                  </p>
+                  <div
+                    v-if="getEntriesForDate(day.dateStr).length > 0"
+                    class="flex items-center gap-1.5 flex-wrap"
+                  >
+                    <span
+                      v-for="(entry, idx) in getEntriesForDate(day.dateStr).slice(0, 3)"
+                      :key="entry.id"
+                      class="w-2 h-2 rounded-full bg-[#4C8BC2] flex-shrink-0"
+                    ></span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                      {{ getEntriesForDate(day.dateStr).length }} Post{{ getEntriesForDate(day.dateStr).length !== 1 ? 's' : '' }}
+                    </span>
+                  </div>
+                  <span v-else class="text-xs text-gray-300 dark:text-gray-600">
+                    &mdash;
+                  </span>
                 </div>
 
-                <!-- Status badge -->
+                <!-- Today badge -->
                 <span
-                  class="text-xs font-medium px-2 py-1 rounded-full flex-shrink-0"
-                  :class="statusColor(post.status)"
+                  v-if="day.isToday"
+                  class="text-[10px] font-bold text-[#4C8BC2] uppercase flex-shrink-0"
                 >
-                  {{ post.status }}
+                  Heute
                 </span>
               </div>
+            </div>
+
+            <!-- No scheduled posts hint -->
+            <div v-if="calendarEntries.length === 0" class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 rounded-lg py-2.5 px-3">
+              Keine geplanten Posts in den naechsten 7 Tagen.
+              <button
+                @click="router.push('/calendar/week-planner')"
+                class="text-[#4C8BC2] hover:underline font-medium ml-1"
+              >
+                Wochenplaner
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Series Status Widget -->
-      <SeriesStatusWidget />
+      <!-- ─── Series Status Widget ─── -->
+      <div data-tour="dashboard-series-status">
+        <SeriesStatusWidget />
+      </div>
 
-      <!-- Content Recycling Panel -->
-      <RecyclingPanel />
+      <!-- ─── Content Recycling Panel ─── -->
+      <div data-tour="dashboard-recycling">
+        <RecyclingPanel />
+      </div>
 
-      <!-- Content Suggestions Section -->
+      <!-- ─── Content Suggestions Section ─── -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-suggestions">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -555,7 +800,7 @@ onMounted(() => {
           <div class="flex items-center gap-2">
             <span
               v-if="suggestions.length > 0"
-              class="text-xs font-medium px-2.5 py-1 rounded-full bg-treff-blue/10 text-treff-blue dark:bg-treff-blue/20"
+              class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#4C8BC2]/10 text-[#4C8BC2] dark:bg-[#4C8BC2]/20"
             >
               {{ suggestions.length }} offen
             </span>
@@ -563,7 +808,7 @@ onMounted(() => {
               @click="generateSuggestions"
               :disabled="generatingSuggestions"
               data-testid="generate-suggestions-btn"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
               <span v-else>✨</span>
@@ -583,12 +828,12 @@ onMounted(() => {
             @action="generateSuggestions"
           />
 
-          <!-- Suggestions list -->
-          <div v-else class="space-y-4">
+          <!-- Suggestions grid -->
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div
               v-for="suggestion in suggestions"
               :key="suggestion.id"
-              class="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-treff-blue/30 dark:hover:border-treff-blue/40 transition-colors"
+              class="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-[#4C8BC2]/30 dark:hover:border-[#4C8BC2]/40 transition-colors"
             >
               <!-- Top row: type badge + category + country -->
               <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -648,7 +893,7 @@ onMounted(() => {
                 <button
                   @click="acceptSuggestion(suggestion)"
                   :disabled="acceptingId === suggestion.id"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-treff-blue rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span v-if="acceptingId === suggestion.id" class="animate-spin">⏳</span>
                   <span v-else>✅</span>

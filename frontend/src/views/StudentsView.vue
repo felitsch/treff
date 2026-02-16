@@ -257,7 +257,7 @@ onMounted(() => {
         hint-id="students-story-arcs"
         message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
         link-text="Story-Arcs"
-        link-to="/story-arcs"
+        link-to="/calendar/story-arcs"
         icon="📖"
         :show="showStoryArcHint"
       />

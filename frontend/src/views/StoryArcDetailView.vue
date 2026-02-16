@@ -58,7 +58,7 @@ async function fetchArc() {
   } catch (err) {
     console.error('Failed to fetch story arc:', err)
     toast.error('Story-Arc konnte nicht geladen werden.')
-    router.push('/story-arcs')
+    router.push('/calendar/story-arcs')
   } finally {
     loading.value = false
   }
@@ -72,12 +72,12 @@ function formatDate(isoStr) {
 
 function goToPost(postId) {
   if (postId) {
-    router.push(`/posts/${postId}/edit`)
+    router.push(`/create/post/${postId}/edit`)
   }
 }
 
 function goBack() {
-  router.push('/story-arcs')
+  router.push('/calendar/story-arcs')
 }
 
 onMounted(() => {

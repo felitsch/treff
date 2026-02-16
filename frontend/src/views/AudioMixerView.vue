@@ -345,7 +345,7 @@ onMounted(async () => {
               title="Keine Videos vorhanden"
               description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Musik und Audio hinzuzufuegen."
               actionLabel="Zu Assets"
-              actionTo="/assets"
+              actionTo="/library/assets"
               :compact="true"
             />
 

@@ -306,7 +306,7 @@ onMounted(() => {
           🎬 Workflow
         </button>
         <router-link
-          to="/video-templates"
+          to="/video/templates"
           class="px-3 py-2 text-sm font-medium text-treff-blue bg-treff-blue/10 rounded-lg hover:bg-treff-blue/20 transition-colors flex items-center gap-1.5"
           data-testid="branding-templates-link"
           data-tour="vc-branding-link"
@@ -353,7 +353,7 @@ onMounted(() => {
               title="Keine Videos vorhanden"
               description="Lade zuerst Videos in der Asset-Bibliothek hoch, um sie hier zu schneiden."
               actionLabel="Zu Assets"
-              actionTo="/assets"
+              actionTo="/library/assets"
               :compact="true"
             />
 

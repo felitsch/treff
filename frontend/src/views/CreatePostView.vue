@@ -1784,7 +1784,7 @@ onMounted(() => {
     // Auto-advance: load templates for the selected category
     loadTemplates()
     // Clear query params from URL to avoid re-applying on refresh
-    router.replace({ path: '/create-post' })
+    router.replace({ path: '/create/quick' })
   } else if (store.hasWorkflowState()) {
     // Reload templates if we're on or past the template step
     if (currentStep.value >= 2 && selectedCategory.value) {
@@ -1848,7 +1848,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       hint-id="create-post-no-assets"
       message="Kein passendes Bild? Lade Bilder in die Asset-Bibliothek hoch, um sie hier zu verwenden."
       link-text="Asset-Bibliothek"
-      link-to="/assets"
+      link-to="/library/assets"
       icon="🖼️"
       :show="showAssetsHint"
     />
@@ -1856,7 +1856,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       hint-id="create-post-no-templates"
       message="Keine Templates gefunden? Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
       link-text="Templates verwalten"
-      link-to="/templates"
+      link-to="/library/templates"
       icon="📄"
       :show="showTemplatesHint"
     />
@@ -3413,8 +3413,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <button v-else @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
             ⬇ PNG herunterladen
           </button>
-          <button @click="router.push('/dashboard')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition-colors">
-            Zum Dashboard
+          <button @click="router.push('/home')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition-colors">
+            Zur Startseite
           </button>
           <button @click="resetWorkflow" class="px-6 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors">
             Neuen Post erstellen

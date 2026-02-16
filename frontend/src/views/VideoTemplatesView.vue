@@ -6,7 +6,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 
-const { addToast } = useToast()
+const toast = useToast()
 const workflowTourRef = ref(null)
 
 // State
@@ -100,7 +100,7 @@ async function fetchTemplates() {
     countries.value = res.data.countries
     styles.value = res.data.styles
   } catch (err) {
-    addToast('Fehler beim Laden der Templates', 'error')
+    toast.error('Fehler beim Laden der Templates')
   } finally {
     loading.value = false
   }
@@ -124,11 +124,11 @@ async function createTemplate() {
     if (!data.cta_text) delete data.cta_text
     const res = await api.post('/api/video-templates', data)
     templates.value.push(res.data)
-    addToast(`Template "${res.data.name}" erstellt`, 'success')
+    toast.success(`Template "${res.data.name}" erstellt`)
     showCreateForm.value = false
     resetCreateForm()
   } catch (err) {
-    addToast('Fehler beim Erstellen: ' + (err.response?.data?.detail || err.message), 'error')
+    toast.error('Fehler beim Erstellen: ' + (err.response?.data?.detail || err.message))
   }
 }
 
@@ -137,9 +137,9 @@ async function deleteTemplate(id, name) {
   try {
     await api.delete(`/api/video-templates/${id}`)
     templates.value = templates.value.filter(t => t.id !== id)
-    addToast(`Template "${name}" geloescht`, 'success')
+    toast.success(`Template "${name}" geloescht`)
   } catch (err) {
-    addToast('Loeschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 'error')
+    toast.error('Loeschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message))
   }
 }
 
@@ -194,9 +194,9 @@ async function applyTemplates() {
     resultData.value = res.data
     applyProgress.value = 100
     showResultModal.value = true
-    addToast('Video mit Branding erfolgreich erstellt!', 'success')
+    toast.success('Video mit Branding erfolgreich erstellt!')
   } catch (err) {
-    addToast('Fehler: ' + (err.response?.data?.detail || err.message), 'error')
+    toast.error('Fehler: ' + (err.response?.data?.detail || err.message))
   } finally {
     clearInterval(progressInterval)
     applying.value = false
@@ -489,7 +489,7 @@ onMounted(() => {
             </select>
             <p v-if="videoAssets.length === 0" class="text-xs text-amber-500 mt-1">
               Keine Videos vorhanden.
-              <router-link to="/assets" class="text-blue-500 hover:underline">Jetzt in Assets hochladen</router-link>
+              <router-link to="/library/assets" class="text-blue-500 hover:underline">Jetzt in Assets hochladen</router-link>
             </p>
           </div>
 

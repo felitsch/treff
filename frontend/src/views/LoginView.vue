@@ -16,7 +16,7 @@ const handleLogin = async () => {
   loading.value = true
   try {
     await auth.login(email.value, password.value)
-    router.push('/dashboard')
+    router.push('/home')
   } catch (err) {
     error.value = err.response?.data?.detail || 'Invalid credentials'
   } finally {

@@ -424,7 +424,7 @@ onMounted(() => {
             v-for="post in posts"
             :key="post.id"
             class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-            @click="router.push(`/posts/${post.id}/edit`)"
+            @click="router.push(`/create/post/${post.id}/edit`)"
           >
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <!-- Episode badge -->

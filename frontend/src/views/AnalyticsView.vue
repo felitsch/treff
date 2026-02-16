@@ -574,7 +574,7 @@ onMounted(() => {
             title="Noch keine Daten"
             description="Erstelle Posts, um die Kategorieverteilung hier zu sehen."
             actionLabel="Post erstellen"
-            actionTo="/create-post"
+            actionTo="/create/quick"
             :compact="true"
           />
           <div v-else>
@@ -599,7 +599,7 @@ onMounted(() => {
             title="Noch keine Daten"
             description="Erstelle Posts fuer Instagram oder TikTok, um die Plattformverteilung zu sehen."
             actionLabel="Post erstellen"
-            actionTo="/create-post"
+            actionTo="/create/quick"
             :compact="true"
           />
           <div v-else class="space-y-4">
@@ -630,7 +630,7 @@ onMounted(() => {
           title="Noch keine Laenderdaten"
           description="Weise Posts Laender zu (USA, Kanada, Australien, Neuseeland, Irland), um die Verteilung hier zu sehen."
           actionLabel="Post erstellen"
-          actionTo="/create-post"
+          actionTo="/create/quick"
           :compact="true"
         />
         <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-4">

@@ -711,12 +711,12 @@ async function executeBatchExport() {
 
 // Navigate to edit
 function editPost(postId) {
-  router.push(`/posts/${postId}/edit`)
+  router.push(`/create/post/${postId}/edit`)
 }
 
 // Navigate to create
 function createPost() {
-  router.push('/create-post')
+  router.push('/create/quick')
 }
 
 onMounted(() => {
@@ -986,9 +986,9 @@ onUnmounted(() => {
       title="Noch keine Posts erstellt"
       description="Erstelle deinen ersten Social-Media-Post fuer TREFF! Waehle ein Template, schreibe Texte mit KI-Unterstuetzung und plane den Post im Kalender."
       actionLabel="Ersten Post erstellen"
-      actionTo="/create-post"
+      actionTo="/create/quick"
       secondaryLabel="Zum Wochenplaner"
-      secondaryTo="/week-planner"
+      secondaryTo="/calendar/week-planner"
     />
 
     <!-- No results for filter -->

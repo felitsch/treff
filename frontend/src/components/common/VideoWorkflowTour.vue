@@ -34,7 +34,7 @@ const steps = [
     title: '1. Thumbnail-Generator',
     description:
       'Erstelle klickstarke Vorschaubilder fuer deine Videos und Reels. Waehle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Woerter) und exportiere in verschiedenen Groessen (YouTube 1280x720, Instagram 1080x1080, Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
-    page: '/thumbnail-generator',
+    page: '/video/thumbnails',
     navLabel: 'Thumbnails oeffnen',
   },
   {
@@ -42,7 +42,7 @@ const steps = [
     title: '2. Video-Overlay-Editor',
     description:
       'Fuege Text, Logos, Sticker und Animationen ueber deine Videos. Ideal fuer TREFF-Branding, Untertitel und Call-to-Actions. Jeder Overlay-Layer kann einzeln positioniert, skaliert und zeitlich eingestellt werden. Mehrere Layer uebereinander sind moeglich — so entsteht professionelles Video-Branding.',
-    page: '/video-overlays',
+    page: '/video/overlays',
     navLabel: 'Overlay-Editor oeffnen',
   },
   {
@@ -50,7 +50,7 @@ const steps = [
     title: '3. Video-Composer (Schnitt)',
     description:
       'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kuerze sie auf die optimale Laenge und fuege Uebergaenge (Crossfade, Cut) hinzu. Waehle das Ausgabeformat: 9:16 fuer Reels/TikTok, 1:1 fuer Instagram Feed, 16:9 fuer YouTube. Ideal sind 15-60 Sekunden fuer Social Media.',
-    page: '/video-composer',
+    page: '/video/composer',
     navLabel: 'Composer oeffnen',
   },
   {
@@ -58,7 +58,7 @@ const steps = [
     title: '4. Video-Branding-Templates',
     description:
       'Verwalte wiederverwendbare Vorlagen fuer Intros, Outros, Bauchbinden und Texteinblendungen — alles im TREFF-Design (Blau #4C8BC2, Gelb #FDD000). Einmal erstellt, kannst du Templates immer wieder auf verschiedene Videos anwenden. Konsistentes Branding ueber alle Videos staerkt die Markenwahrnehmung.',
-    page: '/video-templates',
+    page: '/video/templates',
     navLabel: 'Templates oeffnen',
   },
   {
@@ -66,7 +66,7 @@ const steps = [
     title: '5. Video-Export',
     description:
       'Optimiere deine Videos fuer verschiedene Plattformen mit dem richtigen Seitenverhaeltnis, Fokuspunkt und Qualitaetseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 fuer Reels UND 1:1 fuer den Feed. Alle Varianten als ZIP herunterladen.',
-    page: '/video-export',
+    page: '/video/export',
     navLabel: 'Export oeffnen',
   },
   {
@@ -74,7 +74,7 @@ const steps = [
     title: '6. Audio-Mixer',
     description:
       'Fuege Hintergrundmusik, Soundeffekte und Voiceover zu deinen Videos hinzu. Regle die Lautstaerke jeder Spur einzeln (Musik 20-30%, Voiceover 100%, Original-Audio 50%) und fuege Fade-In/Fade-Out hinzu. Professioneller Sound macht den Unterschied zwischen amateurhaft und hochwertig!',
-    page: '/audio-mixer',
+    page: '/video/audio-mixer',
     navLabel: 'Audio-Mixer oeffnen',
   },
   {
