@@ -15,6 +15,8 @@ import logging
 import random
 from typing import Optional
 
+from app.core.strategy_loader import StrategyLoader
+
 logger = logging.getLogger(__name__)
 
 # Country-specific facts and content
@@ -373,6 +375,44 @@ CATEGORY_DISPLAY_NAMES = {
 }
 
 
+def _get_dynamic_hook_and_cta_sections(
+    platform: Optional[str] = None,
+    category: Optional[str] = None,
+    buyer_journey_stage: Optional[str] = None,
+) -> str:
+    """Build dynamic hook formula, CTA, and strategy sections from JSON files.
+
+    Replaces previously hardcoded hook formulas and CTA strategies with
+    dynamic content loaded via StrategyLoader from the strategy JSON files.
+    Includes buyer journey, content pillar, seasonal phase, and platform
+    best practices context.
+    """
+    try:
+        strategy = StrategyLoader.instance()
+        return strategy.build_strategy_prompt_sections(
+            platform=platform,
+            category=category,
+            buyer_journey_stage=buyer_journey_stage,
+        )
+    except Exception as e:
+        logger.warning("Failed to load dynamic strategy sections: %s, using fallback", e)
+        # Fallback to basic hardcoded hooks if strategy loading fails
+        return (
+            "HOOK-FORMELN (fuer die erste Caption-Zeile - MUSS Aufmerksamkeit erregen):\n"
+            '- Wissensluecke: "Was ich gerne VOR meinem Auslandsjahr gewusst haette..."\n'
+            '- Vergleich: "USA vs. Kanada: Welches Land passt zu dir?"\n'
+            '- Mythos-Entlarvung: "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche."\n'
+            '- POV: "POV: Dein erster Tag an einer amerikanischen High School"\n'
+            '- Nummerierte Liste: "5 Gruende, warum DU ein Auslandsjahr machen solltest"\n'
+            "Waehle die passende Hook-Formel basierend auf Kategorie und Plattform!\n\n"
+            "ENGAGEMENT-STRATEGIE (fuer CTAs am Post-Ende):\n"
+            '- Frage-CTA: "In welches Land wuerdest du gehen? Kommentiere!"\n'
+            '- Speicher-CTA: "Speicher dir diesen Post fuer spaeter!"\n'
+            '- Teilen-CTA: "Tagge einen Freund, der das wissen muss!"\n'
+            "Waehle den CTA-Typ passend zur Kategorie und Plattform!"
+        )
+
+
 def _build_personality_prompt_section(personality_preset: dict) -> str:
     """Build a personality-specific prompt section from a student's personality preset.
 
@@ -437,8 +477,19 @@ def _build_personality_prompt_section(personality_preset: dict) -> str:
     return "\n\n".join(sections)
 
 
-def _build_gemini_system_prompt(tone: str, personality_preset: Optional[dict] = None) -> str:
-    """Build the system prompt for Gemini with TREFF brand guidelines."""
+def _build_gemini_system_prompt(
+    tone: str,
+    personality_preset: Optional[dict] = None,
+    platform: Optional[str] = None,
+    category: Optional[str] = None,
+    buyer_journey_stage: Optional[str] = None,
+) -> str:
+    """Build the system prompt for Gemini with TREFF brand guidelines.
+
+    Now dynamically loads hook formulas, CTAs, tone-of-voice, buyer journey,
+    content pillar, seasonal phase, and platform best practices from the
+    strategy JSON files via StrategyLoader.
+    """
     tone_instructions = {
         "serioess": (
             "Schreibe in einem serioesen, vertrauenswuerdigen Ton. "
@@ -567,26 +618,7 @@ WICHTIGE REGELN:
 - Die letzte Slide sollte immer einen Call-to-Action enthalten
 - Bullet Points (falls vorhanden) sollen konkrete Fakten oder Tipps enthalten
 
-HOOK-FORMELN (fuer die erste Caption-Zeile - MUSS Aufmerksamkeit erregen):
-- Wissensluecke: "Was ich gerne VOR meinem Auslandsjahr gewusst haette..."
-- Vergleich: "USA vs. Kanada: Welches Land passt zu dir?"
-- Mythos-Entlarvung: "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche. Die Wahrheit..."
-- POV: "POV: Dein erster Tag an einer amerikanischen High School"
-- Nummerierte Liste: "5 Gruende, warum DU ein Auslandsjahr machen solltest"
-- Direkte Frage: "Wuerdest du 10 Monate bei einer fremden Familie leben?"
-- Erwartung vs. Realitaet: "Erwartung: US High Schools sind wie in den Filmen..."
-- Emotionaler Einstieg: "Der Moment, in dem ich realisiert habe: Jetzt bin ich alleine."
-- Countdown/Dringlichkeit: "Nur noch 30 Tage bis Bewerbungsschluss!"
-Waehle die passende Hook-Formel basierend auf Kategorie und Plattform!
-
-ENGAGEMENT-STRATEGIE (fuer CTAs am Post-Ende):
-- Frage-CTA: "In welches Land wuerdest du gehen? Kommentiere!"
-- Speicher-CTA: "Speicher dir diesen Post fuer spaeter!"
-- Teilen-CTA: "Tagge einen Freund, der das wissen muss!"
-- UGC-CTA: "Zeig uns dein Auslandsjahr mit #MeinTREFFJahr!"
-- DM-CTA: "Fragen? DM uns - wir antworten in 24h!"
-- Link-CTA: "Alle Infos ueber den Link in unserer Bio!"
-Waehle den CTA-Typ passend zur Kategorie und Plattform!
+{_get_dynamic_hook_and_cta_sections(platform, category, buyer_journey_stage)}
 
 BRAND-HASHTAGS (immer mindestens einen davon verwenden):
 #TREFFSprachreisen #HighschoolYear #MeinTREFFJahr"""
@@ -676,6 +708,7 @@ def generate_text_with_gemini(
     platform: str = "instagram_feed",
     slide_count: int = 1,
     personality_preset: Optional[dict] = None,
+    buyer_journey_stage: Optional[str] = None,
 ) -> Optional[dict]:
     """
     Generate text content using Gemini 2.5 Flash.
@@ -685,6 +718,9 @@ def generate_text_with_gemini(
 
     If personality_preset is provided, it customizes the AI system prompt with
     the student's personality (tone, humor_level, emoji_usage, perspective, catchphrases).
+
+    If buyer_journey_stage is provided (awareness/consideration/decision),
+    the prompt adapts tone and CTA accordingly.
     """
     try:
         from google import genai
@@ -692,7 +728,13 @@ def generate_text_with_gemini(
 
         client = genai.Client(api_key=api_key)
 
-        system_prompt = _build_gemini_system_prompt(tone, personality_preset=personality_preset)
+        system_prompt = _build_gemini_system_prompt(
+            tone,
+            personality_preset=personality_preset,
+            platform=platform,
+            category=category,
+            buyer_journey_stage=buyer_journey_stage,
+        )
         content_prompt = _build_gemini_content_prompt(
             category=category,
             country=country,
@@ -783,6 +825,7 @@ def generate_text_content(
     slide_count: int = 1,
     api_key: Optional[str] = None,
     personality_preset: Optional[dict] = None,
+    buyer_journey_stage: Optional[str] = None,
 ) -> dict:
     """
     Generate structured text content for a social media post.
@@ -792,6 +835,9 @@ def generate_text_content(
 
     If personality_preset is provided, it customizes the AI system prompt with
     the student's personality (tone, humor_level, emoji_usage, perspective, catchphrases).
+
+    If buyer_journey_stage is provided (awareness/consideration/decision),
+    the prompt adapts tone and CTA accordingly based on strategy JSON files.
 
     Returns dict with:
     - slides: list of slide content objects
@@ -804,7 +850,10 @@ def generate_text_content(
     """
     # Try Gemini first if API key is available
     if api_key:
-        logger.info("Attempting Gemini text generation (category=%s, country=%s, tone=%s, has_personality=%s)", category, country, tone, personality_preset is not None)
+        logger.info(
+            "Attempting Gemini text generation (category=%s, country=%s, tone=%s, has_personality=%s, buyer_journey=%s)",
+            category, country, tone, personality_preset is not None, buyer_journey_stage,
+        )
         gemini_result = generate_text_with_gemini(
             api_key=api_key,
             category=category,
@@ -815,15 +864,20 @@ def generate_text_content(
             platform=platform,
             slide_count=slide_count,
             personality_preset=personality_preset,
+            buyer_journey_stage=buyer_journey_stage,
         )
         if gemini_result:
             return gemini_result
         logger.info("Gemini failed, falling back to rule-based generation")
 
     # Rule-based fallback
-    # Default to a random country if none specified
+    # Default to a weighted random country if none specified (from strategy JSON)
     if not country or country not in COUNTRY_DATA:
-        country = random.choice(list(COUNTRY_DATA.keys()))
+        try:
+            strategy = StrategyLoader.instance()
+            country = strategy.pick_weighted_country(list(COUNTRY_DATA.keys()))
+        except Exception:
+            country = random.choice(list(COUNTRY_DATA.keys()))
 
     c = COUNTRY_DATA[country]
     cat = CATEGORY_CONTENT.get(category, CATEGORY_CONTENT["laender_spotlight"])
