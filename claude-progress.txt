@@ -1,5 +1,51 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #233: Breadcrumb-Navigation
+**Date:** 2026-02-16
+**Feature ID:** #233
+**Status:** PASSING
+
+### What was implemented:
+Breadcrumb navigation component that automatically generates breadcrumbs from Vue Router route meta data.
+
+### Component Created:
+- `frontend/src/components/layout/BreadcrumbNav.vue` — Reusable breadcrumb nav with:
+  - Reads `route.meta.breadcrumb` array (label + path pairs)
+  - Only shows when breadcrumb has 2+ items (hides on Home page)
+  - Chevron (>) separators between items via SVG icon
+  - Last item is non-clickable text (current page) with `aria-current="page"`
+  - All other items are clickable router-links
+  - Hover color transitions to brand blue (treff-blue)
+  - Dark mode support via dark: classes
+  - `data-testid="breadcrumb-nav"` for testing
+  - `aria-label="Breadcrumb"` for accessibility
+
+### Layout Integration:
+- `frontend/src/components/layout/AppLayout.vue` — BreadcrumbNav imported and placed between TopBar and main content area
+
+### Route Meta (pre-existing):
+- All routes already had `meta.breadcrumb` arrays defined (from Feature #284 Router Restructuring)
+- Examples: `/home` = 1 item (no breadcrumb), `/settings` = 2 items, `/calendar/story-arcs` = 3 items, `/video/thumbnails` = 3 items
+
+### Verification completed:
+- Home page (`/home`): No breadcrumb (correct — only 1 level)
+- Settings (`/settings`): "Home > Einstellungen" — PASS
+- Story-Arcs (`/calendar/story-arcs`): "Home > Kalender > Story-Arcs" — PASS
+- Video Thumbnails (`/video/thumbnails`): "Home > Video-Tools > Thumbnails" — PASS
+- Calendar (`/calendar`): "Home > Kalender" — PASS
+- Create Quick Post (`/create/quick`): "Home > Erstellen > Quick Post" — PASS
+- Breadcrumb link click (Kalender → navigates to /calendar): PASS
+- Breadcrumb link click (Home → navigates to /home): PASS
+- Last item not clickable: PASS (plain text, not a link)
+- Console errors: 0
+- Mock data grep: Zero matches in new files
+- Screenshots captured confirming visual design
+
+### Current state:
+- Feature #233 marked as PASSING
+
+---
+
 ## Session - Feature #228: Dashboard komplett neu gestalten
 **Date:** 2026-02-16
 **Feature ID:** #228
