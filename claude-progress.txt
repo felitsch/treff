@@ -1,5 +1,53 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #278: Social-Media-Optimierung mit social-content Strategie
+**Date:** 2026-02-16
+**Feature ID:** #278
+**Status:** PASSING
+
+### What was implemented:
+Comprehensive social content strategy system with platform-specific guidelines, hook formulas, engagement strategies, and integration into AI text generation and weekly planning.
+
+### 1. social-content.json Config (frontend/src/config/social-content.json):
+- **Platform Strategies**: Instagram Feed (3-5x/Woche), Instagram Stories (taeglich), Instagram Reels (2-3x/Woche), TikTok (1-4x/Tag)
+- **Optimal Posting Times**: Weekday and weekend times for German teenager audience (e.g., Feed: 17:00-18:00 weekdays, 11:00-12:00 weekends)
+- **Hook Formulas**: 10 proven templates (Wissensluecke, Vergleich, Geheimtipp, Countdown, Storytelling, Kontroverse, Transformation, Listicle, Identifikation, Behind-the-Scenes) with effectiveness ratings
+- **Content Repurposing**: 7 workflows (Feed->Stories, Feed->TikTok, Reel->TikTok, Experience->Carousel, Carousel->TikTok, TikTok->Reel, Story->Highlight)
+- **Engagement Strategies**: 7 CTA types (question, poll, save, share, ugc, dm, link_in_bio) + community building tips
+- **Viral Patterns**: 8 adapted patterns for TREFF (Erwartung vs Realitaet, POV, Tipps die niemand kennt, etc.)
+- **Hashtag Strategy**: Brand (#TREFFSprachreisen, #HighschoolYear), niche, and country-specific hashtags
+- **Calendar Rules**: Weekly mix, seasonal priorities, recurring content slots (Motivation Monday, Tipps Tuesday, etc.)
+
+### 2. Documentation (docs/social-content-strategy.md):
+- 193-line human-readable strategy documentation
+- Platform comparison tables, hook formula reference, repurposing matrix, posting time schedules
+
+### 3. Backend AI Integration:
+- **text_generator.py**: Enhanced Gemini system prompt with hook formula examples and engagement CTAs, updated hashtag counts (Instagram 8-12, TikTok 3-5)
+- **ai.py (rule-based planner)**: Added weekday/weekend posting times, recurring content slot preferences, hook-formula-inspired topic generation
+- **ai.py (Gemini planner)**: Enhanced system prompt with platform-specific posting rules, weekly content slots, hook formulas, content mix rules
+
+### 4. Settings UI (frontend/src/views/SettingsView.vue):
+- Social-Content-Strategie section with 7 collapsible accordion panels
+- Panels: Plattform-Strategien, Hook-Formeln, Content-Wiederverwendung, Engagement-Strategien, Virale Muster, Hashtag-Strategie, Kalender-Regeln
+- Effectiveness badges, effort indicators, platform tags, urgency badges
+- Loads from GET /api/content-strategy/social-strategy endpoint
+
+### 5. API Endpoints (already committed in Feature #277):
+- 9 new endpoints under /api/content-strategy/social-strategy/* (platforms, hooks, repurposing, engagement, viral-patterns, hashtags, posting-times, calendar-rules)
+
+### Files changed:
+- `frontend/src/config/social-content.json` (NEW - 519 lines)
+- `docs/social-content-strategy.md` (NEW - 193 lines)
+- `backend/app/api/routes/ai.py` (+136 lines)
+- `backend/app/core/text_generator.py` (+30/-26 lines)
+- `frontend/src/views/SettingsView.vue` (+327 lines)
+- `backend/app/api/routes/content_strategy.py` (committed with Feature #277)
+
+### Commit: bff6e6f
+
+---
+
 ## Session - Feature #227: Design-System & Tailwind Config Ueberarbeitung
 **Date:** 2026-02-16
 **Feature ID:** #227
