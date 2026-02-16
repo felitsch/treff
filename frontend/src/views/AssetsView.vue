@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
 import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 import VideoTrimmer from '@/components/assets/VideoTrimmer.vue'
+import ImageEditTools from '@/components/assets/ImageEditTools.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
@@ -34,6 +35,10 @@ const videoPreviewAsset = ref(null)
 // Video trimmer state
 const showTrimmer = ref(false)
 const trimAsset = ref(null)
+
+// KI image edit state
+const showImageEdit = ref(false)
+const imageEditAsset = ref(null)
 
 // Stock photo state
 const stockSearchQuery = ref('')
@@ -131,6 +136,20 @@ function closeVideoPreview() {
 function openTrimmer(asset) {
   trimAsset.value = asset
   showTrimmer.value = true
+}
+
+// Open KI image edit tool
+function openImageEdit(asset) {
+  imageEditAsset.value = asset
+  showImageEdit.value = true
+}
+
+// Handle KI image edit completion
+function onImageEdited(editedAsset) {
+  // Add the new edited asset to the top of the list
+  assets.value.unshift(editedAsset)
+  showImageEdit.value = false
+  imageEditAsset.value = null
 }
 
 // Handle trim completion
@@ -820,6 +839,19 @@ onMounted(fetchAssets)
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
               </button>
+              <!-- KI Image Edit button (only for images, not video/audio) -->
+              <button
+                v-if="!isVideoAsset(asset) && !isAudioAsset(asset)"
+                @click.stop="openImageEdit(asset)"
+                class="pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                title="KI-Bildbearbeitung"
+                aria-label="KI-Bildbearbeitung"
+                :data-testid="`ai-edit-btn-${asset.id}`"
+              >
+                <svg class="h-3.5 w-3.5 text-gray-500 hover:text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                </svg>
+              </button>
               <!-- Video buttons: Play + Trim + Audio Mix -->
               <template v-if="isVideoAsset(asset)">
                 <button
@@ -1069,6 +1101,15 @@ onMounted(fetchAssets)
       :asset="trimAsset"
       @close="showTrimmer = false; trimAsset = null"
       @trimmed="onTrimmed"
+    />
+
+    <!-- KI Image Edit Modal -->
+    <ImageEditTools
+      v-if="imageEditAsset"
+      :show="showImageEdit"
+      :asset="imageEditAsset"
+      @close="showImageEdit = false; imageEditAsset = null"
+      @image-edited="onImageEdited"
     />
 
     <!-- Video Preview Modal -->

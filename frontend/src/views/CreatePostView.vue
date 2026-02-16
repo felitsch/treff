@@ -26,6 +26,7 @@ import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
 import TourSystem from '@/components/common/TourSystem.vue'
 import ImageUploader from '@/components/assets/ImageUploader.vue'
+import ImageEditTools from '@/components/assets/ImageEditTools.vue'
 import SlideManager from '@/components/posts/SlideManager.vue'
 import LivePreview from '@/components/posts/LivePreview.vue'
 
@@ -89,6 +90,10 @@ const {
 
 const totalSteps = 9
 const tourRef = ref(null)
+
+// KI image edit state (for Step 8 background images)
+const showImageEditInCreator = ref(false)
+const imageEditAssetForCreator = ref(null)
 
 // ── Auto-Save Integration ─────────────────────────────────────────────────
 const {
@@ -987,6 +992,28 @@ function selectAssetAsBackground(asset) {
   }
   successMsg.value = 'Hintergrundbild gesetzt!'
   setTimeout(() => { successMsg.value = '' }, 2000)
+}
+
+// Open KI image edit for a background asset
+function openImageEditForBackground(asset) {
+  imageEditAssetForCreator.value = asset
+  showImageEditInCreator.value = true
+}
+
+// Handle KI-edited image in post creator
+function onImageEditedInCreator(editedAsset) {
+  // Use the edited image as background for the current slide
+  const slide = slides.value[currentPreviewSlide.value]
+  if (slide) {
+    slide.background_type = 'image'
+    slide.background_value = `/api/uploads/assets/${editedAsset.filename}`
+  }
+  successMsg.value = 'KI-bearbeitetes Bild als Hintergrund gesetzt!'
+  setTimeout(() => { successMsg.value = '' }, 3000)
+  // Refresh assets list so the new asset appears
+  loadAssets()
+  showImageEditInCreator.value = false
+  imageEditAssetForCreator.value = null
 }
 
 // Handler for ImageUploader component uploads
@@ -3356,15 +3383,26 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div v-if="assets.length > 0">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Vorhandene Bilder:</h3>
             <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-              <button
+              <div
                 v-for="asset in assets"
                 :key="asset.id"
+                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#3B7AB1] transition-all relative group cursor-pointer"
                 @click="selectAssetAsBackground(asset)"
-                class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#3B7AB1] transition-all relative group"
               >
                 <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
                 <div v-if="asset.source === 'ai_generated'" class="absolute top-1 right-1 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">KI</div>
-              </button>
+                <!-- KI Edit button overlay -->
+                <button
+                  @click.stop="openImageEditForBackground(asset)"
+                  class="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                  title="KI-Bildbearbeitung"
+                  data-testid="step8-ai-edit-btn"
+                >
+                  <svg class="h-3.5 w-3.5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3775,6 +3813,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     </Teleport>
 
     <TourSystem ref="tourRef" page-key="create-post" />
+
+    <!-- KI Image Edit Modal (Step 8) -->
+    <ImageEditTools
+      v-if="imageEditAssetForCreator"
+      :show="showImageEditInCreator"
+      :asset="imageEditAssetForCreator"
+      @close="showImageEditInCreator = false; imageEditAssetForCreator = null"
+      @image-edited="onImageEditedInCreator"
+    />
   </div>
 </template>
 
