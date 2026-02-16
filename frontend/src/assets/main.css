@@ -2,14 +2,352 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ===================================================================
+   TREFF Design System — Global Styles
+   ===================================================================
+   This file defines reusable component classes using Tailwind's
+   @layer components directive. All classes support dark mode via the
+   'dark' variant (class strategy).
+
+   Usage:
+     <button class="btn-primary">Speichern</button>
+     <div class="card">...</div>
+     <input class="input-field" />
+   =================================================================== */
+
+/* ── Base Layer ────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply font-sans text-base text-gray-900 bg-white antialiased;
+  }
+
+  .dark body,
+  body.dark {
+    @apply text-gray-100 bg-gray-950;
+  }
+
+  /* Consistent focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500/50 ring-offset-2 ring-offset-white;
+  }
+
+  .dark *:focus-visible {
+    @apply ring-offset-gray-900;
+  }
 }
 
-/* Scrollbar styling */
+/* ── Component Layer ──────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Buttons ─────────────────────────────────────────────────────
+     btn-primary   — filled brand blue, white text
+     btn-secondary — filled brand yellow, dark text
+     btn-ghost     — transparent with border, subtle hover
+     btn-danger    — filled red for destructive actions
+     All buttons share base sizing, transitions, and focus ring.
+  ──────────────────────────────────────────────────────────────── */
+
+  /* Shared button base */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 text-sm font-medium
+           rounded-lg
+           transition-all duration-200 ease-in-out
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed
+           select-none cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn-base
+           bg-primary-500 text-white
+           hover:bg-primary-600
+           active:bg-primary-700
+           focus:ring-primary-500/50;
+  }
+
+  .dark .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300
+           focus:ring-primary-400/50 ring-offset-gray-900;
+  }
+
+  .btn-secondary {
+    @apply btn-base
+           bg-secondary-500 text-gray-900
+           hover:bg-secondary-400
+           active:bg-secondary-600
+           focus:ring-secondary-500/50;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-secondary-500 hover:bg-secondary-400
+           text-gray-900
+           focus:ring-secondary-400/50 ring-offset-gray-900;
+  }
+
+  .btn-ghost {
+    @apply btn-base
+           bg-transparent text-gray-700
+           border border-gray-300
+           hover:bg-gray-50 hover:border-gray-400
+           active:bg-gray-100
+           focus:ring-gray-400/50;
+  }
+
+  .dark .btn-ghost {
+    @apply text-gray-300 border-gray-600
+           hover:bg-gray-800 hover:border-gray-500
+           active:bg-gray-700
+           focus:ring-gray-500/50 ring-offset-gray-900;
+  }
+
+  .btn-danger {
+    @apply btn-base
+           bg-red-600 text-white
+           hover:bg-red-700
+           active:bg-red-800
+           focus:ring-red-500/50;
+  }
+
+  .dark .btn-danger {
+    @apply bg-red-600 hover:bg-red-500 active:bg-red-400
+           focus:ring-red-400/50 ring-offset-gray-900;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-md;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-xl;
+  }
+
+  .btn-icon {
+    @apply p-2 rounded-lg;
+  }
+
+  /* ── Cards ───────────────────────────────────────────────────────
+     .card         — default card with border, subtle shadow
+     .card-hover   — interactive card with hover elevation
+     .card-flat    — borderless card (for inside panels)
+  ──────────────────────────────────────────────────────────────── */
+
+  .card {
+    @apply bg-white border border-gray-200
+           rounded-lg shadow-card
+           p-4;
+  }
+
+  .dark .card {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .card-hover {
+    @apply card
+           transition-shadow duration-200 ease-in-out
+           hover:shadow-card-hover;
+  }
+
+  .dark .card-hover {
+    @apply bg-gray-800 border-gray-700
+           hover:shadow-lg;
+  }
+
+  .card-flat {
+    @apply bg-gray-50 rounded-lg p-4;
+  }
+
+  .dark .card-flat {
+    @apply bg-gray-800/50;
+  }
+
+  /* ── Inputs ──────────────────────────────────────────────────────
+     .input-field   — text input, select, textarea base
+     .input-label   — label above an input
+     .input-hint    — hint/help text below an input
+     .input-error   — error state border + text
+  ──────────────────────────────────────────────────────────────── */
+
+  .input-field {
+    @apply w-full px-3 py-2 text-sm
+           bg-white text-gray-900
+           border border-gray-300 rounded-md
+           placeholder-gray-400
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500;
+  }
+
+  .dark .input-field {
+    @apply bg-gray-800 text-gray-100
+           border-gray-600
+           placeholder-gray-500
+           focus:ring-primary-400/50 focus:border-primary-400;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .dark .input-label {
+    @apply text-gray-300;
+  }
+
+  .input-hint {
+    @apply mt-1 text-xs text-gray-500;
+  }
+
+  .dark .input-hint {
+    @apply text-gray-400;
+  }
+
+  .input-error {
+    @apply border-red-500 focus:ring-red-500/50 focus:border-red-500;
+  }
+
+  .input-error-text {
+    @apply mt-1 text-xs text-red-600;
+  }
+
+  .dark .input-error-text {
+    @apply text-red-400;
+  }
+
+  /* ── Badges / Tags ──────────────────────────────────────────────── */
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5
+           text-xs font-medium rounded-full;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-700;
+  }
+
+  .dark .badge-primary {
+    @apply bg-primary-900/50 text-primary-300;
+  }
+
+  .badge-secondary {
+    @apply badge bg-secondary-100 text-secondary-800;
+  }
+
+  .dark .badge-secondary {
+    @apply bg-secondary-900/50 text-secondary-300;
+  }
+
+  .badge-success {
+    @apply badge bg-green-100 text-green-700;
+  }
+
+  .dark .badge-success {
+    @apply bg-green-900/50 text-green-300;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-100 text-amber-700;
+  }
+
+  .dark .badge-warning {
+    @apply bg-amber-900/50 text-amber-300;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-100 text-red-700;
+  }
+
+  .dark .badge-danger {
+    @apply bg-red-900/50 text-red-300;
+  }
+
+  .badge-neutral {
+    @apply badge bg-gray-100 text-gray-700;
+  }
+
+  .dark .badge-neutral {
+    @apply bg-gray-700 text-gray-300;
+  }
+
+  /* ── Section / Page Header ────────────────────────────────────── */
+
+  .page-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .dark .page-title {
+    @apply text-white;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-gray-800 mb-3;
+  }
+
+  .dark .section-title {
+    @apply text-gray-200;
+  }
+
+  /* ── Divider ──────────────────────────────────────────────────── */
+
+  .divider {
+    @apply border-t border-gray-200 my-4;
+  }
+
+  .dark .divider {
+    @apply border-gray-700;
+  }
+
+  /* ── Overlay / Backdrop ───────────────────────────────────────── */
+
+  .overlay-backdrop {
+    @apply fixed inset-0 bg-black/50 z-overlay;
+  }
+}
+
+/* ── Utility Layer ────────────────────────────────────────────────── */
+@layer utilities {
+  /* Focus ring utility (legacy — prefer native focus-visible) */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500/50;
+  }
+
+  .dark .focus-ring {
+    @apply focus:ring-primary-400/50 focus:ring-offset-gray-900;
+  }
+
+  /* Transition utilities */
+  .transition-base {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* Text truncation helpers */
+  .text-truncate {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+/* ── Non-layer Scrollbar Defaults ─────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -26,15 +364,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #6B7280;
-}
-
-/* Focus ring utility */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
-  --tw-ring-color: #3B7AB1;
-}
-
-/* Transition utilities */
-.transition-base {
-  @apply transition-all duration-200 ease-in-out;
 }

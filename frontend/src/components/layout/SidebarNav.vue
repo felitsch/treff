@@ -12,49 +12,57 @@ const route = useRoute()
 
 const navGroups = [
   {
-    label: 'Uebersicht',
-    key: 'overview',
+    label: 'Home',
+    key: 'home',
     items: [
-      { name: 'Dashboard', path: '/dashboard', icon: '📊' },
+      { name: 'Home', path: '/home', icon: '📊' },
     ],
   },
   {
-    label: 'Content erstellen',
-    key: 'content',
+    label: 'Erstellen',
+    key: 'create',
     items: [
-      { name: 'Create Post', path: '/create-post', icon: '✏️' },
-      { name: 'Templates', path: '/templates', icon: '📄' },
-      { name: 'Assets', path: '/assets', icon: '🖼️' },
+      { name: 'Erstellen', path: '/create', icon: '✏️' },
+      { name: 'Quick Post', path: '/create/quick', icon: '⚡' },
+      { name: 'Kampagne', path: '/create/campaign', icon: '📅' },
     ],
   },
   {
-    label: 'Planung',
-    key: 'planning',
+    label: 'Kalender',
+    key: 'calendar',
     items: [
       { name: 'Kalender', path: '/calendar', icon: '📅' },
-      { name: 'Wochenplaner', path: '/week-planner', icon: '🗓️' },
-      { name: 'History', path: '/history', icon: '📋' },
+      { name: 'Wochenplaner', path: '/calendar/week-planner', icon: '🗓️' },
+      { name: 'Story-Arcs', path: '/calendar/story-arcs', icon: '📖' },
+      { name: 'Formate', path: '/calendar/recurring-formats', icon: '🔄' },
     ],
   },
   {
-    label: 'Serien & Formate',
-    key: 'series',
+    label: 'Bibliothek',
+    key: 'library',
     items: [
-      { name: 'Students', path: '/students', icon: '🎓' },
-      { name: 'Story-Arcs', path: '/story-arcs', icon: '📖' },
-      { name: 'Formate', path: '/recurring-formats', icon: '🔄' },
+      { name: 'Templates', path: '/library/templates', icon: '📄' },
+      { name: 'Assets', path: '/library/assets', icon: '🖼️' },
+      { name: 'History', path: '/library/history', icon: '📋' },
+    ],
+  },
+  {
+    label: 'Schueler',
+    key: 'students',
+    items: [
+      { name: 'Schueler', path: '/students', icon: '🎓' },
     ],
   },
   {
     label: 'Video-Tools',
     key: 'video',
     items: [
-      { name: 'Thumbnails', path: '/thumbnail-generator', icon: '🎬' },
-      { name: 'Video-Overlay', path: '/video-overlays', icon: '🎞️' },
-      { name: 'Video-Schnitt', path: '/video-composer', icon: '✂️' },
-      { name: 'Video-Branding', path: '/video-templates', icon: '🏷️' },
-      { name: 'Video-Export', path: '/video-export', icon: '📤' },
-      { name: 'Audio-Mixer', path: '/audio-mixer', icon: '🎵' },
+      { name: 'Thumbnails', path: '/video/thumbnails', icon: '🎬' },
+      { name: 'Video-Overlay', path: '/video/overlays', icon: '🎞️' },
+      { name: 'Video-Schnitt', path: '/video/composer', icon: '✂️' },
+      { name: 'Video-Branding', path: '/video/templates', icon: '🏷️' },
+      { name: 'Video-Export', path: '/video/export', icon: '📤' },
+      { name: 'Audio-Mixer', path: '/video/audio-mixer', icon: '🎵' },
     ],
   },
   {
@@ -63,6 +71,7 @@ const navGroups = [
     items: [
       { name: 'Analytics', path: '/analytics', icon: '📈' },
       { name: 'Settings', path: '/settings', icon: '⚙️' },
+      { name: 'Design-System', path: '/design-system', icon: '🎨' },
     ],
   },
 ]
@@ -156,7 +165,7 @@ const isActive = (path) => route.path.startsWith(path)
                 ]"
                 :aria-label="item.name"
                 :title="item.name"
-                :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
+                :data-tour="item.path === '/create' || item.path === '/create/quick' ? 'create-post' : item.path === '/library/templates' ? 'templates' : undefined"
               >
                 <span class="text-lg">{{ item.icon }}</span>
               </router-link>
@@ -207,7 +216,7 @@ const isActive = (path) => route.path.startsWith(path)
                     : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
                 ]"
                 :aria-label="item.name"
-                :data-tour="item.path === '/create-post' ? 'create-post' : item.path === '/templates' ? 'templates' : undefined"
+                :data-tour="item.path === '/create' || item.path === '/create/quick' ? 'create-post' : item.path === '/library/templates' ? 'templates' : undefined"
               >
                 <span class="text-lg mr-3">{{ item.icon }}</span>
                 <span>{{ item.name }}</span>
