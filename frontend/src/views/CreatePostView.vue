@@ -21,6 +21,7 @@ import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import AIImageGenerator from '@/components/common/AIImageGenerator.vue'
 import AITextGenerator from '@/components/common/AITextGenerator.vue'
 import HashtagManager from '@/components/posts/HashtagManager.vue'
+import CaptionOptimizer from '@/components/posts/CaptionOptimizer.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
@@ -992,6 +993,15 @@ function selectAssetAsBackground(asset) {
   }
   successMsg.value = 'Hintergrundbild gesetzt!'
   setTimeout(() => { successMsg.value = '' }, 2000)
+}
+
+// Caption optimizer handlers
+function onApplyCaptionVariant(text) {
+  captionInstagram.value = text
+}
+
+function onRevertCaption(originalText) {
+  captionInstagram.value = originalText
 }
 
 // Open KI image edit for a background asset
@@ -3156,6 +3166,19 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <span class="text-xs" :class="(captionInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : (captionInstagram?.length || 0) > 1800 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ captionInstagram?.length || 0 }}/2.200</span>
               </div>
             </div>
+
+            <!-- Caption Optimizer (A/B Variants) -->
+            <CaptionOptimizer
+              v-if="captionInstagram?.trim()"
+              :caption="captionInstagram"
+              :platform="selectedPlatform"
+              :country="country"
+              :category="selectedCategory"
+              @apply-variant="onApplyCaptionVariant"
+              @revert="onRevertCaption"
+              data-testid="caption-optimizer-instagram"
+            />
+
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center gap-1 mb-2">
                 <HelpTooltip :text="tooltipTexts.createPost.hashtagsInstagram" size="sm" />

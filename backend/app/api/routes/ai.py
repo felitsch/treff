@@ -749,6 +749,307 @@ async def regenerate_field(
         raise HTTPException(status_code=500, detail=f"Field regeneration failed: {str(e)}")
 
 
+@router.post("/optimize-caption")
+async def optimize_caption(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Optimize a caption text with multiple A/B variant suggestions.
+
+    Takes an original caption and optimization options, returns 2-3 optimized
+    variants with tone labels and character counts for side-by-side comparison.
+
+    Expects:
+    - text (str): Original caption text to optimize
+    - platform (str): Target platform (instagram_feed, tiktok, etc.)
+    - options (list[str]): Optimization actions to apply, any combination of:
+        - 'shorten': Kuerze den Text fuer maximale Wirkung
+        - 'add_emojis': Fuege passende Emojis hinzu
+        - 'remove_emojis': Entferne alle Emojis
+        - 'change_tone_casual': Mache den Ton lockerer/jugendlicher
+        - 'change_tone_serious': Mache den Ton serioeser
+        - 'add_cta': Fuege einen Call-to-Action hinzu
+        - 'add_hook': Starte mit einem starken Hook
+    - num_variants (int, optional): Number of variants to generate (2-3, default 3)
+    - country (str, optional): Target country for context
+    - category (str, optional): Post category for context
+
+    Returns:
+    - variants: list of {text, label, char_count, changes_summary}
+    - original: {text, char_count}
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "optimize-caption")
+
+    try:
+        text = request.get("text", "").strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="Caption text is required")
+
+        platform = request.get("platform", "instagram_feed")
+        options = request.get("options", ["shorten"])
+        num_variants = min(max(request.get("num_variants", 3), 2), 3)
+        country = request.get("country")
+        category = request.get("category")
+
+        # Build the optimization instruction string
+        option_descriptions = {
+            "shorten": "Kuerze den Text auf das Wesentliche, behalte die Kernaussage bei",
+            "add_emojis": "Fuege passende Emojis hinzu die den Text auflockern",
+            "remove_emojis": "Entferne alle Emojis aus dem Text",
+            "change_tone_casual": "Mache den Ton lockerer und jugendlicher (Du-Ansprache, umgangssprachlich)",
+            "change_tone_serious": "Mache den Ton serioeser und professioneller (Sie-Ansprache moeglich)",
+            "add_cta": "Fuege einen klaren Call-to-Action am Ende hinzu (z.B. Link in Bio, Jetzt bewerben, Schreib uns)",
+            "add_hook": "Starte mit einem aufmerksamkeitsstarken Hook/Einstieg",
+        }
+
+        selected_instructions = [
+            option_descriptions.get(opt, opt) for opt in options if opt in option_descriptions
+        ]
+        if not selected_instructions:
+            selected_instructions = ["Optimiere den Text fuer bessere Performance"]
+
+        instructions_text = "\n".join(f"- {inst}" for inst in selected_instructions)
+
+        # Platform-specific char limits
+        char_limits = {
+            "instagram_feed": 2200,
+            "instagram_story": 200,
+            "instagram_reels": 2200,
+            "tiktok": 150,
+        }
+        max_chars = char_limits.get(platform, 2200)
+
+        # Try Gemini first
+        api_key = await _get_gemini_api_key(user_id, db)
+        variants = None
+
+        if api_key:
+            try:
+                variants = _optimize_caption_gemini(
+                    text=text,
+                    instructions=instructions_text,
+                    platform=platform,
+                    max_chars=max_chars,
+                    num_variants=num_variants,
+                    country=country,
+                    category=category,
+                    api_key=api_key,
+                )
+            except Exception:
+                variants = None
+
+        # Fallback: rule-based optimization
+        if not variants:
+            variants = _optimize_caption_local(
+                text=text,
+                options=options,
+                platform=platform,
+                max_chars=max_chars,
+                num_variants=num_variants,
+            )
+
+        return {
+            "variants": variants,
+            "original": {
+                "text": text,
+                "char_count": len(text),
+            },
+            "source": "gemini" if api_key and variants else "local",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Caption optimization failed: {str(e)}")
+
+
+def _optimize_caption_gemini(
+    text: str,
+    instructions: str,
+    platform: str,
+    max_chars: int,
+    num_variants: int,
+    country: str | None,
+    category: str | None,
+    api_key: str,
+) -> list[dict]:
+    """Use Gemini to generate optimized caption variants."""
+    import google.genai as genai
+    import json as json_mod
+
+    client = genai.Client(api_key=api_key)
+
+    country_hint = f"\nZielland: {country}" if country else ""
+    category_hint = f"\nPost-Kategorie: {category}" if category else ""
+
+    prompt = f"""Du bist ein Social-Media-Experte fuer TREFF Sprachreisen (Highschool-Aufenthalte im Ausland).
+
+Optimiere den folgenden Caption-Text und erstelle {num_variants} verschiedene Varianten.
+
+ORIGINALTEXT:
+\"\"\"{text}\"\"\"
+
+OPTIMIERUNGSANWEISUNGEN:
+{instructions}
+
+KONTEXT:
+- Plattform: {platform}
+- Max. Zeichen: {max_chars}{country_hint}{category_hint}
+- Zielgruppe: Deutsche Schueler (14-18 Jahre) und deren Eltern
+- Marke: TREFF Sprachreisen (seit 1984)
+
+REGELN:
+- Jede Variante muss sich deutlich von den anderen unterscheiden
+- Behalte die Kernaussage des Originals bei
+- Halte das Zeichenlimit ein
+- Verwende keinen Slang, aber bleibe nahbar
+- Gib jeder Variante ein kurzes Label (z.B. "Kurz & knackig", "Emotional", "Mit starkem CTA")
+
+Antworte NUR mit einem JSON-Array:
+[
+  {{"text": "...", "label": "...", "changes_summary": "Kurze Beschreibung der Aenderungen"}},
+  ...
+]"""
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+
+    response_text = response.text.strip()
+    # Extract JSON from response
+    if "```json" in response_text:
+        response_text = response_text.split("```json")[1].split("```")[0].strip()
+    elif "```" in response_text:
+        response_text = response_text.split("```")[1].split("```")[0].strip()
+
+    parsed = json_mod.loads(response_text)
+
+    # Validate and normalize
+    variants = []
+    for item in parsed[:num_variants]:
+        if isinstance(item, dict) and "text" in item:
+            variants.append({
+                "text": item["text"][:max_chars],
+                "label": item.get("label", f"Variante {len(variants) + 1}"),
+                "char_count": len(item["text"][:max_chars]),
+                "changes_summary": item.get("changes_summary", "KI-optimiert"),
+            })
+
+    if len(variants) < 2:
+        return None  # Fall back to local
+
+    return variants
+
+
+def _optimize_caption_local(
+    text: str,
+    options: list[str],
+    platform: str,
+    max_chars: int,
+    num_variants: int,
+) -> list[dict]:
+    """Rule-based caption optimization fallback."""
+    import re
+
+    variants = []
+
+    # Variant 1: Shortened version
+    shortened = text
+    # Remove redundant spaces
+    shortened = re.sub(r'\s+', ' ', shortened).strip()
+    # Truncate sentences if too long
+    sentences = re.split(r'(?<=[.!?])\s+', shortened)
+    if len(sentences) > 2 and "shorten" in options:
+        shortened = ' '.join(sentences[:2])
+    if len(shortened) > max_chars:
+        shortened = shortened[:max_chars - 3] + '...'
+    variants.append({
+        "text": shortened,
+        "label": "Kurz & knackig",
+        "char_count": len(shortened),
+        "changes_summary": "Auf das Wesentliche gekuerzt",
+    })
+
+    # Variant 2: With emojis or modified tone
+    modified = text
+    if "add_emojis" in options:
+        emoji_map = {
+            "usa": "🇺🇸", "kanada": "🇨🇦", "australien": "🇦🇺",
+            "neuseeland": "🇳🇿", "irland": "🇮🇪",
+            "highschool": "🏫", "schule": "📚", "abenteuer": "🌍",
+            "bewerbung": "📝", "frist": "⏰", "traum": "✨",
+            "freunde": "👫", "gastfamilie": "🏠", "reise": "✈️",
+        }
+        for keyword, emoji in emoji_map.items():
+            if keyword.lower() in modified.lower() and emoji not in modified:
+                modified = modified.replace(
+                    keyword, f"{keyword} {emoji}", 1
+                ) if keyword in modified else modified.replace(
+                    keyword.capitalize(), f"{keyword.capitalize()} {emoji}", 1
+                )
+                break
+        if not any(c in modified for c in "🌍✈️📚🏫✨"):
+            modified = "✨ " + modified
+    elif "remove_emojis" in options:
+        # Remove emoji characters
+        modified = re.sub(
+            r'[\U0001F300-\U0001F9FF\U00002600-\U000027BF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002702-\U000027B0]',
+            '', modified
+        ).strip()
+        modified = re.sub(r'\s+', ' ', modified)
+    elif "change_tone_casual" in options:
+        modified = modified.replace("Sie ", "du ").replace("Ihnen ", "dir ").replace("Ihre ", "deine ")
+        if not modified.endswith("!"):
+            modified = modified.rstrip(".") + "!"
+    elif "change_tone_serious" in options:
+        modified = modified.replace(" du ", " Sie ").replace(" dir ", " Ihnen ").replace(" deine ", " Ihre ")
+    if len(modified) > max_chars:
+        modified = modified[:max_chars - 3] + '...'
+    label = "Mit Emojis" if "add_emojis" in options else "Ohne Emojis" if "remove_emojis" in options else "Lockerer Ton" if "change_tone_casual" in options else "Serioeser Ton" if "change_tone_serious" in options else "Optimiert"
+    variants.append({
+        "text": modified,
+        "label": label,
+        "char_count": len(modified),
+        "changes_summary": f"Ton und Stil angepasst ({label})",
+    })
+
+    # Variant 3: With CTA or hook
+    if num_variants >= 3:
+        enhanced = text
+        if "add_cta" in options:
+            ctas = [
+                "\n\n👉 Link in Bio fuer mehr Infos!",
+                "\n\n📩 Schreib uns – wir beraten dich!",
+                "\n\n🔗 Jetzt informieren – Link in Bio!",
+            ]
+            import random
+            enhanced = enhanced.rstrip() + random.choice(ctas)
+        elif "add_hook" in options:
+            hooks = [
+                "Stell dir vor: ",
+                "Wusstest du? ",
+                "Das aendert alles: ",
+                "Dein Abenteuer beginnt hier: ",
+            ]
+            import random
+            enhanced = random.choice(hooks) + enhanced
+        else:
+            # Default: combine short + CTA
+            enhanced = re.sub(r'\s+', ' ', enhanced).strip()
+            enhanced = enhanced.rstrip() + "\n\n👉 Mehr erfahren: Link in Bio!"
+        if len(enhanced) > max_chars:
+            enhanced = enhanced[:max_chars - 3] + '...'
+        variants.append({
+            "text": enhanced,
+            "label": "Mit CTA" if "add_cta" in options else "Mit Hook" if "add_hook" in options else "Engagement-Boost",
+            "char_count": len(enhanced),
+            "changes_summary": "Call-to-Action oder Hook hinzugefuegt",
+        })
+
+    return variants[:num_variants]
+
+
 # Platform-to-aspect-ratio mapping for automatic ratio selection
 PLATFORM_ASPECT_RATIOS = {
     "instagram_feed": "1:1",
