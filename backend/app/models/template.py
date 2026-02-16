@@ -1,6 +1,7 @@
 """Template model."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, Boolean, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,15 +18,15 @@ class Template(Base):
     slide_count: Mapped[int] = mapped_column(Integer, default=1)
     html_content: Mapped[str] = mapped_column(Text, nullable=False)
     css_content: Mapped[str] = mapped_column(Text, nullable=False)
-    default_colors: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
-    default_fonts: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
+    default_colors: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
+    default_fonts: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
     placeholder_fields: Mapped[str] = mapped_column(Text, nullable=False)  # JSON array
-    thumbnail_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    thumbnail_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     is_country_themed: Mapped[bool] = mapped_column(Boolean, default=False)
-    country: Mapped[str | None] = mapped_column(String, nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
-    parent_template_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    parent_template_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

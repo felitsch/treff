@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Content Analyzer Service - AI-powered media analysis for the Smart Content Pipeline.
 

@@ -1,6 +1,7 @@
 """Student model - central entity for story series content."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, Text, DateTime, Date, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,17 +20,17 @@ class Student(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     country: Mapped[str] = mapped_column(String, nullable=False)  # usa, kanada, australien, neuseeland, irland
-    city: Mapped[str | None] = mapped_column(String, nullable=True)
-    school_name: Mapped[str | None] = mapped_column(String, nullable=True)
-    host_family_name: Mapped[str | None] = mapped_column(String, nullable=True)
-    start_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
-    end_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
-    profile_image_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("assets.id"), nullable=True)
-    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
-    fun_facts: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array of strings
+    city: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    school_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    host_family_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    start_date: Mapped[Optional[datetime]] = mapped_column(Date, nullable=True)
+    end_date: Mapped[Optional[datetime]] = mapped_column(Date, nullable=True)
+    profile_image_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("assets.id"), nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    fun_facts: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array of strings
     status: Mapped[str] = mapped_column(String, default="active")  # active, completed, upcoming
     # Personality preset - JSON with tone, humor_level, emoji_usage, perspective, catchphrases
-    personality_preset: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON object
+    personality_preset: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON object
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

@@ -1,8 +1,10 @@
 """Centralized path utilities for Vercel + local compatibility."""
+from __future__ import annotations
 
 import base64
 import os
 from pathlib import Path
+from typing import Optional
 
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 APP_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +18,7 @@ def get_upload_dir(subdir: str = "") -> Path:
     return path
 
 
-def save_and_encode(data: bytes, file_path: Path) -> str | None:
+def save_and_encode(data: bytes, file_path: Path) -> Optional[str]:
     """Write bytes to disk. On Vercel, also return base64 for DB storage."""
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "wb") as f:

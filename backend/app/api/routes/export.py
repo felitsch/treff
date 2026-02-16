@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 """Export routes."""
 
 import os
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -162,7 +165,7 @@ async def download_export(
 async def get_export_history(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    post_id: int | None = None,
+    post_id: Optional[int] = None,
 ):
     """Get export history records, optionally filtered by post_id."""
     query = (

@@ -1,6 +1,7 @@
 """HashtagSet model for managing hashtag collections per country/category."""
 
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import DateTime, Float, Integer, String, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column
@@ -28,8 +29,8 @@ class HashtagSet(Base):
     user_id: Mapped[int] = mapped_column(Integer, nullable=True)  # NULL = system default
     name: Mapped[str] = mapped_column(String, nullable=False)
     hashtags: Mapped[str] = mapped_column(Text, nullable=False)  # JSON array of hashtag strings
-    category: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "laender_spotlight", "allgemein"
-    country: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "usa", "canada"
+    category: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "laender_spotlight", "allgemein"
+    country: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "usa", "canada"
     performance_score: Mapped[float] = mapped_column(Float, default=0.0)
     is_default: Mapped[int] = mapped_column(Integer, default=0)  # 1 = system default set
 

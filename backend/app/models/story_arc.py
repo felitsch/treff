@@ -1,6 +1,7 @@
 """StoryArc model - multi-part story series about a student or theme."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, Text, DateTime, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,14 +20,14 @@ class StoryArc(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    subtitle: Mapped[str | None] = mapped_column(String, nullable=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    student_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("students.id"), nullable=True)
-    country: Mapped[str | None] = mapped_column(String, nullable=True)  # usa, kanada, australien, neuseeland, irland
+    subtitle: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    student_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("students.id"), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # usa, kanada, australien, neuseeland, irland
     status: Mapped[str] = mapped_column(String, default="draft")  # draft, active, paused, completed
     planned_episodes: Mapped[int] = mapped_column(Integer, default=8)
     current_episode: Mapped[int] = mapped_column(Integer, default=0)
-    cover_image_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("assets.id"), nullable=True)
+    cover_image_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("assets.id"), nullable=True)
     tone: Mapped[str] = mapped_column(String, default="jugendlich")  # jugendlich, serioess
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

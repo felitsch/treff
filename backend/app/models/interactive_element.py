@@ -1,6 +1,7 @@
 """PostInteractiveElement model for Instagram Story interactive elements."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, Text, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,13 +20,13 @@ class PostInteractiveElement(Base):
         String, nullable=False
     )  # poll, quiz, slider, question
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
-    options: Mapped[str | None] = mapped_column(
+    options: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # JSON array of option strings (for poll/quiz)
-    correct_answer: Mapped[int | None] = mapped_column(
+    correct_answer: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
     )  # Index of correct answer (for quiz)
-    emoji: Mapped[str | None] = mapped_column(
+    emoji: Mapped[Optional[str]] = mapped_column(
         String, nullable=True
     )  # Emoji for slider element
     position_x: Mapped[float] = mapped_column(Float, nullable=False, default=50.0)  # % from left

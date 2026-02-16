@@ -1,6 +1,7 @@
 """Video Overlay model for storing overlay configurations on videos."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, Text, DateTime, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,10 +20,10 @@ class VideoOverlay(Base):
     layers: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
 
     # Rendered output path (after ffmpeg processing)
-    rendered_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    rendered_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     render_status: Mapped[str] = mapped_column(String, default="pending")  # pending, rendering, done, error
-    render_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    rendered_data: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64-encoded rendered PNG (Vercel persistence)
+    render_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rendered_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Base64-encoded rendered PNG (Vercel persistence)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

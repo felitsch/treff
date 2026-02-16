@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 """Interactive Elements routes for Instagram Story elements (polls, quizzes, sliders, questions)."""
 
 import json
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,22 +24,22 @@ class InteractiveElementCreate(BaseModel):
     slide_index: int = 0
     element_type: str  # poll, quiz, slider, question
     question_text: str
-    options: list[str] | None = None  # For poll/quiz
-    correct_answer: int | None = None  # For quiz (index into options)
-    emoji: str | None = None  # For slider
+    options: Optional[List[str]] = None  # For poll/quiz
+    correct_answer: Optional[int] = None  # For quiz (index into options)
+    emoji: Optional[str] = None  # For slider
     position_x: float = Field(default=50.0, ge=0, le=100)
     position_y: float = Field(default=50.0, ge=0, le=100)
 
 
 class InteractiveElementUpdate(BaseModel):
-    slide_index: int | None = None
-    element_type: str | None = None
-    question_text: str | None = None
-    options: list[str] | None = None
-    correct_answer: int | None = None
-    emoji: str | None = None
-    position_x: float | None = Field(default=None, ge=0, le=100)
-    position_y: float | None = Field(default=None, ge=0, le=100)
+    slide_index: Optional[int] = None
+    element_type: Optional[str] = None
+    question_text: Optional[str] = None
+    options: Optional[List[str]] = None
+    correct_answer: Optional[int] = None
+    emoji: Optional[str] = None
+    position_x: Optional[float] = Field(default=None, ge=0, le=100)
+    position_y: Optional[float] = Field(default=None, ge=0, le=100)
 
 
 def element_to_dict(el: PostInteractiveElement) -> dict:

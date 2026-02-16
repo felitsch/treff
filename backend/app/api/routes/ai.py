@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """AI Generation routes."""
 
 import io
@@ -8,6 +10,7 @@ import logging
 import base64
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path
+from typing import Optional, List, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -179,7 +182,7 @@ def asset_to_dict(asset: Asset) -> dict:
     }
 
 
-async def _get_gemini_api_key(user_id: int, db: AsyncSession) -> str | None:
+async def _get_gemini_api_key(user_id: int, db: AsyncSession) -> Optional[str]:
     """Get Gemini API key: first from user settings, then from env."""
     # Check user settings
     result = await db.execute(
@@ -203,9 +206,9 @@ async def _generate_with_gemini(
     api_key: str,
     width: int = 1024,
     height: int = 1024,
-    aspect_ratio: str | None = None,
-    image_size: str | None = None,
-) -> bytes | None:
+    aspect_ratio: Optional[str] = None,
+    image_size: Optional[str] = None,
+) -> Optional[bytes]:
     """Try to generate an image using Nano Banana Pro (gemini-3-pro-image-preview).
 
     Supports aspect_ratio (e.g. '1:1', '9:16', '16:9') and
@@ -750,6 +753,9 @@ async def generate_image(
     - height (int, optional): Image height in pixels (default: based on platform or 1024)
     - image_size (str, optional): Output resolution for Nano Banana Pro
       ('1K', '2K', '4K'). Default: '2K'.
+    - style (str, optional): Image style. One of:
+      'photorealistic' (default), 'illustration', 'minimalist', 'branded'.
+      The style is prepended to the prompt for AI generation.
     - category (str, optional): Asset category for library
     - country (str, optional): Country tag for the image
 
@@ -774,8 +780,21 @@ async def generate_image(
     platform = request.get("platform")  # e.g. "instagram_feed", "tiktok"
     aspect_ratio = request.get("aspect_ratio")  # e.g. "1:1", "9:16", "16:9"
     image_size = request.get("image_size")  # e.g. "1K", "2K", "4K"
+    style = request.get("style", "photorealistic")  # photorealistic, illustration, minimalist, branded
     category = request.get("category", "ai_generated")
     country = request.get("country")
+
+    # Map style to prompt prefix for AI generation
+    STYLE_PREFIXES = {
+        "photorealistic": "Photorealistic, high-quality photograph. ",
+        "illustration": "Digital illustration, colorful and vibrant, flat design style. ",
+        "minimalist": "Minimalist design, clean lines, simple shapes, muted colors, lots of white space. ",
+        "branded": "Professional social media branded content with bold typography, "
+                   "TREFF Sprachreisen brand blue (#4C8BC2) and yellow (#FDD000) color scheme. ",
+    }
+    style_prefix = STYLE_PREFIXES.get(style, "")
+    # Prepend style instruction to the prompt for AI generation
+    styled_prompt = f"{style_prefix}{prompt}" if style_prefix else prompt
 
     # Determine aspect ratio: explicit aspect_ratio > platform mapping > default
     if not aspect_ratio and platform and platform in PLATFORM_ASPECT_RATIOS:
@@ -797,9 +816,9 @@ async def generate_image(
     # Try Gemini API first (Nano Banana Pro with fallback to Flash)
     api_key = await _get_gemini_api_key(user_id, db)
     if api_key:
-        logger.info(f"Attempting Gemini image generation for prompt: {prompt[:50]}...")
+        logger.info(f"Attempting Gemini image generation for styled prompt: {styled_prompt[:80]}...")
         image_bytes = await _generate_with_gemini(
-            prompt, api_key, req_width, req_height,
+            styled_prompt, api_key, req_width, req_height,
             aspect_ratio=aspect_ratio,
             image_size=image_size,
         )
@@ -811,8 +830,8 @@ async def generate_image(
 
     # Fallback: generate a branded placeholder image
     if not image_bytes:
-        logger.info(f"Generating local branded image for: {prompt[:50]}...")
-        image_bytes = _generate_placeholder_image(prompt, req_width, req_height)
+        logger.info(f"Generating local branded image for: {styled_prompt[:80]}...")
+        image_bytes = _generate_placeholder_image(styled_prompt, req_width, req_height)
 
     # Save image to disk and database with proper error handling
     try:
@@ -857,6 +876,7 @@ async def generate_image(
             "source": source,
             "aspect_ratio": aspect_ratio or "1:1",
             "platform": platform,
+            "style": style,
             "message": "Bild erfolgreich generiert!" if source == "gemini" else "Bild generiert (lokale Vorschau - fuer KI-Bilder Gemini API-Key in Einstellungen hinterlegen)",
         }
     except OSError as e:
@@ -1132,7 +1152,7 @@ async def _generate_suggestions_with_gemini(
     upcoming_deadlines: list[dict],
     recent_categories: list[str],
     recent_countries: list[str],
-) -> list[dict] | None:
+) -> Optional[List[dict]]:
     """Generate content suggestions using Gemini 2.5 Flash.
 
     Returns a list of suggestion dicts or None if generation fails.
@@ -1567,7 +1587,7 @@ async def _generate_weekly_plan_with_gemini(
     recent_countries: list[str],
     recent_platforms: list[str],
     posts_per_week: int = 3,
-) -> list[dict] | None:
+) -> Optional[List[dict]]:
     """Generate a weekly content plan using Gemini 2.5 Flash.
 
     Returns a list of planned post dicts, or None if generation fails.
@@ -2406,9 +2426,9 @@ def _generate_humor_with_gemini(
     template_structure: dict,
     example_text: dict,
     topic: str,
-    country: str | None = None,
+    country: Optional[str] = None,
     tone: str = "jugendlich",
-) -> dict | None:
+) -> Optional[dict]:
     """Generate humor content using Gemini 2.5 Flash for a specific humor format.
 
     Returns structured humor content or None if generation fails.
@@ -2561,7 +2581,7 @@ def _generate_humor_rule_based(
     template_structure: dict,
     example_text: dict,
     topic: str,
-    country: str | None = None,
+    country: Optional[str] = None,
 ) -> dict:
     """Generate humor content using the example text as a template (rule-based fallback).
 
@@ -2760,7 +2780,7 @@ HOOK_TYPES = {
 
 def _generate_hooks_rule_based(
     topic: str,
-    country: str | None,
+    country: Optional[str],
     tone: str,
     platform: str,
     count: int,
@@ -2811,11 +2831,11 @@ def _generate_hooks_rule_based(
 def _generate_hooks_with_gemini(
     api_key: str,
     topic: str,
-    country: str | None,
+    country: Optional[str],
     tone: str,
     platform: str,
     count: int,
-) -> list[dict] | None:
+) -> Optional[List[dict]]:
     """Generate hook variants using Gemini 2.5 Flash."""
     try:
         from google import genai
@@ -3071,9 +3091,9 @@ async def save_hook_selection(
 
 def _suggest_hashtags_rule_based(
     topic: str,
-    country: str | None,
+    country: Optional[str],
     platform: str,
-    category: str | None,
+    category: Optional[str],
     existing_sets: list[dict],
 ) -> dict:
     """Suggest hashtags using rule-based logic from existing hashtag sets."""
@@ -3150,11 +3170,11 @@ def _suggest_hashtags_rule_based(
 def _suggest_hashtags_with_gemini(
     api_key: str,
     topic: str,
-    country: str | None,
+    country: Optional[str],
     platform: str,
-    category: str | None,
+    category: Optional[str],
     tone: str,
-) -> dict | None:
+) -> Optional[dict]:
     """Suggest hashtags using Gemini AI for more intelligent, context-aware suggestions."""
     try:
         from google import genai
@@ -3348,7 +3368,7 @@ async def suggest_hashtags(
 # Emoji Rules Endpoint
 # ═══════════════════════════════════════════════════════════════════════
 
-def _get_emoji_suggestions(tone: str, country: str | None = None) -> dict:
+def _get_emoji_suggestions(tone: str, country: Optional[str] = None) -> dict:
     """Get emoji suggestions based on tone and country."""
     import random
 
@@ -3390,7 +3410,7 @@ def _get_emoji_suggestions(tone: str, country: str | None = None) -> dict:
 @router.get("/emoji-rules")
 async def get_emoji_rules(
     tone: str = "jugendlich",
-    country: str | None = None,
+    country: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
 ):
     """Get emoji rules and suggestions for a given tone and country.
@@ -3438,7 +3458,7 @@ INTERACTIVE_ELEMENT_TYPES = {
 
 
 def _generate_interactive_rule_based(
-    element_type: str, topic: str, country: str | None = None
+    element_type: str, topic: str, country: Optional[str] = None
 ) -> dict:
     """Generate interactive element content using rule-based approach (fallback)."""
     country_name = {
@@ -3570,9 +3590,9 @@ def _generate_interactive_rule_based(
 async def _generate_interactive_with_gemini(
     element_type: str,
     topic: str,
-    country: str | None,
+    country: Optional[str],
     api_key: str,
-) -> dict | None:
+) -> Optional[dict]:
     """Generate interactive Story element content using Gemini 2.5 Flash."""
     try:
         from google import genai
@@ -3778,7 +3798,7 @@ def _build_engagement_boost_content_prompt(
     post_content: dict,
     platform: str,
     post_format: str,
-    posting_time: str | None = None,
+    posting_time: Optional[str] = None,
 ) -> str:
     """Build the content prompt with the actual post data to analyze."""
     # Extract post content details
@@ -3845,9 +3865,9 @@ async def _generate_engagement_boost_with_gemini(
     post_content: dict,
     platform: str,
     post_format: str,
-    posting_time: str | None,
+    posting_time: Optional[str],
     api_key: str,
-) -> list[dict] | None:
+) -> Optional[List[dict]]:
     """Generate engagement boost suggestions using Gemini 2.5 Flash."""
     try:
         from google import genai
@@ -3914,7 +3934,7 @@ def _generate_engagement_boost_rule_based(
     post_content: dict,
     platform: str,
     post_format: str,
-    posting_time: str | None = None,
+    posting_time: Optional[str] = None,
 ) -> list[dict]:
     """Generate rule-based engagement boost suggestions as fallback."""
     suggestions = []
@@ -4650,9 +4670,9 @@ async def _generate_episode_text_ai(
     prev_episodes: list,
     topic: str,
     tone: str,
-    country: str | None,
+    country: Optional[str],
     api_key: str,
-) -> str | None:
+) -> Optional[str]:
     """Use Gemini to generate episode-specific text."""
     try:
         from google import genai
@@ -4724,7 +4744,7 @@ def _generate_episode_text_fallback(
     planned_episodes: int,
     prev_episodes: list,
     topic: str,
-    country: str | None,
+    country: Optional[str],
 ) -> str:
     """Rule-based fallback for episode text generation."""
     country_name = {
@@ -4966,9 +4986,9 @@ async def _generate_cliffhanger_ai(
     next_episode,
     days_until_next: int,
     tone: str,
-    country: str | None,
+    country: Optional[str],
     api_key: str,
-) -> dict | None:
+) -> Optional[dict]:
     """Use Gemini to generate cliffhanger and teaser variants."""
     try:
         from google import genai
@@ -5056,7 +5076,7 @@ def _generate_cliffhanger_fallback(
     episode_content: str,
     next_episode,
     days_until_next: int,
-    country: str | None,
+    country: Optional[str],
 ) -> dict:
     """Rule-based fallback for cliffhanger and teaser generation."""
     import random

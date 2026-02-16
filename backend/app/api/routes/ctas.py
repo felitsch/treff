@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 """CTA (Call-to-Action) library CRUD routes."""
 
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -35,9 +38,9 @@ def cta_to_dict(cta: CTA) -> dict:
 
 @router.get("")
 async def list_ctas(
-    category: str | None = None,
-    platform: str | None = None,
-    format: str | None = None,
+    category: Optional[str] = None,
+    platform: Optional[str] = None,
+    format: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):

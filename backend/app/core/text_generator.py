@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 TREFF Sprachreisen - Text Content Generator
 
@@ -435,7 +437,7 @@ def _build_personality_prompt_section(personality_preset: dict) -> str:
     return "\n\n".join(sections)
 
 
-def _build_gemini_system_prompt(tone: str, personality_preset: dict | None = None) -> str:
+def _build_gemini_system_prompt(tone: str, personality_preset: Optional[dict] = None) -> str:
     """Build the system prompt for Gemini with TREFF brand guidelines."""
     tone_instructions = {
         "serioess": (

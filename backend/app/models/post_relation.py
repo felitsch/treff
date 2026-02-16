@@ -1,6 +1,7 @@
 """PostRelation model - Many-to-Many relationship between posts for cross-post linking."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,7 +30,7 @@ class PostRelation(Base):
     relation_type: Mapped[str] = mapped_column(
         String, nullable=False, default="cross_reference"
     )  # story_teaser, cross_reference, sequel, related
-    note: Mapped[str | None] = mapped_column(String, nullable=True)  # Optional user note about the relationship
+    note: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Optional user note about the relationship
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

@@ -17,11 +17,14 @@ import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import AIImageGenerator from '@/components/common/AIImageGenerator.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
 import TourSystem from '@/components/common/TourSystem.vue'
 import ImageUploader from '@/components/assets/ImageUploader.vue'
+import SlideManager from '@/components/posts/SlideManager.vue'
+import LivePreview from '@/components/posts/LivePreview.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -58,6 +61,7 @@ const {
   assets,
   aiImagePrompt,
   aiImageAspectRatio,
+  aiImageStyle,
   generatingImage,
   generatedImageResult,
   aiImageError,
@@ -416,6 +420,15 @@ const selectedCategoryObj = computed(() => categories.find(c => c.id === selecte
 const selectedPlatformObj = computed(() => platforms.find(p => p.id === selectedPlatform.value))
 const selectedCountryObj = computed(() => countries.find(c => c.id === country.value))
 
+// Background image for live preview (from current slide's background_value if type is 'image')
+const previewBackgroundImage = computed(() => {
+  const slide = slides.value[currentPreviewSlide.value]
+  if (slide && slide.background_type === 'image' && slide.background_value) {
+    return slide.background_value
+  }
+  return ''
+})
+
 // Effective preview platform: uses the toggle value if set, otherwise falls back to selectedPlatform
 const effectivePreviewPlatform = computed(() => previewPlatform.value || selectedPlatform.value)
 const effectivePreviewPlatformObj = computed(() => platforms.find(p => p.id === effectivePreviewPlatform.value))
@@ -685,6 +698,30 @@ function applyGeneratedContent(data) {
   // Initialize undo/redo history with newly generated content
   ensureDragIds()
   initFromState(getEditableState())
+}
+
+// Apply selected template's styling to all slides (colors/fonts)
+function applyTemplateToAllSlides() {
+  if (!selectedTemplate.value || slides.value.length === 0) return
+  const tmpl = selectedTemplate.value
+  let colors = null
+  let fonts = null
+  try {
+    if (tmpl.default_colors) colors = typeof tmpl.default_colors === 'string' ? JSON.parse(tmpl.default_colors) : tmpl.default_colors
+    if (tmpl.default_fonts) fonts = typeof tmpl.default_fonts === 'string' ? JSON.parse(tmpl.default_fonts) : tmpl.default_fonts
+  } catch { /* ignore parse errors */ }
+
+  for (const slide of slides.value) {
+    // Apply template background color if slide has no custom image
+    if (colors?.primary && slide.background_type !== 'image') {
+      slide.background_value = colors.primary
+    }
+    // Store template styling metadata on each slide
+    slide._templateColors = colors
+    slide._templateFonts = fonts
+    slide._templateId = tmpl.id
+  }
+  toast.info('Template-Stil auf alle Slides angewendet')
 }
 
 // Accept pending AI-generated content (user confirmed overwrite)
@@ -997,6 +1034,28 @@ async function generateAiImage() {
 
 function selectPromptSuggestion(suggestion) {
   aiImagePrompt.value = suggestion
+}
+
+/**
+ * Called when user clicks "Verwenden" on the AIImageGenerator component.
+ * Sets the generated image as the background for the current slide.
+ */
+function onAiImageUse({ imageUrl, asset, result }) {
+  if (imageUrl) {
+    const slide = slides.value[currentPreviewSlide.value]
+    if (slide) {
+      slide.background_type = 'image'
+      slide.background_value = imageUrl
+    }
+  }
+}
+
+/**
+ * Called when AIImageGenerator successfully generates an image.
+ * Refreshes the assets list to include the new image.
+ */
+async function onAiImageGenerated(result) {
+  await loadAssets()
 }
 
 function isNetworkError(e) {
@@ -1656,11 +1715,16 @@ function onSlideReorder() {
   ensureDragIds()
 }
 
-// ── Add / Remove slide ─────────────────────────────────────────────────
+// ── Add / Remove / Duplicate slide ────────────────────────────────────
+const MAX_SLIDES = 10
 const showDeleteSlideConfirm = ref(false)
 const slideToDeleteIndex = ref(-1)
 
 function addSlide() {
+  if (slides.value.length >= MAX_SLIDES) {
+    toast.warning(`Maximal ${MAX_SLIDES} Slides pro Carousel erlaubt.`)
+    return
+  }
   const newSlide = {
     headline: 'Neue Slide',
     subheadline: '',
@@ -1673,6 +1737,25 @@ function addSlide() {
   ensureDragIds()
   // Switch to the newly added slide
   currentPreviewSlide.value = slides.value.length - 1
+}
+
+function duplicateSlide(index) {
+  if (slides.value.length >= MAX_SLIDES) {
+    toast.warning(`Maximal ${MAX_SLIDES} Slides pro Carousel erlaubt.`)
+    return
+  }
+  if (index < 0 || index >= slides.value.length) return
+  const source = slides.value[index]
+  // Deep clone the slide (strip dragId so a new one is assigned)
+  const clone = JSON.parse(JSON.stringify(source))
+  delete clone.dragId
+  clone.headline = (clone.headline || '') + ' (Kopie)'
+  // Insert after the source slide
+  slides.value.splice(index + 1, 0, clone)
+  ensureDragIds()
+  // Switch to the newly duplicated slide
+  currentPreviewSlide.value = index + 1
+  toast.success('Slide dupliziert')
 }
 
 function requestRemoveSlide(index) {
@@ -1853,7 +1936,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-[90rem] mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-tour="cp-header">Neuen Post erstellen</h1>
@@ -1960,6 +2043,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </template>
       </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Main Content + Live Preview Side-by-Side Layout              -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="flex gap-6 items-start" data-testid="creator-layout">
+    <!-- Main content area (flex-1) -->
+    <div class="flex-1 min-w-0">
 
     <!-- Messages -->
     <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300" role="alert" data-testid="error-message">
@@ -2675,68 +2765,60 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Edit panel -->
         <div class="space-y-4">
-          <!-- Slide tabs with drag-and-drop reordering + Add/Remove -->
-          <div v-if="slides.length >= 1" class="mb-3">
-            <div class="flex items-center justify-between mb-2">
-              <span v-if="slides.length > 1" class="text-xs text-gray-500 dark:text-gray-400">&#8597; Slides per Drag &amp; Drop neu anordnen</span>
-              <span v-else class="text-xs text-gray-500 dark:text-gray-400">{{ slides.length }} Slide</span>
-              <span class="text-xs text-gray-400 dark:text-gray-500">{{ slides.length }} Slides</span>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <draggable
-                v-model="slides"
-                item-key="dragId"
-                handle=".drag-handle"
-                animation="200"
-                ghost-class="slide-ghost"
-                class="flex gap-1 flex-wrap"
-                @end="onSlideReorder"
-              >
-                <template #item="{ element, index }">
-                  <button
-                    @click="currentPreviewSlide = index"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 drag-handle cursor-grab active:cursor-grabbing"
-                    :class="currentPreviewSlide === index
-                      ? 'bg-[#3B7AB1] text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
-                  >
-                    <span class="opacity-50">&#10495;</span>
-                    Slide {{ index + 1 }}
-                    <span v-if="index === 0" class="font-normal">(Cover)</span>
-                    <span v-if="index === slides.length - 1 && index > 0" class="font-normal">(CTA)</span>
-                  </button>
-                </template>
-              </draggable>
-              <!-- Add Slide button -->
-              <button
-                @click="addSlide"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-[#3B7AB1] hover:text-[#3B7AB1] dark:hover:border-[#3B7AB1] dark:hover:text-[#3B7AB1]"
-                title="Neue Slide hinzufuegen"
-                data-testid="add-slide-btn"
-              >
-                <span>+</span> Slide
-              </button>
-            </div>
-          </div>
+          <!-- SlideManager: Thumbnail strip with drag-and-drop, add/remove/duplicate -->
+          <SlideManager
+            v-if="slides.length >= 1"
+            :slides="slides"
+            :current-slide="currentPreviewSlide"
+            :max-slides="MAX_SLIDES"
+            @update:slides="val => { slides = val; ensureDragIds() }"
+            @update:current-slide="val => currentPreviewSlide = val"
+            @add="addSlide"
+            @remove="requestRemoveSlide"
+            @duplicate="duplicateSlide"
+            @reorder="onSlideReorder"
+            @select="val => currentPreviewSlide = val"
+            class="mb-3"
+          />
 
           <!-- Current slide edit -->
           <div v-if="slides[currentPreviewSlide]" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-3">
-            <!-- Slide header with delete button -->
+            <!-- Slide header with duplicate + delete buttons -->
             <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-700">
               <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Slide {{ currentPreviewSlide + 1 }}
                 <span v-if="currentPreviewSlide === 0" class="text-xs font-normal text-gray-400">(Cover)</span>
                 <span v-if="currentPreviewSlide === slides.length - 1 && currentPreviewSlide > 0" class="text-xs font-normal text-gray-400">(CTA)</span>
               </span>
-              <button
-                v-if="slides.length > 1"
-                @click="requestRemoveSlide(currentPreviewSlide)"
-                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title="Slide entfernen"
-                data-testid="remove-slide-btn"
-              >
-                &#128465; Entfernen
-              </button>
+              <div class="flex items-center gap-1">
+                <!-- Per-slide image indicator -->
+                <span
+                  v-if="slides[currentPreviewSlide]?.background_type === 'image'"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-md bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                >
+                  &#128247; Bild
+                </span>
+                <!-- Duplicate button -->
+                <button
+                  v-if="slides.length < MAX_SLIDES"
+                  @click="duplicateSlide(currentPreviewSlide)"
+                  class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md text-[#3B7AB1] hover:bg-[#3B7AB1]/10 transition-colors"
+                  title="Slide duplizieren"
+                  data-testid="duplicate-slide-btn"
+                >
+                  &#x2398; Duplizieren
+                </button>
+                <!-- Delete button -->
+                <button
+                  v-if="slides.length > 1"
+                  @click="requestRemoveSlide(currentPreviewSlide)"
+                  class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="Slide entfernen"
+                  data-testid="remove-slide-btn"
+                >
+                  &#128465; Entfernen
+                </button>
+              </div>
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -2834,6 +2916,39 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :topic="topic"
               />
             </div>
+
+            <!-- Per-Slide Image (inline quick-assign) -->
+            <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Slide-Bild</label>
+                <button
+                  v-if="slides[currentPreviewSlide]?.background_type === 'image'"
+                  @click="slides[currentPreviewSlide].background_type = 'color'; slides[currentPreviewSlide].background_value = '#3B7AB1'"
+                  class="text-[10px] text-red-500 hover:text-red-700 font-medium"
+                  data-testid="remove-slide-image-btn"
+                >
+                  Bild entfernen
+                </button>
+              </div>
+              <div v-if="slides[currentPreviewSlide]?.background_type === 'image'" class="flex items-center gap-2">
+                <div
+                  class="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden flex-shrink-0"
+                  :style="{ backgroundImage: `url(${slides[currentPreviewSlide].background_value})`, backgroundSize: 'cover', backgroundPosition: 'center' }"
+                ></div>
+                <span class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ slides[currentPreviewSlide].background_value?.split('/').pop() }}</span>
+              </div>
+              <div v-else class="flex items-center gap-2">
+                <div
+                  class="w-12 h-12 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs cursor-pointer hover:border-[#3B7AB1] hover:text-[#3B7AB1] transition-colors"
+                  @click="goToStep(8)"
+                  title="Zu Schritt 8 (Hintergrundbild) springen"
+                  data-testid="slide-image-placeholder"
+                >
+                  &#128247;
+                </div>
+                <span class="text-[10px] text-gray-400 dark:text-gray-500">Bild in Schritt 8 zuweisen</span>
+              </div>
+            </div>
           </div>
 
           <!-- Background Color Picker -->
@@ -2875,6 +2990,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 class="ml-auto text-xs text-[#3B7AB1] hover:underline"
               >Farbe verwenden</button>
             </div>
+          </div>
+
+          <!-- Apply Template to all slides button -->
+          <div v-if="selectedTemplate && slides.length > 1" class="p-3 rounded-xl border border-[#3B7AB1]/20 bg-[#3B7AB1]/5 dark:bg-[#3B7AB1]/10 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-medium text-[#3B7AB1]">Template-Stil auf alle Slides anwenden</span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 block">{{ selectedTemplate.name }} (Farben &amp; Schriften)</span>
+            </div>
+            <button
+              @click="applyTemplateToAllSlides"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#3B7AB1] text-white hover:bg-[#2E6A9E] transition-colors"
+              data-testid="apply-template-all-btn"
+            >
+              Anwenden
+            </button>
           </div>
 
           <!-- Captions editing -->
@@ -3116,106 +3246,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="space-y-6">
 
-          <!-- AI Image Generation -->
-          <div class="border-2 border-purple-300 dark:border-purple-600 rounded-xl p-6 bg-purple-50/50 dark:bg-purple-900/10">
-            <div class="flex items-center gap-2 mb-3">
-              <span class="text-2xl">🤖</span>
-              <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300">KI-Bild generieren</h3>
-            </div>
-
-            <!-- Prompt Input -->
-            <div class="mb-3">
-              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Bildbeschreibung (Prompt)</label>
-              <textarea
-                v-model="aiImagePrompt"
-                rows="3"
-                maxlength="500"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none"
-                placeholder="z.B. American high school hallway with students"
-                :disabled="generatingImage"
-              ></textarea>
-              <div class="flex justify-between items-center mt-1">
-                <span class="text-xs text-gray-400">{{ aiImagePrompt.length }}/500</span>
-              </div>
-            </div>
-
-            <!-- Prompt Suggestions -->
-            <div class="mb-4">
-              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Vorschlaege:</p>
-              <div class="flex flex-wrap gap-1.5">
-                <button
-                  v-for="suggestion in promptSuggestions"
-                  :key="suggestion"
-                  @click="selectPromptSuggestion(suggestion)"
-                  class="text-xs px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full hover:border-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors truncate max-w-[200px]"
-                  :disabled="generatingImage"
-                >
-                  {{ suggestion }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Aspect Ratio Selection -->
-            <div class="mb-4">
-              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-2">Seitenverhaeltnis</label>
-              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                <span>Plattform: {{ selectedPlatformObj?.label || 'Nicht gewaehlt' }}</span>
-                <span class="text-purple-500 font-medium">({{ platformAspectRatioLabel }})</span>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="ar in aspectRatioOptions"
-                  :key="ar.value"
-                  @click="aiImageAspectRatio = aiImageAspectRatio === ar.value ? '' : ar.value"
-                  :class="[
-                    'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
-                    (aiImageAspectRatio === ar.value || (!aiImageAspectRatio && ar.value === platformDefaultAspectRatio))
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-purple-400'
-                  ]"
-                  :disabled="generatingImage"
-                >
-                  {{ ar.label }}
-                  <span v-if="ar.value === platformDefaultAspectRatio && !aiImageAspectRatio" class="ml-1 opacity-75">(Auto)</span>
-                </button>
-              </div>
-              <p v-if="aiImageAspectRatio && aiImageAspectRatio !== platformDefaultAspectRatio" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                Manuell ueberschrieben (Standard fuer {{ selectedPlatformObj?.label }}: {{ platformDefaultAspectRatio }})
-              </p>
-            </div>
-
-            <!-- Generate Button -->
-            <button
-              @click="generateAiImage"
-              :disabled="generatingImage || !aiImagePrompt.trim()"
-              class="w-full px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              <span v-if="generatingImage" class="flex items-center gap-2">
-                <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                Bild wird generiert...
-              </span>
-              <span v-else>🎨 Bild generieren ({{ effectiveAspectRatio }})</span>
-            </button>
-
-            <!-- AI Error -->
-            <div v-if="aiImageError" class="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300" role="alert">
-              {{ aiImageError }}
-            </div>
-
-            <!-- Generated Image Result -->
-            <div v-if="generatedImageResult && generatedImageResult.status === 'success'" class="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-green-600">✓</span>
-                <span class="text-sm font-medium text-green-700 dark:text-green-300">{{ generatedImageResult.message }}</span>
-              </div>
-              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                <span>Quelle: {{ generatedImageResult.source === 'gemini' ? 'Gemini AI' : 'Lokale Generierung' }}</span>
-                <span v-if="generatedImageResult.asset">| {{ generatedImageResult.asset.width }}x{{ generatedImageResult.asset.height }}px</span>
-                <span v-if="generatedImageResult.aspect_ratio">| Verhaeltnis: {{ generatedImageResult.aspect_ratio }}</span>
-                <span v-if="generatedImageResult.platform">| Plattform: {{ generatedImageResult.platform }}</span>
-              </div>
-            </div>
-          </div>
+          <!-- AI Image Generation Component -->
+          <AIImageGenerator
+            v-model:prompt="aiImagePrompt"
+            v-model:aspectRatio="aiImageAspectRatio"
+            v-model:style="aiImageStyle"
+            v-model:generating="generatingImage"
+            v-model:result="generatedImageResult"
+            v-model:error="aiImageError"
+            :platform="selectedPlatform"
+            :country="country"
+            :topic="topic"
+            :category="selectedCategory"
+            @use-image="onAiImageUse"
+            @image-generated="onAiImageGenerated"
+          />
 
           <!-- Divider -->
           <div class="relative">
@@ -3489,6 +3534,35 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         Weiter &#8594;
       </button>
     </div>
+
+    </div><!-- end main content area (flex-1) -->
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- PERMANENT Live-Preview Panel (right side on desktop)         -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <LivePreview
+      :platform="effectivePreviewPlatform"
+      :platforms="selectedPlatforms.length > 0 ? selectedPlatforms : [selectedPlatform || 'instagram_feed']"
+      :slides="slides"
+      :current-slide-index="currentPreviewSlide"
+      :caption-instagram="captionInstagram"
+      :caption-tiktok="captionTiktok"
+      :hashtags-instagram="hashtagsInstagram"
+      :hashtags-tiktok="hashtagsTiktok"
+      :cta-text="ctaText"
+      :category-label="selectedCategoryObj?.label || ''"
+      :country="selectedCountryObj || null"
+      :background-image="previewBackgroundImage"
+      :episode-number="selectedEpisodeNumber"
+      :episode-previously-text="episodePreviouslyText"
+      :episode-cliffhanger-text="episodeCliffhangerText"
+      :episode-next-hint="episodeNextHint"
+      @update:platform="previewPlatform = $event"
+      @update:current-slide-index="currentPreviewSlide = $event"
+      data-testid="live-preview-panel"
+    />
+
+    </div><!-- end flex layout (creator-layout) -->
 
     <!-- Delete Slide Confirmation Modal -->
     <Teleport to="body">

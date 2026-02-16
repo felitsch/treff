@@ -1,6 +1,7 @@
 """CTA (Call-to-Action) model for the CTA library."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import Integer, String, DateTime, Text, Float
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,7 +16,7 @@ class CTA(Base):
     category: Mapped[str] = mapped_column(String, nullable=False)  # engagement, conversion, awareness, traffic
     platform: Mapped[str] = mapped_column(String, nullable=False, default="both")  # instagram, tiktok, both
     format: Mapped[str] = mapped_column(String, nullable=False, default="all")  # feed, story, reel, all
-    emoji: Mapped[str | None] = mapped_column(String, nullable=True)
+    emoji: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     performance_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_default: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # 1 = seeded default, 0 = user-created
