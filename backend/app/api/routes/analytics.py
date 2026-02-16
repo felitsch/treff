@@ -175,6 +175,7 @@ async def get_dashboard_data(
             "suggested_category": s.suggested_category,
             "suggested_country": s.suggested_country,
             "suggested_date": s.suggested_date.isoformat() if s.suggested_date else None,
+            "suggested_format": getattr(s, "suggested_format", None),
             "reason": s.reason,
             "status": s.status,
             "created_at": s.created_at.isoformat() if s.created_at else None,

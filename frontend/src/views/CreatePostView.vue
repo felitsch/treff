@@ -1984,15 +1984,23 @@ onMounted(() => {
   // Check if navigated from an accepted suggestion (query params from dashboard)
   const suggestionCategory = route.query.category
   const suggestionCountry = route.query.country
-  if (suggestionCategory) {
+  const suggestionTopic = route.query.topic
+  if (suggestionCategory || suggestionTopic) {
     // Reset any existing workflow state and pre-fill from suggestion
     store.resetWorkflow()
-    selectedCategory.value = suggestionCategory
+    if (suggestionCategory) {
+      selectedCategory.value = suggestionCategory
+    }
     if (suggestionCountry) {
       country.value = suggestionCountry
     }
+    if (suggestionTopic) {
+      topic.value = suggestionTopic
+    }
     // Auto-advance: load templates for the selected category
-    loadTemplates()
+    if (suggestionCategory) {
+      loadTemplates()
+    }
     // Clear query params from URL to avoid re-applying on refresh
     router.replace({ path: '/create/quick' })
     // Dismiss draft restore since we're starting from a suggestion

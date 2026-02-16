@@ -1372,11 +1372,12 @@ Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaeru
 {{
   "suggestions": [
     {{
-      "suggestion_type": "seasonal|country_rotation|category_balance|gap_fill",
+      "suggestion_type": "seasonal|country_rotation|category_balance|gap_fill|holiday",
       "title": "Kurzer, praegnanter Titel (max 80 Zeichen)",
       "description": "Beschreibung des Vorschlags mit konkreten Ideen (1-2 Saetze)",
       "suggested_category": "laender_spotlight|erfahrungsberichte|infografiken|fristen_cta|tipps_tricks|faq|foto_posts",
       "suggested_country": "usa|canada|australia|newzealand|ireland|null",
+      "suggested_format": "instagram_feed|instagram_story|tiktok|carousel",
       "suggested_date": "YYYY-MM-DD",
       "reason": "Begruendung warum jetzt (Bezug auf Fristen, Jahreszeit oder Content-Mix)"
     }}
@@ -1428,7 +1429,7 @@ Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaeru
 
             # Normalize fields
             stype = s.get("suggestion_type", "seasonal")
-            if stype not in ("seasonal", "country_rotation", "category_balance", "gap_fill"):
+            if stype not in ("seasonal", "country_rotation", "category_balance", "gap_fill", "holiday"):
                 stype = "seasonal"
 
             cat = s.get("suggested_category", "laender_spotlight")
@@ -1441,6 +1442,14 @@ Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaeru
             # Handle string "null" from JSON
             if country == "null" or country == "":
                 country = None
+
+            # Normalize suggested format
+            suggested_format = s.get("suggested_format")
+            valid_formats = ("instagram_feed", "instagram_story", "instagram_stories", "instagram_reels", "tiktok", "carousel")
+            if suggested_format and suggested_format not in valid_formats:
+                suggested_format = "instagram_feed"
+            if suggested_format == "null" or suggested_format == "":
+                suggested_format = None
 
             # Parse date
             suggested_date = None
@@ -1459,6 +1468,7 @@ Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaeru
                 "description": (s.get("description") or "")[:500],
                 "suggested_category": cat,
                 "suggested_country": country,
+                "suggested_format": suggested_format,
                 "suggested_date": suggested_date,
                 "reason": (s.get("reason") or "")[:300],
             })

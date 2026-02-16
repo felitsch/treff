@@ -21,6 +21,7 @@ def suggestion_to_dict(s: ContentSuggestion) -> dict:
         "suggested_category": s.suggested_category,
         "suggested_country": s.suggested_country,
         "suggested_date": s.suggested_date.isoformat() if s.suggested_date else None,
+        "suggested_format": getattr(s, "suggested_format", None),
         "reason": s.reason,
         "status": s.status,
         "accepted_post_id": s.accepted_post_id,

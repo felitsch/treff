@@ -6,6 +6,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 import WelcomeFlow from '@/components/common/WelcomeFlow.vue'
 import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
 import SeriesStatusWidget from '@/components/dashboard/SeriesStatusWidget.vue'
+import ContentSuggestions from '@/components/dashboard/ContentSuggestions.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -36,8 +37,7 @@ const stats = ref({
 const recentPosts = ref([])
 const calendarEntries = ref([])
 const suggestions = ref([])
-const acceptingId = ref(null)
-const dismissingId = ref(null)
+const contentSuggestionsRef = ref(null)
 const generatingSuggestions = ref(false)
 
 // Animated counters
@@ -196,118 +196,15 @@ function formatDateShort(dateStr) {
   })
 }
 
-// Suggestion type icons
-function suggestionTypeIcon(type) {
-  switch (type) {
-    case 'seasonal':
-      return '🌸'
-    case 'country_rotation':
-      return '🌍'
-    case 'category_balance':
-      return '⚖️'
-    case 'gap_fill':
-      return '📅'
-    case 'weekly_plan':
-      return '📋'
-    case 'story_teaser':
-      return '👉'
-    default:
-      return '💡'
-  }
-}
-
-// Suggestion type label
-function suggestionTypeLabel(type) {
-  const labels = {
-    seasonal: 'Saisonal',
-    country_rotation: 'Laender-Rotation',
-    category_balance: 'Kategorie-Balance',
-    gap_fill: 'Luecke fuellen',
-    weekly_plan: 'Wochenplan',
-    story_teaser: 'Story-Teaser',
-  }
-  return labels[type] || type
-}
-
-// Suggestion type badge color
-function suggestionTypeBadge(type) {
-  switch (type) {
-    case 'seasonal':
-      return 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
-    case 'country_rotation':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-    case 'category_balance':
-      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-    case 'gap_fill':
-      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-    case 'weekly_plan':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-    case 'story_teaser':
-      return 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300'
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-  }
-}
-
-// Country flag emoji
-function countryFlag(country) {
-  const flags = {
-    usa: '🇺🇸',
-    canada: '🇨🇦',
-    australia: '🇦🇺',
-    newzealand: '🇳🇿',
-    ireland: '🇮🇪',
-  }
-  return flags[country] || ''
-}
-
-// Accept suggestion
-async function acceptSuggestion(suggestion) {
-  acceptingId.value = suggestion.id
-  try {
-    await api.put('/api/suggestions/' + suggestion.id + '/accept')
-    suggestions.value = suggestions.value.filter((s) => s.id !== suggestion.id)
-    // Navigate to create post with pre-filled data
-    router.push({
-      path: '/create/quick',
-      query: {
-        category: suggestion.suggested_category || '',
-        country: suggestion.suggested_country || '',
-      },
-    })
-  } catch (err) {
-    console.error('Failed to accept suggestion:', err)
-  } finally {
-    acceptingId.value = null
-  }
-}
-
-// Dismiss suggestion
-async function dismissSuggestion(suggestion) {
-  dismissingId.value = suggestion.id
-  try {
-    await api.put('/api/suggestions/' + suggestion.id + '/dismiss')
-    suggestions.value = suggestions.value.filter((s) => s.id !== suggestion.id)
-  } catch (err) {
-    console.error('Failed to dismiss suggestion:', err)
-  } finally {
-    dismissingId.value = null
-  }
-}
-
-// Generate new AI content suggestions
+// Generate new AI content suggestions (delegates to ContentSuggestions component)
 async function generateSuggestions() {
-  generatingSuggestions.value = true
-  try {
-    const res = await api.post('/api/ai/suggest-content', {})
-    if (res.data.suggestions && res.data.suggestions.length > 0) {
-      // Prepend new suggestions to existing ones
-      suggestions.value = [...res.data.suggestions, ...suggestions.value]
+  if (contentSuggestionsRef.value && contentSuggestionsRef.value.generateSuggestions) {
+    generatingSuggestions.value = true
+    try {
+      await contentSuggestionsRef.value.generateSuggestions()
+    } finally {
+      generatingSuggestions.value = false
     }
-  } catch (err) {
-    console.error('Failed to generate suggestions:', err)
-  } finally {
-    generatingSuggestions.value = false
   }
 }
 
@@ -789,130 +686,11 @@ onMounted(() => {
         <RecyclingPanel />
       </div>
 
-      <!-- ─── Content Suggestions Section ─── -->
-      <BaseCard padding="none" data-tour="dashboard-suggestions">
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>💡</span> Content-Vorschlaege <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />
-          </h2>
-        </template>
-        <template #headerAction>
-          <div class="flex items-center gap-2">
-            <span
-              v-if="suggestions.length > 0"
-              class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#4C8BC2]/10 text-[#4C8BC2] dark:bg-[#4C8BC2]/20"
-            >
-              {{ suggestions.length }} offen
-            </span>
-            <button
-              @click="generateSuggestions"
-              :disabled="generatingSuggestions"
-              data-testid="generate-suggestions-btn"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
-              <span v-else>✨</span>
-              {{ generatingSuggestions ? 'Generiere...' : 'Generieren' }}
-            </button>
-          </div>
-        </template>
-        <div class="p-5">
-          <!-- Empty state -->
-          <EmptyState
-            v-if="suggestions.length === 0"
-            svgIcon="sparkles"
-            title="Keine Vorschlaege vorhanden"
-            description="Klicke auf 'Generieren' um KI-gestuetzte Content-Vorschlaege fuer deine naechsten Posts zu erhalten."
-            actionLabel="Vorschlaege generieren"
-            :compact="true"
-            @action="generateSuggestions"
-          />
-
-          <!-- Suggestions grid -->
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              v-for="suggestion in suggestions"
-              :key="suggestion.id"
-              class="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-[#4C8BC2]/30 dark:hover:border-[#4C8BC2]/40 transition-colors"
-            >
-              <!-- Top row: type badge + category + country -->
-              <div class="flex items-center gap-2 flex-wrap mb-2">
-                <span
-                  class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
-                  :class="suggestionTypeBadge(suggestion.suggestion_type)"
-                >
-                  {{ suggestionTypeIcon(suggestion.suggestion_type) }}
-                  {{ suggestionTypeLabel(suggestion.suggestion_type) }}
-                </span>
-                <span
-                  v-if="suggestion.suggested_category"
-                  class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                >
-                  {{ categoryLabel(suggestion.suggested_category) }}
-                </span>
-                <span
-                  v-if="suggestion.suggested_country"
-                  class="text-xs"
-                >
-                  {{ countryFlag(suggestion.suggested_country) }}
-                </span>
-                <span
-                  v-if="suggestion.suggested_date"
-                  class="text-xs text-gray-400 dark:text-gray-500 ml-auto"
-                >
-                  {{ formatDate(suggestion.suggested_date) }}
-                </span>
-              </div>
-
-              <!-- Title -->
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                {{ suggestion.title }}
-              </h3>
-
-              <!-- Description (if available) -->
-              <p
-                v-if="suggestion.description"
-                class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2"
-              >
-                {{ suggestion.description }}
-              </p>
-
-              <!-- Reason -->
-              <div
-                v-if="suggestion.reason"
-                class="flex items-start gap-1.5 mb-3"
-              >
-                <span class="text-xs text-gray-400 mt-0.5">💬</span>
-                <p class="text-xs text-gray-400 dark:text-gray-500 italic">
-                  {{ suggestion.reason }}
-                </p>
-              </div>
-
-              <!-- Action buttons -->
-              <div class="flex items-center gap-2">
-                <button
-                  @click="acceptSuggestion(suggestion)"
-                  :disabled="acceptingId === suggestion.id"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span v-if="acceptingId === suggestion.id" class="animate-spin">⏳</span>
-                  <span v-else>✅</span>
-                  Annehmen
-                </button>
-                <button
-                  @click="dismissSuggestion(suggestion)"
-                  :disabled="dismissingId === suggestion.id"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span v-if="dismissingId === suggestion.id" class="animate-spin">⏳</span>
-                  <span v-else>❌</span>
-                  Ablehnen
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </BaseCard>
+      <!-- ─── Content Suggestions Section (extracted component) ─── -->
+      <ContentSuggestions
+        ref="contentSuggestionsRef"
+        :initial-suggestions="suggestions"
+      />
     </div>
 
     <!-- Welcome Flow for first-time users (before page tours) -->

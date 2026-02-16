@@ -18,6 +18,7 @@ class ContentSuggestion(Base):
     suggested_category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     suggested_country: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     suggested_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    suggested_format: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # instagram_feed, instagram_story, tiktok, carousel
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String, default="pending")  # pending, accepted, dismissed
     accepted_post_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("posts.id"), nullable=True)
