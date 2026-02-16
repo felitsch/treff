@@ -9,6 +9,7 @@ import { useToast } from '@/composables/useToast'
 import { useContentDraftStore } from '@/stores/contentDraft'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+import { useAutoSave } from '@/composables/useAutoSave'
 import CtaPicker from '@/components/posts/CtaPicker.vue'
 import HookSelector from '@/components/posts/HookSelector.vue'
 import InteractiveElementPreview from '@/components/interactive/InteractiveElementPreview.vue'
@@ -18,6 +19,7 @@ import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import AIImageGenerator from '@/components/common/AIImageGenerator.vue'
+import AITextGenerator from '@/components/common/AITextGenerator.vue'
 import HashtagManager from '@/components/posts/HashtagManager.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
@@ -87,6 +89,64 @@ const {
 
 const totalSteps = 9
 const tourRef = ref(null)
+
+// ── Auto-Save Integration ─────────────────────────────────────────────────
+const {
+  draftId: autoSaveDraftId,
+  saving: autoSaving,
+  hasUnsavedChanges: autoSaveUnsaved,
+  saveStatusText: autoSaveStatusText,
+  restoreAvailable: autoSaveRestoreAvailable,
+  restoreDraft: autoSaveRestoreDraft,
+  restoringDraft: autoSaveRestoring,
+  saveDraft: autoSaveTrigger,
+  markChanged: autoSaveMarkChanged,
+  restoreFromDraft: autoSaveRestore,
+  dismissRestore: autoSaveDismissRestore,
+  cleanupDraft: autoSaveCleanup,
+  startAutoSave,
+  stopAutoSave,
+} = useAutoSave({
+  getState: () => ({
+    selectedCategory: selectedCategory.value,
+    selectedPlatform: selectedPlatform.value,
+    selectedPlatforms: selectedPlatforms.value,
+    country: country.value,
+    topic: topic.value,
+    keyPoints: keyPoints.value,
+    tone: tone.value,
+    slides: slides.value.map(({ dragId, ...rest }) => rest),
+    captionInstagram: captionInstagram.value,
+    captionTiktok: captionTiktok.value,
+    hashtagsInstagram: hashtagsInstagram.value,
+    hashtagsTiktok: hashtagsTiktok.value,
+    ctaText: ctaText.value,
+    currentStep: currentStep.value,
+    selectedTemplateId: selectedTemplate.value?.id || null,
+    aiImageStyle: aiImageStyle.value,
+  }),
+  onRestore: (data) => {
+    if (data.selectedCategory) selectedCategory.value = data.selectedCategory
+    if (data.selectedPlatform) selectedPlatform.value = data.selectedPlatform
+    if (data.selectedPlatforms) selectedPlatforms.value = data.selectedPlatforms
+    if (data.country) country.value = data.country
+    if (data.topic) topic.value = data.topic
+    if (data.keyPoints) keyPoints.value = data.keyPoints
+    if (data.tone) tone.value = data.tone
+    if (data.slides && data.slides.length > 0) {
+      slides.value = data.slides.map((s, i) => ({ ...s, dragId: `slide-${i}-${Date.now()}` }))
+    }
+    if (data.captionInstagram) captionInstagram.value = data.captionInstagram
+    if (data.captionTiktok) captionTiktok.value = data.captionTiktok
+    if (data.hashtagsInstagram) hashtagsInstagram.value = data.hashtagsInstagram
+    if (data.hashtagsTiktok) hashtagsTiktok.value = data.hashtagsTiktok
+    if (data.ctaText) ctaText.value = data.ctaText
+    if (data.currentStep) currentStep.value = data.currentStep
+    if (data.aiImageStyle) aiImageStyle.value = data.aiImageStyle
+    toast.success('Entwurf wiederhergestellt!', 3000)
+  },
+  intervalMs: 30000,
+})
 
 // ── Workflow Hints ───────────────────────────────────────────────────────
 const showAssetsHint = computed(() => currentStep.value === 8 && assets.value.length === 0 && !uploadingImage.value)
@@ -701,6 +761,12 @@ function applyGeneratedContent(data) {
   initFromState(getEditableState())
 }
 
+// Apply a variant from AITextGenerator component
+function onApplyVariant({ variant }) {
+  applyGeneratedContent(variant)
+  toast.success('Variante uebernommen!')
+}
+
 // Apply selected template's styling to all slides (colors/fonts)
 function applyTemplateToAllSlides() {
   if (!selectedTemplate.value || slides.value.length === 0) return
@@ -1161,6 +1227,8 @@ async function saveAndExport() {
     lastSaveFunction.value = null
     successMsg.value = 'Post gespeichert und exportiert!'
     toast.success('Post erfolgreich erstellt und gespeichert!', 5000)
+    // Cleanup auto-save draft since the post is now finalized
+    autoSaveCleanup()
   } catch (e) {
     if (isNetworkError(e)) {
       error.value = 'Netzwerkfehler beim Speichern. Bitte pruefe deine Internetverbindung.'
@@ -1869,6 +1937,31 @@ watch(
   { deep: false }
 )
 
+// ── Auto-save watcher: track all content changes ─────────────────────────
+watch(
+  () => [
+    selectedCategory.value,
+    selectedPlatform.value,
+    country.value,
+    topic.value,
+    tone.value,
+    JSON.stringify(slides.value),
+    captionInstagram.value,
+    captionTiktok.value,
+    hashtagsInstagram.value,
+    hashtagsTiktok.value,
+    ctaText.value,
+    currentStep.value,
+  ],
+  () => {
+    // Only trigger auto-save if user has started the workflow
+    if (selectedCategory.value) {
+      autoSaveMarkChanged()
+    }
+  },
+  { deep: false }
+)
+
 // Initialize undo history when content is first generated (entering step 6+)
 watch(currentStep, (newStep, oldStep) => {
   if (newStep >= 6 && oldStep < 6 && slides.value.length > 0) {
@@ -1902,6 +1995,8 @@ onMounted(() => {
     loadTemplates()
     // Clear query params from URL to avoid re-applying on refresh
     router.replace({ path: '/create/quick' })
+    // Dismiss draft restore since we're starting from a suggestion
+    autoSaveDismissRestore()
   } else if (store.hasWorkflowState()) {
     // Reload templates if we're on or past the template step
     if (currentStep.value >= 2 && selectedCategory.value) {
@@ -1940,7 +2035,17 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
   <div class="max-w-[90rem] mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-tour="cp-header">Neuen Post erstellen</h1>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white" data-tour="cp-header">Neuen Post erstellen</h1>
+        <!-- Auto-save status indicator -->
+        <div v-if="autoSaveStatusText" class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500" data-testid="autosave-status">
+          <span v-if="autoSaving" class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          <span v-else-if="autoSaveUnsaved" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Aenderungen"></span>
+          <span v-else class="inline-block w-2 h-2 rounded-full bg-green-400"></span>
+          {{ autoSaveStatusText }}
+        </div>
+        <span v-if="autoSaveUnsaved && !autoSaveStatusText" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Aenderungen"></span>
+      </div>
       <div class="flex items-center gap-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">Schritt {{ currentStep }} von {{ totalSteps }}</span>
         <button
@@ -2477,77 +2582,59 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <div v-if="currentStep === 5">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 5: Inhalt generieren <HelpTooltip :text="tooltipTexts.createPost.stepGenerate" /></h2>
 
-      <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
-        <div class="text-5xl mb-4">{{ selectedHumorFormat ? selectedHumorFormat.icon : '&#x2728;' }}</div>
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          {{ selectedHumorFormat ? 'Humor-Content generieren' : 'KI-Textgenerierung' }}
-        </h3>
-        <p class="text-gray-500 dark:text-gray-400 mb-6">
-          {{ selectedHumorFormat
-            ? `"${selectedHumorFormat.name}" - Humor-Format mit KI-gestuetzten Textvorschlaegen.`
-            : 'Texte, Captions und Hashtags werden basierend auf deiner Auswahl generiert.' }}
-        </p>
-
-        <!-- Summary of selections -->
-        <div class="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-left space-y-1">
-          <div><strong>Kategorie:</strong> {{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
-          <div><strong>Template:</strong> {{ selectedTemplate?.name }} ({{ selectedTemplate?.slide_count }} Slide{{ selectedTemplate?.slide_count > 1 ? 's' : '' }})</div>
-          <div><strong>Plattform:</strong> {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
-          <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
-          <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
-          <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
-          <div><strong>Tonalitaet:</strong> {{ selectedToneObj?.icon }} {{ selectedToneObj?.label || tone }}</div>
-          <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)"><strong>🎭 Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
-          <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
-            <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
-            <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
-          </div>
-          <div v-if="selectedArcId" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
-            <strong>📖 Story-Arc:</strong> {{ storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.title || 'Arc #' + selectedArcId }}
-            <span class="ml-1 text-xs text-[#3B7AB1]">Episode {{ selectedEpisodeNumber }}</span>
-          </div>
-        </div>
-
-        <button
-          @click="selectedHumorFormat ? generateHumorContent() : generateText()"
-          :disabled="generatingText"
-          class="px-8 py-4 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
-          :class="selectedHumorFormat
-            ? 'bg-gradient-to-r from-[#FDD000] to-[#FFB800] hover:from-[#E8C300] hover:to-[#EBA800] text-gray-900 disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-700 dark:disabled:to-gray-700 disabled:text-gray-500'
-            : 'bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 dark:disabled:bg-gray-700'"
-          data-testid="generate-content-btn"
+      <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8">
+        <AITextGenerator
+          :category="selectedCategory"
+          :topic="topic"
+          :key-points="keyPoints"
+          :country="country"
+          :platform="selectedPlatform"
+          :tone="tone"
+          :slide-count="selectedTemplate?.slide_count || 1"
+          :student-id="selectedStudentId"
+          :generating="generatingText"
+          :generated-content="generatedContent"
+          :humor-format="selectedHumorFormat"
+          @generate="generateText"
+          @generate-humor="generateHumorContent"
+          @apply-variant="onApplyVariant"
+          data-testid="step5-ai-text-generator"
         >
-          <span v-if="generatingText" class="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full"></span>
-          <span v-else>{{ selectedHumorFormat ? selectedHumorFormat.icon : '&#x2728;' }}</span>
-          {{ generatingText ? 'Generiere...' : (selectedHumorFormat ? 'Humor-Content generieren' : 'Inhalt generieren') }}
-        </button>
+          <template #summary>
+            <!-- Summary of selections -->
+            <div class="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-left space-y-1">
+              <div><strong>Kategorie:</strong> {{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
+              <div><strong>Template:</strong> {{ selectedTemplate?.name }} ({{ selectedTemplate?.slide_count }} Slide{{ selectedTemplate?.slide_count > 1 ? 's' : '' }})</div>
+              <div><strong>Plattform:</strong> {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
+              <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
+              <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
+              <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
+              <div><strong>Tonalitaet:</strong> {{ selectedToneObj?.icon }} {{ selectedToneObj?.label || tone }}</div>
+              <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)"><strong>🎭 Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
+              <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
+                <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
+                <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
+              </div>
+              <div v-if="selectedArcId" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
+                <strong>📖 Story-Arc:</strong> {{ storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.title || 'Arc #' + selectedArcId }}
+                <span class="ml-1 text-xs text-[#3B7AB1]">Episode {{ selectedEpisodeNumber }}</span>
+              </div>
+            </div>
+          </template>
 
-        <!-- Generated content summary -->
-        <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-left">
-          <div class="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3">
-            <span class="text-lg">&#10003;</span>
-            <span class="font-bold">{{ generatedContent.humor_format ? 'Humor-Content generiert!' : 'Inhalt generiert!' }}</span>
-          </div>
-          <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
-            <li>{{ slides.length }} Slide(s) mit Texten</li>
-            <li>Instagram Caption erstellt</li>
-            <li>TikTok Caption erstellt</li>
-            <li>Hashtags generiert</li>
-            <li v-if="generatedContent.humor_format">Humor-Format: {{ generatedContent.humor_format }}</li>
-            <li v-if="generatedContent.source">Quelle: {{ generatedContent.source === 'gemini' ? 'KI (Gemini)' : 'Vorlage' }}</li>
-          </ul>
-        </div>
-
-        <!-- Hook / Attention-Grabber Selector (shown after content is generated) -->
-        <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <HookSelector
-            :topic="topic"
-            :country="country"
-            :tone="tone"
-            :platform="selectedPlatform"
-            @hook-selected="onHookSelected"
-          />
-        </div>
+          <template #after-generation>
+            <!-- Hook / Attention-Grabber Selector (shown after content is generated) -->
+            <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <HookSelector
+                :topic="topic"
+                :country="country"
+                :tone="tone"
+                :platform="selectedPlatform"
+                @hook-selected="onHookSelected"
+              />
+            </div>
+          </template>
+        </AITextGenerator>
       </div>
     </div>
 
@@ -3570,6 +3657,49 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               data-testid="confirm-delete-slide-btn"
             >
               Entfernen
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Draft Restoration Dialog -->
+    <Teleport to="body">
+      <div v-if="autoSaveRestoreAvailable && autoSaveRestoreDraft" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="draft-restore-dialog">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all">
+          <div class="text-center mb-4">
+            <div class="text-4xl mb-2">&#x1F4DD;</div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Entwurf gefunden</h3>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+            Du hast einen ungespeicherten Entwurf von deiner letzten Sitzung.
+          </p>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-5 text-sm">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-medium text-gray-700 dark:text-gray-300">{{ autoSaveRestoreDraft.title || 'Unbenannter Entwurf' }}</span>
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3">
+              <span v-if="autoSaveRestoreDraft.category">{{ autoSaveRestoreDraft.category }}</span>
+              <span v-if="autoSaveRestoreDraft.country">{{ autoSaveRestoreDraft.country }}</span>
+              <span v-if="autoSaveRestoreDraft.updated_at">{{ new Date(autoSaveRestoreDraft.updated_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}</span>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button
+              @click="autoSaveDismissRestore"
+              class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+              data-testid="draft-dismiss-btn"
+            >
+              Verwerfen
+            </button>
+            <button
+              @click="autoSaveRestore(autoSaveRestoreDraft)"
+              :disabled="autoSaveRestoring"
+              class="flex-1 px-4 py-2.5 bg-[#3B7AB1] hover:bg-[#2E6A9E] disabled:bg-gray-300 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              data-testid="draft-restore-btn"
+            >
+              <span v-if="autoSaveRestoring" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              {{ autoSaveRestoring ? 'Wird geladen...' : 'Entwurf laden' }}
             </button>
           </div>
         </div>

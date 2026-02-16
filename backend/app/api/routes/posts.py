@@ -215,6 +215,128 @@ async def sync_sibling_posts(
     return {"updated": updated, "count": len(updated)}
 
 
+# ═══════════════════════════════════════════════════════════════════════
+# Draft Auto-Save Endpoints (must be before /{post_id} to avoid route conflict)
+# ═══════════════════════════════════════════════════════════════════════
+
+@router.get("/drafts/list")
+async def list_drafts(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all draft posts for the current user, ordered by most recently updated."""
+    result = await db.execute(
+        select(Post)
+        .where(Post.user_id == user_id, Post.status == "draft")
+        .order_by(Post.updated_at.desc())
+    )
+    drafts = result.scalars().all()
+    return {
+        "drafts": [post_to_dict(d) for d in drafts],
+        "count": len(drafts),
+    }
+
+
+@router.get("/drafts/latest")
+async def get_latest_draft(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the most recently updated draft for auto-restoration."""
+    result = await db.execute(
+        select(Post)
+        .where(Post.user_id == user_id, Post.status == "draft")
+        .order_by(Post.updated_at.desc())
+        .limit(1)
+    )
+    draft = result.scalar_one_or_none()
+    if not draft:
+        return {"draft": None, "message": "Kein Entwurf vorhanden"}
+    return {
+        "draft": post_to_dict(draft),
+        "message": "Letzter Entwurf geladen",
+    }
+
+
+@router.post("/drafts/save")
+async def save_draft(
+    draft_data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Save or update a draft post.
+
+    If draft_id is provided, updates the existing draft.
+    If not, creates a new draft post with status='draft'.
+    """
+    draft_id = draft_data.pop("draft_id", None)
+    wizard_state = draft_data.pop("wizard_state", None)
+    draft_data["status"] = "draft"
+
+    # Parse scheduled_date if present
+    if "scheduled_date" in draft_data and draft_data["scheduled_date"] and isinstance(draft_data["scheduled_date"], str):
+        try:
+            draft_data["scheduled_date"] = datetime.fromisoformat(draft_data["scheduled_date"].replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            try:
+                draft_data["scheduled_date"] = datetime.strptime(draft_data["scheduled_date"], "%Y-%m-%d")
+            except (ValueError, TypeError):
+                draft_data.pop("scheduled_date", None)
+
+    # Store wizard state in custom_fonts JSON field for restoration
+    if wizard_state:
+        draft_data["custom_fonts"] = json.dumps({"_wizard_state": wizard_state}) if isinstance(wizard_state, dict) else wizard_state
+
+    if draft_id:
+        result = await db.execute(
+            select(Post).where(Post.id == draft_id, Post.user_id == user_id, Post.status == "draft")
+        )
+        draft = result.scalar_one_or_none()
+        if not draft:
+            raise HTTPException(status_code=404, detail="Entwurf nicht gefunden")
+
+        for key, value in draft_data.items():
+            if hasattr(draft, key) and key not in ("id", "user_id", "created_at"):
+                setattr(draft, key, value)
+
+        draft.updated_at = datetime.now(timezone.utc)
+        await db.flush()
+        await db.refresh(draft)
+        return {"status": "updated", "draft": post_to_dict(draft), "message": "Entwurf aktualisiert"}
+    else:
+        draft_data.setdefault("category", "allgemein")
+        draft_data.setdefault("platform", "instagram_feed")
+        draft_data.setdefault("slide_data", "[]")
+        draft_data.pop("id", None)
+        draft_data.pop("created_at", None)
+        draft_data.pop("updated_at", None)
+
+        draft = Post(user_id=user_id, **draft_data)
+        db.add(draft)
+        await db.flush()
+        await db.refresh(draft)
+        return {"status": "created", "draft": post_to_dict(draft), "message": "Entwurf gespeichert"}
+
+
+@router.delete("/drafts/{draft_id}")
+async def delete_draft(
+    draft_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a draft post."""
+    result = await db.execute(
+        select(Post).where(Post.id == draft_id, Post.user_id == user_id, Post.status == "draft")
+    )
+    draft = result.scalar_one_or_none()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Entwurf nicht gefunden")
+    await db.delete(draft)
+    return {"detail": "Entwurf geloescht", "draft_id": draft_id}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+
 @router.get("/{post_id}")
 async def get_post(
     post_id: int,

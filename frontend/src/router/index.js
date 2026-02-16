@@ -472,6 +472,19 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'video/script-generator',
+        name: 'VideoScriptGenerator',
+        component: () => import('@/views/VideoScriptView.vue'),
+        meta: {
+          requiresAuth: true,
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'Video-Tools', path: '/create/video' },
+            { label: 'Script-Generator', path: '/video/script-generator' },
+          ],
+        },
+      },
 
       // ═══════════════════════════════════════════════════════
       // REDIRECTS: Old routes → new equivalents (no 404s)

@@ -24,6 +24,7 @@ const navGroups = [
     items: [
       { name: 'Erstellen', path: '/create', icon: '✏️' },
       { name: 'Quick Post', path: '/create/quick', icon: '⚡' },
+      { name: 'Entwuerfe', path: '/create/drafts', icon: '💾' },
       { name: 'Kampagne', path: '/create/campaign', icon: '📅' },
     ],
   },
@@ -43,6 +44,7 @@ const navGroups = [
     items: [
       { name: 'Templates', path: '/library/templates', icon: '📄' },
       { name: 'Galerie', path: '/library/template-gallery', icon: '🎨' },
+      { name: 'Editor', path: '/library/template-editor', icon: '✏️' },
       { name: 'Assets', path: '/library/assets', icon: '🖼️' },
       { name: 'History', path: '/library/history', icon: '📋' },
     ],
@@ -64,6 +66,7 @@ const navGroups = [
       { name: 'Video-Branding', path: '/video/templates', icon: '🏷️' },
       { name: 'Video-Export', path: '/video/export', icon: '📤' },
       { name: 'Audio-Mixer', path: '/video/audio-mixer', icon: '🎵' },
+      { name: 'Script-Generator', path: '/video/script-generator', icon: '📝' },
     ],
   },
   {
