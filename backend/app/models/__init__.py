@@ -27,6 +27,7 @@ from app.models.post_relation import PostRelation
 from app.models.pipeline_item import PipelineItem
 from app.models.campaign import Campaign
 from app.models.campaign_post import CampaignPost
+from app.models.template_favorite import TemplateFavorite
 
 __all__ = [
     "User",
@@ -56,4 +57,5 @@ __all__ = [
     "PipelineItem",
     "Campaign",
     "CampaignPost",
+    "TemplateFavorite",
 ]

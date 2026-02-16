@@ -42,6 +42,7 @@ const navGroups = [
     key: 'library',
     items: [
       { name: 'Templates', path: '/library/templates', icon: '📄' },
+      { name: 'Galerie', path: '/library/template-gallery', icon: '🎨' },
       { name: 'Assets', path: '/library/assets', icon: '🖼️' },
       { name: 'History', path: '/library/history', icon: '📋' },
     ],

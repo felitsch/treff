@@ -7,12 +7,14 @@ const router = useRouter()
 
 const tabs = [
   { key: 'templates', label: 'Templates', icon: '📄', path: '/library/templates' },
+  { key: 'template-gallery', label: 'Galerie', icon: '🎨', path: '/library/template-gallery' },
   { key: 'assets', label: 'Assets', icon: '🖼️', path: '/library/assets' },
   { key: 'history', label: 'History', icon: '📋', path: '/library/history' },
 ]
 
 const activeTab = computed(() => {
   const child = route.path.split('/library/')[1]
+  if (child === 'template-gallery') return 'template-gallery'
   if (child === 'assets') return 'assets'
   if (child === 'history') return 'history'
   return 'templates'

@@ -231,6 +231,20 @@ const routes = [
             },
           },
           {
+            path: 'template-gallery',
+            name: 'TemplateGallery',
+            component: () => import('@/views/TemplateGalleryView.vue'),
+            meta: {
+              requiresAuth: true,
+              title: 'Template-Galerie',
+              breadcrumb: [
+                { label: 'Home', path: '/home' },
+                { label: 'Bibliothek', path: '/library' },
+                { label: 'Template-Galerie', path: '/library/template-gallery' },
+              ],
+            },
+          },
+          {
             path: 'assets',
             name: 'Assets',
             component: () => import('@/views/AssetsView.vue'),

@@ -59,6 +59,7 @@ async def list_templates(
     category: Optional[str] = None,
     platform_format: Optional[str] = None,
     country: Optional[str] = None,
+    search: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -71,6 +72,8 @@ async def list_templates(
         query = query.where(Template.platform_format == platform_format)
     if country:
         query = query.where(Template.country == country)
+    if search:
+        query = query.where(Template.name.ilike(f"%{search}%"))
 
     query = query.order_by(Template.category, Template.name)
     result = await db.execute(query)

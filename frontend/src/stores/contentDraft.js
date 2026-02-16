@@ -83,6 +83,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   const assets = ref([])
   const aiImagePrompt = ref('')
   const aiImageAspectRatio = ref('')
+  const aiImageStyle = ref('photorealistic')
   const generatingImage = ref(false)
   const generatedImageResult = ref(null)
   const aiImageError = ref('')
@@ -152,6 +153,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     uploadingImage.value = false
     aiImagePrompt.value = ''
     aiImageAspectRatio.value = ''
+    aiImageStyle.value = 'photorealistic'
     generatingImage.value = false
     generatedImageResult.value = null
     aiImageError.value = ''
@@ -229,6 +231,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     assets,
     aiImagePrompt,
     aiImageAspectRatio,
+    aiImageStyle,
     generatingImage,
     generatedImageResult,
     aiImageError,
