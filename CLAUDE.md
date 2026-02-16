@@ -174,40 +174,6 @@ You: I'll create that feature now.
 [calls feature_create with appropriate parameters]
 You: Done! I've added "S3 Sync Integration" to your backlog. It's now visible on the kanban board.
 
-## Skills — PFLICHT fuer alle Coding-Agents
-
-**WICHTIG: Vor JEDEM Feature MUSS der Agent `/find-skills` ausfuehren und passende Skills nutzen!**
-
-Die folgenden Skills stehen zur Verfuegung und MUESSEN aktiv eingesetzt werden:
-
-| Skill | Wann nutzen | Pflicht bei |
-|-------|-------------|-------------|
-| `content-strategy` | Content Pillars, Buyer Journey, Posting-Frequenz, Content-Kalender-Strategie | Allen Strategy-Features, Content-Planung |
-| `social-media-strategy` | Plattform-spezifische Strategien, Hashtag-Analyse, Community-Aufbau | Allen Social-Media-Features, Plattform-Optimierung |
-| `gemini-image-generator` | KI-Bildgenerierung mit Gemini | Allen Features mit Bildgenerierung |
-| `agent-browser` | Web-Recherche, Konkurrenzanalyse, Inspiration | Research-Tasks, Konkurrenzanalyse |
-| `playwright-cli` | Browser-Automation, Testing, Screenshots | UI-Testing, E2E-Tests, Visual Verification |
-| `design-system-advisor` | UI/UX-Entscheidungen, Komponenten-Design, Barrierefreiheit | Allen UI-Features, Design System |
-| `vue-component-architect` | Vue 3 Composition API Patterns, Composables, Pinia Stores | Allen Vue-Komponenten, Store-Architektur |
-| `fastapi-backend-architect` | FastAPI Routen, SQLAlchemy Models, API-Design | Allen Backend-Features, API-Endpoints |
-
-### Workflow fuer JEDEN Task:
-
-1. **`/find-skills`** ausfuehren — Verfuegbare Skills pruefen
-2. **Relevante Skills aktivieren** — Mindestens 1 Skill pro Feature nutzen
-3. **Skill-Output anwenden** — Empfehlungen des Skills direkt umsetzen
-4. **Code implementieren** — Basierend auf Skill-Empfehlungen
-5. **Testen** — Mit `playwright-cli` oder manuell verifizieren
-6. **Feature abschliessen** — Als passing markieren
-
-### Spezielle Regeln:
-
-- **Video-Features**: Video hat hoechste Prioritaet! Reels/TikTok sind der wichtigste Content-Typ. Nutze `social-media-strategy` fuer Video-Strategie.
-- **UI-Features**: IMMER `design-system-advisor` UND `vue-component-architect` zusammen nutzen.
-- **Backend-Features**: IMMER `fastapi-backend-architect` nutzen.
-- **Strategy-Features**: IMMER `content-strategy` UND `social-media-strategy` zusammen nutzen.
-- **Bildgenerierung**: IMMER `gemini-image-generator` nutzen.
-
 ## Guidelines
 
 1. Be concise and helpful

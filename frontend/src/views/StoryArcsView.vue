@@ -227,7 +227,7 @@ onMounted(() => {
     <!-- Empty state -->
     <EmptyState
       v-else-if="filteredArcs.length === 0"
-      icon="📖"
+      svgIcon="book-open"
       title="Noch keine Story-Arcs erstellt"
       description="Erstelle deine erste Story-Serie mit dem Wizard. Lege vorher Schueler-Profile an, um personalisierte Serien zu erstellen."
       actionLabel="Story-Serie erstellen"

@@ -937,7 +937,7 @@ onMounted(fetchAssets)
 
       <!-- Stock Loading -->
       <div v-if="stockLoading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        <div v-for="i in 8" :key="i" class="bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse aspect-[3/2]"></div>
+        <SkeletonImage v-for="i in 8" :key="i" aspect="3/2" rounded="lg" />
       </div>
 
       <!-- Stock Results -->

@@ -571,7 +571,7 @@ onMounted(() => {
         <BaseCard padding="lg" title="Kategorieverteilung" :header-divider="false" data-testid="category-distribution" data-tour="analytics-categories">
           <EmptyState
             v-if="categories.length === 0"
-            icon="📊"
+            svgIcon="chart-bar"
             title="Noch keine Daten"
             description="Erstelle Posts, um die Kategorieverteilung hier zu sehen."
             actionLabel="Post erstellen"
@@ -595,7 +595,7 @@ onMounted(() => {
         <BaseCard padding="lg" title="Plattformverteilung" :header-divider="false" data-testid="platform-distribution" data-tour="analytics-platforms">
           <EmptyState
             v-if="platforms.length === 0"
-            icon="📱"
+            svgIcon="device-phone-mobile"
             title="Noch keine Daten"
             description="Erstelle Posts fuer Instagram oder TikTok, um die Plattformverteilung zu sehen."
             actionLabel="Post erstellen"
@@ -625,7 +625,7 @@ onMounted(() => {
       <BaseCard padding="lg" title="Laenderverteilung" :header-divider="false" data-testid="country-distribution">
         <EmptyState
           v-if="countries.length === 0"
-          icon="🌍"
+          svgIcon="globe-alt"
           title="Noch keine Laenderdaten"
           description="Weise Posts Laender zu (USA, Kanada, Australien, Neuseeland, Irland), um die Verteilung hier zu sehen."
           actionLabel="Post erstellen"

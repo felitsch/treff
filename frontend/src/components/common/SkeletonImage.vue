@@ -58,10 +58,11 @@ const containerStyle = computed(() => {
       square: '1 / 1',
       '16/9': '16 / 9',
       '4/3': '4 / 3',
+      '3/2': '3 / 2',
       '3/4': '3 / 4',
       '9/16': '9 / 16',
     }
-    style.aspectRatio = aspectMap[props.aspect] || '1 / 1'
+    style.aspectRatio = aspectMap[props.aspect] || props.aspect.replace('/', ' / ')
   }
   return style
 })

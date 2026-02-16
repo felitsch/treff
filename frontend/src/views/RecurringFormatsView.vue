@@ -540,7 +540,7 @@ onMounted(fetchFormats)
     <!-- Empty state -->
     <EmptyState
       v-if="!loading && filteredFormats.length === 0"
-      icon="🔄"
+      svgIcon="arrow-path"
       title="Keine wiederkehrenden Formate"
       description="Erstelle dein erstes wiederkehrendes Format wie 'Motivation Monday' oder 'Freitags-Fail'. Formate sorgen fuer konsistenten Content und hoeheres Engagement."
       actionLabel="Format erstellen"

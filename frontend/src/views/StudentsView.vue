@@ -303,7 +303,7 @@ onMounted(() => {
     <!-- Empty state -->
     <EmptyState
       v-else-if="filteredStudents.length === 0"
-      icon="🎓"
+      svgIcon="academic-cap"
       title="Noch keine Schueler angelegt"
       description="Lege deinen ersten Austausch-Schueler an, um personalisierte Content-Serien und Story-Arcs zu erstellen."
       actionLabel="Schueler anlegen"
