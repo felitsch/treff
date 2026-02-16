@@ -18,6 +18,7 @@ import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import AIImageGenerator from '@/components/common/AIImageGenerator.vue'
+import HashtagManager from '@/components/posts/HashtagManager.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
@@ -3034,41 +3035,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1"># Instagram Hashtags <HelpTooltip :text="tooltipTexts.createPost.hashtagsInstagram" size="sm" /></label>
-                <div class="flex items-center gap-1.5">
-                  <button
-                    @click="suggestHashtags"
-                    :disabled="suggestingHashtags"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    title="KI-optimierte Hashtags vorschlagen"
-                    data-testid="suggest-hashtags-btn"
-                  >
-                    <span :class="{ 'animate-spin': suggestingHashtags }" class="text-sm">&#x2728;</span>
-                    <span>{{ suggestingHashtags ? 'Lade...' : 'Auto-Suggest' }}</span>
-                  </button>
-                  <button
-                    @click="regenerateField('hashtags_instagram')"
-                    :disabled="!!regeneratingField"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    :title="'Instagram Hashtags neu generieren'"
-                  >
-                    <span :class="{ 'animate-spin': regeneratingField === 'hashtags_instagram' }" class="text-sm">&#x1F504;</span>
-                    <span>Neu</span>
-                  </button>
-                </div>
+              <div class="flex items-center gap-1 mb-2">
+                <HelpTooltip :text="tooltipTexts.createPost.hashtagsInstagram" size="sm" />
               </div>
-              <textarea v-model="hashtagsInstagram" rows="2"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
-                :class="(hashtagsInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : (hashtagsInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
-              ></textarea>
-              <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(hashtagsInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit ueberschritten</span>
-                <span v-else class="text-xs text-gray-400"></span>
-                <span class="text-xs" :class="(hashtagsInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-gray-400'">{{ hashtagsInstagram?.length || 0 }} Zeichen</span>
-              </div>
+              <HashtagManager
+                v-model="hashtagsInstagram"
+                :topic="topic"
+                :country="country"
+                :platform="selectedPlatform"
+                :category="selectedCategory"
+                :tone="tone"
+                :max-hashtags="30"
+                platform-label="Instagram"
+              />
               <!-- Emoji Suggestions Row -->
-              <div v-if="suggestedEmojis.length > 0" class="mt-2 flex items-center gap-1.5 flex-wrap" data-testid="emoji-suggestions">
+              <div v-if="suggestedEmojis.length > 0" class="mt-3 flex items-center gap-1.5 flex-wrap" data-testid="emoji-suggestions">
                 <span class="text-xs text-gray-500 dark:text-gray-400">Empfohlene Emojis:</span>
                 <button
                   v-for="(emoji, eidx) in suggestedEmojis"
@@ -3080,27 +3061,20 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">&#x1F3B5; TikTok Hashtags <HelpTooltip :text="tooltipTexts.createPost.hashtagsTiktok" size="sm" /></label>
-                <button
-                  @click="regenerateField('hashtags_tiktok')"
-                  :disabled="!!regeneratingField"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-[#3B7AB1]/10 text-[#3B7AB1] hover:bg-[#3B7AB1]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  :title="'TikTok Hashtags neu generieren'"
-                >
-                  <span :class="{ 'animate-spin': regeneratingField === 'hashtags_tiktok' }" class="text-sm">&#x1F504;</span>
-                  <span>Neu</span>
-                </button>
+              <div class="flex items-center gap-1 mb-2">
+                <label class="text-sm font-bold text-gray-700 dark:text-gray-300">🎵 TikTok Hashtags</label>
+                <HelpTooltip :text="tooltipTexts.createPost.hashtagsTiktok" size="sm" />
               </div>
-              <textarea v-model="hashtagsTiktok" rows="2"
-                class="w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"
-                :class="(hashtagsTiktok?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : (hashtagsTiktok?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
-              ></textarea>
-              <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(hashtagsTiktok?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit ueberschritten</span>
-                <span v-else class="text-xs text-gray-400"></span>
-                <span class="text-xs" :class="(hashtagsTiktok?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-gray-400'">{{ hashtagsTiktok?.length || 0 }} Zeichen</span>
-              </div>
+              <HashtagManager
+                v-model="hashtagsTiktok"
+                :topic="topic"
+                :country="country"
+                platform="tiktok"
+                :category="selectedCategory"
+                :tone="tone"
+                :max-hashtags="30"
+                platform-label="TikTok"
+              />
             </div>
           </div>
 
