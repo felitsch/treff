@@ -5,6 +5,7 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const auth = useAuthStore()
 
@@ -327,8 +328,7 @@ onMounted(fetchFormats)
     </div>
 
     <!-- Create Form -->
-    <div v-if="showCreateForm" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6 shadow-sm">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Neues wiederkehrendes Format</h2>
+    <BaseCard v-if="showCreateForm" padding="lg" title="Neues wiederkehrendes Format" class="mb-6">
       <form @submit.prevent="createFormat" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Name -->
         <div>
@@ -418,7 +418,7 @@ onMounted(fetchFormats)
           </button>
         </div>
       </form>
-    </div>
+    </BaseCard>
 
     <!-- Filters -->
     <div class="flex gap-3 mb-4 flex-wrap">
@@ -443,15 +443,12 @@ onMounted(fetchFormats)
 
     <!-- Formats List -->
     <div data-tour="formats-list" v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div
+      <BaseCard
         v-for="fmt in filteredFormats"
         :key="fmt.id"
-        :class="[
-          'bg-white dark:bg-gray-800 border rounded-xl p-5 shadow-sm transition-all',
-          fmt.is_active
-            ? 'border-gray-200 dark:border-gray-700'
-            : 'border-gray-200 dark:border-gray-700 opacity-60',
-        ]"
+        padding="md"
+        :header-divider="false"
+        :class="[!fmt.is_active ? 'opacity-60' : '']"
       >
         <!-- Header -->
         <div class="flex items-start justify-between mb-3">
@@ -534,7 +531,7 @@ onMounted(fetchFormats)
             class="text-xs px-2.5 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
           >Loeschen</button>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Empty state -->

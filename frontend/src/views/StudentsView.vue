@@ -8,6 +8,7 @@ import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const router = useRouter()
 const store = useStudentStore()
@@ -312,10 +313,13 @@ onMounted(() => {
 
     <!-- Student list -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="students-list">
-      <div
+      <BaseCard
         v-for="(student, idx) in filteredStudents"
         :key="student.id"
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow cursor-pointer"
+        padding="md"
+        hoverable
+        clickable
+        :header-divider="false"
         :data-tour="idx === 0 ? 'students-personality' : undefined"
         @click="router.push(`/students/${student.id}`)"
       >
@@ -388,7 +392,7 @@ onMounted(() => {
             Loeschen
           </button>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Create/Edit Form Modal -->

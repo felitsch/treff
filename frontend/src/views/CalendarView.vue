@@ -9,6 +9,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -1379,7 +1380,7 @@ onMounted(() => {
     </div>
 
     <!-- Weekly Goal Progress Indicator -->
-    <div class="mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+    <BaseCard padding="md" :header-divider="false" class="mb-4">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <span class="text-lg">🎯</span>
@@ -1414,7 +1415,7 @@ onMounted(() => {
           Ziel erreicht! 🎉
         </span>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- Error state -->
     <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400" role="alert">
@@ -1568,7 +1569,7 @@ onMounted(() => {
       <div data-tour="cal-grid" class="flex-1 min-w-0">
 
     <!-- ==================== MONTHLY VIEW ==================== -->
-    <div v-if="viewMode === 'month'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <BaseCard v-if="viewMode === 'month'" padding="none" :header-divider="false">
       <!-- Day headers -->
       <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
         <div
@@ -1773,10 +1774,10 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- ==================== WEEKLY VIEW ==================== -->
-    <div v-if="viewMode === 'week'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <BaseCard v-if="viewMode === 'week'" padding="none" :header-divider="false">
       <!-- Day headers for weekly view -->
       <div class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-200 dark:border-gray-700">
         <!-- Empty corner cell for time column header -->
@@ -1884,12 +1885,12 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- ==================== PLATFORM LANES VIEW ==================== -->
     <div v-if="viewMode === 'lanes'" class="space-y-0">
       <!-- Cross-Platform Stats Summary -->
-      <div v-if="crossPlatformStats && crossPlatformStats.total !== undefined" class="mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <BaseCard v-if="crossPlatformStats && crossPlatformStats.total !== undefined" padding="md" :header-divider="false" class="mb-4">
         <div class="flex items-center gap-3 mb-3">
           <span class="text-lg">📊</span>
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Cross-Platform Statistik</h3>
@@ -1975,10 +1976,10 @@ onMounted(() => {
             <div class="text-[10px] text-violet-500 dark:text-violet-400">Alle 3 Plattformen</div>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Platform Lanes Grid -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <BaseCard padding="none" :header-divider="false">
         <!-- Day headers (same as month view) -->
         <div class="grid grid-cols-[100px_repeat(7,1fr)] border-b border-gray-200 dark:border-gray-700">
           <div class="py-2 px-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700">
@@ -2098,11 +2099,11 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- ==================== QUEUE VIEW ==================== -->
-    <div v-if="viewMode === 'queue'" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <BaseCard v-if="viewMode === 'queue'" padding="none" :header-divider="false">
       <!-- Queue header -->
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <div class="flex items-center gap-3">
@@ -2191,10 +2192,10 @@ onMounted(() => {
           Post erstellen
         </router-link>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- Legend -->
-    <div class="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+    <BaseCard padding="md" :header-divider="false" class="mt-4">
       <div class="flex flex-wrap items-start gap-6">
         <div>
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Kategorien</h3>
@@ -2283,7 +2284,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- Empty state (not for queue view - it has its own) -->
     <EmptyState

@@ -8,6 +8,7 @@ import { useStudentStore } from '@/stores/students'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -800,7 +801,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Filters -->
-    <div data-tour="history-filters" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <BaseCard padding="md" :header-divider="false" data-tour="history-filters" class="mb-6">
       <div class="flex flex-wrap items-center gap-3">
         <!-- Search -->
         <div class="flex-1 min-w-[200px]">
@@ -953,11 +954,11 @@ onUnmounted(() => {
           ✕
         </button>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- Loading state -->
     <div v-if="loading" class="space-y-4">
-      <div v-for="i in 4" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+      <BaseCard v-for="i in 4" :key="i" padding="md" :header-divider="false">
         <div class="flex items-center gap-4">
           <SkeletonBase width="4rem" height="4rem" rounded="lg" />
           <div class="flex-1 space-y-2">
@@ -966,7 +967,7 @@ onUnmounted(() => {
           </div>
           <SkeletonBase width="4rem" height="1.5rem" rounded="full" />
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Error state -->

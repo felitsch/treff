@@ -8,6 +8,7 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -162,26 +163,36 @@ onMounted(() => {
 
     <!-- Stats cards -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6" data-tour="arcs-stats">
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Gesamt</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-        <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Aktiv</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-        <p class="text-2xl font-bold text-yellow-600">{{ stats.paused }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Pausiert</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-        <p class="text-2xl font-bold text-gray-500">{{ stats.draft }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Entwurf</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-        <p class="text-2xl font-bold text-blue-600">{{ stats.completed }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Abgeschlossen</p>
-      </div>
+      <BaseCard padding="sm" :header-divider="false">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Gesamt</p>
+        </div>
+      </BaseCard>
+      <BaseCard padding="sm" :header-divider="false">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Aktiv</p>
+        </div>
+      </BaseCard>
+      <BaseCard padding="sm" :header-divider="false">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-yellow-600">{{ stats.paused }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Pausiert</p>
+        </div>
+      </BaseCard>
+      <BaseCard padding="sm" :header-divider="false">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-gray-500">{{ stats.draft }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Entwurf</p>
+        </div>
+      </BaseCard>
+      <BaseCard padding="sm" :header-divider="false">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-blue-600">{{ stats.completed }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Abgeschlossen</p>
+        </div>
+      </BaseCard>
     </div>
 
     <!-- Filters -->
@@ -238,10 +249,14 @@ onMounted(() => {
 
     <!-- Arc Cards Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-tour="arcs-list">
-      <div
+      <BaseCard
         v-for="arc in filteredArcs"
         :key="arc.id"
-        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group"
+        padding="none"
+        hoverable
+        clickable
+        :header-divider="false"
+        class="group"
         @click="openArcDetail(arc)"
       >
         <!-- Cover Image or Placeholder -->
@@ -310,7 +325,7 @@ onMounted(() => {
             <span>{{ formatDate(arc.created_at) }}</span>
           </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Students connection hint -->

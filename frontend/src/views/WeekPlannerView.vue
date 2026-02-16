@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -283,7 +284,7 @@ onMounted(() => {
     </div>
 
     <!-- Controls -->
-    <div data-tour="wp-controls" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <BaseCard padding="md" :header-divider="false" data-tour="wp-controls" class="mb-6">
       <div class="flex flex-wrap items-end gap-4">
         <!-- Week Picker -->
         <div class="flex-1 min-w-[180px]">
@@ -355,7 +356,7 @@ onMounted(() => {
           {{ loading ? 'Generiere...' : 'Plan generieren' }}
         </button>
       </div>
-    </div>
+    </BaseCard>
 
     <!-- Active Story Arcs Info -->
     <div v-if="activeArcs.length > 0" class="bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-4 mb-6">
@@ -520,8 +521,7 @@ onMounted(() => {
     </div>
 
     <!-- Legend -->
-    <div v-if="planGenerated" data-tour="wp-legend" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mt-6">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Legende & Tipps</h3>
+    <BaseCard v-if="planGenerated" padding="md" title="Legende & Tipps" :header-divider="false" data-tour="wp-legend" class="mt-6">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600 dark:text-gray-400">
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-purple-400 ring-2 ring-purple-300"></span>
@@ -543,7 +543,7 @@ onMounted(() => {
       <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
         💡 Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan uebernehmen" erstellt alle Vorschlaege als geplante Posts im Kalender.
       </p>
-    </div>
+    </BaseCard>
 
     <TourSystem ref="tourRef" page-key="week-planner" />
   </div>
