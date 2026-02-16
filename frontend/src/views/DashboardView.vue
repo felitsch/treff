@@ -9,6 +9,7 @@ import SeriesStatusWidget from '@/components/dashboard/SeriesStatusWidget.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const router = useRouter()
@@ -532,10 +533,7 @@ onMounted(() => {
       <!-- ─── Stat Cards with Animated Counters ─── -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="dashboard-stats">
         <!-- Posts this week -->
-        <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
-          @click="router.push('/library/history')"
-        >
+        <BaseCard hoverable clickable padding="md" @click="router.push('/library/history')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -553,13 +551,10 @@ onMounted(() => {
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
             <span>{{ stats.total_posts }} Posts gesamt</span>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Scheduled Posts -->
-        <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
-          @click="router.push('/calendar')"
-        >
+        <BaseCard hoverable clickable padding="md" @click="router.push('/calendar')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -577,13 +572,10 @@ onMounted(() => {
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
             <span>Im Kalender eingeplant</span>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Drafts -->
-        <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
-          @click="router.push('/library/history?status=draft')"
-        >
+        <BaseCard hoverable clickable padding="md" @click="router.push('/library/history?status=draft')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -601,19 +593,21 @@ onMounted(() => {
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
             <span>Bereit zur Bearbeitung</span>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <!-- ─── Main Content Grid: 3 cols desktop, 2 tablet, 1 mobile ─── -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <!-- Recent Posts Thumbnail Grid (spans 2 columns on lg) -->
-        <div class="md:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-recent-posts">
-          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <BaseCard padding="none" class="md:col-span-2" data-tour="dashboard-recent-posts">
+          <template #header>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📋</span> Letzte Posts
               <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
             </h2>
+          </template>
+          <template #headerAction>
             <button
               v-if="recentPosts.length > 0"
               @click="router.push('/library/history')"
@@ -621,7 +615,7 @@ onMounted(() => {
             >
               Alle anzeigen &rarr;
             </button>
-          </div>
+          </template>
           <div class="p-5">
             <!-- Empty state -->
             <EmptyState
@@ -692,22 +686,24 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Mini Calendar Widget (right column on lg) -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-calendar">
-          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <BaseCard padding="none" data-tour="dashboard-calendar">
+          <template #header>
             <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>📅</span> Naechste 7 Tage
               <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
             </h2>
+          </template>
+          <template #headerAction>
             <button
               @click="router.push('/calendar')"
               class="text-xs text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium"
             >
               Kalender &rarr;
             </button>
-          </div>
+          </template>
           <div class="p-4">
             <div class="space-y-1">
               <div
@@ -778,7 +774,7 @@ onMounted(() => {
               </button>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <!-- ─── Series Status Widget ─── -->
@@ -792,11 +788,13 @@ onMounted(() => {
       </div>
 
       <!-- ─── Content Suggestions Section ─── -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-tour="dashboard-suggestions">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+      <BaseCard padding="none" data-tour="dashboard-suggestions">
+        <template #header>
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <span>💡</span> Content-Vorschlaege <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />
           </h2>
+        </template>
+        <template #headerAction>
           <div class="flex items-center gap-2">
             <span
               v-if="suggestions.length > 0"
@@ -815,7 +813,7 @@ onMounted(() => {
               {{ generatingSuggestions ? 'Generiere...' : 'Generieren' }}
             </button>
           </div>
-        </div>
+        </template>
         <div class="p-5">
           <!-- Empty state -->
           <EmptyState
@@ -912,7 +910,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Welcome Flow for first-time users (before page tours) -->

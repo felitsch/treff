@@ -87,31 +87,55 @@ async def get_dashboard_data(
     )
     scheduled_posts = scheduled_result.scalar() or 0
 
+    # Drafts count
+    drafts_result = await db.execute(
+        select(func.count(Post.id)).where(
+            Post.user_id == user_id,
+            Post.status == "draft",
+        )
+    )
+    draft_posts = drafts_result.scalar() or 0
+
     asset_result = await db.execute(
         select(func.count(Asset.id)).where(Asset.user_id == user_id)
     )
     total_assets = asset_result.scalar() or 0
 
-    # Recent posts (last 5)
+    # Recent posts (last 8) with thumbnail info
     recent_result = await db.execute(
         select(Post)
         .where(Post.user_id == user_id)
         .order_by(Post.created_at.desc())
-        .limit(5)
+        .limit(8)
     )
     recent_posts_raw = recent_result.scalars().all()
-    recent_posts = [
-        {
+
+    import json as _json
+
+    recent_posts = []
+    for p in recent_posts_raw:
+        # Extract first slide thumbnail from slide_data
+        thumbnail_url = None
+        try:
+            slides = _json.loads(p.slide_data) if p.slide_data else []
+            if slides and isinstance(slides, list) and len(slides) > 0:
+                first_slide = slides[0]
+                thumbnail_url = first_slide.get("background_image") or first_slide.get("image_url") or first_slide.get("thumbnail")
+        except (ValueError, TypeError, KeyError):
+            pass
+
+        recent_posts.append({
             "id": p.id,
             "title": p.title,
             "category": p.category,
             "platform": p.platform,
             "status": p.status,
             "country": p.country,
+            "thumbnail_url": thumbnail_url,
+            "slide_count": len(_json.loads(p.slide_data)) if p.slide_data else 0,
             "created_at": p.created_at.isoformat() if p.created_at else None,
-        }
-        for p in recent_posts_raw
-    ]
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        })
 
     # Mini calendar: scheduled posts for the next 7 days
     today = now.date()
@@ -162,6 +186,7 @@ async def get_dashboard_data(
         "stats": {
             "posts_this_week": posts_this_week,
             "scheduled_posts": scheduled_posts,
+            "draft_posts": draft_posts,
             "total_assets": total_assets,
             "total_posts": total_posts,
         },

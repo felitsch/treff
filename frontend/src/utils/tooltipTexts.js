@@ -55,6 +55,7 @@ export const tooltipTexts = {
   dashboard: {
     postsThisWeek: 'Anzahl der Posts, die in dieser Woche (Mo-So) erstellt oder veroeffentlicht wurden.',
     scheduledPosts: 'Posts, die fuer die Zukunft eingeplant sind und noch veroeffentlicht werden muessen.',
+    draftPosts: 'Posts im Entwurf-Status, die noch bearbeitet oder geplant werden koennen.',
     totalAssets: 'Gesamtzahl der hochgeladenen Bilder, Videos und Medien in deiner Asset-Bibliothek.',
     totalPosts: 'Alle jemals erstellten Posts (Entwuerfe, geplante und veroeffentlichte).',
     next7Days: 'Zeigt die naechsten 7 Tage mit geplanten Posts. Leere Tage sind Posting-Luecken.',
