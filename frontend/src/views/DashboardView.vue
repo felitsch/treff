@@ -10,6 +10,8 @@ import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import SkeletonBase from '@/components/common/SkeletonBase.vue'
+import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const router = useRouter()
@@ -437,18 +439,18 @@ onMounted(() => {
     <div v-if="loading" class="space-y-6">
       <!-- Skeleton: Quick Actions -->
       <div class="flex flex-wrap gap-3">
-        <div v-for="i in 3" :key="'qa-sk-'+i" class="h-14 w-44 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+        <SkeletonBase v-for="i in 3" :key="'qa-sk-'+i" width="11rem" height="3.5rem" rounded="xl" />
       </div>
 
       <!-- Skeleton: Stat Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="i in 3" :key="'stat-sk-'+i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+        <div v-for="i in 3" :key="'stat-sk-'+i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
           <div class="flex items-center justify-between">
             <div class="space-y-3">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-              <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              <SkeletonBase width="6rem" height="1rem" />
+              <SkeletonBase width="4rem" height="2rem" />
             </div>
-            <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            <SkeletonBase width="3rem" height="3rem" rounded="xl" />
           </div>
         </div>
       </div>
@@ -456,27 +458,27 @@ onMounted(() => {
       <!-- Skeleton: Main Grid (3 columns) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Skeleton: Recent Posts Grid -->
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
-          <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+          <SkeletonBase width="8rem" height="1.25rem" class="mb-4" />
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <div v-for="i in 8" :key="'post-sk-'+i" class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <SkeletonImage v-for="i in 8" :key="'post-sk-'+i" aspect="square" rounded="lg" />
           </div>
         </div>
 
         <!-- Skeleton: Mini Calendar -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
-          <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-36 mb-4"></div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+          <SkeletonBase width="9rem" height="1.25rem" class="mb-4" />
           <div class="space-y-3">
-            <div v-for="i in 7" :key="'cal-sk-'+i" class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <SkeletonBase v-for="i in 7" :key="'cal-sk-'+i" width="100%" height="2.5rem" />
           </div>
         </div>
       </div>
 
       <!-- Skeleton: Suggestions -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
-        <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4"></div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <SkeletonBase width="10rem" height="1.25rem" class="mb-4" />
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div v-for="i in 4" :key="'sug-sk-'+i" class="h-28 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          <SkeletonBase v-for="i in 4" :key="'sug-sk-'+i" width="100%" height="7rem" rounded="lg" />
         </div>
       </div>
     </div>
@@ -620,7 +622,7 @@ onMounted(() => {
             <!-- Empty state -->
             <EmptyState
               v-if="recentPosts.length === 0"
-              icon="📝"
+              svgIcon="document-text"
               title="Noch keine Posts erstellt"
               description="Erstelle deinen ersten Social-Media-Post fuer TREFF und starte mit deinem Content-Plan!"
               actionLabel="Ersten Post erstellen"
@@ -818,7 +820,7 @@ onMounted(() => {
           <!-- Empty state -->
           <EmptyState
             v-if="suggestions.length === 0"
-            icon="💡"
+            svgIcon="sparkles"
             title="Keine Vorschlaege vorhanden"
             description="Klicke auf 'Generieren' um KI-gestuetzte Content-Vorschlaege fuer deine naechsten Posts zu erhalten."
             actionLabel="Vorschlaege generieren"

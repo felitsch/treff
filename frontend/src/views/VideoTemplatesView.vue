@@ -459,7 +459,7 @@ onMounted(() => {
 
         <EmptyState
           v-if="!loading && filteredTemplates.length === 0"
-          icon="🏷️"
+          svgIcon="magnifying-glass"
           title="Keine Video-Templates gefunden"
           description="Passe die Filter an oder erstelle ein neues Video-Branding-Template."
           actionLabel="Filter zuruecksetzen"

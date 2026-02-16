@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const activeSection = ref('colors')
 
@@ -288,9 +289,71 @@ const scrollToSection = (id) => {
     <section id="section-cards" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Cards</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Drei Card-Varianten fuer unterschiedliche Kontexte.
+        BaseCard-Komponente mit verschiedenen Props und Slots fuer konsistente Kartendarstellung.
       </p>
 
+      <!-- BaseCard demos -->
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">BaseCard Varianten</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Standard -->
+        <div>
+          <BaseCard padding="md" title="Standard Card" subtitle="Mit Titel und Untertitel">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Standard-Karte mit shadow-sm, border und rounded-xl.</p>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard padding="md"&gt;</code>
+        </div>
+
+        <!-- Hoverable -->
+        <div>
+          <BaseCard padding="md" hoverable title="Hover Card">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Schwebt beim Hovern hoch (shadow-md + translate).</p>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard hoverable&gt;</code>
+        </div>
+
+        <!-- Flat -->
+        <div>
+          <BaseCard padding="md" flat title="Flat Card">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Flacher Stil, ideal fuer verschachtelte Bereiche.</p>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard flat&gt;</code>
+        </div>
+
+        <!-- Section Card with header divider -->
+        <div>
+          <BaseCard padding="none" title="Section Card" subtitle="Mit Header-Divider">
+            <template #headerAction>
+              <button class="btn-sm btn-ghost">Aktion</button>
+            </template>
+            <div class="p-5">
+              <p class="text-sm text-gray-500 dark:text-gray-400">Header mit border-b Trennlinie und headerAction-Slot.</p>
+            </div>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard padding="none"&gt; + #headerAction</code>
+        </div>
+
+        <!-- Clickable with footer -->
+        <div>
+          <BaseCard padding="md" clickable hoverable title="Klickbare Karte" @click="() => {}">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Klickbar mit cursor-pointer und Footer.</p>
+            <template #footer>
+              <span class="text-xs text-gray-400">Footer-Bereich mit border-t</span>
+            </template>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard clickable hoverable&gt; + #footer</code>
+        </div>
+
+        <!-- Large padding -->
+        <div>
+          <BaseCard padding="lg" :header-divider="false" title="Grosse Polsterung">
+            <p class="text-sm text-gray-500 dark:text-gray-400">padding="lg" ohne Header-Divider.</p>
+          </BaseCard>
+          <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard padding="lg" :header-divider="false"&gt;</code>
+        </div>
+      </div>
+
+      <!-- Legacy CSS classes -->
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Legacy CSS-Klassen</h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div>
           <div class="card mb-2">

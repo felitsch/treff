@@ -17,6 +17,7 @@ import api from '@/utils/api'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -442,7 +443,7 @@ onMounted(() => {
       <!-- Overview stats cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="overview-stats">
         <!-- Total posts -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <BaseCard padding="lg" :header-divider="false">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Posts gesamt</p>
@@ -454,10 +455,10 @@ onMounted(() => {
               <span class="text-2xl">📊</span>
             </div>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Posts this week -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <BaseCard padding="lg" :header-divider="false">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Posts diese Woche</p>
@@ -469,10 +470,10 @@ onMounted(() => {
               <span class="text-2xl">📅</span>
             </div>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Posts this month -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <BaseCard padding="lg" :header-divider="false">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Posts diesen Monat</p>
@@ -484,12 +485,11 @@ onMounted(() => {
               <span class="text-2xl">📆</span>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <!-- Goal tracking -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="goal-tracking" data-tour="analytics-goals">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Zielverfolgung</h2>
+      <BaseCard padding="lg" title="Zielverfolgung" :header-divider="false" data-testid="goal-tracking" data-tour="analytics-goals">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Weekly goal -->
           <div>
@@ -527,12 +527,14 @@ onMounted(() => {
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ monthlyProgress }}% erreicht</p>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Posting frequency line chart -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="frequency-chart" data-tour="analytics-frequency">
-        <div class="flex items-center justify-between mb-4">
+      <BaseCard padding="lg" :header-divider="false" data-testid="frequency-chart" data-tour="analytics-frequency">
+        <template #header>
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Posting-Frequenz</h2>
+        </template>
+        <template #headerAction>
           <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
             <button
               v-for="(label, key) in periodLabels"
@@ -547,7 +549,7 @@ onMounted(() => {
               {{ label }}
             </button>
           </div>
-        </div>
+        </template>
 
         <!-- Chart loading -->
         <div v-if="frequencyLoading" class="h-72 flex items-center justify-center">
@@ -561,13 +563,12 @@ onMounted(() => {
             :options="frequencyChartOptions"
           />
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Distribution charts row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Category distribution - Doughnut Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="category-distribution" data-tour="analytics-categories">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kategorieverteilung</h2>
+        <BaseCard padding="lg" title="Kategorieverteilung" :header-divider="false" data-testid="category-distribution" data-tour="analytics-categories">
           <EmptyState
             v-if="categories.length === 0"
             icon="📊"
@@ -588,11 +589,10 @@ onMounted(() => {
               {{ totalCategoryPosts }} Posts insgesamt
             </p>
           </div>
-        </div>
+        </BaseCard>
 
         <!-- Platform distribution -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="platform-distribution" data-tour="analytics-platforms">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plattformverteilung</h2>
+        <BaseCard padding="lg" title="Plattformverteilung" :header-divider="false" data-testid="platform-distribution" data-tour="analytics-platforms">
           <EmptyState
             v-if="platforms.length === 0"
             icon="📱"
@@ -618,12 +618,11 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <!-- Country distribution -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700" data-testid="country-distribution">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Laenderverteilung</h2>
+      <BaseCard padding="lg" title="Laenderverteilung" :header-divider="false" data-testid="country-distribution">
         <EmptyState
           v-if="countries.length === 0"
           icon="🌍"
@@ -646,7 +645,7 @@ onMounted(() => {
             <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ c.country }}</p>
           </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Page-specific guided tour -->

@@ -505,7 +505,7 @@ onMounted(() => {
     <!-- Empty State (before plan generation) -->
     <EmptyState
       v-if="!planGenerated && !loading"
-      icon="🗓️"
+      svgIcon="clipboard-document-list"
       title="Wochenplan erstellen"
       description="Waehle oben eine Woche und die Anzahl der Posts aus. Die KI generiert einen ausgewogenen Content-Plan mit wiederkehrenden Formaten, Story-Serien und optimalen Posting-Zeiten."
       actionLabel="Jetzt Plan generieren"

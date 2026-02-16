@@ -7,6 +7,7 @@ import { useToast } from '@/composables/useToast'
 import { useStudentStore } from '@/stores/students'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import SkeletonBase from '@/components/common/SkeletonBase.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -956,14 +957,14 @@ onUnmounted(() => {
 
     <!-- Loading state -->
     <div v-if="loading" class="space-y-4">
-      <div v-for="i in 4" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
+      <div v-for="i in 4" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div class="flex items-center gap-4">
-          <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-          <div class="flex-1">
-            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+          <SkeletonBase width="4rem" height="4rem" rounded="lg" />
+          <div class="flex-1 space-y-2">
+            <SkeletonBase width="33%" height="1rem" />
+            <SkeletonBase width="25%" height="0.75rem" />
           </div>
-          <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+          <SkeletonBase width="4rem" height="1.5rem" rounded="full" />
         </div>
       </div>
     </div>
@@ -982,7 +983,7 @@ onUnmounted(() => {
     <!-- Empty state - no posts at all -->
     <EmptyState
       v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus && !filterCountry"
-      icon="📝"
+      svgIcon="document-text"
       title="Noch keine Posts erstellt"
       description="Erstelle deinen ersten Social-Media-Post fuer TREFF! Waehle ein Template, schreibe Texte mit KI-Unterstuetzung und plane den Post im Kalender."
       actionLabel="Ersten Post erstellen"
@@ -994,7 +995,7 @@ onUnmounted(() => {
     <!-- No results for filter -->
     <EmptyState
       v-else-if="totalPosts === 0"
-      icon="🔍"
+      svgIcon="magnifying-glass"
       title="Keine Posts gefunden"
       description="Keine Posts passen zu deinen aktuellen Filtern. Setze die Filter zurueck, um alle Posts anzuzeigen."
       actionLabel="Filter zuruecksetzen"

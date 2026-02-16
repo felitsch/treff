@@ -3,6 +3,9 @@ import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import BaseCard from '@/components/common/BaseCard.vue'
+import SkeletonBase from '@/components/common/SkeletonBase.vue'
+import SkeletonGrid from '@/components/common/SkeletonGrid.vue'
 
 const tourRef = ref(null)
 
@@ -664,18 +667,15 @@ onMounted(() => {
     <div v-if="loading" class="space-y-6">
       <!-- Skeleton filter bar -->
       <div class="flex gap-3">
-        <div v-for="i in 4" :key="i" class="h-10 w-28 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        <SkeletonBase v-for="i in 4" :key="i" width="7rem" height="2.5rem" rounded="lg" />
       </div>
       <!-- Skeleton grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <div v-for="i in 8" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm animate-pulse">
-          <div class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-t-xl"></div>
-          <div class="p-4 space-y-2">
-            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
+      <SkeletonGrid
+        :count="8"
+        image-aspect="square"
+        :text-lines="1"
+        :show-actions="true"
+      />
     </div>
 
     <!-- Error State -->
@@ -692,7 +692,7 @@ onMounted(() => {
     <!-- Content -->
     <div v-else class="space-y-6">
       <!-- Filter Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4" data-tour="tpl-filters">
+      <BaseCard padding="md" :header-divider="false" data-tour="tpl-filters">
         <div class="flex flex-wrap items-center gap-3">
           <!-- Category Filter -->
           <div class="flex items-center gap-2">
@@ -738,12 +738,12 @@ onMounted(() => {
             {{ filteredTemplates.length }} von {{ templates.length }} Templates
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Empty state -->
       <EmptyState
         v-if="filteredTemplates.length === 0 && templates.length === 0"
-        icon="📄"
+        svgIcon="squares-2x2"
         title="Keine Templates vorhanden"
         description="Templates sind die Basis fuer deine Posts. Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
         actionLabel="Post erstellen"
@@ -751,7 +751,7 @@ onMounted(() => {
       />
       <EmptyState
         v-else-if="filteredTemplates.length === 0"
-        icon="🔍"
+        svgIcon="magnifying-glass"
         title="Keine Templates gefunden"
         description="Keine Templates passen zu deinen aktuellen Filtern. Versuche andere Filter oder setze sie zurueck."
         actionLabel="Filter zuruecksetzen"
@@ -771,10 +771,14 @@ onMounted(() => {
 
         <!-- Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <div
+          <BaseCard
             v-for="template in catTemplates"
             :key="template.id"
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-treff-blue/50 dark:hover:border-treff-blue/50 transition-all cursor-pointer group overflow-hidden relative"
+            hoverable
+            clickable
+            padding="none"
+            :header-divider="false"
+            class="group relative"
             @click="openEditor(template)"
             data-testid="template-card"
           >
@@ -922,7 +926,7 @@ onMounted(() => {
                 &middot; {{ getPlatformInfo(template.platform_format).dim }}
               </p>
             </div>
-          </div>
+          </BaseCard>
         </div>
       </div>
     </div>

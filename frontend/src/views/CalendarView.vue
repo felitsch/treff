@@ -8,6 +8,7 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import SkeletonBase from '@/components/common/SkeletonBase.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -1439,9 +1440,33 @@ onMounted(() => {
     />
 
     <!-- Loading state -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <span class="ml-3 text-gray-500 dark:text-gray-400">Kalender wird geladen...</span>
+    <div v-if="loading" class="flex flex-col md:flex-row gap-4">
+      <!-- Skeleton: Sidebar -->
+      <div class="flex-shrink-0 w-full md:w-64">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-3">
+          <SkeletonBase width="60%" height="1rem" />
+          <SkeletonBase v-for="i in 3" :key="'side-sk-'+i" width="100%" height="3rem" rounded="lg" />
+        </div>
+      </div>
+      <!-- Skeleton: Calendar Grid -->
+      <div class="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+        <!-- Month header -->
+        <div class="flex items-center justify-between mb-4">
+          <SkeletonBase width="8rem" height="1.5rem" />
+          <div class="flex gap-2">
+            <SkeletonBase width="2rem" height="2rem" rounded="lg" />
+            <SkeletonBase width="2rem" height="2rem" rounded="lg" />
+          </div>
+        </div>
+        <!-- Day headers -->
+        <div class="grid grid-cols-7 gap-2 mb-2">
+          <SkeletonBase v-for="i in 7" :key="'dh-sk-'+i" width="100%" height="1.5rem" />
+        </div>
+        <!-- Calendar cells (5 rows x 7 cols) -->
+        <div class="grid grid-cols-7 gap-2">
+          <SkeletonBase v-for="i in 35" :key="'cell-sk-'+i" width="100%" height="4rem" rounded="lg" />
+        </div>
+      </div>
     </div>
 
     <!-- Main layout: sidebar + calendar -->
@@ -2264,7 +2289,7 @@ onMounted(() => {
     <EmptyState
       v-if="!loading && !error && viewMode !== 'queue' && viewMode !== 'lanes' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
       class="mt-6"
-      icon="📅"
+      svgIcon="calendar-days"
       title="Dein Kalender ist noch leer"
       description="Nutze den KI-Wochenplaner, um automatisch Content fuer eine ganze Woche zu planen. Oder erstelle einzelne Posts und plane sie manuell ein."
       actionLabel="Zum Wochenplaner"

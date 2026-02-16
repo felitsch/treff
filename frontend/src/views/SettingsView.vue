@@ -6,6 +6,7 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import { useTour } from '@/composables/useTour'
+import BaseCard from '@/components/common/BaseCard.vue'
 
 const tourRef = ref(null)
 const { seenTours, loadTourProgress, resetTour, resetAllTours } = useTour()
@@ -380,13 +381,15 @@ onMounted(() => {
       <!-- ======================== -->
       <!-- SECTION 1: Account Settings -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="account-section" data-tour="settings-account">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>&#128100;</span> Konto
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Deine Account-Informationen</p>
-        </div>
+      <BaseCard padding="none" data-testid="account-section" data-tour="settings-account">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>&#128100;</span> Konto
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Deine Account-Informationen</p>
+          </div>
+        </template>
         <div class="p-5 space-y-4">
           <!-- Email (read-only) -->
           <div>
@@ -416,18 +419,20 @@ onMounted(() => {
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Wird in der App als dein Name angezeigt.</p>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 2: Brand Settings -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="brand-section" data-tour="settings-brand">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>&#127912;</span> Marken-Einstellungen
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Passe die Farben fuer dein Branding an</p>
-        </div>
+      <BaseCard padding="none" data-testid="brand-section" data-tour="settings-brand">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>&#127912;</span> Marken-Einstellungen
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Passe die Farben fuer dein Branding an</p>
+          </div>
+        </template>
         <div class="p-5 space-y-4">
           <!-- Primary Color -->
           <div>
@@ -514,18 +519,20 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 3: API Key Configuration -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="api-keys-section" data-tour="settings-api-keys">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>&#128273;</span> API-Schluessel
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Konfiguriere externe Dienste fuer KI-Generierung und Bilder</p>
-        </div>
+      <BaseCard padding="none" data-testid="api-keys-section" data-tour="settings-api-keys">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>&#128273;</span> API-Schluessel
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Konfiguriere externe Dienste fuer KI-Generierung und Bilder</p>
+          </div>
+        </template>
         <div class="p-5 space-y-4">
           <!-- Gemini API Key -->
           <div>
@@ -569,18 +576,20 @@ onMounted(() => {
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fuer Stock-Fotos in Posts</p>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 4: Posting Goals -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="posting-goals-section" data-tour="settings-posting-goals">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>&#127919;</span> Posting-Ziele
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Setze deine Content-Ziele und bevorzugte Zeiten</p>
-        </div>
+      <BaseCard padding="none" data-testid="posting-goals-section" data-tour="settings-posting-goals">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>&#127919;</span> Posting-Ziele
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Setze deine Content-Ziele und bevorzugte Zeiten</p>
+          </div>
+        </template>
         <div class="p-5 space-y-4">
           <!-- Posts per week -->
           <div>
@@ -663,18 +672,20 @@ onMounted(() => {
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Warnhinweis bei zu kleinem Abstand zwischen Story-Arc-Episoden im Kalender.</p>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 4b: Target Content-Mix -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="target-mix-section" data-tour="settings-content-mix">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>📊</span> Ziel Content-Mix
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Definiere die ideale Verteilung deiner Posts (in Prozent)</p>
-        </div>
+      <BaseCard padding="none" data-testid="target-mix-section" data-tour="settings-content-mix">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📊</span> Ziel Content-Mix
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Definiere die ideale Verteilung deiner Posts (in Prozent)</p>
+          </div>
+        </template>
         <div class="p-5 space-y-5">
           <!-- Platform mix -->
           <div>
@@ -716,30 +727,30 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 5: Hashtag Manager -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="hashtag-manager-section" data-tour="settings-hashtags">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <span>#</span> Hashtag-Manager
-              </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verwalte deine Hashtag-Sets fuer verschiedene Laender und Kategorien</p>
-            </div>
-            <button
-              @click="showCreateHashtagForm = !showCreateHashtagForm"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-treff-blue bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-              data-testid="create-hashtag-set-btn"
-            >
-              <span v-if="!showCreateHashtagForm">+ Neues Set</span>
-              <span v-else>Abbrechen</span>
-            </button>
+      <BaseCard padding="none" data-testid="hashtag-manager-section" data-tour="settings-hashtags">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>#</span> Hashtag-Manager
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verwalte deine Hashtag-Sets fuer verschiedene Laender und Kategorien</p>
           </div>
-        </div>
+        </template>
+        <template #headerAction>
+          <button
+            @click="showCreateHashtagForm = !showCreateHashtagForm"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-treff-blue bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+            data-testid="create-hashtag-set-btn"
+          >
+            <span v-if="!showCreateHashtagForm">+ Neues Set</span>
+            <span v-else>Abbrechen</span>
+          </button>
+        </template>
 
         <div class="p-5 space-y-4">
           <!-- Create New Set Form -->
@@ -921,17 +932,10 @@ onMounted(() => {
             Standard-Sets koennen nicht bearbeitet oder geloescht werden.
           </p>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Tour-Einstellungen Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-          &#10067; Tour-Einstellungen
-        </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Jede Seite hat eine eigene gefuehrte Tour, die beim ersten Besuch automatisch startet. Hier kannst du einzelne Tours zuruecksetzen oder alle erneut aktivieren.
-        </p>
-
+      <BaseCard padding="lg" title="Tour-Einstellungen" subtitle="Jede Seite hat eine eigene gefuehrte Tour, die beim ersten Besuch automatisch startet. Hier kannst du einzelne Tours zuruecksetzen oder alle erneut aktivieren." :header-divider="false">
         <div class="space-y-3">
           <!-- Tour reset buttons per page -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -972,21 +976,23 @@ onMounted(() => {
             </p>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- ======================== -->
       <!-- SECTION 7: Social Content Strategy -->
       <!-- ======================== -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="social-strategy-section" data-tour="settings-social-strategy">
-        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>&#128640;</span> Social-Content-Strategie
-          </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Plattform-spezifische Best Practices, Hook-Formeln, Engagement-Strategien und Content-Kalender-Regeln.
-            Diese Strategie fliesst automatisch in den KI-Text-Generator und den Wochenplaner ein.
-          </p>
-        </div>
+      <BaseCard padding="none" data-testid="social-strategy-section" data-tour="settings-social-strategy">
+        <template #header>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>&#128640;</span> Social-Content-Strategie
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Plattform-spezifische Best Practices, Hook-Formeln, Engagement-Strategien und Content-Kalender-Regeln.
+              Diese Strategie fliesst automatisch in den KI-Text-Generator und den Wochenplaner ein.
+            </p>
+          </div>
+        </template>
 
         <!-- Loading -->
         <div v-if="socialStrategyLoading" class="p-5">
@@ -1266,7 +1272,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Save Button -->
       <div class="flex justify-end">

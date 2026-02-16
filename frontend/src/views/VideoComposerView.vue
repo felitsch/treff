@@ -349,7 +349,7 @@ onMounted(() => {
             <!-- No videos -->
             <EmptyState
               v-else-if="videoAssets.length === 0"
-              icon="✂️"
+              svgIcon="film"
               title="Keine Videos vorhanden"
               description="Lade zuerst Videos in der Asset-Bibliothek hoch, um sie hier zu schneiden."
               actionLabel="Zu Assets"
@@ -450,7 +450,7 @@ onMounted(() => {
           <!-- Empty state -->
           <EmptyState
             v-if="clips.length === 0"
-            icon="🎬"
+            svgIcon="film"
             title="Keine Clips in der Timeline"
             description="Klicke auf Videos in der Bibliothek links, um sie zur Timeline hinzuzufuegen und zu einem Video zusammenzuschneiden."
             :compact="true"

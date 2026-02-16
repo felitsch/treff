@@ -44,7 +44,9 @@ npm-debug.log*
 *.png
 
 # Autoforge internal
-.autoforge/features.db
 .autoforge/features.db-shm
 .autoforge/features.db-wal
 .autoforge/.agent.lock
+.autoforge/assistant.db
+.autoforge/assistant.db-shm
+.autoforge/assistant.db-wal

@@ -502,7 +502,7 @@ onUnmounted(() => {
 
         <EmptyState
           v-if="videoAssets.length === 0"
-          icon="🎞️"
+          svgIcon="film"
           title="Keine Videos vorhanden"
           description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Overlays und Text-Layer hinzuzufuegen."
           actionLabel="Zu Assets"

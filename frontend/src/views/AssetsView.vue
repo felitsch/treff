@@ -5,6 +5,7 @@ import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 import VideoTrimmer from '@/components/assets/VideoTrimmer.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import SkeletonImage from '@/components/common/SkeletonImage.vue'
 
 const tourRef = ref(null)
 
@@ -662,7 +663,7 @@ onMounted(fetchAssets)
 
       <!-- Loading state -->
       <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <div v-for="i in 8" :key="i" class="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        <SkeletonImage v-for="i in 8" :key="i" aspect="square" rounded="lg" />
       </div>
 
       <!-- Error state -->
@@ -676,7 +677,7 @@ onMounted(fetchAssets)
       <!-- Empty state: no assets at all -->
       <EmptyState
         v-else-if="filteredAssets.length === 0 && !loading && assets.length === 0"
-        icon="🖼️"
+        svgIcon="photo"
         title="Noch keine Assets hochgeladen"
         description="Lade deine ersten Bilder und Videos hoch, um sie in Posts zu verwenden. Du kannst JPG, PNG, GIF und MP4 Dateien nutzen."
         actionLabel="Dateien hochladen"
@@ -686,7 +687,7 @@ onMounted(fetchAssets)
       <!-- Empty state: filters active, no matches -->
       <EmptyState
         v-else-if="filteredAssets.length === 0 && !loading"
-        icon="🔍"
+        svgIcon="magnifying-glass"
         title="Keine Treffer"
         description="Versuche einen anderen Suchbegriff oder setze die Filter zurueck."
         actionLabel="Filter zuruecksetzen"

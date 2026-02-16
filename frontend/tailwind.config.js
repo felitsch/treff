@@ -225,6 +225,10 @@ export default {
           '0%':   { opacity: '0', transform: 'translateX(-12px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
+        'shimmer': {
+          '0%':   { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
       },
       animation: {
         'fade-in':     'fade-in 200ms ease-out',
@@ -232,6 +236,7 @@ export default {
         'slide-down':  'slide-down 250ms ease-out',
         'scale-in':    'scale-in 200ms ease-out',
         'slide-right': 'slide-right 250ms ease-out',
+        'shimmer':     'shimmer 1.5s ease-in-out infinite',
       },
     },
   },

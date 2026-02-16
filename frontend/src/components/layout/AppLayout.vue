@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import SidebarNav from './SidebarNav.vue'
 import TopBar from './TopBar.vue'
+import BreadcrumbNav from './BreadcrumbNav.vue'
 import { useReminders } from '@/composables/useReminders'
 import { useSeriesReminders } from '@/composables/useSeriesReminders'
 
@@ -80,6 +81,7 @@ onUnmounted(() => {
     <!-- Main content -->
     <div class="flex flex-1 flex-col overflow-hidden min-w-0">
       <TopBar @toggle-sidebar="toggleSidebar" />
+      <BreadcrumbNav />
 
       <main class="flex-1 overflow-y-auto p-6">
         <RouterView />

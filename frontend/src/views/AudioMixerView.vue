@@ -341,7 +341,7 @@ onMounted(async () => {
 
             <EmptyState
               v-else-if="videoAssets.length === 0"
-              icon="🎵"
+              svgIcon="film"
               title="Keine Videos vorhanden"
               description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Musik und Audio hinzuzufuegen."
               actionLabel="Zu Assets"
@@ -459,7 +459,7 @@ onMounted(async () => {
 
               <EmptyState
                 v-else-if="filteredTracks.length === 0"
-                icon="🎶"
+                svgIcon="musical-note"
                 title="Keine Tracks gefunden"
                 description="Versuche eine andere Kategorie oder warte, bis Musik-Tracks verfuegbar sind."
                 :compact="true"
