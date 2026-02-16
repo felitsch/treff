@@ -1,0 +1,519 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-02-16",
+  "brand": {
+    "name": "TREFF Sprachreisen",
+    "handle_instagram": "@treff_sprachreisen",
+    "handle_tiktok": "@treffsprachreisen",
+    "primary_color": "#4C8BC2",
+    "secondary_color": "#FDD000",
+    "tone_of_voice": "Jugendlich aber serioess - die Zielgruppe sind Teenager, aber Eltern lesen mit und muessen Vertrauen fassen. Kein Slang, aber auch nicht steif.",
+    "unique_selling_points": [
+      "Seit 1984 - ueber 40 Jahre Erfahrung",
+      "Persoenliche Betreuung vor, waehrend und nach dem Aufenthalt",
+      "5 Laender zur Auswahl: USA, Kanada, Australien, Neuseeland, Irland",
+      "Ca. 200 Teilnehmer pro Jahr - nicht zu gross, nicht zu klein",
+      "Familiengefuehrtes Unternehmen aus Eningen u.A."
+    ]
+  },
+  "platforms": {
+    "instagram_feed": {
+      "name": "Instagram Feed",
+      "posting_frequency": {
+        "min_per_week": 3,
+        "max_per_week": 5,
+        "ideal_per_week": 4,
+        "description": "3-5 Feed-Posts pro Woche fuer konsistente Praesenz"
+      },
+      "optimal_posting_times": {
+        "weekday": ["17:00", "18:00", "19:00", "20:00"],
+        "weekend": ["11:00", "12:00", "13:00", "14:00"],
+        "best_days": ["Dienstag", "Donnerstag", "Samstag"],
+        "description": "Deutsche Teenager sind abends online (nach Schule/Hausaufgaben). Am Wochenende auch mittags."
+      },
+      "content_types": ["Carousel", "Single Image", "Infografik", "Zitat-Kachel", "Erfahrungsbericht"],
+      "caption_rules": {
+        "max_length": 2200,
+        "ideal_length_range": [150, 500],
+        "first_line_hook": true,
+        "line_breaks_for_readability": true,
+        "cta_at_end": true,
+        "hashtag_count": { "min": 5, "max": 15, "ideal": 10 },
+        "emoji_density": "moderat - alle 1-2 Saetze ein passender Emoji"
+      },
+      "best_practices": [
+        "Erste Zeile muss SOFORT Aufmerksamkeit erregen (Hook)",
+        "Carousel-Posts erzielen 3x mehr Engagement als Single-Image",
+        "Call-to-Action in jeder Caption: Link in Bio, DM, Kommentar",
+        "Gesichter und echte Menschen performen 38% besser als Grafiken",
+        "Speichern ist die wichtigste Engagement-Metrik - erstelle speicherwuerdigen Content"
+      ]
+    },
+    "instagram_stories": {
+      "name": "Instagram Stories",
+      "posting_frequency": {
+        "min_per_week": 5,
+        "max_per_week": 14,
+        "ideal_per_week": 7,
+        "description": "Taeglich mindestens 1 Story, idealerweise 3-5 Story-Frames pro Tag"
+      },
+      "optimal_posting_times": {
+        "weekday": ["07:30", "12:00", "17:30", "20:00"],
+        "weekend": ["10:00", "14:00", "18:00"],
+        "best_days": ["Montag", "Mittwoch", "Freitag"],
+        "description": "Stories haben 24h Lebensdauer - morgens posten fuer maximale Sichtbarkeit ueber den Tag."
+      },
+      "content_types": ["Umfrage", "Quiz", "Behind-the-Scenes", "Countdown", "Q&A", "Testimonial-Snippet", "Swipe-Up/Link"],
+      "best_practices": [
+        "Interaktive Sticker nutzen: Umfragen, Quiz, Fragen-Box",
+        "Maximal 7 Frames pro Story-Sequenz (danach sinkt die Completion Rate)",
+        "Text gross und zentriert - viele schauen ohne Ton",
+        "Hintergrundmusik/Trending Audio fuer Atmosphere",
+        "Stories-Highlights fuer dauerhafte Themen: Laender, FAQ, Tipps, Bewerbung"
+      ]
+    },
+    "instagram_reels": {
+      "name": "Instagram Reels",
+      "posting_frequency": {
+        "min_per_week": 2,
+        "max_per_week": 4,
+        "ideal_per_week": 3,
+        "description": "2-3 Reels pro Woche - Reels haben die hoechste organische Reichweite"
+      },
+      "optimal_posting_times": {
+        "weekday": ["18:00", "19:00", "20:00"],
+        "weekend": ["11:00", "12:00", "15:00"],
+        "best_days": ["Mittwoch", "Freitag", "Sonntag"],
+        "description": "Reels performen abends am besten, wenn Teenager entspannt scrollen."
+      },
+      "content_types": ["Vorher/Nachher", "Day-in-the-Life", "Erwartung vs. Realitaet", "Top 5 Listen", "Transitions", "Trending Audio"],
+      "duration": {
+        "min_seconds": 7,
+        "max_seconds": 90,
+        "ideal_range_seconds": [15, 30],
+        "description": "15-30 Sekunden ist der Sweet Spot. Unter 7s werden nicht promoted."
+      },
+      "best_practices": [
+        "Hook in den ersten 1-3 Sekunden - oder User scrollen weiter",
+        "Trending Audio nutzen (erhoecht Reichweite um bis zu 50%)",
+        "Untertitel IMMER einblenden - 85% schauen ohne Ton",
+        "Vertikales Format 9:16 ist Pflicht",
+        "Text-Overlays fuer Informations-Vermittlung",
+        "CTA am Ende: Folgen, Speichern, Kommentieren"
+      ]
+    },
+    "tiktok": {
+      "name": "TikTok",
+      "posting_frequency": {
+        "min_per_week": 5,
+        "max_per_week": 14,
+        "ideal_per_week": 7,
+        "description": "TikTok belohnt Konsistenz: 1-2x taeglich posten fuer optimalen Algorithmus-Boost"
+      },
+      "optimal_posting_times": {
+        "weekday": ["16:00", "17:00", "19:00", "21:00"],
+        "weekend": ["10:00", "12:00", "15:00", "19:00"],
+        "best_days": ["Dienstag", "Donnerstag", "Samstag"],
+        "description": "TikTok-Nutzer sind etwas frueher aktiv als Instagram - schon ab 16 Uhr nach der Schule."
+      },
+      "content_types": ["Storytelling", "POV-Videos", "Duette", "Stitches", "Vlogs", "Listicles", "Trend-Adaptionen"],
+      "duration": {
+        "min_seconds": 5,
+        "max_seconds": 180,
+        "ideal_range_seconds": [15, 60],
+        "description": "15-60 Sekunden fuer maximale Watch-Time. Laengere Videos nur bei Storytelling."
+      },
+      "best_practices": [
+        "Die ersten 2 Sekunden entscheiden ALLES - starte mit einer provokanten Frage oder Aussage",
+        "Trending Sounds verwenden - TikTok pusht Videos mit beliebten Audios",
+        "Authentizitaet schlaegt Perfektion - zu poliert wirkt wie Werbung",
+        "Untertitel sind Pflicht (40% schauen mit Ton aus)",
+        "Hashtags: 3-5 relevante + 1-2 Trending",
+        "Kommentare innerhalb der ersten Stunde beantworten (Algorithmus-Signal)",
+        "Eigene Sounds/Audios erstellen fuer Brand Recognition"
+      ]
+    }
+  },
+  "hook_formulas": {
+    "description": "Bewiesene Hook-Formeln fuer die TREFF-Zielgruppe. Hooks sind die ersten 1-3 Sekunden (Video) oder die erste Zeile (Caption), die zum Weiterlesen/Weiterschauen animieren.",
+    "formulas": [
+      {
+        "id": "knowledge_gap",
+        "name": "Wissenslücke",
+        "template": "Was ich gerne VOR meinem Auslandsjahr gewusst haette...",
+        "examples": [
+          "Was ich gerne VOR meinem Auslandsjahr in den USA gewusst haette...",
+          "3 Dinge, die mir NIEMAND ueber Kanada gesagt hat",
+          "Das hat mir keiner ueber Gastfamilien erzaehlt..."
+        ],
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"],
+        "effectiveness": 9
+      },
+      {
+        "id": "comparison",
+        "name": "Vergleich",
+        "template": "{Land A} vs. {Land B}: Welches Land passt zu dir?",
+        "examples": [
+          "USA vs. Kanada: Welches Land passt zu dir?",
+          "Australien vs. Neuseeland: Der ultimative Vergleich",
+          "Irland oder USA? Die ehrliche Wahrheit"
+        ],
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"],
+        "effectiveness": 8
+      },
+      {
+        "id": "myth_buster",
+        "name": "Mythos-Entlarvung",
+        "template": "MYTHOS: {Verbreitete Annahme}. Die Wahrheit ist...",
+        "examples": [
+          "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche. Die Wahrheit...",
+          "MYTHOS: Du musst perfekt Englisch koennen. Falsch!",
+          "3 Luegen ueber Gastfamilien, die du nicht glauben solltest"
+        ],
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"],
+        "effectiveness": 9
+      },
+      {
+        "id": "pov",
+        "name": "POV (Point of View)",
+        "template": "POV: {Situation aus der Ich-Perspektive}",
+        "examples": [
+          "POV: Dein erster Tag an einer amerikanischen High School",
+          "POV: Du oeffnest den Brief mit deiner Gastfamilien-Zuteilung",
+          "POV: Dein letzter Tag im Auslandsjahr und du musst dich verabschieden"
+        ],
+        "platforms": ["instagram_reels", "tiktok"],
+        "effectiveness": 8
+      },
+      {
+        "id": "list",
+        "name": "Nummerierte Liste",
+        "template": "{Zahl} Dinge/Gruende/Tipps fuer {Thema}",
+        "examples": [
+          "5 Gruende, warum DU ein Auslandsjahr machen solltest",
+          "7 Dinge, die in deine Auslandsjahr-Packliste muessen",
+          "3 Fehler, die JEDER Austauschschueler macht"
+        ],
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"],
+        "effectiveness": 8
+      },
+      {
+        "id": "question",
+        "name": "Direkte Frage",
+        "template": "{Provokante oder neugierig machende Frage}?",
+        "examples": [
+          "Wuerdest du fuer 10 Monate bei einer fremden Familie leben?",
+          "Was wuerdest du tun, wenn du ploetzlich an einer US-High School aufwachst?",
+          "Wie fuehlt es sich an, 10.000 km von zuhause entfernt zu sein?"
+        ],
+        "platforms": ["instagram_feed", "instagram_stories", "tiktok"],
+        "effectiveness": 7
+      },
+      {
+        "id": "expectation_reality",
+        "name": "Erwartung vs. Realitaet",
+        "template": "Erwartung: {Was man denkt} vs. Realitaet: {Wie es wirklich ist}",
+        "examples": [
+          "Erwartung: Amerikanische High Schools sind wie in den Filmen. Realitaet: ...",
+          "Was meine Eltern dachten vs. Was wirklich passiert ist",
+          "Instagram vs. Realitaet: Mein Auslandsjahr"
+        ],
+        "platforms": ["instagram_reels", "tiktok"],
+        "effectiveness": 9
+      },
+      {
+        "id": "emotional_opener",
+        "name": "Emotionaler Einstieg",
+        "template": "{Emotionale Aussage, die Empathie weckt}",
+        "examples": [
+          "Der Moment, in dem ich am Flughafen stand und realisiert habe: Jetzt bin ich wirklich alleine.",
+          "Ich hab in meinem Auslandsjahr mehr ueber mich gelernt als in 16 Jahren zuhause.",
+          "Die schwerste und gleichzeitig beste Entscheidung meines Lebens."
+        ],
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"],
+        "effectiveness": 8
+      },
+      {
+        "id": "countdown_urgency",
+        "name": "Countdown/Dringlichkeit",
+        "template": "Nur noch {Zeitraum} bis {Deadline/Event}!",
+        "examples": [
+          "Nur noch 30 Tage bis Bewerbungsschluss!",
+          "LETZTE CHANCE: Plaetze fuer USA 2027 fast ausgebucht!",
+          "In 6 Monaten koenntest du HIER sein. Aber nur, wenn du dich JETZT bewirbst."
+        ],
+        "platforms": ["instagram_feed", "instagram_stories", "tiktok"],
+        "effectiveness": 7
+      },
+      {
+        "id": "behind_scenes",
+        "name": "Behind the Scenes",
+        "template": "So sieht {Thema} WIRKLICH aus / Was {Person} WIRKLICH macht",
+        "examples": [
+          "So sieht ein normaler Schultag in den USA WIRKLICH aus",
+          "Behind the Scenes: So bereiten wir euch auf das Auslandsjahr vor",
+          "Was deine Gastfamilie WIRKLICH ueber dich denkt"
+        ],
+        "platforms": ["instagram_stories", "instagram_reels", "tiktok"],
+        "effectiveness": 7
+      }
+    ]
+  },
+  "content_repurposing": {
+    "description": "System zur Wiederverwendung und Anpassung von Content ueber verschiedene Plattformen und Formate hinweg.",
+    "workflows": [
+      {
+        "source": "instagram_feed",
+        "target": "instagram_stories",
+        "transformation": "Einzelne Slides als Story-Frames posten + Umfrage/Quiz hinzufuegen + Link zum Feed-Post",
+        "effort": "niedrig"
+      },
+      {
+        "source": "instagram_feed",
+        "target": "tiktok",
+        "transformation": "Caption als Voiceover-Skript nutzen + B-Roll/Stockvideos unterlegen + Trending Sound hinzufuegen",
+        "effort": "mittel"
+      },
+      {
+        "source": "instagram_reels",
+        "target": "tiktok",
+        "transformation": "Reel ohne Instagram-Wasserzeichen exportieren + TikTok-spezifische Hashtags + ggf. anderen Trending Sound",
+        "effort": "niedrig"
+      },
+      {
+        "source": "instagram_stories",
+        "target": "instagram_feed",
+        "transformation": "Beliebte Story-Umfragen als Infografik aufbereiten + Ergebnisse teilen",
+        "effort": "mittel"
+      },
+      {
+        "source": "tiktok",
+        "target": "instagram_reels",
+        "transformation": "Video ohne TikTok-Wasserzeichen + Instagram-optimierte Caption + andere Hashtag-Strategie",
+        "effort": "niedrig"
+      },
+      {
+        "source": "erfahrungsbericht_text",
+        "target": "carousel",
+        "transformation": "Langen Erfahrungsbericht in 5-7 Carousel-Slides aufteilen + Zitat-Kacheln erstellen",
+        "effort": "mittel"
+      },
+      {
+        "source": "erfahrungsbericht_text",
+        "target": "tiktok",
+        "transformation": "Story als 60s-Kurzversion erzaehlen lassen + Fotos einblenden + emotionale Musik",
+        "effort": "hoch"
+      }
+    ]
+  },
+  "engagement_strategies": {
+    "description": "Strategien um Engagement (Likes, Kommentare, Shares, Saves) zu maximieren.",
+    "cta_strategies": [
+      {
+        "type": "question",
+        "description": "Offene Frage stellen, die zum Kommentieren einlaedt",
+        "examples": ["In welches Land wuerdest du am liebsten gehen? Schreib es in die Kommentare!", "Was wuerdest du am meisten vermissen? Kommentiere!"],
+        "best_for": ["instagram_feed", "tiktok"]
+      },
+      {
+        "type": "poll",
+        "description": "Abstimmung zwischen zwei Optionen",
+        "examples": ["USA oder Kanada? Stimm ab!", "Team Australien oder Team Neuseeland?"],
+        "best_for": ["instagram_stories"]
+      },
+      {
+        "type": "save",
+        "description": "Zum Speichern auffordern (wichtigste Metrik)",
+        "examples": ["Speicher dir diesen Post fuer spaeter!", "Bookmark this fuer wenn du dich bewirbst!"],
+        "best_for": ["instagram_feed"]
+      },
+      {
+        "type": "share",
+        "description": "Zum Teilen mit Freunden auffordern",
+        "examples": ["Tagge einen Freund, der das wissen muss!", "Schick das deinen Eltern!"],
+        "best_for": ["instagram_feed", "tiktok"]
+      },
+      {
+        "type": "ugc",
+        "description": "User-Generated-Content-Aktion",
+        "examples": ["Zeig uns dein Auslandsjahr mit #MeinTREFFJahr!", "Schick uns eure besten Auslandsjahr-Fotos per DM!"],
+        "best_for": ["instagram_feed", "instagram_stories", "tiktok"]
+      },
+      {
+        "type": "dm",
+        "description": "Zur Direktnachricht auffordern",
+        "examples": ["Schreib uns eine DM fuer mehr Infos!", "Fragen? DM uns - wir antworten innerhalb von 24h!"],
+        "best_for": ["instagram_feed", "instagram_stories"]
+      },
+      {
+        "type": "link_in_bio",
+        "description": "Auf den Link in der Bio verweisen",
+        "examples": ["Alle Infos ueber den Link in unserer Bio!", "Bewirb dich jetzt - Link in Bio!"],
+        "best_for": ["instagram_feed", "instagram_reels"]
+      }
+    ],
+    "community_building": [
+      "Jeden Kommentar innerhalb von 2 Stunden beantworten (Algorithmus-Signal)",
+      "Auf User-Generated-Content reagieren und reposten",
+      "Story-Fragen-Box woechentlich nutzen fuer Q&A",
+      "Ehemalige Austauschschueler als Content-Creators einbinden",
+      "Wettbewerbe/Giveaways: z.B. TREFF-Merch oder Reisegutschein"
+    ]
+  },
+  "viral_patterns": {
+    "description": "Virale Content-Patterns aus dem Bildungs- und Reise-Bereich, adaptiert fuer TREFF.",
+    "patterns": [
+      {
+        "name": "Transformation Story",
+        "description": "Vorher-Nachher einer persoenlichen Entwicklung",
+        "treff_adaptation": "Schueler vor dem Auslandsjahr (unsicher, aengstlich) vs. nach dem Auslandsjahr (selbstbewusst, weltoffen)",
+        "platforms": ["instagram_reels", "tiktok"]
+      },
+      {
+        "name": "Day in My Life",
+        "description": "Authentischer Tagesablauf einer interessanten Person",
+        "treff_adaptation": "Typischer Schultag an einer High School in den USA/Kanada/etc.",
+        "platforms": ["tiktok", "instagram_reels"]
+      },
+      {
+        "name": "Things I Wish I Knew",
+        "description": "Rueckblickende Erkenntnisse teilen",
+        "treff_adaptation": "TREFF-Alumni teilen, was sie vor dem Auslandsjahr gerne gewusst haetten",
+        "platforms": ["instagram_feed", "tiktok"]
+      },
+      {
+        "name": "Storytime",
+        "description": "Persoenliche Geschichte emotional erzaehlen",
+        "treff_adaptation": "Lustige/emotionale Erlebnisse aus dem Auslandsjahr: erster Schultag, Heimweh-Moment, bester Tag",
+        "platforms": ["tiktok", "instagram_reels"]
+      },
+      {
+        "name": "Country Comparison",
+        "description": "Zwei Optionen direkt gegeneinander stellen",
+        "treff_adaptation": "USA vs. Kanada, Australien vs. Neuseeland - fuer welches Land bist du Team?",
+        "platforms": ["instagram_feed", "instagram_reels", "tiktok"]
+      },
+      {
+        "name": "Myth Busting",
+        "description": "Verbreitete Irrtuemer aufklaeren",
+        "treff_adaptation": "Auslandsjahr-Mythen zerstoeren: zu teuer, zu gefaehrlich, zu einsam, Noten-Probleme",
+        "platforms": ["instagram_reels", "tiktok"]
+      },
+      {
+        "name": "Cultural Shock Moments",
+        "description": "Ueberraschende kulturelle Unterschiede",
+        "treff_adaptation": "5 Dinge die in den USA normal sind, aber in Deutschland UNVORSTELLBAR waeren",
+        "platforms": ["tiktok", "instagram_reels"]
+      },
+      {
+        "name": "Emotional Reunion",
+        "description": "Wiedersehen nach langer Trennung",
+        "treff_adaptation": "Rueckkehr nach Deutschland: Wiedersehen mit Familie/Freunden am Flughafen",
+        "platforms": ["instagram_reels", "tiktok"]
+      }
+    ]
+  },
+  "hashtag_strategy": {
+    "description": "Dreistufige Hashtag-Strategie: Brand + Nische + Trending",
+    "brand_hashtags": {
+      "primary": ["#TREFFSprachreisen", "#HighschoolYear", "#MeinTREFFJahr"],
+      "secondary": ["#TREFFAlumni", "#TREFFFamily", "#TREFFSprachreisen1984"],
+      "campaign": ["#DeinAuslandsjahr2027", "#TREFFGoesGlobal"]
+    },
+    "niche_hashtags": {
+      "auslandsjahr": ["#Auslandsjahr", "#Schueleraustausch", "#HighSchoolAbroad", "#StudyAbroad", "#GapYear", "#Austauschschueler", "#AuslandsjahrUSA", "#AuslandsjahrKanada"],
+      "reise_bildung": ["#WeltEntdecken", "#Fernweh", "#Reiselust", "#Bildung", "#Sprachreise", "#KulturellerAustausch", "#InterkulturellesBildung"],
+      "teenager_leben": ["#TeenagerLeben", "#Schulzeit", "#Abitur", "#NachDemAbi", "#GenZ", "#Zukunft"]
+    },
+    "country_hashtags": {
+      "usa": ["#HighSchoolUSA", "#AuslandsjahrUSA", "#AmericanHighSchool", "#USATravel", "#ExchangeStudentUSA"],
+      "canada": ["#HighSchoolKanada", "#AuslandsjahrKanada", "#CanadaLife", "#ExchangeStudentCanada", "#StudyInCanada"],
+      "australia": ["#HighSchoolAustralien", "#AuslandsjahrAustralien", "#AustraliaLife", "#StudyDownUnder", "#ExchangeStudentAustralia"],
+      "newzealand": ["#HighSchoolNeuseeland", "#AuslandsjahrNeuseeland", "#NewZealandLife", "#StudyInNZ", "#KiwiLife"],
+      "ireland": ["#HighSchoolIrland", "#AuslandsjahrIrland", "#IrelandLife", "#StudyInIreland", "#ExchangeStudentIreland"]
+    },
+    "rules": [
+      "Immer mindestens 1 Brand-Hashtag verwenden (#TREFFSprachreisen)",
+      "Mix aus grossen (100k+ Posts) und kleinen (<10k Posts) Hashtags",
+      "Instagram: 8-12 Hashtags optimal (nicht alle 30 nutzen)",
+      "TikTok: 3-5 Hashtags + 1-2 Trending",
+      "Hashtags rotieren - nicht immer die gleichen verwenden",
+      "Land-spezifische Hashtags bei Land-bezogenem Content"
+    ]
+  },
+  "content_calendar_rules": {
+    "description": "Regeln fuer den automatischen Content-Kalender und Wochenplan-Generator",
+    "weekly_mix": {
+      "minimum_categories": 3,
+      "minimum_countries": 2,
+      "minimum_platforms": 2,
+      "no_same_country_consecutive_days": true,
+      "no_same_category_consecutive_days": true,
+      "include_deadline_post_if_within_14_days": true
+    },
+    "seasonal_priorities": {
+      "januar_februar": {
+        "focus": "Bewerbungsphase fuer kommendes Schuljahr",
+        "priority_categories": ["fristen_cta", "erfahrungsberichte", "laender_spotlight"],
+        "urgency": "hoch"
+      },
+      "maerz_april": {
+        "focus": "Letzte Bewerbungsfristen + Vorbereitungs-Content",
+        "priority_categories": ["fristen_cta", "tipps_tricks", "faq"],
+        "urgency": "sehr_hoch"
+      },
+      "mai_juni": {
+        "focus": "Vorbereitung + Vorfreude-Content fuer Abreisende",
+        "priority_categories": ["tipps_tricks", "erfahrungsberichte", "foto_posts"],
+        "urgency": "mittel"
+      },
+      "juli_august": {
+        "focus": "Schueler sind im Ausland - Live-Content und Updates",
+        "priority_categories": ["foto_posts", "erfahrungsberichte", "laender_spotlight"],
+        "urgency": "mittel"
+      },
+      "september_oktober": {
+        "focus": "Neue Schueler im Ausland + Fruehbucher fuer naechstes Jahr",
+        "priority_categories": ["erfahrungsberichte", "laender_spotlight", "fristen_cta"],
+        "urgency": "mittel"
+      },
+      "november_dezember": {
+        "focus": "Weihnachts-Content + Fruehbucher-Aktionen + Heimweh-Support",
+        "priority_categories": ["erfahrungsberichte", "tipps_tricks", "foto_posts"],
+        "urgency": "niedrig"
+      }
+    },
+    "recurring_content_slots": [
+      {
+        "name": "Motivation Monday",
+        "day": "Montag",
+        "type": "Motivierendes Zitat oder Erfahrungsbericht-Ausschnitt",
+        "platform": "instagram_feed"
+      },
+      {
+        "name": "Tipps Tuesday",
+        "day": "Dienstag",
+        "type": "Praktischer Tipp oder FAQ",
+        "platform": "instagram_feed"
+      },
+      {
+        "name": "Throwback Thursday",
+        "day": "Donnerstag",
+        "type": "Alumni-Foto oder -Geschichte",
+        "platform": "instagram_feed"
+      },
+      {
+        "name": "Freitags-Reel",
+        "day": "Freitag",
+        "type": "Unterhaltsames Reel: Cultural Shock, Erwartung vs. Realitaet",
+        "platform": "instagram_reels"
+      },
+      {
+        "name": "Samstags-Story-Serie",
+        "day": "Samstag",
+        "type": "Story-Serie mit Umfragen und Quiz",
+        "platform": "instagram_stories"
+      }
+    ]
+  }
+}

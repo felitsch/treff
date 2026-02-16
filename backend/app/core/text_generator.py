@@ -557,13 +557,37 @@ WICHTIGE REGELN:
 - Schreibe IMMER auf Deutsch
 - Erwaehne TREFF Sprachreisen oder TREFF in Captions
 - Verwende relevante Landesflaggen-Emojis (z.B. die Flagge des jeweiligen Landes)
-- Instagram-Hashtags: 10-12 relevante Hashtags, Mix aus deutsch und englisch
-- TikTok-Hashtags: 6-8 kuerzere Hashtags inkl. #fyp #foryou
+- Instagram-Hashtags: 8-12 relevante Hashtags, Mix aus deutsch und englisch, immer #TREFFSprachreisen
+- TikTok-Hashtags: 3-5 kuerzere Hashtags + 1-2 Trending, immer #TREFFSprachreisen
 - Captions sollen zum Engagement anregen (Fragen stellen, zum Kommentieren auffordern)
 - Jede Slide-Headline soll kurz und praegnant sein (max 60 Zeichen)
 - Body-Texte sollen informativ aber nicht zu lang sein (max 200 Zeichen pro Slide)
 - Die letzte Slide sollte immer einen Call-to-Action enthalten
-- Bullet Points (falls vorhanden) sollen konkrete Fakten oder Tipps enthalten"""
+- Bullet Points (falls vorhanden) sollen konkrete Fakten oder Tipps enthalten
+
+HOOK-FORMELN (fuer die erste Caption-Zeile - MUSS Aufmerksamkeit erregen):
+- Wissensluecke: "Was ich gerne VOR meinem Auslandsjahr gewusst haette..."
+- Vergleich: "USA vs. Kanada: Welches Land passt zu dir?"
+- Mythos-Entlarvung: "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche. Die Wahrheit..."
+- POV: "POV: Dein erster Tag an einer amerikanischen High School"
+- Nummerierte Liste: "5 Gruende, warum DU ein Auslandsjahr machen solltest"
+- Direkte Frage: "Wuerdest du 10 Monate bei einer fremden Familie leben?"
+- Erwartung vs. Realitaet: "Erwartung: US High Schools sind wie in den Filmen..."
+- Emotionaler Einstieg: "Der Moment, in dem ich realisiert habe: Jetzt bin ich alleine."
+- Countdown/Dringlichkeit: "Nur noch 30 Tage bis Bewerbungsschluss!"
+Waehle die passende Hook-Formel basierend auf Kategorie und Plattform!
+
+ENGAGEMENT-STRATEGIE (fuer CTAs am Post-Ende):
+- Frage-CTA: "In welches Land wuerdest du gehen? Kommentiere!"
+- Speicher-CTA: "Speicher dir diesen Post fuer spaeter!"
+- Teilen-CTA: "Tagge einen Freund, der das wissen muss!"
+- UGC-CTA: "Zeig uns dein Auslandsjahr mit #MeinTREFFJahr!"
+- DM-CTA: "Fragen? DM uns - wir antworten in 24h!"
+- Link-CTA: "Alle Infos ueber den Link in unserer Bio!"
+Waehle den CTA-Typ passend zur Kategorie und Plattform!
+
+BRAND-HASHTAGS (immer mindestens einen davon verwenden):
+#TREFFSprachreisen #HighschoolYear #MeinTREFFJahr"""
 
     # Append personality preset section if provided
     if personality_preset and isinstance(personality_preset, dict):

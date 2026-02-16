@@ -276,9 +276,42 @@ async function saveSettings() {
   }
 }
 
+// ── Social Content Strategy state ──
+const socialStrategy = ref(null)
+const socialStrategyLoading = ref(false)
+const socialStrategyError = ref(null)
+const socialStrategyExpanded = ref({
+  platforms: false,
+  hooks: false,
+  repurposing: false,
+  engagement: false,
+  viral: false,
+  hashtags: false,
+  calendar: false,
+})
+
+async function fetchSocialStrategy() {
+  socialStrategyLoading.value = true
+  socialStrategyError.value = null
+  try {
+    const res = await api.get('/api/content-strategy/social-strategy')
+    socialStrategy.value = res.data
+  } catch (err) {
+    console.error('Failed to load social strategy:', err)
+    socialStrategyError.value = 'Social-Content-Strategie konnte nicht geladen werden.'
+  } finally {
+    socialStrategyLoading.value = false
+  }
+}
+
+function toggleStrategySection(key) {
+  socialStrategyExpanded.value[key] = !socialStrategyExpanded.value[key]
+}
+
 onMounted(() => {
   fetchSettings()
   loadTourProgress()
+  fetchSocialStrategy()
 })
 </script>
 
@@ -937,6 +970,300 @@ onMounted(() => {
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Beim naechsten Besuch jeder Seite wird die Tour erneut automatisch gestartet.
             </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================== -->
+      <!-- SECTION 7: Social Content Strategy -->
+      <!-- ======================== -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" data-testid="social-strategy-section" data-tour="settings-social-strategy">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>&#128640;</span> Social-Content-Strategie
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Plattform-spezifische Best Practices, Hook-Formeln, Engagement-Strategien und Content-Kalender-Regeln.
+            Diese Strategie fliesst automatisch in den KI-Text-Generator und den Wochenplaner ein.
+          </p>
+        </div>
+
+        <!-- Loading -->
+        <div v-if="socialStrategyLoading" class="p-5">
+          <div class="animate-pulse space-y-3">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div v-else-if="socialStrategyError" class="p-5">
+          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-600 dark:text-red-400">
+            {{ socialStrategyError }}
+          </div>
+        </div>
+
+        <!-- Strategy Content -->
+        <div v-else-if="socialStrategy" class="p-5 space-y-3">
+          <!-- Strategy version info -->
+          <div class="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 mb-2">
+            <span>Version {{ socialStrategy.version || '1.0.0' }}</span>
+            <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+            <span>Aktualisiert: {{ socialStrategy.last_updated || '-' }}</span>
+          </div>
+
+          <!-- Collapsible: Plattform-Strategien -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('platforms')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-platforms-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#128241;</span> Plattform-Strategien
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Posting-Frequenz, Zeiten, Best Practices)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.platforms }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.platforms" class="p-4 space-y-4">
+              <div v-for="(plat, key) in socialStrategy.platforms" :key="key" class="border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
+                <h4 class="font-medium text-gray-800 dark:text-gray-200 text-sm mb-2">{{ plat.name || key }}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block mb-1">Frequenz:</span>
+                    <span class="text-gray-700 dark:text-gray-300">{{ plat.posting_frequency?.description || '-' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 block mb-1">Optimale Zeiten:</span>
+                    <span class="text-gray-700 dark:text-gray-300">{{ plat.optimal_posting_times?.description || '-' }}</span>
+                  </div>
+                </div>
+                <div v-if="plat.best_practices?.length" class="mt-2">
+                  <span class="text-gray-500 dark:text-gray-400 text-xs block mb-1">Best Practices:</span>
+                  <ul class="list-disc list-inside text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                    <li v-for="(bp, idx) in plat.best_practices.slice(0, 3)" :key="idx">{{ bp }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Hook-Formeln -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('hooks')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-hooks-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#127907;</span> Hook-Formeln
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.hook_formulas?.formulas?.length || 0 }} Formeln)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.hooks }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.hooks" class="p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ socialStrategy.hook_formulas?.description || '' }}</p>
+              <div class="space-y-2">
+                <div v-for="hook in (socialStrategy.hook_formulas?.formulas || [])" :key="hook.id" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-medium text-gray-800 dark:text-gray-200 text-sm">{{ hook.name }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full"
+                      :class="hook.effectiveness >= 9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : hook.effectiveness >= 8 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-300'"
+                    >{{ hook.effectiveness }}/10</span>
+                  </div>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 italic">"{{ hook.template }}"</p>
+                  <div class="flex gap-1.5 mt-1.5">
+                    <span v-for="plat in (hook.platforms || [])" :key="plat"
+                      class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                      {{ plat.replace('instagram_', 'IG ') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Content-Repurposing -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('repurposing')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-repurposing-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#128260;</span> Content-Repurposing
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.content_repurposing?.workflows?.length || 0 }} Workflows)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.repurposing }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.repurposing" class="p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ socialStrategy.content_repurposing?.description || '' }}</p>
+              <div class="space-y-2">
+                <div v-for="(wf, idx) in (socialStrategy.content_repurposing?.workflows || [])" :key="idx" class="flex items-center gap-2 text-xs bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
+                  <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium whitespace-nowrap">{{ wf.source.replace('instagram_', 'IG ').replace('erfahrungsbericht_text', 'Erfahrungsbericht') }}</span>
+                  <span class="text-gray-400">&#8594;</span>
+                  <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium whitespace-nowrap">{{ wf.target.replace('instagram_', 'IG ') }}</span>
+                  <span class="text-gray-500 dark:text-gray-400 flex-1 truncate">{{ wf.transformation }}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
+                    :class="wf.effort === 'niedrig' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : wf.effort === 'mittel' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'"
+                  >{{ wf.effort }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Engagement-Strategien -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('engagement')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-engagement-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#128170;</span> Engagement-Strategien
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(CTAs, UGC, Community Building)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.engagement }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.engagement" class="p-4 space-y-3">
+              <div v-for="cta in (socialStrategy.engagement_strategies?.cta_strategies || [])" :key="cta.type" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5 text-xs">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-medium text-gray-800 dark:text-gray-200 capitalize">{{ cta.type.replace('_', ' ') }}</span>
+                  <span class="text-gray-400">-</span>
+                  <span class="text-gray-600 dark:text-gray-400">{{ cta.description }}</span>
+                </div>
+                <div class="flex gap-1.5 mt-1">
+                  <span v-for="plat in (cta.best_for || [])" :key="plat"
+                    class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                    {{ plat.replace('instagram_', 'IG ') }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="socialStrategy.engagement_strategies?.community_building?.length" class="border-t border-gray-200 dark:border-gray-600 pt-3 mt-3">
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">Community Building:</span>
+                <ul class="list-disc list-inside text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  <li v-for="(tip, idx) in socialStrategy.engagement_strategies.community_building" :key="idx">{{ tip }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Virale Content-Patterns -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('viral')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-viral-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#128293;</span> Virale Content-Patterns
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.viral_patterns?.patterns?.length || 0 }} Patterns)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.viral }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.viral" class="p-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div v-for="pattern in (socialStrategy.viral_patterns?.patterns || [])" :key="pattern.name" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 text-xs">
+                  <span class="font-medium text-gray-800 dark:text-gray-200 block mb-1">{{ pattern.name }}</span>
+                  <span class="text-gray-600 dark:text-gray-400">{{ pattern.treff_adaptation }}</span>
+                  <div class="flex gap-1 mt-1.5">
+                    <span v-for="plat in (pattern.platforms || [])" :key="plat"
+                      class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                      {{ plat.replace('instagram_', 'IG ') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Hashtag-Strategie -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('hashtags')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-hashtags-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>#</span> Hashtag-Strategie
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Brand, Nische, Laender)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.hashtags }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.hashtags" class="p-4 space-y-3 text-xs">
+              <div v-if="socialStrategy.hashtag_strategy?.brand_hashtags">
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-1">Brand-Hashtags:</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span v-for="tag in (socialStrategy.hashtag_strategy.brand_hashtags.primary || [])" :key="tag"
+                    class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium">{{ tag }}</span>
+                  <span v-for="tag in (socialStrategy.hashtag_strategy.brand_hashtags.secondary || [])" :key="tag"
+                    class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">{{ tag }}</span>
+                </div>
+              </div>
+              <div v-if="socialStrategy.hashtag_strategy?.rules?.length">
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-1">Regeln:</span>
+                <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-0.5">
+                  <li v-for="(rule, idx) in socialStrategy.hashtag_strategy.rules" :key="idx">{{ rule }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible: Content-Kalender-Regeln -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+            <button
+              @click="toggleStrategySection('calendar')"
+              class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              data-testid="social-strategy-calendar-toggle"
+            >
+              <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                <span>&#128197;</span> Content-Kalender-Regeln
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Woechentliche Slots, Saisonale Prioritaeten)</span>
+              </span>
+              <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.calendar }">&#9660;</span>
+            </button>
+            <div v-if="socialStrategyExpanded.calendar" class="p-4 space-y-3 text-xs">
+              <!-- Recurring content slots -->
+              <div v-if="socialStrategy.content_calendar_rules?.recurring_content_slots?.length">
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Woechentliche Content-Slots:</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div v-for="slot in socialStrategy.content_calendar_rules.recurring_content_slots" :key="slot.name" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5 flex items-start gap-2">
+                    <span class="font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ slot.day }}:</span>
+                    <div>
+                      <span class="text-blue-600 dark:text-blue-400 font-medium">{{ slot.name }}</span>
+                      <span class="text-gray-500 dark:text-gray-400 block">{{ slot.type }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Seasonal priorities -->
+              <div v-if="socialStrategy.content_calendar_rules?.seasonal_priorities">
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Saisonale Prioritaeten:</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div v-for="(season, key) in socialStrategy.content_calendar_rules.seasonal_priorities" :key="key" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="font-medium text-gray-800 dark:text-gray-200 capitalize">{{ key.replace('_', '-') }}</span>
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                        :class="season.urgency === 'sehr_hoch' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' : season.urgency === 'hoch' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' : season.urgency === 'mittel' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'"
+                      >{{ season.urgency?.replace('_', ' ') }}</span>
+                    </div>
+                    <span class="text-gray-600 dark:text-gray-400">{{ season.focus }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Weekly mix rules -->
+              <div v-if="socialStrategy.content_calendar_rules?.weekly_mix">
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-1">Mix-Regeln:</span>
+                <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-0.5">
+                  <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_categories }} verschiedene Kategorien/Woche</li>
+                  <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_countries }} verschiedene Laender/Woche</li>
+                  <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_platforms }} verschiedene Plattformen/Woche</li>
+                  <li v-if="socialStrategy.content_calendar_rules.weekly_mix.no_same_country_consecutive_days">Nicht dasselbe Land an aufeinanderfolgenden Tagen</li>
+                  <li v-if="socialStrategy.content_calendar_rules.weekly_mix.no_same_category_consecutive_days">Nicht dieselbe Kategorie an aufeinanderfolgenden Tagen</li>
+                  <li v-if="socialStrategy.content_calendar_rules.weekly_mix.include_deadline_post_if_within_14_days">Fristen-Post wenn Deadline innerhalb 14 Tagen</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>

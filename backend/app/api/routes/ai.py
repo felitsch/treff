@@ -1417,11 +1417,22 @@ def _generate_weekly_plan_rule_based(
         days_until_monday = 7
     next_monday = today + timedelta(days=days_until_monday)
 
-    # Optimal posting times for German teenagers (target audience)
-    optimal_times = ["18:00", "19:00", "17:30", "20:00", "12:00"]
+    # Optimal posting times for German teenagers (from social content strategy)
+    # Weekday best times: 17:00-20:00, Weekend best times: 11:00-14:00
+    optimal_times_weekday = ["17:00", "18:00", "19:00", "20:00", "17:30"]
+    optimal_times_weekend = ["11:00", "12:00", "13:00", "14:00", "11:30"]
 
-    # Platforms to rotate
-    platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_feed", "instagram_reels"]
+    # Platforms to rotate (balanced mix per social content strategy)
+    platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_feed", "instagram_reels", "instagram_stories", "tiktok"]
+
+    # Recurring content slot themes from social strategy (for enriching topic suggestions)
+    recurring_slots = {
+        0: {"theme": "Motivation Monday", "preferred_category": "tipps_tricks"},
+        1: {"theme": "Tipps Tuesday", "preferred_category": "tipps_tricks"},
+        3: {"theme": "Throwback Thursday", "preferred_category": "erfahrungsberichte"},
+        4: {"theme": "Freitags-Reel", "preferred_platform": "instagram_reels"},
+        5: {"theme": "Samstags-Story-Serie", "preferred_platform": "instagram_stories"},
+    }
 
     # Determine which countries/categories are underrepresented
     country_counts = {c: recent_countries.count(c) for c in ALL_COUNTRIES}
@@ -1443,16 +1454,69 @@ def _generate_weekly_plan_rule_based(
     # Check upcoming deadlines for seasonal relevance
     upcoming = _get_upcoming_deadlines(today, lookahead_days=14)
 
+    # Hook formula templates from social content strategy for topic enrichment
+    hook_templates = {
+        "laender_spotlight": [
+            "Was ich gerne VOR meinem Aufenthalt in {country} gewusst haette...",
+            "{country}: 5 Dinge die dich ueberraschen werden",
+            "So sieht ein Schultag in {country} WIRKLICH aus",
+        ],
+        "erfahrungsberichte": [
+            "Mein emotionalstes Erlebnis in {country}",
+            "POV: Dein erster Tag an einer High School in {country}",
+            "Erwartung vs. Realitaet: Mein Auslandsjahr in {country}",
+        ],
+        "infografiken": [
+            "{country} in Zahlen: Die wichtigsten Fakten",
+            "USA vs. Kanada: Der ehrliche Vergleich",
+            "Was kostet ein Auslandsjahr? Alle Zahlen auf einen Blick",
+        ],
+        "fristen_cta": [
+            "Nur noch wenige Plaetze fuer {country}!",
+            "Bewerbungsschluss naht! Jetzt noch Platz sichern",
+            "LETZTE CHANCE: {country} Plaetze fast ausgebucht!",
+        ],
+        "tipps_tricks": [
+            "5 Tipps, die ich vor meinem Auslandsjahr gebraucht haette",
+            "Packliste: Diese Dinge haetten wir gern vorher gewusst",
+            "So bereitest du dich optimal vor",
+        ],
+        "faq": [
+            "Die 3 haeufigsten Fragen zum Auslandsjahr - ehrlich beantwortet",
+            "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche. Die Wahrheit...",
+            "Deine Eltern haben Fragen? Wir haben Antworten",
+        ],
+        "foto_posts": [
+            "Impressionen aus {country} - echte Momente, echte Erlebnisse",
+            "So sieht Highschool in {country} wirklich aus",
+            "TREFF-Schueler unterwegs in {country}",
+        ],
+    }
+
     plan = []
     for i, day_offset in enumerate(post_days):
         post_date = next_monday + timedelta(days=day_offset)
         day_name = day_names_de[day_offset]
+        is_weekend = day_offset >= 5  # Saturday=5, Sunday=6
 
         # Pick category and country (rotate through underrepresented ones)
         category = sorted_categories[i % len(sorted_categories)]
         country = sorted_countries[i % len(sorted_countries)]
         platform = platforms[i % len(platforms)]
-        time = optimal_times[i % len(optimal_times)]
+
+        # Use weekday/weekend optimal times from social content strategy
+        if is_weekend:
+            time = optimal_times_weekend[i % len(optimal_times_weekend)]
+        else:
+            time = optimal_times_weekday[i % len(optimal_times_weekday)]
+
+        # Apply recurring content slot preferences from social strategy
+        slot = recurring_slots.get(day_offset)
+        if slot:
+            if "preferred_category" in slot and slot["preferred_category"] in ALL_CATEGORIES:
+                category = slot["preferred_category"]
+            if "preferred_platform" in slot:
+                platform = slot["preferred_platform"]
 
         # If there's an upcoming deadline, override one post with fristen_cta
         if i == 0 and upcoming:
@@ -1465,17 +1529,20 @@ def _generate_weekly_plan_rule_based(
             country_name = COUNTRY_NAMES.get(country, country)
             cat_name = CATEGORY_DISPLAY.get(category, category)
 
-            topic_ideas = {
-                "laender_spotlight": f"{country_name}-Spotlight: Highlights und Fakten",
-                "erfahrungsberichte": f"Erfahrungsbericht aus {country_name}",
-                "infografiken": f"Infografik: Highschool in {country_name} in Zahlen",
-                "fristen_cta": f"Bewerbungsfristen fuer {country_name}",
-                "tipps_tricks": f"Tipps fuer dein Auslandsjahr in {country_name}",
-                "faq": f"FAQ: Haeufige Fragen zu {country_name}",
-                "foto_posts": f"Foto-Impressionen aus {country_name}",
-            }
-            topic = topic_ideas.get(category, f"{cat_name} ueber {country_name}")
-            reason = f"Abwechslung im Content-Mix: {cat_name} + {country_name} fuer ausgewogene Praesenz"
+            # Use hook-formula-inspired topic ideas from social content strategy
+            cat_hooks = hook_templates.get(category, [])
+            if cat_hooks:
+                hook = random.choice(cat_hooks).replace("{country}", country_name)
+                topic = hook
+            else:
+                topic = f"{cat_name} ueber {country_name}"
+
+            # Add recurring slot theme to reason if applicable
+            slot_info = recurring_slots.get(day_offset)
+            if slot_info:
+                reason = f"{slot_info['theme']}: {cat_name} + {country_name} (Social-Content-Strategie)"
+            else:
+                reason = f"Content-Mix: {cat_name} + {country_name} fuer ausgewogene Praesenz"
 
         plan.append({
             "day": day_name,
@@ -1535,12 +1602,35 @@ async def _generate_weekly_plan_with_gemini(
 
         system_prompt = """Du bist der Content-Strategie-Planer fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
 
-Deine Aufgabe ist es, einen kompletten Wochenplan fuer Social Media (Instagram Feed, Instagram Stories, Instagram Reels, TikTok) zu erstellen. Der Plan soll:
-- Einen optimalen Content-Mix bieten (verschiedene Laender und Kategorien abwechseln)
-- Die Posting-Zeiten auf die Zielgruppe (deutsche Teenager 14-18 Jahre) optimieren: beste Zeiten sind 17:00-20:00 Uhr unter der Woche, 11:00-14:00 am Wochenende
-- Bevorstehende TREFF-Fristen und Events beruecksichtigen
-- Plattformen sinnvoll verteilen (nicht alles auf einer Plattform)
-- NICHT mehrmals dasselbe Land oder dieselbe Kategorie direkt hintereinander
+Deine Aufgabe ist es, einen kompletten Wochenplan fuer Social Media zu erstellen. Der Plan basiert auf der TREFF Social-Content-Strategie:
+
+PLATTFORM-SPEZIFISCHE REGELN:
+- Instagram Feed: 3-5 Posts/Woche, beste Zeiten Werktags 17-20 Uhr, Wochenende 11-14 Uhr
+- Instagram Stories: Taeglich, beste Zeiten 07:30, 12:00, 17:30, 20:00
+- Instagram Reels: 2-3/Woche, beste Zeiten Werktags 18-20 Uhr, Wochenende 11-15 Uhr
+- TikTok: 1-2x taeglich, beste Zeiten Werktags 16-21 Uhr, Wochenende 10-19 Uhr
+
+WOECHENTLICHE CONTENT-SLOTS (Empfehlung):
+- Montag: Motivation Monday (motivierender Content)
+- Dienstag: Tipps Tuesday (praktische Tipps oder FAQ)
+- Donnerstag: Throwback Thursday (Alumni-Fotos/-Geschichten)
+- Freitag: Freitags-Reel (unterhaltsames Reel: Cultural Shock, Erwartung vs. Realitaet)
+- Samstag: Samstags-Story-Serie (Story mit Umfragen und Quiz)
+
+HOOK-FORMELN (die erste Zeile/die ersten Sekunden MUESSEN fesseln):
+- Wissensluecke: "Was ich gerne VOR meinem Auslandsjahr gewusst haette..."
+- Vergleich: "USA vs. Kanada: Welches Land passt zu dir?"
+- Mythos-Entlarvung: "MYTHOS: Ein Auslandsjahr ist nur was fuer Reiche."
+- POV: "POV: Dein erster Tag an einer amerikanischen High School"
+- Erwartung vs. Realitaet: "Erwartung: US High Schools sind wie in den Filmen..."
+
+CONTENT-MIX REGELN:
+- Mindestens 3 verschiedene Kategorien pro Woche
+- Mindestens 2 verschiedene Laender pro Woche
+- Mindestens 2 verschiedene Plattformen pro Woche
+- Nicht dasselbe Land an aufeinanderfolgenden Tagen
+- Nicht dieselbe Kategorie an aufeinanderfolgenden Tagen
+- Fristen-Post einplanen wenn Deadline innerhalb von 14 Tagen
 
 TREFF Sprachreisen:
 - Gegruendet 1984 in Eningen u.A., Deutschland
