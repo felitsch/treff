@@ -8,6 +8,7 @@ const router = useRouter()
 const tabs = [
   { key: 'templates', label: 'Templates', icon: '📄', path: '/library/templates' },
   { key: 'template-gallery', label: 'Galerie', icon: '🎨', path: '/library/template-gallery' },
+  { key: 'template-editor', label: 'Editor', icon: '✏️', path: '/library/template-editor' },
   { key: 'assets', label: 'Assets', icon: '🖼️', path: '/library/assets' },
   { key: 'history', label: 'History', icon: '📋', path: '/library/history' },
 ]
