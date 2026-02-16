@@ -39,6 +39,8 @@ def post_to_dict(post: Post) -> dict:
         "story_arc_id": post.story_arc_id,
         "episode_number": post.episode_number,
         "linked_post_group_id": post.linked_post_group_id,
+        "recurring_rule_id": post.recurring_rule_id,
+        "is_recurring_instance": bool(post.is_recurring_instance) if post.is_recurring_instance is not None else None,
         "scheduled_date": post.scheduled_date.isoformat() if post.scheduled_date else None,
         "scheduled_time": post.scheduled_time,
         "exported_at": post.exported_at.isoformat() if post.exported_at else None,
@@ -337,6 +339,67 @@ async def delete_draft(
 
 # ═══════════════════════════════════════════════════════════════════════
 
+
+@router.put("/batch-status")
+async def batch_update_status(
+    data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update status for multiple posts at once.
+
+    Expects:
+    - post_ids: list of post IDs
+    - status: target status string
+    """
+    valid_statuses = {"draft", "scheduled", "reminded", "in_review", "exported", "posted", "archived"}
+    post_ids = data.get("post_ids", [])
+    new_status = data.get("status")
+
+    if not post_ids or not isinstance(post_ids, list):
+        raise HTTPException(status_code=400, detail="post_ids must be a non-empty list")
+    if not new_status or new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(sorted(valid_statuses))}")
+
+    allowed_transitions = {
+        "draft": {"scheduled", "in_review", "archived"},
+        "scheduled": {"draft", "in_review", "exported", "reminded", "archived"},
+        "in_review": {"draft", "scheduled", "exported", "archived"},
+        "reminded": {"scheduled", "in_review", "exported", "posted", "archived"},
+        "exported": {"scheduled", "in_review", "posted", "archived"},
+        "posted": {"archived"},
+        "archived": {"draft"},
+    }
+
+    result = await db.execute(
+        select(Post).where(Post.id.in_(post_ids), Post.user_id == user_id)
+    )
+    posts = result.scalars().all()
+
+    updated = []
+    skipped = []
+    for post in posts:
+        current = post.status or "draft"
+        if current in allowed_transitions and new_status not in allowed_transitions.get(current, set()):
+            skipped.append({"id": post.id, "title": post.title, "reason": f"Wechsel von '{current}' nicht erlaubt"})
+            continue
+        post.status = new_status
+        if new_status == "posted" and not post.posted_at:
+            post.posted_at = datetime.now(timezone.utc)
+        if new_status == "exported" and not post.exported_at:
+            post.exported_at = datetime.now(timezone.utc)
+        updated.append(post.id)
+
+    await db.commit()
+    return {
+        "updated": updated,
+        "updated_count": len(updated),
+        "skipped": skipped,
+        "skipped_count": len(skipped),
+        "target_status": new_status,
+    }
+
+
 @router.get("/{post_id}")
 async def get_post(
     post_id: int,
@@ -541,7 +604,7 @@ async def update_post_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Update post status with proper timestamp tracking."""
-    valid_statuses = {"draft", "scheduled", "reminded", "exported", "posted"}
+    valid_statuses = {"draft", "scheduled", "reminded", "in_review", "exported", "posted", "archived"}
     new_status = status_data.get("status")
     if not new_status or new_status not in valid_statuses:
         raise HTTPException(
@@ -549,12 +612,30 @@ async def update_post_status(
             detail=f"Invalid status. Must be one of: {', '.join(sorted(valid_statuses))}"
         )
 
+    # Status transition rules: define allowed transitions
+    allowed_transitions = {
+        "draft": {"scheduled", "in_review", "archived"},
+        "scheduled": {"draft", "in_review", "exported", "reminded", "archived"},
+        "in_review": {"draft", "scheduled", "exported", "archived"},
+        "reminded": {"scheduled", "in_review", "exported", "posted", "archived"},
+        "exported": {"scheduled", "in_review", "posted", "archived"},
+        "posted": {"archived"},
+        "archived": {"draft"},  # Can only unarchive back to draft
+    }
+
     result = await db.execute(
         select(Post).where(Post.id == post_id, Post.user_id == user_id)
     )
     post = result.scalar_one_or_none()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    current_status = post.status or "draft"
+    if current_status in allowed_transitions and new_status not in allowed_transitions.get(current_status, set()):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Statuswechsel von '{current_status}' nach '{new_status}' nicht erlaubt. Erlaubt: {', '.join(sorted(allowed_transitions.get(current_status, set())))}"
+        )
 
     post.status = new_status
 

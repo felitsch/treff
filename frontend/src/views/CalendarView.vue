@@ -1497,10 +1497,21 @@ const showWeekPlannerHint = computed(() => {
   return !loading.value && totalPosts.value === 0
 })
 
+// Close status dropdowns when clicking outside
+function handleGlobalClick() {
+  statusDropdownPost.value = null
+  showBatchStatusMenu.value = false
+}
+
 onMounted(() => {
   fetchData()
   fetchUnscheduled()
   checkRecurringFormats()
+  document.addEventListener('click', handleGlobalClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleGlobalClick)
 })
 </script>
 
