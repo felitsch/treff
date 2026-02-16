@@ -27,6 +27,16 @@ const dragItem = ref(null)
 const dragSourceDay = ref(null)
 const tourRef = ref(null)
 
+// Platform filter: which platforms to include in generated plan
+const selectedPlatforms = ref(['instagram_feed', 'instagram_story', 'tiktok'])
+
+// Theme/topic focus: which categories to emphasize
+const selectedThemes = ref([])
+
+// Inline edit state
+const editingItem = ref(null) // { dayIndex, suggestionIndex }
+const editForm = ref({ topic: '', category: '', platform: '', country: '', time: '' })
+
 // Category display helpers
 const categoryColors = {
   laender_spotlight: { bg: 'bg-blue-100 dark:bg-blue-900/40', border: 'border-blue-400', text: 'text-blue-700 dark:text-blue-300' },
@@ -78,6 +88,24 @@ const countryNames = {
   ireland: 'Irland',
 }
 
+// Available platform options for filter
+const platformOptions = [
+  { value: 'instagram_feed', label: 'IG Feed', icon: '📷' },
+  { value: 'instagram_story', label: 'IG Story', icon: '📱' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+]
+
+// Available theme/category options for focus
+const themeOptions = [
+  { value: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍' },
+  { value: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬' },
+  { value: 'infografiken', label: 'Infografiken', icon: '📊' },
+  { value: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰' },
+  { value: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡' },
+  { value: 'faq', label: 'FAQ', icon: '❓' },
+  { value: 'foto_posts', label: 'Foto-Posts', icon: '📸' },
+]
+
 // Compute default week start (next Monday)
 function getNextMonday() {
   const today = new Date()
@@ -114,6 +142,8 @@ async function generatePlan() {
       posts_per_week: postsPerWeek.value,
       include_recurring: includeRecurring.value,
       include_series: includeSeries.value,
+      platforms: selectedPlatforms.value.length > 0 ? selectedPlatforms.value : undefined,
+      theme_focus: selectedThemes.value.length > 0 ? selectedThemes.value : undefined,
     }
     const res = await fetch('/api/ai/weekly-planner', {
       method: 'POST',
@@ -186,6 +216,63 @@ function onDrop(event, targetDayIndex) {
 function onDragEnd() {
   dragItem.value = null
   dragSourceDay.value = null
+}
+
+// Inline editing functions
+function startEdit(dayIndex, suggestionIndex) {
+  const suggestion = daySlots.value[dayIndex].suggestions[suggestionIndex]
+  editingItem.value = { dayIndex, suggestionIndex }
+  editForm.value = {
+    topic: suggestion.topic || '',
+    category: suggestion.category || 'laender_spotlight',
+    platform: suggestion.platform || 'instagram_feed',
+    country: suggestion.country || 'usa',
+    time: suggestion.time || '17:00',
+  }
+}
+
+function saveEdit() {
+  if (!editingItem.value) return
+  const { dayIndex, suggestionIndex } = editingItem.value
+  const suggestion = daySlots.value[dayIndex].suggestions[suggestionIndex]
+  suggestion.topic = editForm.value.topic
+  suggestion.category = editForm.value.category
+  suggestion.platform = editForm.value.platform
+  suggestion.country = editForm.value.country
+  suggestion.time = editForm.value.time
+  editingItem.value = null
+  toast.success('Vorschlag aktualisiert')
+}
+
+function cancelEdit() {
+  editingItem.value = null
+}
+
+function isEditing(dayIndex, suggestionIndex) {
+  return editingItem.value?.dayIndex === dayIndex && editingItem.value?.suggestionIndex === suggestionIndex
+}
+
+// Toggle platform selection
+function togglePlatform(platform) {
+  const idx = selectedPlatforms.value.indexOf(platform)
+  if (idx >= 0) {
+    // Don't allow deselecting all
+    if (selectedPlatforms.value.length > 1) {
+      selectedPlatforms.value.splice(idx, 1)
+    }
+  } else {
+    selectedPlatforms.value.push(platform)
+  }
+}
+
+// Toggle theme selection
+function toggleTheme(theme) {
+  const idx = selectedThemes.value.indexOf(theme)
+  if (idx >= 0) {
+    selectedThemes.value.splice(idx, 1)
+  } else {
+    selectedThemes.value.push(theme)
+  }
 }
 
 // One-click adopt plan
@@ -344,6 +431,53 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- Platform Filter -->
+        <div class="w-full">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Plattformen</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="p in platformOptions"
+              :key="p.value"
+              @click="togglePlatform(p.value)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all"
+              :class="selectedPlatforms.includes(p.value)
+                ? 'bg-treff-blue/10 border-treff-blue text-treff-blue dark:bg-treff-blue/20 dark:text-blue-300'
+                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'"
+            >
+              <span>{{ p.icon }}</span>
+              <span>{{ p.label }}</span>
+              <svg v-if="selectedPlatforms.includes(p.value)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Focus (optional) -->
+        <div class="w-full">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Themen-Schwerpunkte
+            <span class="text-xs font-normal text-gray-400 dark:text-gray-500 ml-1">(optional – leer = ausgewogener Mix)</span>
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="t in themeOptions"
+              :key="t.value"
+              @click="toggleTheme(t.value)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all"
+              :class="selectedThemes.includes(t.value)
+                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 text-amber-700 dark:text-amber-300'
+                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'"
+            >
+              <span>{{ t.icon }}</span>
+              <span>{{ t.label }}</span>
+              <svg v-if="selectedThemes.includes(t.value)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         <!-- Generate Button -->
         <button
           data-tour="wp-generate"
@@ -438,55 +572,113 @@ onMounted(() => {
             <div
               v-for="(suggestion, sIdx) in slot.suggestions"
               :key="`${slot.date}-${sIdx}`"
-              draggable="true"
-              @dragstart="onDragStart($event, dayIndex, sIdx)"
+              :draggable="!isEditing(dayIndex, sIdx)"
+              @dragstart="!isEditing(dayIndex, sIdx) && onDragStart($event, dayIndex, sIdx)"
               @dragend="onDragEnd"
-              class="p-2.5 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-md"
+              class="p-2.5 rounded-lg border-2 transition-all hover:shadow-md"
               :class="[
-                getCategoryStyle(suggestion.category).bg,
-                getCategoryStyle(suggestion.category).border,
-                suggestion.is_series ? 'ring-2 ring-purple-400 dark:ring-purple-600' : '',
+                isEditing(dayIndex, sIdx) ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300' : getCategoryStyle(suggestion.category).bg + ' ' + getCategoryStyle(suggestion.category).border + ' cursor-grab active:cursor-grabbing',
+                suggestion.is_series && !isEditing(dayIndex, sIdx) ? 'ring-2 ring-purple-400 dark:ring-purple-600' : '',
               ]"
             >
-              <!-- Suggestion Header -->
-              <div class="flex items-center justify-between mb-1">
-                <div class="flex items-center gap-1">
-                  <span class="text-sm">{{ suggestion.icon }}</span>
-                  <span class="text-[10px] font-bold uppercase tracking-wider" :class="getCategoryStyle(suggestion.category).text">
-                    {{ suggestion.is_series ? 'Serie' : suggestion.is_recurring ? 'Format' : 'Mix' }}
+              <!-- EDIT MODE -->
+              <div v-if="isEditing(dayIndex, sIdx)" class="space-y-2">
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Thema</label>
+                  <input
+                    v-model="editForm.topic"
+                    type="text"
+                    class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Thema eingeben..."
+                  />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] font-semibold text-gray-500 uppercase">Kategorie</label>
+                    <select v-model="editForm.category" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                      <option v-for="t in themeOptions" :key="t.value" :value="t.value">{{ t.icon }} {{ t.label }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-semibold text-gray-500 uppercase">Plattform</label>
+                    <select v-model="editForm.platform" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                      <option v-for="p in platformOptions" :key="p.value" :value="p.value">{{ p.icon }} {{ p.label }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] font-semibold text-gray-500 uppercase">Land</label>
+                    <select v-model="editForm.country" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                      <option v-for="(name, code) in countryNames" :key="code" :value="code">{{ countryFlags[code] }} {{ name }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-semibold text-gray-500 uppercase">Uhrzeit</label>
+                    <input v-model="editForm.time" type="time" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button @click="saveEdit" class="flex-1 px-2 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">
+                    Speichern
+                  </button>
+                  <button @click="cancelEdit" class="flex-1 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors">
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+
+              <!-- VIEW MODE -->
+              <template v-else>
+                <!-- Suggestion Header -->
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-sm">{{ suggestion.icon }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider" :class="getCategoryStyle(suggestion.category).text">
+                      {{ suggestion.is_series ? 'Serie' : suggestion.is_recurring ? 'Format' : 'Mix' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button
+                      @click.stop="startEdit(dayIndex, sIdx)"
+                      class="text-gray-400 hover:text-blue-500 text-xs p-0.5 rounded"
+                      title="Bearbeiten"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      @click.stop="removeSuggestion(dayIndex, sIdx)"
+                      class="text-gray-400 hover:text-red-500 text-xs p-0.5 rounded"
+                      title="Entfernen"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Topic -->
+                <div class="text-xs font-medium text-gray-800 dark:text-gray-200 mb-1.5 line-clamp-2">
+                  {{ suggestion.topic }}
+                </div>
+
+                <!-- Meta row -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
+                    {{ platformIcons[suggestion.platform] }} {{ platformLabels[suggestion.platform] }}
+                  </span>
+                  <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
+                    {{ countryFlags[suggestion.country] }} {{ countryNames[suggestion.country] }}
+                  </span>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
+                    🕐 {{ suggestion.time }}
                   </span>
                 </div>
-                <button
-                  @click.stop="removeSuggestion(dayIndex, sIdx)"
-                  class="text-gray-400 hover:text-red-500 text-xs p-0.5 rounded"
-                  title="Entfernen"
-                >
-                  ✕
-                </button>
-              </div>
 
-              <!-- Topic -->
-              <div class="text-xs font-medium text-gray-800 dark:text-gray-200 mb-1.5 line-clamp-2">
-                {{ suggestion.topic }}
-              </div>
-
-              <!-- Meta row -->
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
-                  {{ platformIcons[suggestion.platform] }} {{ platformLabels[suggestion.platform] }}
-                </span>
-                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
-                  {{ countryFlags[suggestion.country] }} {{ countryNames[suggestion.country] }}
-                </span>
-                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
-                  🕐 {{ suggestion.time }}
-                </span>
-              </div>
-
-              <!-- Reason (tooltip-style) -->
-              <div class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 italic line-clamp-1">
-                {{ suggestion.reason }}
-              </div>
+                <!-- Reason (tooltip-style) -->
+                <div class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 italic line-clamp-1">
+                  {{ suggestion.reason }}
+                </div>
+              </template>
             </div>
 
             <!-- Empty state -->

@@ -933,12 +933,307 @@ async def generate_image(
 async def edit_image(
     request: dict,
     user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Edit existing image via natural language."""
-    return {
-        "status": "api_key_required",
-        "message": "Bildbearbeitung benoetigt einen Gemini API-Key. Bitte in den Einstellungen konfigurieren.",
+    """Edit existing image: background removal, style transfer, or outpainting.
+
+    Expects:
+    - asset_id (int): ID of the source asset to edit
+    - operation (str): One of 'remove_background', 'style_transfer', 'outpainting'
+    - style (str, optional): For style_transfer: 'illustration', 'watercolor', 'minimalist', 'comic', 'oil_painting'
+    - target_aspect_ratio (str, optional): For outpainting: '1:1', '4:5', '9:16', '16:9'
+
+    Returns edited image saved as new asset (original preserved).
+    """
+    ai_rate_limiter.check_rate_limit(user_id, "edit-image")
+
+    asset_id = request.get("asset_id")
+    operation = request.get("operation", "").strip()
+
+    if not asset_id:
+        raise HTTPException(status_code=400, detail="asset_id ist erforderlich.")
+    if operation not in ("remove_background", "style_transfer", "outpainting"):
+        raise HTTPException(
+            status_code=400,
+            detail="Unbekannte Operation. Erlaubt: remove_background, style_transfer, outpainting",
+        )
+
+    # Load source asset
+    result = await db.execute(
+        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
+    )
+    source_asset = result.scalar_one_or_none()
+    if not source_asset:
+        raise HTTPException(status_code=404, detail="Asset nicht gefunden.")
+
+    # Load image bytes
+    source_bytes = None
+    if source_asset.file_data:
+        try:
+            source_bytes = base64.b64decode(source_asset.file_data)
+        except Exception:
+            pass
+    if not source_bytes:
+        for try_path in [
+            ASSETS_UPLOAD_DIR / source_asset.filename,
+            Path(source_asset.file_path.lstrip("/")),
+        ]:
+            if try_path.exists():
+                source_bytes = try_path.read_bytes()
+                break
+    if not source_bytes:
+        raise HTTPException(status_code=404, detail="Bilddaten konnten nicht geladen werden.")
+
+    api_key = await _get_gemini_api_key(user_id, db)
+    edited_bytes = None
+    edit_source = "local"
+    edit_label = ""
+
+    if operation == "remove_background":
+        edit_label = "Hintergrund entfernt"
+        if api_key:
+            edited_bytes = await _remove_background_gemini(source_bytes, api_key)
+            if edited_bytes:
+                edit_source = "gemini"
+        if not edited_bytes:
+            edited_bytes = _remove_background_local(source_bytes)
+
+    elif operation == "style_transfer":
+        style = request.get("style", "illustration")
+        if style not in ("illustration", "watercolor", "minimalist", "comic", "oil_painting"):
+            style = "illustration"
+        edit_label = f"Style: {style}"
+        if api_key:
+            edited_bytes = await _style_transfer_gemini(source_bytes, style, api_key)
+            if edited_bytes:
+                edit_source = "gemini"
+        if not edited_bytes:
+            edited_bytes = _style_transfer_local(source_bytes, style)
+
+    elif operation == "outpainting":
+        target_ratio = request.get("target_aspect_ratio", "4:5")
+        edit_label = f"Format: {target_ratio}"
+        if api_key:
+            edited_bytes = await _outpainting_gemini(source_bytes, target_ratio, api_key)
+            if edited_bytes:
+                edit_source = "gemini"
+        if not edited_bytes:
+            edited_bytes = _outpainting_local(source_bytes, target_ratio)
+
+    if not edited_bytes:
+        raise HTTPException(status_code=500, detail="Bildbearbeitung fehlgeschlagen.")
+
+    # Save as new asset (original preserved)
+    try:
+        from app.core.paths import save_and_encode
+        unique_filename = f"edit_{operation}_{uuid.uuid4().hex[:10]}.png"
+        file_path = ASSETS_UPLOAD_DIR / unique_filename
+        b64 = save_and_encode(edited_bytes, file_path)
+        img = Image.open(io.BytesIO(edited_bytes))
+        width, height = img.size
+
+        new_asset = Asset(
+            user_id=user_id,
+            filename=unique_filename,
+            original_filename=f"{edit_label}: {source_asset.original_filename or source_asset.filename}",
+            file_path=f"/uploads/assets/{unique_filename}",
+            file_type="image/png",
+            file_size=len(edited_bytes),
+            width=width,
+            height=height,
+            source="ai_edited",
+            ai_prompt=f"{operation}: {edit_label}",
+            category=source_asset.category,
+            country=source_asset.country,
+            tags=f"edited,{operation}",
+            file_data=b64,
+        )
+        db.add(new_asset)
+        await db.flush()
+        await db.refresh(new_asset)
+
+        return {
+            "status": "success",
+            "image_url": f"/api/uploads/assets/{unique_filename}",
+            "asset": asset_to_dict(new_asset),
+            "original_asset_id": asset_id,
+            "operation": operation,
+            "source": edit_source,
+            "message": f"Bild erfolgreich bearbeitet ({edit_label})!",
+        }
+    except Exception as e:
+        logger.error(f"Failed to save edited image: {e}")
+        raise HTTPException(status_code=500, detail="Fehler beim Speichern des bearbeiteten Bildes.")
+
+
+# ── Image Editing Helpers ──
+
+async def _remove_background_gemini(image_bytes: bytes, api_key: str) -> Optional[bytes]:
+    """Remove background using Gemini."""
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+        img = Image.open(io.BytesIO(image_bytes))
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=[types.Content(parts=[
+                types.Part.from_image(img),
+                types.Part.from_text("Remove the background completely. Keep only the main subject on a white background."),
+            ])],
+            config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
+        )
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                return part.inline_data.data
+        return None
+    except Exception as e:
+        logger.warning(f"Gemini background removal failed: {e}")
+        return None
+
+
+def _remove_background_local(image_bytes: bytes) -> bytes:
+    """Local fallback: rounded-rect cutout with white background."""
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    w, h = img.size
+    mask = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask)
+    margin = min(w, h) // 15
+    draw.rounded_rectangle([margin, margin, w - margin, h - margin], radius=min(w, h) // 8, fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(radius=min(w, h) // 30))
+    result = Image.new("RGBA", (w, h), (255, 255, 255, 255))
+    result.paste(img, (0, 0), mask)
+    draw2 = ImageDraw.Draw(result)
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", max(12, h // 35))
+    except Exception:
+        font = ImageFont.load_default()
+    draw2.text((8, h - 24), "Vorschau - KI-Freisteller mit API-Key", fill=(160, 160, 160, 180), font=font)
+    buf = io.BytesIO()
+    result.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+async def _style_transfer_gemini(image_bytes: bytes, style: str, api_key: str) -> Optional[bytes]:
+    """Apply style transfer using Gemini."""
+    prompts = {
+        "illustration": "Transform this into a colorful digital illustration with flat design, bold outlines, vivid colors.",
+        "watercolor": "Transform this into a watercolor painting with soft washes and delicate color blending.",
+        "minimalist": "Transform this into a minimalist design with clean lines, limited colors, lots of white space.",
+        "comic": "Transform this into a comic book style with bold outlines, halftone dots, pop colors.",
+        "oil_painting": "Transform this into a classic oil painting with visible brush strokes, rich textures, deep colors.",
     }
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+        img = Image.open(io.BytesIO(image_bytes))
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=[types.Content(parts=[
+                types.Part.from_image(img),
+                types.Part.from_text(prompts.get(style, prompts["illustration"])),
+            ])],
+            config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
+        )
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                return part.inline_data.data
+        return None
+    except Exception as e:
+        logger.warning(f"Gemini style transfer failed: {e}")
+        return None
+
+
+def _style_transfer_local(image_bytes: bytes, style: str) -> bytes:
+    """Local fallback: apply basic PIL filters to approximate style."""
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    w, h = img.size
+    from PIL import ImageEnhance, ImageOps
+    if style == "illustration":
+        img = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
+        img = ImageOps.posterize(img, 4)
+    elif style == "watercolor":
+        img = img.filter(ImageFilter.GaussianBlur(radius=2))
+        img = img.filter(ImageFilter.SMOOTH_MORE)
+        img = ImageEnhance.Color(img).enhance(1.3)
+    elif style == "minimalist":
+        img = ImageEnhance.Color(img).enhance(0.3)
+        img = ImageEnhance.Contrast(img).enhance(1.5)
+    elif style == "comic":
+        img = img.filter(ImageFilter.CONTOUR)
+        img = ImageOps.posterize(img, 3)
+        img = ImageEnhance.Color(img).enhance(2.0)
+    elif style == "oil_painting":
+        img = img.filter(ImageFilter.GaussianBlur(radius=3))
+        img = ImageEnhance.Contrast(img).enhance(1.4)
+        img = ImageEnhance.Color(img).enhance(1.3)
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", max(12, h // 35))
+    except Exception:
+        font = ImageFont.load_default()
+    draw.text((8, h - 24), "Vorschau - KI-Style mit API-Key", fill=(160, 160, 160), font=font)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+async def _outpainting_gemini(image_bytes: bytes, target_ratio: str, api_key: str) -> Optional[bytes]:
+    """Extend image to new aspect ratio using Gemini."""
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+        img = Image.open(io.BytesIO(image_bytes))
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=[types.Content(parts=[
+                types.Part.from_image(img),
+                types.Part.from_text(f"Extend this image to fill a {target_ratio} aspect ratio. Seamlessly continue the scene."),
+            ])],
+            config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
+        )
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                return part.inline_data.data
+        return None
+    except Exception as e:
+        logger.warning(f"Gemini outpainting failed: {e}")
+        return None
+
+
+def _outpainting_local(image_bytes: bytes, target_ratio: str) -> bytes:
+    """Local fallback: extend canvas with blurred edge fill."""
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    ow, oh = img.size
+    ratios = {"1:1": (1, 1), "4:5": (4, 5), "9:16": (9, 16), "16:9": (16, 9), "3:4": (3, 4), "4:3": (4, 3)}
+    rw, rh = ratios.get(target_ratio, (4, 5))
+    tr = rw / rh
+    if tr > ow / oh:
+        nw, nh = int(oh * tr), oh
+    else:
+        nw, nh = ow, int(ow / tr)
+    bg = img.resize((nw, nh), Image.LANCZOS).filter(ImageFilter.GaussianBlur(radius=max(nw, nh) // 15))
+    xo, yo = (nw - ow) // 2, (nh - oh) // 2
+    # Soft edge mask
+    mask = Image.new("L", (ow, oh), 255)
+    draw = ImageDraw.Draw(mask)
+    fade = min(ow, oh) // 10
+    for i in range(fade):
+        a = int(255 * (i / fade))
+        draw.rectangle([i, i, ow - i - 1, oh - i - 1], outline=a)
+    mask = mask.filter(ImageFilter.GaussianBlur(radius=fade // 2))
+    bg.paste(img, (xo, yo), mask)
+    draw2 = ImageDraw.Draw(bg)
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", max(12, nh // 35))
+    except Exception:
+        font = ImageFont.load_default()
+    draw2.text((8, nh - 24), "Vorschau - KI-Outpainting mit API-Key", fill=(160, 160, 160), font=font)
+    buf = io.BytesIO()
+    bg.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 # ── TREFF Seasonal Calendar for Content Suggestions ──
@@ -2177,6 +2472,24 @@ async def weekly_planner(
     include_recurring = request.get("include_recurring", True)
     include_series = request.get("include_series", True)
 
+    # Platform filter: list of allowed platforms (e.g. ["instagram_feed", "tiktok"])
+    allowed_platforms = request.get("platforms", None)
+    if allowed_platforms and isinstance(allowed_platforms, list):
+        allowed_platforms = [p for p in allowed_platforms if p in ("instagram_feed", "instagram_story", "instagram_stories", "instagram_reels", "tiktok")]
+    else:
+        allowed_platforms = None  # No filter = all platforms
+
+    # Theme focus: list of preferred categories (e.g. ["laender_spotlight", "tipps_tricks"])
+    theme_focus = request.get("theme_focus", None)
+    if theme_focus and isinstance(theme_focus, list):
+        theme_focus = [t for t in theme_focus if t in (
+            "laender_spotlight", "erfahrungsberichte", "infografiken",
+            "fristen_cta", "tipps_tricks", "faq", "foto_posts",
+            "reel_tiktok_thumbnails", "story_posts", "story_teaser",
+        )]
+    else:
+        theme_focus = None  # No focus = balanced mix
+
     # Fetch active story arcs
     active_arcs = []
     if include_series:
@@ -2368,8 +2681,11 @@ async def weekly_planner(
                             reason = f"Bevorstehende Frist: {dl['label']} am {dl['date'].strftime('%d.%m.%Y')}"
                             break
 
-            platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
-            platform = platforms[assigned_count % len(platforms)]
+            default_platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
+            platform_pool = [p for p in default_platforms if p in allowed_platforms] if allowed_platforms else default_platforms
+            if not platform_pool:
+                platform_pool = default_platforms
+            platform = platform_pool[assigned_count % len(platform_pool)]
 
             slot["suggestions"].append({
                 "type": "recurring",
@@ -2393,7 +2709,29 @@ async def weekly_planner(
         country_counts = {c: recent_countries.count(c) for c in ALL_COUNTRIES}
         sorted_countries = sorted(ALL_COUNTRIES, key=lambda c: country_counts.get(c, 0))
         cat_counts = {c: recent_categories.count(c) for c in ALL_CATEGORIES}
-        sorted_cats = sorted(ALL_CATEGORIES, key=lambda c: cat_counts.get(c, 0))
+
+        # If theme_focus is specified, prioritize those categories
+        if theme_focus:
+            # Interleave focused themes with remaining categories for variety
+            focused_cats = [c for c in theme_focus if c in ALL_CATEGORIES]
+            other_cats = sorted([c for c in ALL_CATEGORIES if c not in theme_focus], key=lambda c: cat_counts.get(c, 0))
+            # 2:1 ratio focused vs other
+            sorted_cats = []
+            fi, oi = 0, 0
+            while len(sorted_cats) < len(ALL_CATEGORIES):
+                if fi < len(focused_cats):
+                    sorted_cats.append(focused_cats[fi % len(focused_cats)])
+                    fi += 1
+                if fi < len(focused_cats) and len(sorted_cats) < len(ALL_CATEGORIES):
+                    sorted_cats.append(focused_cats[fi % len(focused_cats)])
+                    fi += 1
+                if oi < len(other_cats) and len(sorted_cats) < len(ALL_CATEGORIES):
+                    sorted_cats.append(other_cats[oi])
+                    oi += 1
+                if fi >= len(focused_cats) and oi >= len(other_cats):
+                    break
+        else:
+            sorted_cats = sorted(ALL_CATEGORIES, key=lambda c: cat_counts.get(c, 0))
 
         fill_idx = 0
         for slot in day_slots:
@@ -2406,8 +2744,11 @@ async def weekly_planner(
             country = sorted_countries[fill_idx % len(sorted_countries)]
             country_name = COUNTRY_NAMES.get(country, country)
             cat_name = CATEGORY_DISPLAY.get(category, category)
-            platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
-            platform = platforms[fill_idx % len(platforms)]
+            default_platforms = ["instagram_feed", "instagram_stories", "tiktok", "instagram_reels"]
+            platform_pool = [p for p in default_platforms if p in allowed_platforms] if allowed_platforms else default_platforms
+            if not platform_pool:
+                platform_pool = default_platforms
+            platform = platform_pool[fill_idx % len(platform_pool)]
             time_str = optimal_times_weekend[0] if slot["is_weekend"] else optimal_times_weekday[fill_idx % len(optimal_times_weekday)]
 
             topic_ideas = {
