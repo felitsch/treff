@@ -47,6 +47,58 @@ const newTemplate = ref({
   placeholder_fields: '["title", "content"]',
 })
 
+// Placeholder insertion toolbar for template HTML editor
+const showPlaceholderDropdown = ref(false)
+const htmlTextareaRef = ref(null)
+
+const AVAILABLE_PLACEHOLDERS = [
+  { name: 'headline', label: 'Ueberschrift', icon: '📝' },
+  { name: 'subheadline', label: 'Unterueberschrift', icon: '📋' },
+  { name: 'body_text', label: 'Fliesstext', icon: '📄' },
+  { name: 'cta_text', label: 'CTA-Text', icon: '🚀' },
+  { name: 'name', label: 'Name', icon: '👤' },
+  { name: 'land', label: 'Land', icon: '🌍' },
+  { name: 'stadt', label: 'Stadt', icon: '🏙️' },
+  { name: 'datum', label: 'Datum', icon: '📅' },
+  { name: 'quote', label: 'Zitat', icon: '💬' },
+  { name: 'quote_text', label: 'Zitat-Text', icon: '💬' },
+  { name: 'quote_author', label: 'Zitat-Autor', icon: '✍️' },
+  { name: 'zahl', label: 'Zahl / Statistik', icon: '🔢' },
+  { name: 'image', label: 'Bild-Platzhalter', icon: '🖼️' },
+]
+
+function insertPlaceholder(placeholderName) {
+  const placeholder = `{{${placeholderName}}}`
+  const textarea = htmlTextareaRef.value
+  if (textarea) {
+    const start = textarea.selectionStart || 0
+    const end = textarea.selectionEnd || 0
+    const content = newTemplate.value.html_content
+    newTemplate.value.html_content = content.substring(0, start) + placeholder + content.substring(end)
+    // Re-focus and position cursor after the inserted placeholder
+    nextTick(() => {
+      textarea.focus()
+      const newPos = start + placeholder.length
+      textarea.setSelectionRange(newPos, newPos)
+    })
+  } else {
+    // Fallback: append at end
+    newTemplate.value.html_content += placeholder
+  }
+  // Auto-update placeholder_fields JSON if this placeholder isn't already listed
+  try {
+    let fields = JSON.parse(newTemplate.value.placeholder_fields || '[]')
+    if (!Array.isArray(fields)) fields = []
+    if (!fields.includes(placeholderName)) {
+      fields.push(placeholderName)
+      newTemplate.value.placeholder_fields = JSON.stringify(fields)
+    }
+  } catch {
+    newTemplate.value.placeholder_fields = JSON.stringify([placeholderName])
+  }
+  showPlaceholderDropdown.value = false
+}
+
 // =============================================
 // Template Editor with Live Preview
 // =============================================
@@ -1165,7 +1217,41 @@ onMounted(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               HTML-Inhalt <span class="text-red-500">*</span>
             </label>
+            <!-- Placeholder Insertion Toolbar -->
+            <div class="flex items-center gap-2 mb-1.5">
+              <div class="relative">
+                <button
+                  type="button"
+                  @click="showPlaceholderDropdown = !showPlaceholderDropdown"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                  data-testid="insert-placeholder-btn"
+                >
+                  <span>🔤</span>
+                  Platzhalter einfuegen
+                  <svg class="w-3.5 h-3.5 transition-transform" :class="showPlaceholderDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div
+                  v-if="showPlaceholderDropdown"
+                  class="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg z-30 py-1 max-h-64 overflow-auto"
+                  data-testid="placeholder-dropdown"
+                >
+                  <button
+                    v-for="ph in AVAILABLE_PLACEHOLDERS"
+                    :key="ph.name"
+                    type="button"
+                    @click="insertPlaceholder(ph.name)"
+                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors"
+                  >
+                    <span>{{ ph.icon }}</span>
+                    <span class="flex-1">{{ ph.label }}</span>
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 font-mono" v-text="'{{' + ph.name + '}}'"></span>
+                  </button>
+                </div>
+              </div>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500">Klicke, um <span v-text="'{{variable}}'" class="font-mono"></span> in den HTML-Code einzufuegen</span>
+            </div>
             <textarea
+              ref="htmlTextareaRef"
               v-model="newTemplate.html_content"
               rows="6"
               placeholder="<div class='template'>...</div>"
@@ -1217,6 +1303,24 @@ onMounted(() => {
               class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm font-mono"
             />
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JSON-Array der Platzhalter-Namen, die im HTML verwendet werden.</p>
+            <details class="mt-2">
+              <summary class="text-xs text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">Verfuegbare Standard-Variablen anzeigen</summary>
+              <div class="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs text-gray-600 dark:text-gray-400 grid grid-cols-2 gap-1.5">
+                <span><strong>headline</strong> — Ueberschrift</span>
+                <span><strong>subheadline</strong> — Unterueberschrift</span>
+                <span><strong>body_text</strong> — Fliesstext</span>
+                <span><strong>cta_text</strong> — CTA-Button</span>
+                <span><strong>name</strong> — Person / Schueler</span>
+                <span><strong>land</strong> — Zielland</span>
+                <span><strong>stadt</strong> — Stadt / Region</span>
+                <span><strong>datum</strong> — Datum / Frist</span>
+                <span><strong>quote</strong> — Zitat (kurz)</span>
+                <span><strong>quote_text</strong> — Zitat-Text</span>
+                <span><strong>quote_author</strong> — Zitat-Autor</span>
+                <span><strong>zahl</strong> — Statistik / Zahl</span>
+                <span><strong>image</strong> — Bild-Platzhalter</span>
+              </div>
+            </details>
           </div>
         </div>
 

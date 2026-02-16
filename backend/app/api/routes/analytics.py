@@ -1192,3 +1192,105 @@ async def export_performance_csv(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/heatmap")
+async def get_heatmap(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posting activity heatmap data for the last 12 months.
+
+    Returns daily post counts in a format suitable for a GitHub-style
+    contribution heatmap (52 weeks x 7 days grid).
+
+    Response includes:
+    - days: list of {date, count, titles} for each day with posts
+    - streak: current and longest consecutive posting streak
+    - total_posts: total posts in the 12-month window
+    - total_days_with_posts: number of days that have at least one post
+    """
+    now = datetime.now(timezone.utc)
+    # Go back ~12 months (52 weeks = 364 days)
+    start_date = now - timedelta(days=364)
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Query all posts in the date range
+    result = await db.execute(
+        select(Post.created_at, Post.title).where(
+            Post.user_id == user_id,
+            Post.created_at >= start_date,
+        ).order_by(Post.created_at)
+    )
+    rows = result.all()
+
+    # Build daily counts dict
+    daily_counts = {}
+    daily_titles = {}
+    for created_at, title in rows:
+        day_str = created_at.date().isoformat()
+        daily_counts[day_str] = daily_counts.get(day_str, 0) + 1
+        if day_str not in daily_titles:
+            daily_titles[day_str] = []
+        if title and len(daily_titles[day_str]) < 5:
+            daily_titles[day_str].append(title)
+
+    # Build complete day list for the grid
+    days = []
+    today = now.date()
+    # Start from the Monday of the week 52 weeks ago
+    grid_start = (today - timedelta(days=364))
+    # Align to Monday
+    grid_start = grid_start - timedelta(days=grid_start.weekday())
+
+    for i in range(371):  # 53 weeks * 7 days (to cover full range)
+        day = grid_start + timedelta(days=i)
+        if day > today:
+            break
+        day_str = day.isoformat()
+        count = daily_counts.get(day_str, 0)
+        entry = {
+            "date": day_str,
+            "count": count,
+            "weekday": day.weekday(),  # 0=Mon, 6=Sun
+        }
+        if count > 0 and day_str in daily_titles:
+            entry["titles"] = daily_titles[day_str]
+        days.append(entry)
+
+    # Calculate streaks
+    current_streak = 0
+    longest_streak = 0
+    temp_streak = 0
+
+    # Walk backwards from today for current streak
+    for i in range(365):
+        check_day = (today - timedelta(days=i)).isoformat()
+        if daily_counts.get(check_day, 0) > 0:
+            current_streak += 1
+        else:
+            break
+
+    # Walk forward from start for longest streak
+    for i in range(365):
+        check_day = (grid_start + timedelta(days=i)).isoformat()
+        if daily_counts.get(check_day, 0) > 0:
+            temp_streak += 1
+            longest_streak = max(longest_streak, temp_streak)
+        else:
+            temp_streak = 0
+
+    total_posts = sum(daily_counts.values())
+    total_days_with_posts = len([d for d in daily_counts.values() if d > 0])
+
+    return {
+        "days": days,
+        "streak": {
+            "current": current_streak,
+            "longest": longest_streak,
+        },
+        "total_posts": total_posts,
+        "total_days_with_posts": total_days_with_posts,
+        "grid_start": grid_start.isoformat(),
+        "grid_end": today.isoformat(),
+    }

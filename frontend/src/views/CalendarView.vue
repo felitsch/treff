@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import ContentMixPanel from '@/components/calendar/ContentMixPanel.vue'
 import CalendarExportImport from '@/components/calendar/CalendarExportImport.vue'
+import RecurringPostSettings from '@/components/calendar/RecurringPostSettings.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -82,6 +83,15 @@ const showRecurringFormats = ref(true)
 
 // Export/Import Modal
 const showExportImport = ref(false)
+
+// Recurring Post Settings Modal
+const showRecurringSettings = ref(false)
+const recurringTargetPost = ref(null) // { id, title, scheduled_date }
+
+function openRecurringSettings(post) {
+  recurringTargetPost.value = post
+  showRecurringSettings.value = true
+}
 
 // Story Arc Timeline
 const showArcTimeline = ref(true)
@@ -2133,6 +2143,12 @@ onUnmounted(() => {
                 <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
                 <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
                 <span
+                  v-if="post.is_recurring_instance || post.recurring_rule_id"
+                  class="flex-shrink-0 text-[10px] cursor-pointer hover:scale-125 transition-transform"
+                  title="Wiederkehrender Post – Klicken fuer Einstellungen"
+                  @click.stop="openRecurringSettings(post)"
+                >🔁</span>
+                <span
                   v-if="post.episode_number"
                   class="flex-shrink-0 ml-auto text-[9px] font-bold px-1 py-0 rounded bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-300"
                   :title="'Episode ' + post.episode_number"
@@ -2167,6 +2183,14 @@ onUnmounted(() => {
                     >
                       <span>{{ getStatusMeta(nextStatus).icon }}</span>
                       <span>{{ getStatusMeta(nextStatus).label }}</span>
+                    </button>
+                    <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                    <button
+                      @click.stop="statusDropdownPost = null; openRecurringSettings(post)"
+                      class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-blue-600 dark:text-blue-400"
+                    >
+                      <span>🔁</span>
+                      <span>{{ post.recurring_rule_id ? 'Wiederkehr bearbeiten' : 'Wiederkehrend machen' }}</span>
                     </button>
                   </div>
                 </span>
@@ -3087,6 +3111,17 @@ onUnmounted(() => {
       :platform-filter="platformFilter"
       @close="showExportImport = false"
       @imported="fetchCalendarData(); showExportImport = false"
+    />
+
+    <!-- Recurring Post Settings Modal -->
+    <RecurringPostSettings
+      :show="showRecurringSettings"
+      :post-id="recurringTargetPost?.id"
+      :post-title="recurringTargetPost?.title || 'Unbenannt'"
+      :post-scheduled-date="recurringTargetPost?.scheduled_date"
+      @close="showRecurringSettings = false"
+      @created="fetchCalendarData(); showRecurringSettings = false"
+      @deleted="fetchCalendarData(); showRecurringSettings = false"
     />
   </div>
 </template>

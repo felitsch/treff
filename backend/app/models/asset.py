@@ -35,5 +35,17 @@ class Asset(Base):
     duration_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     thumbnail_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # path to auto-generated thumbnail from first frame
 
+    # Multi-size image thumbnails (auto-generated on upload)
+    thumbnail_small: Mapped[Optional[str]] = mapped_column(String, nullable=True)   # 150px wide
+    thumbnail_medium: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # 400px wide
+    thumbnail_large: Mapped[Optional[str]] = mapped_column(String, nullable=True)   # 800px wide
+
+    # EXIF metadata (extracted from images)
+    exif_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string with EXIF info
+
+    # Garbage collection / last usage tracking
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    marked_unused: Mapped[Optional[bool]] = mapped_column(Integer, nullable=True, default=None)  # True if flagged by garbage collection
+
     # Relationships
     user = relationship("User", back_populates="assets")

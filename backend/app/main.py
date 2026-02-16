@@ -33,7 +33,7 @@ from app.core.seed_video_templates import seed_video_templates
 from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
 from app.schemas.responses import ERROR_CODES
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +134,20 @@ async def lifespan(app: FastAPI):
             logger.info("Added perf_updated_at column to posts table")
         except Exception:
             pass
+        # Asset management enhancements: multi-size thumbnails, EXIF, garbage collection
+        for col_sql in [
+            "ALTER TABLE assets ADD COLUMN thumbnail_small VARCHAR",
+            "ALTER TABLE assets ADD COLUMN thumbnail_medium VARCHAR",
+            "ALTER TABLE assets ADD COLUMN thumbnail_large VARCHAR",
+            "ALTER TABLE assets ADD COLUMN exif_data TEXT",
+            "ALTER TABLE assets ADD COLUMN last_used_at DATETIME",
+            "ALTER TABLE assets ADD COLUMN marked_unused INTEGER",
+        ]:
+            try:
+                await conn.execute(text(col_sql))
+                logger.info(f"Migration: {col_sql.split('ADD COLUMN ')[1].split(' ')[0]} added to assets")
+            except Exception:
+                pass
 
     # Seed default user (critical for Vercel where DB is ephemeral)
     async with async_session() as session:
@@ -403,6 +417,10 @@ OPENAPI_TAGS = [
     {
         "name": "Post Relations",
         "description": "Link related posts together (translations, variations, series). Suggest relations based on content similarity.",
+    },
+    {
+        "name": "Background Tasks",
+        "description": "Monitor and manage long-running background operations. Query task status, view history, cancel running tasks, and receive progress updates.",
     },
 ]
 
@@ -708,6 +726,7 @@ app.include_router(template_favorites.router, prefix="/api/template-favorites", 
 app.include_router(video_scripts.router, prefix="/api/video-scripts", tags=["Video Scripts"])
 app.include_router(prompt_history.router, prefix="/api/ai", tags=["AI Prompt History"])
 app.include_router(smart_scheduling.router, prefix="/api/ai", tags=["Smart Scheduling"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["Background Tasks"])
 
 
 if __name__ == "__main__":

@@ -42,6 +42,14 @@ MAX_AUDIO_SIZE = 50 * 1024 * 1024  # 50 MB
 
 def asset_to_dict(asset: Asset) -> dict:
     """Convert Asset model to plain dict to avoid async serialization issues."""
+    # Parse EXIF data from JSON string if available
+    exif = None
+    if asset.exif_data:
+        try:
+            exif = json.loads(asset.exif_data)
+        except (json.JSONDecodeError, TypeError):
+            exif = None
+
     return {
         "id": asset.id,
         "user_id": asset.user_id,
@@ -61,6 +69,12 @@ def asset_to_dict(asset: Asset) -> dict:
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
         "duration_seconds": asset.duration_seconds,
         "thumbnail_path": asset.thumbnail_path,
+        "thumbnail_small": asset.thumbnail_small,
+        "thumbnail_medium": asset.thumbnail_medium,
+        "thumbnail_large": asset.thumbnail_large,
+        "exif_data": exif,
+        "last_used_at": asset.last_used_at.isoformat() if asset.last_used_at else None,
+        "marked_unused": bool(asset.marked_unused) if asset.marked_unused is not None else None,
     }
 
 
@@ -72,6 +86,134 @@ def is_video_type(content_type: str) -> bool:
 def is_audio_type(content_type: str) -> bool:
     """Check if a content type is an audio type."""
     return content_type in ALLOWED_AUDIO_TYPES
+
+
+# Thumbnail sizes: small (150px), medium (400px), large (800px)
+THUMBNAIL_SIZES = {
+    "small": 150,
+    "medium": 400,
+    "large": 800,
+}
+
+
+def _generate_image_thumbnails(image_bytes: bytes, original_filename: str) -> dict:
+    """Generate 3 thumbnail sizes (small, medium, large) for an image.
+
+    Returns dict with keys: thumbnail_small, thumbnail_medium, thumbnail_large
+    Each value is the relative serving path or None if generation failed.
+    """
+    from app.core.paths import save_and_encode
+
+    result = {"thumbnail_small": None, "thumbnail_medium": None, "thumbnail_large": None}
+
+    try:
+        from PIL import Image
+        import io
+
+        img = Image.open(io.BytesIO(image_bytes))
+
+        # Determine output format
+        ext = os.path.splitext(original_filename or "img.jpg")[1].lower()
+        fmt = "JPEG"
+        out_ext = ".jpg"
+        if ext == ".png":
+            fmt = "PNG"
+            out_ext = ".png"
+        elif ext == ".webp":
+            fmt = "WEBP"
+            out_ext = ".webp"
+
+        for size_name, max_width in THUMBNAIL_SIZES.items():
+            try:
+                thumb = img.copy()
+                # Only downscale, never upscale
+                if thumb.width > max_width:
+                    ratio = max_width / thumb.width
+                    new_height = int(thumb.height * ratio)
+                    thumb = thumb.resize((max_width, new_height), Image.LANCZOS)
+
+                buf = io.BytesIO()
+                if fmt == "JPEG" and thumb.mode in ("RGBA", "LA", "P"):
+                    thumb = thumb.convert("RGB")
+                thumb.save(buf, format=fmt, quality=85)
+                thumb_bytes = buf.getvalue()
+
+                thumb_filename = f"{uuid.uuid4()}_thumb_{size_name}{out_ext}"
+                thumb_path = THUMBNAILS_DIR / thumb_filename
+                save_and_encode(thumb_bytes, thumb_path)
+
+                result[f"thumbnail_{size_name}"] = f"/uploads/thumbnails/{thumb_filename}"
+            except Exception as e:
+                logger.warning(f"Failed to generate {size_name} thumbnail: {e}")
+
+    except ImportError:
+        logger.warning("Pillow not available - image thumbnail generation skipped")
+    except Exception as e:
+        logger.warning(f"Error generating image thumbnails: {e}")
+
+    return result
+
+
+def _extract_exif_data(image_bytes: bytes) -> Optional[str]:
+    """Extract EXIF metadata from an image and return as JSON string.
+
+    Extracts: camera make/model, orientation, date taken, GPS coordinates,
+    exposure settings, ISO, focal length, etc.
+    """
+    try:
+        from PIL import Image
+        from PIL.ExifTags import TAGS, GPSTAGS
+        import io
+
+        img = Image.open(io.BytesIO(image_bytes))
+        exif_raw = img.getexif()
+        if not exif_raw:
+            return None
+
+        exif_dict = {}
+        for tag_id, value in exif_raw.items():
+            tag_name = TAGS.get(tag_id, str(tag_id))
+            # Convert non-serializable types to strings
+            if isinstance(value, bytes):
+                try:
+                    value = value.decode("utf-8", errors="replace")
+                except Exception:
+                    value = str(value)
+            elif isinstance(value, (tuple, list)):
+                value = [str(v) for v in value]
+            elif not isinstance(value, (str, int, float, bool, type(None))):
+                value = str(value)
+            exif_dict[tag_name] = value
+
+        # Try to extract GPS info
+        gps_info = exif_raw.get_ifd(0x8825)
+        if gps_info:
+            gps_data = {}
+            for tag_id, value in gps_info.items():
+                tag_name = GPSTAGS.get(tag_id, str(tag_id))
+                if isinstance(value, bytes):
+                    try:
+                        value = value.decode("utf-8", errors="replace")
+                    except Exception:
+                        value = str(value)
+                elif isinstance(value, (tuple, list)):
+                    value = [str(v) for v in value]
+                elif not isinstance(value, (str, int, float, bool, type(None))):
+                    value = str(value)
+                gps_data[tag_name] = value
+            if gps_data:
+                exif_dict["GPSInfo"] = gps_data
+
+        if exif_dict:
+            return json.dumps(exif_dict, default=str, ensure_ascii=False)
+        return None
+
+    except ImportError:
+        logger.warning("Pillow not available - EXIF extraction skipped")
+        return None
+    except Exception as e:
+        logger.debug(f"EXIF extraction failed (may be normal for non-EXIF images): {e}")
+        return None
 
 
 def _extract_audio_metadata(audio_path: Path) -> dict:
@@ -215,10 +357,22 @@ async def list_assets(
     source: Optional[str] = None,
     search: Optional[str] = None,
     file_type: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List assets with optional filters."""
+    """List assets with optional filters.
+
+    Query params:
+        category: Filter by asset category
+        country: Filter by country
+        source: Filter by source (upload, stock_unsplash, etc.)
+        search: Search in filename, original_filename, tags
+        file_type: Filter by type (image, video, audio, or specific MIME type)
+        date_from: Filter assets created on or after this date (ISO format: YYYY-MM-DD)
+        date_to: Filter assets created on or before this date (ISO format: YYYY-MM-DD)
+    """
     query = select(Asset).where(Asset.user_id == user_id)
 
     if category:
@@ -243,10 +397,53 @@ async def list_assets(
             | (Asset.original_filename.ilike(f"%{search}%"))
             | (Asset.tags.ilike(f"%{search}%"))
         )
+    if date_from:
+        try:
+            from datetime import datetime as _dt
+            dt_from = _dt.fromisoformat(date_from)
+            query = query.where(Asset.created_at >= dt_from)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            from datetime import datetime as _dt, timedelta
+            dt_to = _dt.fromisoformat(date_to) + timedelta(days=1)
+            query = query.where(Asset.created_at < dt_to)
+        except ValueError:
+            pass
 
     result = await db.execute(query.order_by(Asset.created_at.desc()))
     assets = result.scalars().all()
     return [asset_to_dict(a) for a in assets]
+
+
+@router.get("/{asset_id}")
+async def get_asset(
+    asset_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a single asset by ID.
+
+    Also updates the last_used_at timestamp and clears the marked_unused flag.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+
+    result = await db.execute(
+        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
+    )
+    asset = result.scalar_one_or_none()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    # Track access / clear unused flag
+    asset.last_used_at = _dt.now(_tz.utc)
+    if asset.marked_unused:
+        asset.marked_unused = None
+    await db.flush()
+    await db.refresh(asset)
+
+    return asset_to_dict(asset)
 
 
 @router.post("/upload", status_code=201)

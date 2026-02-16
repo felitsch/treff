@@ -19,6 +19,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
+import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -671,6 +672,17 @@ onMounted(() => {
             :options="frequencyChartOptions"
           />
         </div>
+      </BaseCard>
+
+      <!-- Activity Heatmap (GitHub-style contribution graph) -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="activity-heatmap-section" data-tour="analytics-heatmap">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Aktivitaets-Heatmap</h2>
+        </template>
+        <template #headerAction>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Letzte 12 Monate</span>
+        </template>
+        <ActivityHeatmap />
       </BaseCard>
 
       <!-- Distribution charts row -->

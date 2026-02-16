@@ -49,6 +49,13 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   const selectedPlatforms = ref(['instagram_feed'])
 
   // ═══════════════════════════════════════════════════════════════════
+  // TEMPLATE PLACEHOLDER VALUES (1 ref)
+  // Stores user-entered values for template {{placeholders}}
+  // Key = placeholder name, Value = user-entered string
+  // ═══════════════════════════════════════════════════════════════════
+  const templatePlaceholderValues = ref({})
+
+  // ═══════════════════════════════════════════════════════════════════
   // TOPIC & GENERATION (7 refs)
   // Step 4: Topic input  |  Step 5: AI text generation
   // ═══════════════════════════════════════════════════════════════════
@@ -123,6 +130,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     currentStep.value = 1
     selectedCategory.value = ''
     selectedTemplate.value = null
+    templatePlaceholderValues.value = {}
     selectedPlatform.value = 'instagram_feed'
     selectedPlatforms.value = ['instagram_feed']
     topic.value = ''
@@ -195,6 +203,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     templates,
     selectedTemplate,
     loadingTemplates,
+    templatePlaceholderValues,
     // Step 3
     selectedPlatform,
     selectedPlatforms,

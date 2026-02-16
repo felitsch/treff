@@ -46,6 +46,10 @@ const props = defineProps({
   episodeCliffhangerText: { type: String, default: '' },
   /** Episode next hint (optional) */
   episodeNextHint: { type: String, default: '' },
+  /** Template placeholder values object { fieldName: 'value' } for real-time substitution */
+  templatePlaceholderValues: { type: Object, default: () => ({}) },
+  /** Selected template object (with html_content, css_content, placeholder_fields) */
+  selectedTemplate: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:platform', 'update:currentSlideIndex'])
@@ -133,6 +137,67 @@ const effectiveCaption = computed(() => {
 
 const effectiveHashtags = computed(() => {
   return activePlatform.value === 'tiktok' ? props.hashtagsTiktok : props.hashtagsInstagram
+})
+
+// ── Template Placeholder Substitution ────────────────────────────────
+// Replace {{variable}} patterns in text with actual placeholder values in real-time
+const placeholderRegex = /\{\{(\w+)\}\}/g
+
+function substitutePlaceholders(text) {
+  if (!text || typeof text !== 'string') return text
+  const vals = props.templatePlaceholderValues
+  if (!vals || Object.keys(vals).length === 0) return text
+  return text.replace(placeholderRegex, (match, key) => {
+    const val = vals[key]
+    return (val && val.trim()) ? val : match // Keep original {{key}} if unfilled
+  })
+}
+
+// Resolved current slide with placeholder values substituted into all text fields
+const resolvedSlide = computed(() => {
+  const slide = currentSlide.value
+  if (!slide) return null
+  const vals = props.templatePlaceholderValues
+  if (!vals || Object.keys(vals).length === 0) return slide
+  // Return a new object with substituted text fields
+  return {
+    ...slide,
+    headline: substitutePlaceholders(slide.headline),
+    subheadline: substitutePlaceholders(slide.subheadline),
+    body_text: substitutePlaceholders(slide.body_text),
+    cta_text: substitutePlaceholders(slide.cta_text),
+    bullet_points: Array.isArray(slide.bullet_points)
+      ? slide.bullet_points.map(bp => substitutePlaceholders(bp))
+      : slide.bullet_points,
+  }
+})
+
+// Resolved caption with placeholder substitution
+const resolvedCaption = computed(() => substitutePlaceholders(dCaption.value))
+const resolvedHashtags = computed(() => substitutePlaceholders(dHashtags.value))
+const resolvedCta = computed(() => substitutePlaceholders(dCta.value))
+
+// Template HTML preview with placeholders replaced — used for an inline template rendering mode
+const resolvedTemplateHtml = computed(() => {
+  if (!props.selectedTemplate?.html_content) return ''
+  let html = props.selectedTemplate.html_content
+  const vals = props.templatePlaceholderValues
+  if (vals && Object.keys(vals).length > 0) {
+    html = html.replace(placeholderRegex, (match, key) => {
+      const val = vals[key]
+      if (key === 'image' || key === 'bild') {
+        // Image placeholders: show a placeholder box or actual image if uploaded
+        return val ? `<img src="${val}" style="max-width:100%;height:auto;border-radius:8px;" alt="Bild" />` : '<div style="width:100%;height:120px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:12px;">🖼️ Bild</div>'
+      }
+      return (val && val.trim()) ? val : `<span style="opacity:0.4;font-style:italic;">${match}</span>`
+    })
+  }
+  return html
+})
+
+// Whether the template has renderable HTML for an inline preview
+const hasTemplateHtml = computed(() => {
+  return !!props.selectedTemplate?.html_content && props.selectedTemplate.html_content.trim().length > 0
 })
 </script>
 
