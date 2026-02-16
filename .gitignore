@@ -43,6 +43,19 @@ npm-debug.log*
 # Screenshots (verification artifacts)
 *.png
 
+# Playwright
+.playwright/
+.playwright-cli/
+.playwright-mcp/
+backend/.playwright-cli/
+frontend/.playwright-cli/
+
+# Uploads (runtime artifacts)
+backend/app/static/uploads/composed/
+backend/app/static/uploads/music/
+backend/app/static/uploads/thumbnails/
+backend/app/static/uploads/video_exports/
+
 # Autoforge internal
 .autoforge/features.db-shm
 .autoforge/features.db-wal

@@ -21,6 +21,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import { useStudentStore } from '@/stores/students'
 import { useStoryArcStore } from '@/stores/storyArc'
 import TourSystem from '@/components/common/TourSystem.vue'
+import ImageUploader from '@/components/assets/ImageUploader.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -882,6 +883,38 @@ function selectAssetAsBackground(asset) {
   }
   successMsg.value = 'Hintergrundbild gesetzt!'
   setTimeout(() => { successMsg.value = '' }, 2000)
+}
+
+// Handler for ImageUploader component uploads
+function onImageUploaderUpload({ asset, url }) {
+  const slide = slides.value[currentPreviewSlide.value]
+  if (slide) {
+    slide.background_type = 'image'
+    slide.background_value = url
+  }
+  successMsg.value = 'Bild hochgeladen und als Hintergrund gesetzt!'
+  setTimeout(() => { successMsg.value = '' }, 3000)
+  loadAssets()
+}
+
+function onImageUploaderRemove({ index, asset }) {
+  // If the removed image is the current background, reset it
+  const slide = slides.value[currentPreviewSlide.value]
+  if (slide && asset && slide.background_value?.includes(asset.filename)) {
+    slide.background_type = 'gradient'
+    slide.background_value = ''
+  }
+}
+
+function onImageUploaderReorder(reorderedImages) {
+  // If carousel mode, the first image becomes the background for the current slide
+  if (reorderedImages.length > 0) {
+    const slide = slides.value[currentPreviewSlide.value]
+    if (slide) {
+      slide.background_type = 'image'
+      slide.background_value = reorderedImages[0].url
+    }
+  }
 }
 
 async function generateAiImage() {
