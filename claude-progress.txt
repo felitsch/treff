@@ -10418,3 +10418,69 @@ Enhanced the existing toast system to meet all feature requirements:
 
 ### Current state:
 - Feature #229 marked as PASSING
+
+---
+
+## Session - Feature #285: I-05: Pinia Store Architektur (Store-Zerlegung)
+**Date:** 2026-02-16
+**Feature ID:** #285
+**Status:** PASSING
+
+### What was implemented:
+Decomposed the monolithic `createPost.js` Pinia store (47+ reactive refs) into 3 focused, purpose-built stores:
+
+1. **contentDraft.js** — Vereinfachter Draft-State fuer Quick/Smart Create:
+   - All post-creation wizard state (steps 1-9)
+   - Category, template, platform selection
+   - Topic, AI text generation, slides, captions, hashtags, CTA
+   - Background image, AI image generation
+   - Export and validation state
+   - `resetWorkflow()` and `hasWorkflowState()` methods
+
+2. **campaign.js** — Multi-Post-Kampagnen-State:
+   - Campaign CRUD (title, description, goal, dateRange, platforms, status)
+   - `fetchCampaigns()`, `fetchCampaign()`, `createCampaign()`, `updateCampaign()`, `deleteCampaign()`
+   - AI plan generation via `generatePlan()`
+   - Local post management: `addPost()`, `removePost()`
+   - Computed: campaignCount, activeCampaignPostCount, hasActiveCampaign
+
+3. **contentPipeline.js** — Student Inbox & Content-Verarbeitungs-Queue:
+   - Inbox with pagination, student/status filters
+   - `fetchInbox()`, `analyzeMedia()`, `processItem()`, `markAsProcessed()`
+   - Content multiplication via `multiplyContent()`
+   - Computed: pendingCount, analyzedCount, processedCount, totalPages
+
+4. **createPost.js** — Backward-compat wrapper (DEPRECATED):
+   - Thin function wrapper that returns useContentDraftStore() directly
+   - Console.warn deprecation message (once per session)
+   - Migration guide in JSDoc comments
+
+5. **CreatePostView.vue** — Updated import to `useContentDraftStore` directly
+
+### Store Architecture Documentation:
+Each store file contains comprehensive JSDoc header with:
+- Architecture explanation and purpose
+- Responsibilities list
+- Cross-references (@see) to related stores
+- Migration guide (in deprecated createPost.js)
+
+### Files created/modified:
+- frontend/src/stores/contentDraft.js (NEW) - Core draft state (~250 lines)
+- frontend/src/stores/campaign.js (NEW) - Campaign management (~313 lines)
+- frontend/src/stores/contentPipeline.js (NEW) - Pipeline/inbox state (~299 lines)
+- frontend/src/stores/createPost.js (modified) - Backward-compat wrapper (~48 lines, down from 213)
+- frontend/src/views/CreatePostView.vue (modified) - Import updated to useContentDraftStore
+
+### Verification completed:
+- Browser: Create Quick Post page loads with new store (zero errors)
+- Browser: Category selection works (Laender-Spotlight highlighted correctly)
+- Browser: Step navigation works (Step 1 -> Step 2 Template selection)
+- Browser: Reset workflow works (Zuruecksetzen returns to Step 1 with clean state)
+- Console: Zero JavaScript errors throughout testing
+- Mock data grep: Zero matches for globalThis/devStore/mockData/testData patterns
+- No 500s in network requests
+- All existing functionality preserved through backward-compat wrapper
+- Git commit: 71912a8
+
+### Current state:
+- Feature #285 marked as PASSING
