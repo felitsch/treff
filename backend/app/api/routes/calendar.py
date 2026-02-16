@@ -2,11 +2,13 @@
 
 import csv
 import io
-from typing import Optional
+import json
+import uuid
+from typing import Optional, List
 from datetime import datetime, date, timedelta
 from calendar import monthrange
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, extract, func
 
@@ -1598,4 +1600,595 @@ async def get_recurring_placeholders(
     return {
         "placeholders": placeholders,
         "format_count": len(formats),
+    }
+
+
+# ========== CALENDAR EXPORT: iCal ==========
+
+@router.get("/export/ical")
+async def export_calendar_ical(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    platform: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export scheduled posts as iCalendar (.ics) file.
+
+    Each scheduled post becomes a calendar event with:
+    - Summary: Post title
+    - Description: Category, platform, country, status, hashtags
+    - DTSTART/DTEND: Scheduled date/time (30min duration)
+    """
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    last_day_num = monthrange(year, month)[1]
+    first_dt = datetime(year, month, 1, 0, 0, 0)
+    last_dt = datetime(year, month, last_day_num, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = (
+        select(Post)
+        .where(and_(*conditions))
+        .order_by(Post.scheduled_date.asc(), Post.scheduled_time.asc())
+    )
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    # Build iCal content (RFC 5545)
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//TREFF Sprachreisen//Content Calendar//DE",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        f"X-WR-CALNAME:TREFF Content-Kalender {month:02d}/{year}",
+    ]
+
+    platform_labels = {
+        "instagram_feed": "Instagram Feed",
+        "instagram_story": "Instagram Story",
+        "tiktok": "TikTok",
+    }
+
+    for post in posts:
+        dt_date = post.scheduled_date.strftime("%Y%m%d")
+        # Parse time or default to 10:00
+        hour, minute = 10, 0
+        if post.scheduled_time:
+            try:
+                parts = post.scheduled_time.split(":")
+                hour, minute = int(parts[0]), int(parts[1])
+            except (ValueError, IndexError):
+                pass
+
+        dt_start = f"{dt_date}T{hour:02d}{minute:02d}00"
+        # 30 minute event duration
+        end_hour = hour
+        end_minute = minute + 30
+        if end_minute >= 60:
+            end_hour += 1
+            end_minute -= 60
+        if end_hour >= 24:
+            end_hour = 23
+            end_minute = 59
+        dt_end = f"{dt_date}T{end_hour:02d}{end_minute:02d}00"
+
+        uid = f"treff-post-{post.id}@treff-sprachreisen.de"
+
+        plat_label = platform_labels.get(post.platform, post.platform or "")
+        description_parts = []
+        if post.category:
+            description_parts.append(f"Kategorie: {post.category}")
+        if plat_label:
+            description_parts.append(f"Plattform: {plat_label}")
+        if post.country:
+            description_parts.append(f"Land: {post.country}")
+        if post.status:
+            description_parts.append(f"Status: {post.status}")
+        if post.hashtags_instagram:
+            description_parts.append(f"Hashtags: {post.hashtags_instagram}")
+
+        description = "\\n".join(description_parts)
+
+        summary = (post.title or "Unbenannter Post").replace(",", "\\,")
+        description = description.replace(",", "\\,")
+
+        lines.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTART:{dt_start}",
+            f"DTEND:{dt_end}",
+            f"SUMMARY:{summary}",
+            f"DESCRIPTION:{description}",
+            f"CATEGORIES:{post.category or ''}",
+            f"STATUS:{'CONFIRMED' if post.status == 'scheduled' else 'TENTATIVE'}",
+            "END:VEVENT",
+        ])
+
+    lines.append("END:VCALENDAR")
+
+    ical_content = "\r\n".join(lines) + "\r\n"
+
+    month_names_en = [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december",
+    ]
+    filename = f"TREFF_calendar_{month_names_en[month - 1]}_{year}.ics"
+
+    return Response(
+        content=ical_content,
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
+# ========== CALENDAR EXPORT: PDF ==========
+
+@router.get("/export/pdf")
+async def export_calendar_pdf(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    platform: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export calendar as a printable PDF overview.
+
+    Generates an HTML-based visual weekly overview, then returns it
+    as a downloadable HTML file that can be printed to PDF from browser.
+    For server-side PDF, a headless browser (Puppeteer) would be needed.
+    """
+    now = datetime.now()
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+
+    last_day_num = monthrange(year, month)[1]
+    first_dt = datetime(year, month, 1, 0, 0, 0)
+    last_dt = datetime(year, month, last_day_num, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= first_dt,
+        Post.scheduled_date <= last_dt,
+    ]
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = (
+        select(Post)
+        .where(and_(*conditions))
+        .order_by(Post.scheduled_date.asc(), Post.scheduled_time.asc())
+    )
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    # Group posts by date
+    posts_by_date = {}
+    for post in posts:
+        date_str = post.scheduled_date.strftime("%Y-%m-%d")
+        if date_str not in posts_by_date:
+            posts_by_date[date_str] = []
+        posts_by_date[date_str].append(post)
+
+    # German month names
+    month_names_de = [
+        "Januar", "Februar", "Maerz", "April", "Mai", "Juni",
+        "Juli", "August", "September", "Oktober", "November", "Dezember",
+    ]
+    month_name = month_names_de[month - 1]
+
+    platform_labels = {
+        "instagram_feed": "IG Feed",
+        "instagram_story": "IG Story",
+        "tiktok": "TikTok",
+    }
+
+    category_colors = {
+        "laender-spotlight": "#3B82F6",
+        "erfahrungsberichte": "#8B5CF6",
+        "tipps-checklisten": "#F59E0B",
+        "infografiken": "#06B6D4",
+        "behind-the-scenes": "#EC4899",
+        "countdown-events": "#EF4444",
+        "interaktiv": "#10B981",
+        "motivation": "#F97316",
+        "eltern-content": "#6366F1",
+        "partner-schulen": "#14B8A6",
+    }
+
+    # Build calendar grid (Monday-based)
+    first_day = date(year, month, 1)
+    # Monday = 0
+    start_weekday = first_day.weekday()
+    # Start from Monday of the first week
+    grid_start = first_day - timedelta(days=start_weekday)
+
+    weeks_html = ""
+    current = grid_start
+    for week_num in range(6):
+        cells = ""
+        for day_num in range(7):
+            day_date = current + timedelta(days=week_num * 7 + day_num)
+            date_str = day_date.strftime("%Y-%m-%d")
+            is_current_month = day_date.month == month
+
+            day_posts = posts_by_date.get(date_str, [])
+            posts_html = ""
+            for p in day_posts[:3]:  # Max 3 posts per cell
+                color = category_colors.get(p.category, "#6B7280")
+                plat = platform_labels.get(p.platform, p.platform or "")
+                title = (p.title or "Unbenannt")[:25]
+                time_str = p.scheduled_time or ""
+                posts_html += f'''<div style="background:{color}15;border-left:3px solid {color};padding:2px 4px;margin:1px 0;font-size:9px;border-radius:2px;">
+                    <span style="color:{color};font-weight:600;">{time_str}</span>
+                    <span style="color:#374151;">{title}</span>
+                    <span style="color:#9CA3AF;font-size:8px;">{plat}</span>
+                </div>'''
+            if len(day_posts) > 3:
+                posts_html += f'<div style="font-size:8px;color:#9CA3AF;text-align:center;">+{len(day_posts)-3} mehr</div>'
+
+            opacity = "1" if is_current_month else "0.35"
+            bg = "#FFFFFF" if is_current_month else "#F9FAFB"
+            cells += f'''<td style="border:1px solid #E5E7EB;padding:3px;vertical-align:top;width:14.28%;height:90px;opacity:{opacity};background:{bg};">
+                <div style="font-size:11px;font-weight:600;color:#6B7280;margin-bottom:2px;">{day_date.day}</div>
+                {posts_html}
+            </td>'''
+
+        weeks_html += f"<tr>{cells}</tr>"
+
+    # Stats summary
+    total_posts = len(posts)
+    platform_counts = {}
+    category_counts = {}
+    for p in posts:
+        pl = platform_labels.get(p.platform, p.platform or "Sonstige")
+        platform_counts[pl] = platform_counts.get(pl, 0) + 1
+        category_counts[p.category or "Sonstige"] = category_counts.get(p.category or "Sonstige", 0) + 1
+
+    stats_html = f"<strong>{total_posts} Posts</strong> geplant"
+    if platform_counts:
+        parts = [f"{v}x {k}" for k, v in sorted(platform_counts.items(), key=lambda x: -x[1])]
+        stats_html += " &mdash; " + ", ".join(parts)
+
+    html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>TREFF Content-Kalender {month_name} {year}</title>
+    <style>
+        @page {{ size: A4 landscape; margin: 10mm; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 15px; color: #1F2937; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #4C8BC2; }}
+        .header h1 {{ margin: 0; font-size: 20px; color: #4C8BC2; }}
+        .header .brand {{ font-size: 12px; color: #6B7280; }}
+        .stats {{ font-size: 11px; color: #6B7280; margin-bottom: 8px; }}
+        table {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
+        th {{ background: #4C8BC2; color: white; padding: 5px; font-size: 11px; text-align: center; }}
+        @media print {{ body {{ padding: 0; }} }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Content-Kalender: {month_name} {year}</h1>
+        <div class="brand">TREFF Sprachreisen &bull; Erstellt am {now.strftime('%d.%m.%Y')}</div>
+    </div>
+    <div class="stats">{stats_html}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th><th>Sa</th><th>So</th>
+            </tr>
+        </thead>
+        <tbody>
+            {weeks_html}
+        </tbody>
+    </table>
+</body>
+</html>"""
+
+    month_names_en = [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december",
+    ]
+    filename = f"TREFF_calendar_{month_names_en[month - 1]}_{year}.html"
+
+    return Response(
+        content=html,
+        media_type="text/html",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
+# ========== CALENDAR IMPORT: CSV ==========
+
+VALID_PLATFORMS = {"instagram_feed", "instagram_story", "tiktok"}
+VALID_CATEGORIES = {
+    "laender-spotlight", "erfahrungsberichte", "tipps-checklisten",
+    "infografiken", "behind-the-scenes", "countdown-events",
+    "interaktiv", "motivation", "eltern-content", "partner-schulen",
+}
+
+@router.post("/import/csv/preview")
+async def preview_csv_import(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Preview CSV import: parse file, validate, detect duplicates.
+
+    Returns parsed rows with validation status so user can review
+    before committing the import.
+
+    Expected CSV columns: date, time, title, category, platform, country, hashtags
+    (Flexible: columns can be in any order; extra columns ignored.)
+    """
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Nur CSV-Dateien (.csv) werden unterstuetzt.")
+
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")  # Handle BOM
+    except UnicodeDecodeError:
+        try:
+            text = content.decode("latin-1")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Datei-Encoding nicht erkannt. Bitte UTF-8 verwenden.")
+
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV-Datei ist leer oder hat keine Kopfzeile.")
+
+    # Map common column name variations
+    column_map = {}
+    for field in reader.fieldnames:
+        fl = field.strip().lower()
+        if fl in ("date", "datum"):
+            column_map["date"] = field
+        elif fl in ("time", "uhrzeit", "zeit"):
+            column_map["time"] = field
+        elif fl in ("title", "titel"):
+            column_map["title"] = field
+        elif fl in ("category", "kategorie"):
+            column_map["category"] = field
+        elif fl in ("platform", "plattform"):
+            column_map["platform"] = field
+        elif fl in ("country", "land"):
+            column_map["country"] = field
+        elif fl in ("status",):
+            column_map["status"] = field
+        elif fl in ("hashtags", "tags"):
+            column_map["hashtags"] = field
+
+    if "date" not in column_map:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV muss eine 'date' oder 'Datum' Spalte enthalten."
+        )
+
+    # Parse rows
+    rows = []
+    errors = []
+    row_num = 1
+    for row in reader:
+        row_num += 1
+        parsed = {"row_number": row_num, "valid": True, "warnings": [], "errors": []}
+
+        # Date (required)
+        date_str = row.get(column_map.get("date", ""), "").strip()
+        parsed_date = None
+        for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%m/%d/%Y"):
+            try:
+                parsed_date = datetime.strptime(date_str, fmt)
+                break
+            except ValueError:
+                continue
+        if not parsed_date:
+            parsed["valid"] = False
+            parsed["errors"].append(f"Ungueltiges Datum: '{date_str}'")
+        parsed["date"] = parsed_date.strftime("%Y-%m-%d") if parsed_date else date_str
+
+        # Time (optional)
+        time_str = row.get(column_map.get("time", ""), "").strip()
+        if time_str:
+            # Validate HH:MM format
+            try:
+                parts = time_str.replace(".", ":").split(":")
+                h, m = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+                if 0 <= h <= 23 and 0 <= m <= 59:
+                    time_str = f"{h:02d}:{m:02d}"
+                else:
+                    parsed["warnings"].append(f"Ungueltige Uhrzeit: '{time_str}', verwende 10:00")
+                    time_str = "10:00"
+            except (ValueError, IndexError):
+                parsed["warnings"].append(f"Ungueltige Uhrzeit: '{time_str}', verwende 10:00")
+                time_str = "10:00"
+        else:
+            time_str = "10:00"
+        parsed["time"] = time_str
+
+        # Title (optional but recommended)
+        title = row.get(column_map.get("title", ""), "").strip()
+        if not title:
+            parsed["warnings"].append("Kein Titel angegeben")
+            title = f"Import Post {row_num}"
+        parsed["title"] = title
+
+        # Category (optional)
+        category = row.get(column_map.get("category", ""), "").strip().lower()
+        if category and category not in VALID_CATEGORIES:
+            parsed["warnings"].append(f"Unbekannte Kategorie: '{category}', verwende 'laender-spotlight'")
+            category = "laender-spotlight"
+        elif not category:
+            category = "laender-spotlight"
+        parsed["category"] = category
+
+        # Platform (optional)
+        plat = row.get(column_map.get("platform", ""), "").strip().lower()
+        # Normalize platform names
+        plat_map = {
+            "instagram": "instagram_feed", "ig": "instagram_feed",
+            "ig feed": "instagram_feed", "instagram feed": "instagram_feed",
+            "ig story": "instagram_story", "instagram story": "instagram_story",
+            "story": "instagram_story", "stories": "instagram_story",
+            "tiktok": "tiktok", "tt": "tiktok",
+        }
+        plat = plat_map.get(plat, plat)
+        if plat and plat not in VALID_PLATFORMS:
+            parsed["warnings"].append(f"Unbekannte Plattform: '{plat}', verwende 'instagram_feed'")
+            plat = "instagram_feed"
+        elif not plat:
+            plat = "instagram_feed"
+        parsed["platform"] = plat
+
+        # Country (optional)
+        country = row.get(column_map.get("country", ""), "").strip()
+        parsed["country"] = country or None
+
+        # Hashtags (optional)
+        hashtags = row.get(column_map.get("hashtags", ""), "").strip()
+        parsed["hashtags"] = hashtags or None
+
+        rows.append(parsed)
+
+    # Duplicate detection: check for existing posts on same date with same title
+    if rows:
+        valid_dates = [r["date"] for r in rows if r["valid"]]
+        if valid_dates:
+            # Find existing posts on those dates
+            date_objects = []
+            for d in set(valid_dates):
+                try:
+                    date_objects.append(datetime.strptime(d, "%Y-%m-%d"))
+                except ValueError:
+                    pass
+
+            if date_objects:
+                existing_query = (
+                    select(Post)
+                    .where(
+                        Post.user_id == user_id,
+                        Post.scheduled_date.in_(date_objects),
+                    )
+                )
+                existing_result = await db.execute(existing_query)
+                existing_posts = existing_result.scalars().all()
+
+                # Build lookup: (date, title_lower) -> True
+                existing_set = set()
+                for ep in existing_posts:
+                    if ep.scheduled_date and ep.title:
+                        existing_set.add((
+                            ep.scheduled_date.strftime("%Y-%m-%d"),
+                            ep.title.lower().strip(),
+                        ))
+
+                for r in rows:
+                    if r["valid"] and (r["date"], r["title"].lower().strip()) in existing_set:
+                        r["duplicate"] = True
+                        r["warnings"].append("Moegliches Duplikat: Post mit gleichem Datum und Titel existiert bereits")
+                    else:
+                        r["duplicate"] = False
+
+    valid_count = sum(1 for r in rows if r["valid"])
+    error_count = sum(1 for r in rows if not r["valid"])
+    duplicate_count = sum(1 for r in rows if r.get("duplicate"))
+
+    return {
+        "columns_detected": list(column_map.keys()),
+        "total_rows": len(rows),
+        "valid_rows": valid_count,
+        "error_rows": error_count,
+        "duplicate_rows": duplicate_count,
+        "rows": rows,
+    }
+
+
+@router.post("/import/csv")
+async def import_csv(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Import posts from previously previewed CSV data.
+
+    Expects: { "rows": [...], "skip_duplicates": true/false }
+    Each row: { date, time, title, category, platform, country, hashtags, valid, duplicate }
+    """
+    rows = request.get("rows", [])
+    skip_duplicates = request.get("skip_duplicates", True)
+
+    if not rows:
+        raise HTTPException(status_code=400, detail="Keine Zeilen zum Importieren.")
+
+    imported = 0
+    skipped = 0
+    errors_list = []
+
+    for row in rows:
+        if not row.get("valid", False):
+            skipped += 1
+            continue
+
+        if skip_duplicates and row.get("duplicate", False):
+            skipped += 1
+            continue
+
+        try:
+            scheduled_date = datetime.strptime(row["date"], "%Y-%m-%d")
+        except (ValueError, KeyError):
+            errors_list.append(f"Zeile {row.get('row_number', '?')}: Ungueltiges Datum")
+            skipped += 1
+            continue
+
+        post = Post(
+            user_id=user_id,
+            title=row.get("title", "Import Post"),
+            category=row.get("category", "laender-spotlight"),
+            platform=row.get("platform", "instagram_feed"),
+            country=row.get("country"),
+            status="scheduled",
+            scheduled_date=scheduled_date,
+            scheduled_time=row.get("time", "10:00"),
+            slide_data="[]",
+            tone="jugendlich",
+        )
+
+        # Set hashtags based on platform
+        if row.get("hashtags"):
+            if post.platform == "tiktok":
+                post.hashtags_tiktok = row["hashtags"]
+            else:
+                post.hashtags_instagram = row["hashtags"]
+
+        db.add(post)
+        imported += 1
+
+    if imported > 0:
+        await db.commit()
+
+    return {
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors_list,
+        "message": f"{imported} Posts importiert, {skipped} uebersprungen.",
     }

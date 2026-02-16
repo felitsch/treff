@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
@@ -80,6 +80,9 @@ const showRecyclingSuggestions = ref(true)
 const recurringPlaceholders = ref([]) // Array of placeholder objects from API
 const showRecurringFormats = ref(true)
 
+// Export/Import Modal
+const showExportImport = ref(false)
+
 // Story Arc Timeline
 const showArcTimeline = ref(true)
 const arcTimelineData = ref([]) // Array of arc objects from API
@@ -152,12 +155,32 @@ const categoryMeta = {
 
 // Status icons and labels
 const statusMeta = {
-  draft: { label: 'Entwurf', icon: '📝', color: 'text-gray-500' },
-  scheduled: { label: 'Geplant', icon: '📅', color: 'text-blue-500' },
-  reminded: { label: 'Erinnert', icon: '🔔', color: 'text-yellow-500' },
-  exported: { label: 'Exportiert', icon: '📤', color: 'text-green-500' },
-  posted: { label: 'Veroeffentlicht', icon: '✅', color: 'text-emerald-500' },
+  draft: { label: 'Entwurf', icon: '📝', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-700', badge: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300' },
+  scheduled: { label: 'Geplant', icon: '📅', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+  in_review: { label: 'In Review', icon: '👁', color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20', badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
+  reminded: { label: 'Erinnert', icon: '🔔', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' },
+  exported: { label: 'Exportiert', icon: '📤', color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', badge: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
+  posted: { label: 'Veroeffentlicht', icon: '✅', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+  archived: { label: 'Archiviert', icon: '📦', color: 'text-slate-400', bg: 'bg-slate-50 dark:bg-slate-900/20', badge: 'bg-slate-100 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400' },
 }
+
+// Status transition rules (which statuses a post can move to)
+const statusTransitions = {
+  draft: ['scheduled', 'in_review', 'archived'],
+  scheduled: ['draft', 'in_review', 'exported', 'archived'],
+  in_review: ['draft', 'scheduled', 'exported', 'archived'],
+  reminded: ['scheduled', 'in_review', 'exported', 'posted', 'archived'],
+  exported: ['scheduled', 'in_review', 'posted', 'archived'],
+  posted: ['archived'],
+  archived: ['draft'],
+}
+
+// Status filter: which statuses to show in calendar
+const statusFilter = ref(new Set(['draft', 'scheduled', 'in_review', 'reminded', 'exported', 'posted']))
+
+// Status change dropdown state
+const statusDropdownPost = ref(null) // post ID that has dropdown open
+const showBatchStatusMenu = ref(false)
 
 // Platform icons
 const platformIcons = {
@@ -251,6 +274,12 @@ function getAllDayPosts(dayDateStr) {
 }
 
 // Computed: calendar grid days (6 rows x 7 cols = 42 cells)
+// Helper to filter posts by status filter
+function filterPostsByStatus(posts) {
+  if (!posts || posts.length === 0) return []
+  return posts.filter(p => statusFilter.value.has(p.status || 'draft'))
+}
+
 const calendarDays = computed(() => {
   const year = currentYear.value
   const month = currentMonth.value
@@ -280,7 +309,7 @@ const calendarDays = computed(() => {
       dateStr,
       isCurrentMonth: false,
       isToday: false,
-      posts: postsByDate.value[dateStr] || [],
+      posts: filterPostsByStatus(postsByDate.value[dateStr] || []),
     })
   }
 
@@ -295,7 +324,7 @@ const calendarDays = computed(() => {
       dateStr,
       isCurrentMonth: true,
       isToday: dateStr === todayStr,
-      posts: postsByDate.value[dateStr] || [],
+      posts: filterPostsByStatus(postsByDate.value[dateStr] || []),
     })
   }
 
@@ -310,7 +339,7 @@ const calendarDays = computed(() => {
       dateStr,
       isCurrentMonth: false,
       isToday: false,
-      posts: postsByDate.value[dateStr] || [],
+      posts: filterPostsByStatus(postsByDate.value[dateStr] || []),
     })
     nextDay++
   }
@@ -982,6 +1011,101 @@ function cancelMultiMoveDialog() {
   showMultiMoveDialog.value = false
 }
 
+// ========== STATUS MANAGEMENT ==========
+
+function toggleStatusFilter(status) {
+  const newSet = new Set(statusFilter.value)
+  if (newSet.has(status)) {
+    // Don't allow hiding all statuses
+    if (newSet.size > 1) newSet.delete(status)
+  } else {
+    newSet.add(status)
+  }
+  statusFilter.value = newSet
+}
+
+function isStatusVisible(status) {
+  return statusFilter.value.has(status)
+}
+
+function getAvailableTransitions(currentStatus) {
+  return statusTransitions[currentStatus] || []
+}
+
+function toggleStatusDropdown(postId) {
+  statusDropdownPost.value = statusDropdownPost.value === postId ? null : postId
+}
+
+async function changePostStatus(post, newStatus) {
+  statusDropdownPost.value = null
+  const oldStatus = post.status
+  try {
+    const res = await fetch(`/api/posts/${post.id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+      body: JSON.stringify({ status: newStatus }),
+    })
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.detail || `HTTP ${res.status}`)
+    }
+    // Update locally
+    post.status = newStatus
+    toast.success(`Status geaendert: ${getStatusMeta(newStatus).label}`)
+    // Refresh to keep everything in sync
+    await fetchData()
+  } catch (err) {
+    console.error('Status change error:', err)
+    toast.error(`Statusaenderung fehlgeschlagen: ${err.message}`)
+  }
+}
+
+async function batchChangeStatus(newStatus) {
+  if (selectedPostIds.value.size === 0) return
+  const postIds = [...selectedPostIds.value]
+  try {
+    const res = await fetch('/api/posts/batch-status', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+      body: JSON.stringify({ post_ids: postIds, status: newStatus }),
+    })
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.detail || `HTTP ${res.status}`)
+    }
+    const result = await res.json()
+    if (result.updated_count > 0) {
+      toast.success(`${result.updated_count} Posts auf "${getStatusMeta(newStatus).label}" geaendert`)
+    }
+    if (result.skipped_count > 0) {
+      toast.warning(`${result.skipped_count} Posts uebersprungen (Statuswechsel nicht erlaubt)`)
+    }
+    clearSelection()
+    await fetchData()
+  } catch (err) {
+    console.error('Batch status change error:', err)
+    toast.error(`Batch-Statusaenderung fehlgeschlagen: ${err.message}`)
+  }
+}
+
+// Compute status overview counts from current calendar data
+const statusOverview = computed(() => {
+  const counts = {}
+  Object.values(postsByDate.value).forEach(posts => {
+    posts.forEach(p => {
+      const s = p.status || 'draft'
+      counts[s] = (counts[s] || 0) + 1
+    })
+  })
+  return counts
+})
+
 // ========== OPTIMISTIC UPDATE HELPERS ==========
 
 function optimisticMovePost(post, newDate, newTime) {
@@ -1418,6 +1542,24 @@ onMounted(() => {
           </button>
         </div>
 
+        <!-- Status filter -->
+        <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-x-auto max-w-full">
+          <button
+            v-for="(meta, key) in statusMeta"
+            :key="'sf-' + key"
+            @click="toggleStatusFilter(key)"
+            class="px-2 py-1.5 text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1"
+            :class="isStatusVisible(key)
+              ? meta.badge
+              : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400 line-through opacity-50'"
+            :title="(isStatusVisible(key) ? 'Verbergen: ' : 'Anzeigen: ') + meta.label"
+          >
+            <span>{{ meta.icon }}</span>
+            <span class="hidden sm:inline">{{ meta.label }}</span>
+            <span v-if="statusOverview[key]" class="ml-0.5 text-[10px] font-bold">{{ statusOverview[key] }}</span>
+          </button>
+        </div>
+
         <!-- View mode toggle -->
         <div data-tour="cal-views" class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
           <button
@@ -1561,17 +1703,18 @@ onMounted(() => {
           <HelpTooltip :text="tooltipTexts.calendar.contentMix" size="sm" />
         </button>
 
-        <!-- Export Calendar as CSV button -->
+        <!-- Export & Import Calendar button -->
         <button
-          @click="exportCalendarCSV"
+          @click="showExportImport = true"
           class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
-          title="Kalender als CSV exportieren"
-          aria-label="Kalender als CSV exportieren"
+          title="Kalender exportieren oder importieren"
+          aria-label="Kalender exportieren oder importieren"
+          data-tour="calendar-export-import"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          CSV Export
+          Export / Import
         </button>
 
         <!-- Prev / Label / Next (hide in queue mode) -->
@@ -1987,7 +2130,35 @@ onMounted(() => {
               <div class="flex items-center gap-1 mt-0.5 opacity-75">
                 <span class="flex-shrink-0 text-[10px]">{{ getPlatformIcon(post.platform) }}</span>
                 <span v-if="post.scheduled_time" class="text-[10px]">{{ post.scheduled_time }}</span>
-                <span class="ml-auto text-[10px]" :class="getStatusMeta(post.status).color">{{ getStatusMeta(post.status).icon }}</span>
+                <!-- Status badge with click-to-change dropdown -->
+                <span class="ml-auto relative">
+                  <button
+                    @click.stop="toggleStatusDropdown(post.id)"
+                    class="text-[10px] cursor-pointer hover:opacity-100 transition-opacity"
+                    :class="getStatusMeta(post.status).color"
+                    :title="'Status: ' + getStatusMeta(post.status).label + ' – Klicken zum Aendern'"
+                  >
+                    {{ getStatusMeta(post.status).icon }}
+                  </button>
+                  <!-- Status dropdown -->
+                  <div
+                    v-if="statusDropdownPost === post.id"
+                    class="absolute right-0 bottom-full mb-1 z-30 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[140px]"
+                    @click.stop
+                  >
+                    <div class="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Status aendern</div>
+                    <button
+                      v-for="nextStatus in getAvailableTransitions(post.status)"
+                      :key="nextStatus"
+                      @click.stop="changePostStatus(post, nextStatus)"
+                      class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      :class="getStatusMeta(nextStatus).color"
+                    >
+                      <span>{{ getStatusMeta(nextStatus).icon }}</span>
+                      <span>{{ getStatusMeta(nextStatus).label }}</span>
+                    </button>
+                  </div>
+                </span>
               </div>
             </div>
 
@@ -2745,6 +2916,37 @@ onMounted(() => {
             </svg>
             Verschieben
           </button>
+          <!-- Batch status change dropdown -->
+          <div class="relative">
+            <button
+              @click="showBatchStatusMenu = !showBatchStatusMenu"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Status
+              <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div
+              v-if="showBatchStatusMenu"
+              class="absolute bottom-full mb-2 left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[160px]"
+            >
+              <div class="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Alle auf Status setzen</div>
+              <button
+                v-for="(meta, key) in statusMeta"
+                :key="'batch-' + key"
+                @click="batchChangeStatus(key); showBatchStatusMenu = false"
+                class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                :class="meta.color"
+              >
+                <span>{{ meta.icon }}</span>
+                <span>{{ meta.label }}</span>
+              </button>
+            </div>
+          </div>
           <button
             @click="clearSelection"
             class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
@@ -2865,6 +3067,16 @@ onMounted(() => {
       </div>
     </Teleport>
     <TourSystem ref="tourRef" page-key="calendar" />
+
+    <!-- Export/Import Modal -->
+    <CalendarExportImport
+      :show="showExportImport"
+      :month="currentMonth"
+      :year="currentYear"
+      :platform-filter="platformFilter"
+      @close="showExportImport = false"
+      @imported="fetchCalendarData(); showExportImport = false"
+    />
   </div>
 </template>
 
