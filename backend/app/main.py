@@ -27,7 +27,7 @@ from app.core.seed_music_tracks import seed_music_tracks
 from app.core.seed_video_templates import seed_video_templates
 from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,11 @@ async def lifespan(app: FastAPI):
         try:
             await conn.execute(text("ALTER TABLE video_overlays ADD COLUMN rendered_data TEXT"))
             logger.info("Added rendered_data column to video_overlays table")
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("ALTER TABLE content_suggestions ADD COLUMN suggested_format VARCHAR"))
+            logger.info("Added suggested_format column to content_suggestions table")
         except Exception:
             pass
 
@@ -389,6 +394,7 @@ app.include_router(content_strategy.router, prefix="/api/content-strategy", tags
 app.include_router(campaigns.router, prefix="/api/campaigns", tags=["Campaigns"])
 app.include_router(template_favorites.router, prefix="/api/template-favorites", tags=["Template Favorites"])
 app.include_router(video_scripts.router, prefix="/api/video-scripts", tags=["Video Scripts"])
+app.include_router(prompt_history.router, prefix="/api/ai", tags=["AI Prompt History"])
 
 
 if __name__ == "__main__":
