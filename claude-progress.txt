@@ -1,5 +1,87 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #268: Background Tasks fuer lange Operationen
+**Date:** 2026-02-16
+**Feature ID:** #268
+**Status:** PASSING
+
+### What was implemented:
+Full background task processing system for long-running async operations.
+
+#### Backend:
+1. **BackgroundTask model** (background_task.py) — SQLAlchemy model with:
+   - task_id (UUID), user_id, task_type, title
+   - Status: pending → processing → completed/failed/cancelled
+   - Progress (0.0 - 1.0), result (JSON), error message
+   - Timestamps: created_at, started_at, completed_at
+   - Configurable timeout_seconds, optional callback_url
+
+2. **TaskManager service** (task_manager.py) — Singleton manager with:
+   - `submit_task()` — Persists to DB and launches asyncio coroutine
+   - `TaskContext` — Passed to task functions for progress reporting
+   - `cancel_task()` — Cancels running asyncio tasks
+   - `get_active_tasks()` — Returns pending/processing tasks
+   - `get_user_tasks()` — Paginated history with status filter
+   - `cleanup_old_tasks()` — Removes tasks older than 7 days
+   - `_fire_callback()` — POSTs result to webhook URL on completion
+   - Timeout enforcement via `asyncio.wait_for()`
+
+3. **Tasks API routes** (tasks.py) — 5 endpoints:
+   - `GET /api/tasks/status/{task_id}` — Single task status query
+   - `GET /api/tasks/active` — Active tasks for progress indicator
+   - `GET /api/tasks/history` — Paginated history with status filter
+   - `POST /api/tasks/cancel/{task_id}` — Cancel running tasks
+   - `POST /api/tasks/submit-demo` — Demo task for testing
+
+#### Frontend:
+4. **useBackgroundTasks composable** — Polling-based reactive state:
+   - Dynamic polling speed: fast (3s) when tasks active, slow (30s) otherwise
+   - activeTasks, taskHistory, submitDemoTask, cancelTask helpers
+
+5. **ProgressIndicator component** — TopBar badge + dropdown:
+   - Shows spinner + count when tasks are running
+   - Expandable dropdown with task list, progress bars, cancel buttons
+   - Recently-completed tasks fade after 5s
+   - Links to full task history in Settings
+
+6. **TaskHistoryPanel component** — Settings section:
+   - Paginated task history with status filter pills
+   - Task type icons, duration display, error messages
+   - Demo task launcher for testing
+   - Refresh button
+
+### Files created:
+- backend/app/models/background_task.py (NEW)
+- backend/app/services/task_manager.py (NEW)
+- backend/app/api/routes/tasks.py (NEW)
+- frontend/src/composables/useBackgroundTasks.js (NEW)
+- frontend/src/components/common/ProgressIndicator.vue (NEW)
+- frontend/src/components/tasks/TaskHistoryPanel.vue (NEW)
+
+### Files modified:
+- backend/app/models/__init__.py — Added BackgroundTask import
+- backend/app/main.py — Added tasks router, tag, route registration
+- frontend/src/components/layout/TopBar.vue — Added ProgressIndicator
+- frontend/src/views/SettingsView.vue — Added TaskHistoryPanel section
+
+### Verification completed:
+- API: Submit demo task (5s) → completed with result ✓
+- API: Submit failing task → status=failed at 50% with error message ✓
+- API: Submit long task → cancel → status=cancelled ✓
+- API: Active tasks endpoint shows processing tasks with progress ✓
+- API: Task history with status filter works ✓
+- API: Unauthenticated access returns 401 ✓
+- API: Data persists across server restart (RESTART_TEST_268) ✓
+- Frontend: Build succeeds with zero errors ✓
+- Frontend: ProgressIndicator polling visible in server logs ✓
+- Mock data grep: Zero matches across all new files ✓
+- Cleanup endpoint works ✓
+
+### Current state:
+- Feature #268 marked as PASSING
+
+---
+
 ## Session - Feature #265: Turso/SQLite Datenbank-Migrationen
 **Date:** 2026-02-16
 **Feature ID:** #265
