@@ -22,6 +22,7 @@ from app.core.security import get_current_user_id
 from app.core.text_generator import generate_text_content, regenerate_single_field
 from app.core.config import settings
 from app.core.rate_limiter import ai_rate_limiter
+from app.core.strategy_loader import StrategyLoader
 from app.models.asset import Asset
 from app.models.setting import Setting
 from app.models.post import Post
@@ -480,6 +481,9 @@ async def generate_text(
       and use it to customize the AI generation tone and style.
     - buyer_journey_stage (str, optional): awareness, consideration, or decision.
       Adapts tone and CTA based on content-strategy.json buyer journey definitions.
+    - content_pillar (str, optional): Content pillar ID (e.g. 'erfahrungsberichte',
+      'laender_spotlight'). If provided, injects pillar-specific writing instructions
+      into the Gemini prompt. Falls back to deriving pillar from category.
 
     Returns structured content for all slides, captions, and hashtags.
     Includes 'source' field: "gemini" or "rule_based".
@@ -497,6 +501,7 @@ async def generate_text(
         slide_count = request.get("slide_count", 1)
         student_id = request.get("student_id")
         buyer_journey_stage = request.get("buyer_journey_stage")
+        content_pillar = request.get("content_pillar")
 
         if slide_count < 1:
             slide_count = 1
@@ -530,8 +535,12 @@ async def generate_text(
         # Get Gemini API key for AI-powered text generation
         api_key = await _get_gemini_api_key(user_id, db)
 
+        # If content_pillar is explicitly provided, use it for pillar-specific
+        # prompt injection (overrides category-to-pillar mapping)
+        effective_category = content_pillar if content_pillar else category
+
         result = generate_text_content(
-            category=category,
+            category=effective_category,
             country=country,
             topic=topic,
             key_points=key_points,
@@ -542,6 +551,11 @@ async def generate_text(
             personality_preset=personality_preset,
             buyer_journey_stage=buyer_journey_stage,
         )
+
+        # Include the original category and content_pillar in the result
+        if content_pillar:
+            result["content_pillar"] = content_pillar
+            result["category"] = category
 
         return result
     except Exception as e:
@@ -574,11 +588,29 @@ async def adapt_text_for_platform(
     if not original_text:
         raise HTTPException(status_code=400, detail="original_text is required")
 
-    platform_guidelines = {
-        "instagram_feed": "Instagram Feed: Laengere Captions (bis 2200 Zeichen), Hashtags am Ende, informativ/storytelling, Call-to-Action",
-        "instagram_story": "Instagram Story: Kurz und knackig (max 100 Zeichen), CTA mit Swipe-Up/Link, 1-2 Emojis, Frage oder Poll zum Interagieren",
-        "tiktok": "TikTok: Hook-fokussiert (erste 3 Sekunden entscheidend), kurz (max 150 Zeichen), trendige Sprache, Hashtags inline, weniger Emojis",
-    }
+    # Load platform guidelines dynamically from social-content.json
+    strategy = StrategyLoader.instance()
+    platform_guidelines = {}
+    # Build guidelines from strategy for each platform
+    for plat in ["instagram_feed", "instagram_stories", "instagram_reels", "tiktok"]:
+        config = strategy.get_platform_config(plat)
+        if config:
+            best_practices = config.get("best_practices", [])
+            caption_rules = config.get("caption_rules", {})
+            ideal_range = caption_rules.get("ideal_length_range", [])
+            length_hint = f", ideale Laenge: {ideal_range[0]}-{ideal_range[1]} Zeichen" if ideal_range else ""
+            practices_str = "; ".join(best_practices[:4]) if best_practices else ""
+            platform_guidelines[plat] = f"{config.get('name', plat)}: {practices_str}{length_hint}"
+    # Fallback for unmapped platforms
+    if not platform_guidelines:
+        platform_guidelines = {
+            "instagram_feed": "Instagram Feed: Laengere Captions (bis 2200 Zeichen), Hashtags am Ende, informativ/storytelling, Call-to-Action",
+            "instagram_stories": "Instagram Story: Kurz und knackig (max 100 Zeichen), CTA mit Swipe-Up/Link, 1-2 Emojis",
+            "tiktok": "TikTok: Hook-fokussiert (erste 3 Sekunden entscheidend), kurz (max 150 Zeichen), trendige Sprache",
+        }
+    # Map legacy key "instagram_story" to "instagram_stories"
+    if "instagram_stories" in platform_guidelines and "instagram_story" not in platform_guidelines:
+        platform_guidelines["instagram_story"] = platform_guidelines["instagram_stories"]
 
     source_desc = platform_guidelines.get(source_platform, source_platform)
     target_desc = platform_guidelines.get(target_platform, target_platform)
@@ -931,6 +963,16 @@ TREFF_SEASONAL_CALENDAR = [
     # Messen
     {"month": 11, "day": 1, "label": "JuBi Messe Herbst", "country": None, "type": "messe"},
     {"month": 3, "day": 1, "label": "JuBi Messe Fruehling", "country": None, "type": "messe"},
+    # Deutsche Feiertage und Schulferien
+    {"month": 1, "day": 1, "label": "Neujahr – Neujahrsvorsaetze & Auslandsplanung", "country": None, "type": "feiertag"},
+    {"month": 4, "day": 18, "label": "Osterferien – Fernweh-Content", "country": None, "type": "schulferien"},
+    {"month": 5, "day": 1, "label": "Tag der Arbeit – Motivation & Zukunftsplanung", "country": None, "type": "feiertag"},
+    {"month": 6, "day": 20, "label": "Sommerferien-Start – Abenteuerlust wecken", "country": None, "type": "schulferien"},
+    {"month": 10, "day": 3, "label": "Tag der Deutschen Einheit – Weltoffenheit", "country": None, "type": "feiertag"},
+    {"month": 10, "day": 14, "label": "Herbstferien – Auslandsjahr planen", "country": None, "type": "schulferien"},
+    {"month": 12, "day": 23, "label": "Weihnachtsferien – Weihnachten im Ausland", "country": None, "type": "schulferien"},
+    {"month": 12, "day": 24, "label": "Heiligabend – Weihnachten in der Gastfamilie", "country": None, "type": "feiertag"},
+    {"month": 12, "day": 31, "label": "Silvester – Jahresrueckblick & Ausblick", "country": None, "type": "feiertag"},
 ]
 
 SEASON_NAMES = {
@@ -1057,19 +1099,54 @@ def _generate_suggestions_rule_based(
             )
             category = "fristen_cta"
             country = None
+            suggested_format = "instagram_story"
             reason = f"Messe-Termin am {deadline['date'].strftime('%d.%m.%Y')}"
+        elif dl_type == "feiertag":
+            title = deadline["label"]
+            desc = (
+                f"Feiertag am {deadline['date'].strftime('%d.%m.')} – "
+                f"Perfekt fuer einen thematisch passenden Post mit Bezug zum Auslandsaufenthalt!"
+            )
+            category = "foto_posts"
+            country = None
+            suggested_format = "instagram_feed"
+            reason = f"Deutscher Feiertag am {deadline['date'].strftime('%d.%m.%Y')} – Content-Chance nutzen"
+        elif dl_type == "schulferien":
+            title = deadline["label"]
+            desc = (
+                f"Schulferien stehen an – viele Schueler und Eltern haben Zeit, "
+                f"sich ueber Auslandsaufenthalte zu informieren. Nutze die erhoehte Aufmerksamkeit!"
+            )
+            category = "tipps_tricks"
+            country = None
+            suggested_format = "instagram_story"
+            reason = f"Schulferien am {deadline['date'].strftime('%d.%m.%Y')} – Zielgruppe hat mehr Zeit"
         else:
             continue
 
+        # Default format mapping by category for non-holiday types
+        if "suggested_format" not in dir() or not suggested_format:
+            format_map = {
+                "fristen_cta": "instagram_feed",
+                "erfahrungsberichte": "instagram_feed",
+                "tipps_tricks": "instagram_story",
+                "foto_posts": "instagram_feed",
+                "laender_spotlight": "carousel",
+            }
+            suggested_format = format_map.get(category, "instagram_feed")
+
+        stype = "holiday" if dl_type in ("feiertag", "schulferien") else "seasonal"
         suggestions.append({
-            "suggestion_type": "seasonal",
+            "suggestion_type": stype,
             "title": title,
             "description": desc,
             "suggested_category": category,
             "suggested_country": country,
+            "suggested_format": suggested_format,
             "suggested_date": (today + timedelta(days=min(days_until - 7, 3) if days_until > 10 else 1)).isoformat(),
             "reason": reason,
         })
+        suggested_format = None  # Reset for next iteration
 
     # 2. Country rotation: suggest underrepresented countries
     country_counts = {}
@@ -1087,6 +1164,7 @@ def _generate_suggestions_rule_based(
             ),
             "suggested_category": "laender_spotlight",
             "suggested_country": country,
+            "suggested_format": "carousel",
             "suggested_date": (today + timedelta(days=2)).isoformat(),
             "reason": f"{country_name} ist unterrepraesentiert in deinen letzten Posts",
         })
@@ -1099,6 +1177,15 @@ def _generate_suggestions_rule_based(
     for cat in least_used_cat[:1]:
         cat_name = CATEGORY_DISPLAY.get(cat, cat)
         random_country = random.choice(ALL_COUNTRIES)
+        cat_format_map = {
+            "laender_spotlight": "carousel",
+            "erfahrungsberichte": "instagram_feed",
+            "infografiken": "carousel",
+            "fristen_cta": "instagram_feed",
+            "tipps_tricks": "tiktok",
+            "faq": "instagram_story",
+            "foto_posts": "instagram_feed",
+        }
         suggestions.append({
             "suggestion_type": "category_balance",
             "title": f"Mehr {cat_name}-Content erstellen",
@@ -1108,6 +1195,7 @@ def _generate_suggestions_rule_based(
             ),
             "suggested_category": cat,
             "suggested_country": random_country,
+            "suggested_format": cat_format_map.get(cat, "instagram_feed"),
             "suggested_date": (today + timedelta(days=3)).isoformat(),
             "reason": f"Kategorie '{cat_name}' braucht mehr Beitraege fuer eine ausgewogene Content-Strategie",
         })
@@ -1142,6 +1230,7 @@ def _generate_suggestions_rule_based(
         "description": season_data["desc"],
         "suggested_category": season_data["category"],
         "suggested_country": random.choice(ALL_COUNTRIES),
+        "suggested_format": "instagram_feed",
         "suggested_date": (today + timedelta(days=4)).isoformat(),
         "reason": f"Saisonaler Content-Vorschlag fuer {season}",
     })
@@ -1158,6 +1247,12 @@ async def _generate_suggestions_with_gemini(
     recent_countries: list[str],
 ) -> Optional[List[dict]]:
     """Generate content suggestions using Gemini 2.5 Flash.
+
+    Integrates dynamic strategy context:
+    - Content pillar distribution (30/20/20/10/10/5/5%) from content-strategy.json
+    - Buyer journey balance (40% Awareness, 35% Consideration, 25% Decision)
+    - Seasonal priorities from content-strategy.json
+    - Country weights from content-strategy.json
 
     Returns a list of suggestion dicts or None if generation fails.
     """
@@ -1181,12 +1276,73 @@ async def _generate_suggestions_with_gemini(
         recent_cats_str = ", ".join(recent_categories[:10]) if recent_categories else "Keine bisherigen Posts"
         recent_countries_str = ", ".join(recent_countries[:10]) if recent_countries else "Keine Laender-Posts"
 
-        system_prompt = """Du bist der Content-Strategie-Assistent fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
+        # Load dynamic strategy context
+        strategy = StrategyLoader.instance()
+
+        # Content pillar distribution analysis
+        pillars = strategy.get_content_pillars()
+        pillar_context = ""
+        if pillars:
+            pillar_context = "\nCONTENT-SAEULEN-VERTEILUNG (Soll-Verteilung):\n"
+            from collections import Counter
+            cat_counts = Counter(recent_categories)
+            total_posts = len(recent_categories) or 1
+            for p in pillars:
+                pid = p.get("id", "")
+                pname = p.get("name", pid)
+                target_pct = p.get("percentage", 0)
+                actual_count = cat_counts.get(pid, 0)
+                actual_pct = round(actual_count / total_posts * 100)
+                status = "unterrepraesentiert" if actual_pct < target_pct * 0.7 else ("ueberrepraesentiert" if actual_pct > target_pct * 1.3 else "im Ziel")
+                pillar_context += f"  - {pname}: Soll {target_pct}%, Ist {actual_pct}% ({status})\n"
+            pillar_context += "Schlage bevorzugt unterrepraesentierte Saeulen vor!\n"
+
+        # Buyer journey balance
+        buyer_journey_context = ""
+        stages = strategy.get_buyer_journey_stages()
+        if stages:
+            buyer_journey_context = "\nBUYER-JOURNEY-BALANCE (Empfohlene Verteilung):\n"
+            for s in stages:
+                buyer_journey_context += f"  - {s.get('name', '')}: {s.get('percentage', 0)}% ({s.get('description', '')})\n"
+            buyer_journey_context += "Achte darauf, dass die Vorschlaege die verschiedenen Journey-Stufen abdecken!\n"
+
+        # Seasonal priorities
+        seasonal_context = ""
+        phase = strategy.get_current_seasonal_phase()
+        if phase:
+            seasonal_context = f"\nAKTUELLE SAISONALE PHASE: {phase.get('name', '')}\n"
+            seasonal_context += f"Fokus: {phase.get('focus', '')}\n"
+            seasonal_context += f"Beschreibung: {phase.get('description', '')}\n"
+            priority_pillars = phase.get("priority_pillars", [])
+            if priority_pillars:
+                seasonal_context += f"Prioritaets-Themen fuer diese Phase: {', '.join(priority_pillars)}\n"
+            content_mix = phase.get("content_mix", {})
+            if content_mix:
+                seasonal_context += f"Saisonaler Content-Mix: Awareness {content_mix.get('awareness', 0)}%, Consideration {content_mix.get('consideration', 0)}%, Decision {content_mix.get('decision', 0)}%\n"
+
+        # Country weights
+        country_weights = strategy.get_country_weights()
+        country_weight_context = ""
+        if country_weights:
+            from collections import Counter
+            country_counts = Counter(recent_countries)
+            total_country_posts = len(recent_countries) or 1
+            country_weight_context = "\nLAENDER-GEWICHTUNG (Soll vs. Ist):\n"
+            for c, target_w in country_weights.items():
+                actual_count = country_counts.get(c, 0)
+                actual_pct = round(actual_count / total_country_posts * 100)
+                country_name = {"usa": "USA", "canada": "Kanada", "australia": "Australien", "newzealand": "Neuseeland", "ireland": "Irland"}.get(c, c)
+                country_weight_context += f"  - {country_name}: Soll {target_w}%, Ist {actual_pct}%\n"
+
+        system_prompt = f"""Du bist der Content-Strategie-Assistent fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
 
 Deine Aufgabe ist es, 3-5 konkrete Content-Vorschlaege fuer Social Media (Instagram & TikTok) zu generieren. Jeder Vorschlag soll:
 - Zum aktuellen Datum und zur Jahreszeit passen
 - Bevorstehende TREFF-Fristen und Events beruecksichtigen
 - Die Vielfalt im Content-Mix foerdern (verschiedene Laender und Kategorien)
+- Die Content-Saeulen-Verteilung respektieren (unterrepraesentierte Saeulen bevorzugen)
+- Die Buyer-Journey-Balance beruecksichtigen (Awareness, Consideration, Decision)
+- Saisonale Prioritaeten aus der Content-Strategie beachten
 - Auf Deutsch sein und zum TREFF-Markenton passen (jugendlich aber serioees)
 
 Verfuegbare Kategorien: laender_spotlight, erfahrungsberichte, infografiken, fristen_cta, tipps_tricks, faq, foto_posts
@@ -1211,7 +1367,7 @@ LETZTE POST-KATEGORIEN (der letzten 20 Posts):
 
 LETZTE POST-LAENDER (der letzten 20 Posts):
 {recent_countries_str}
-
+{pillar_context}{buyer_journey_context}{seasonal_context}{country_weight_context}
 Antworte ausschliesslich im folgenden JSON-Format (kein Markdown, keine Erklaerungen):
 {{
   "suggestions": [
@@ -1390,6 +1546,7 @@ async def suggest_content(
             suggested_category=s.get("suggested_category"),
             suggested_country=s.get("suggested_country"),
             suggested_date=suggested_date_val,
+            suggested_format=s.get("suggested_format"),
             reason=s.get("reason"),
             status="pending",
         )
@@ -1405,6 +1562,7 @@ async def suggest_content(
             "suggested_category": suggestion.suggested_category,
             "suggested_country": suggestion.suggested_country,
             "suggested_date": suggestion.suggested_date.isoformat() if suggestion.suggested_date else None,
+            "suggested_format": getattr(suggestion, "suggested_format", None),
             "reason": suggestion.reason,
             "status": suggestion.status,
             "created_at": suggestion.created_at.isoformat() if suggestion.created_at else None,
@@ -2728,58 +2886,100 @@ async def generate_humor(
 # Hook / Attention-Grabber Generation endpoints
 # ═══════════════════════════════════════════════════════════════════════
 
-HOOK_TYPES = {
-    "frage": {
-        "label": "Frage",
-        "description": "Provokante oder neugierig machende Frage",
-        "icon": "❓",
-        "examples": [
-            "Wusstest du, dass 87% aller Austauschschueler sagen, es war die beste Entscheidung ihres Lebens?",
-            "Was wuerdest du tun, wenn du ploetzlich 10.000 km von zuhause entfernt aufwachst?",
-            "Hast du dich jemals gefragt, wie es sich anfuehlt, in einer amerikanischen High School zu sitzen?",
-        ],
-    },
-    "statistik": {
-        "label": "Statistik",
-        "description": "Ueberraschende Zahl oder Statistik",
-        "icon": "📊",
-        "examples": [
-            "87% aller Austauschschueler sagen: Es war die beste Entscheidung meines Lebens.",
-            "Nur 3% aller deutschen Schueler machen ein Auslandsjahr – gehoerst du bald dazu?",
-            "10.000+ Schueler hat TREFF seit 1984 ins Ausland geschickt.",
-        ],
-    },
-    "emotion": {
-        "label": "Emotion",
-        "description": "Emotionales Statement oder Gefuehlsbeschreibung",
-        "icon": "🥺",
-        "examples": [
-            "Der Moment, in dem du realisierst, dass du deine Gastfamilie mehr vermisst als du dachtest...",
-            "Dieses Gefuehl, wenn du zum ersten Mal alleine am Flughafen stehst – und weisst, dein Abenteuer beginnt jetzt.",
-            "Es gibt diesen einen Moment, der alles veraendert. Fuer mich war es der erste Schultag in Kanada.",
-        ],
-    },
-    "provokation": {
-        "label": "Provokation",
-        "description": "Mutiges Statement oder Unpopular Opinion",
-        "icon": "⚡",
-        "examples": [
-            "Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abitur-Zeugnis.",
-            "Sorry, aber: Wer nie im Ausland war, verpasst die wichtigste Lektion des Lebens.",
-            "Hot Take: Die beste Schule ist nicht in Deutschland – sie ist 10.000 km entfernt.",
-        ],
-    },
-    "story_opener": {
-        "label": "Story-Opener",
-        "description": "Erzaehlerischer Einstieg der neugierig macht",
-        "icon": "📖",
-        "examples": [
-            "Es war 3 Uhr morgens in Vancouver, als mein Telefon klingelte...",
-            "Ich stand am Flughafen mit zwei Koffern und null Plan – und es war der beste Tag meines Lebens.",
-            "Tag 1 in meiner Gastfamilie: Die Mutter stellte mir ein Gericht vor, das ich noch nie gesehen hatte...",
-        ],
-    },
-}
+def _get_dynamic_hook_types(platform: Optional[str] = None) -> dict:
+    """Load hook types dynamically from StrategyLoader (social-content.json).
+
+    Returns a dict keyed by hook formula ID with label, description, icon, and examples.
+    Falls back to the original 5 hardcoded types if strategy loading fails.
+    """
+    try:
+        strategy = StrategyLoader.instance()
+        formulas = strategy.get_hook_formulas(platform)
+        if formulas:
+            hook_types = {}
+            # Icon mapping based on formula characteristics
+            icon_map = {
+                "knowledge_gap": "❓",
+                "comparison": "📊",
+                "emotional_opener": "🥺",
+                "myth_buster": "⚡",
+                "countdown_urgency": "⏳",
+                "behind_scenes": "📖",
+                "pov": "🤝",
+                "question": "💬",
+                "list": "📋",
+                "expectation_reality": "🔍",
+            }
+            for f in formulas:
+                fid = f.get("id", "")
+                hook_types[fid] = {
+                    "label": f.get("name", fid),
+                    "description": f.get("template", ""),
+                    "icon": icon_map.get(fid, "🎯"),
+                    "effectiveness": f.get("effectiveness", 5),
+                    "examples": f.get("examples", []),
+                }
+            return hook_types
+    except Exception as e:
+        logger.warning("Failed to load dynamic hook types: %s", e)
+
+    # Hardcoded fallback if strategy loading fails
+    return {
+        "frage": {
+            "label": "Frage",
+            "description": "Provokante oder neugierig machende Frage",
+            "icon": "❓",
+            "effectiveness": 8,
+            "examples": [
+                "Wusstest du, dass 87% aller Austauschschueler sagen, es war die beste Entscheidung ihres Lebens?",
+                "Was wuerdest du tun, wenn du ploetzlich 10.000 km von zuhause entfernt aufwachst?",
+            ],
+        },
+        "statistik": {
+            "label": "Statistik",
+            "description": "Ueberraschende Zahl oder Statistik",
+            "icon": "📊",
+            "effectiveness": 7,
+            "examples": [
+                "87% aller Austauschschueler sagen: Es war die beste Entscheidung meines Lebens.",
+                "Nur 3% aller deutschen Schueler machen ein Auslandsjahr – gehoerst du bald dazu?",
+            ],
+        },
+        "emotion": {
+            "label": "Emotion",
+            "description": "Emotionales Statement oder Gefuehlsbeschreibung",
+            "icon": "🥺",
+            "effectiveness": 8,
+            "examples": [
+                "Der Moment, in dem du realisierst, dass du deine Gastfamilie mehr vermisst als du dachtest...",
+                "Dieses Gefuehl, wenn du zum ersten Mal alleine am Flughafen stehst...",
+            ],
+        },
+        "provokation": {
+            "label": "Provokation",
+            "description": "Mutiges Statement oder Unpopular Opinion",
+            "icon": "⚡",
+            "effectiveness": 9,
+            "examples": [
+                "Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abitur-Zeugnis.",
+                "Hot Take: Die beste Schule ist nicht in Deutschland.",
+            ],
+        },
+        "story_opener": {
+            "label": "Story-Opener",
+            "description": "Erzaehlerischer Einstieg der neugierig macht",
+            "icon": "📖",
+            "effectiveness": 8,
+            "examples": [
+                "Es war 3 Uhr morgens in Vancouver, als mein Telefon klingelte...",
+                "Ich stand am Flughafen mit zwei Koffern und null Plan...",
+            ],
+        },
+    }
+
+
+# Legacy compatibility alias (used in save-hook-selection validation)
+HOOK_TYPES = _get_dynamic_hook_types()
 
 
 def _generate_hooks_rule_based(
@@ -2789,7 +2989,11 @@ def _generate_hooks_rule_based(
     platform: str,
     count: int,
 ) -> list[dict]:
-    """Generate hook variants using rule-based templates (fallback)."""
+    """Generate hook variants using rule-based templates (fallback).
+
+    Loads hook formulas dynamically from StrategyLoader (social-content.json)
+    and uses effectiveness-weighted selection.
+    """
     import random
 
     country_name = {
@@ -2797,14 +3001,43 @@ def _generate_hooks_rule_based(
         "newzealand": "Neuseeland", "ireland": "Irland"
     }.get(country, "")
 
+    # Load hook types dynamically (platform-filtered)
+    hook_types = _get_dynamic_hook_types(platform)
     hooks = []
-    hook_type_keys = list(HOOK_TYPES.keys())
+    hook_type_keys = list(hook_types.keys())
 
-    for i in range(count):
-        hook_type = hook_type_keys[i % len(hook_type_keys)]
-        hook_data = HOOK_TYPES[hook_type]
+    # Use effectiveness-weighted selection instead of round-robin
+    weights = [hook_types[k].get("effectiveness", 5) for k in hook_type_keys]
 
-        example = random.choice(hook_data["examples"])
+    selected_types = random.choices(hook_type_keys, weights=weights, k=count)
+    # Deduplicate while maintaining count (cycle through if needed)
+    seen = set()
+    unique_types = []
+    for t in selected_types:
+        if t not in seen:
+            unique_types.append(t)
+            seen.add(t)
+    while len(unique_types) < count:
+        for k in hook_type_keys:
+            if k not in seen:
+                unique_types.append(k)
+                seen.add(k)
+            if len(unique_types) >= count:
+                break
+        if len(unique_types) < count:
+            # If we still don't have enough, allow repeats
+            unique_types.extend(random.choices(hook_type_keys, weights=weights, k=count - len(unique_types)))
+            break
+
+    for hook_type in unique_types[:count]:
+        hook_data = hook_types[hook_type]
+        examples = hook_data.get("examples", [])
+        if examples:
+            example = random.choice(examples)
+        else:
+            # Use template as fallback
+            example = hook_data.get("description", f"{hook_data.get('label', hook_type)} Hook")
+
         if country_name:
             replacements = {
                 "Kanada": country_name,
@@ -2840,7 +3073,11 @@ def _generate_hooks_with_gemini(
     platform: str,
     count: int,
 ) -> Optional[List[dict]]:
-    """Generate hook variants using Gemini 2.5 Flash."""
+    """Generate hook variants using Gemini 2.5 Flash.
+
+    Passes hook formula templates with effectiveness ratings from
+    social-content.json to Gemini so generated hooks follow proven patterns.
+    """
     try:
         from google import genai
         from google.genai import types
@@ -2864,6 +3101,19 @@ def _generate_hooks_with_gemini(
             else "Die Hooks sollen als erste Zeile eines Instagram-Feed-Posts funktionieren."
         )
 
+        # Load hook formulas dynamically from strategy
+        hook_types = _get_dynamic_hook_types(platform)
+        hook_types_prompt = ""
+        valid_type_ids = []
+        for i, (fid, fdata) in enumerate(hook_types.items(), 1):
+            eff = fdata.get("effectiveness", 5)
+            template = fdata.get("description", "")
+            examples = fdata.get("examples", [])
+            example_str = f' (Beispiel: "{examples[0]}")' if examples else ""
+            hook_types_prompt += f'{i}. "{fid}" - {fdata["label"]} (Effektivitaet {eff}/10): {template}{example_str}\n'
+            valid_type_ids.append(fid)
+        type_ids_str = "|".join(valid_type_ids)
+
         system_prompt = f"""Du bist ein Experte fuer Social-Media-Hooks und Attention-Grabber fuer TREFF Sprachreisen, einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
 
 Deine Aufgabe: Generiere {count} verschiedene Hooks/Aufhaenger fuer den Beginn eines Social-Media-Posts. Die ersten 1-3 Sekunden entscheiden, ob jemand weiterliest oder weiterscrollt.
@@ -2885,25 +3135,21 @@ LAND: {country_name}
 TONALITAET: {tone}
 PLATTFORM: {platform}
 
-Jeder Hook soll einem anderen Typ entsprechen:
-1. "frage" - Provokante oder neugierig machende Frage
-2. "statistik" - Ueberraschende Zahl oder Statistik
-3. "emotion" - Emotionales Statement
-4. "provokation" - Mutiges Statement / Unpopular Opinion
-5. "story_opener" - Erzaehlerischer Einstieg
-
+Jeder Hook soll einem der folgenden bewaeehrten Hook-Formeln entsprechen (bevorzuge Formeln mit hoeherer Effektivitaet!):
+{hook_types_prompt}
 Regeln:
 - Jeder Hook max 150 Zeichen
 - Hooks sollen zum Stoppen beim Scrollen zwingen (Scroll-Stopper)
 - Jeder Hook soll einzigartig und kreativ sein
 - Hooks muessen zum Thema und Land passen
+- Bevorzuge Hook-Formeln mit hoher Effektivitaet (8-10/10)
 
 Antworte ausschliesslich im folgenden JSON-Format:
 {{
   "hooks": [
     {{
       "hook_text": "Der Hook-Text",
-      "hook_type": "frage|statistik|emotion|provokation|story_opener"
+      "hook_type": "{type_ids_str}"
     }}
   ]
 }}"""
@@ -2940,20 +3186,21 @@ Antworte ausschliesslich im folgenden JSON-Format:
             logger.warning("Gemini returned empty hooks list")
             return None
 
-        valid_hook_types = set(HOOK_TYPES.keys())
+        valid_hook_types = set(hook_types.keys())
         hooks = []
         for h in hooks_raw[:count]:
             if not isinstance(h, dict) or not h.get("hook_text"):
                 continue
-            hook_type = h.get("hook_type", "frage")
+            hook_type = h.get("hook_type", "")
             if hook_type not in valid_hook_types:
-                hook_type = "frage"
-            hook_data = HOOK_TYPES[hook_type]
+                # Try to match by partial name or default to first type
+                hook_type = next(iter(valid_hook_types), "frage")
+            hook_data = hook_types.get(hook_type, {})
             hooks.append({
                 "hook_text": h["hook_text"][:200],
                 "hook_type": hook_type,
-                "hook_type_label": hook_data["label"],
-                "hook_type_icon": hook_data["icon"],
+                "hook_type_label": hook_data.get("label", hook_type),
+                "hook_type_icon": hook_data.get("icon", "🎯"),
             })
 
         if hooks:
@@ -3029,14 +3276,16 @@ async def generate_hooks(
 
     await db.flush()
 
+    # Return dynamic hook types (platform-filtered)
+    dynamic_types = _get_dynamic_hook_types(platform)
     return {
         "status": "success",
         "hooks": hooks,
         "source": source,
         "count": len(hooks),
         "hook_types": {
-            k: {"label": v["label"], "description": v["description"], "icon": v["icon"]}
-            for k, v in HOOK_TYPES.items()
+            k: {"label": v["label"], "description": v.get("description", ""), "icon": v["icon"]}
+            for k, v in dynamic_types.items()
         },
         "message": f"{len(hooks)} Hook-Varianten generiert!",
     }
@@ -3070,8 +3319,9 @@ async def save_hook_selection(
     if not hook_text:
         raise HTTPException(status_code=400, detail="hook_text is required")
 
-    if hook_type not in HOOK_TYPES:
-        hook_type = "frage"
+    dynamic_types = _get_dynamic_hook_types()
+    if hook_type not in dynamic_types:
+        hook_type = next(iter(dynamic_types), "frage")
 
     hook = Hook(
         user_id=user_id, post_id=post_id, hook_text=hook_text,
@@ -3764,8 +4014,27 @@ async def generate_interactive(
 # ═══════════════════════════════════════════════════════════════════════
 
 def _build_engagement_boost_system_prompt() -> str:
-    """Build the system prompt for engagement boost analysis."""
-    return """Du bist ein erfahrener Social-Media-Experte und Engagement-Analyst fuer TREFF Sprachreisen,
+    """Build the system prompt for engagement boost analysis.
+
+    Loads CTA strategies and platform best practices dynamically
+    from social-content.json via StrategyLoader.
+    """
+    # Load CTA strategies dynamically
+    strategy = StrategyLoader.instance()
+    cta_strategies = strategy.get_cta_strategies()
+    cta_context = ""
+    if cta_strategies:
+        cta_context = "\n\nVERFUEGBARE CTA-STRATEGIEN (aus Content-Strategie):\n"
+        for s in cta_strategies:
+            cta_type = s.get("type", "")
+            desc = s.get("description", "")
+            examples = s.get("examples", [])
+            platforms = ", ".join(s.get("best_for", []))
+            example_str = f' (z.B. "{examples[0]}")' if examples else ""
+            cta_context += f"- {cta_type.title()} ({platforms}): {desc}{example_str}\n"
+        cta_context += "\nNutze diese CTA-Strategien als Referenz fuer CTA-Verbesserungsvorschlaege!"
+
+    return f"""Du bist ein erfahrener Social-Media-Experte und Engagement-Analyst fuer TREFF Sprachreisen,
 einen deutschen Anbieter von Highschool-Aufenthalten im Ausland (USA, Kanada, Australien, Neuseeland, Irland).
 
 Deine Aufgabe: Analysiere einen Social-Media-Post-Entwurf und gib konkrete, umsetzbare Vorschlaege,
@@ -3780,7 +4049,7 @@ Analysiere diese Aspekte:
 6. Format-Wahl: Ist das gewaehlte Format (Feed Post, Story, Reel) das richtige fuer diesen Inhalt?
 7. Emotionale Ansprache: Spricht der Post die Zielgruppe emotional an?
 8. Interaktionsanreize: Gibt es Elemente, die zur Interaktion einladen (Fragen, Umfragen, etc.)?
-
+{cta_context}
 Fuer jeden Vorschlag gib an:
 - priority: "high", "medium", oder "low"
 - category: Eine der Kategorien (hook, cta, length, hashtags, timing, format, emotion, interaction)
@@ -3940,7 +4209,11 @@ def _generate_engagement_boost_rule_based(
     post_format: str,
     posting_time: Optional[str] = None,
 ) -> list[dict]:
-    """Generate rule-based engagement boost suggestions as fallback."""
+    """Generate rule-based engagement boost suggestions as fallback.
+
+    Uses CTA strategies from social-content.json via StrategyLoader
+    and platform best practices for context-aware suggestions.
+    """
     suggestions = []
 
     slides = post_content.get("slides", [])
@@ -3952,6 +4225,11 @@ def _generate_engagement_boost_rule_based(
 
     caption = caption_instagram if "instagram" in platform else caption_tiktok
     hashtags = hashtags_instagram if "instagram" in platform else hashtags_tiktok
+
+    # Load dynamic CTA strategies and platform config
+    strategy = StrategyLoader.instance()
+    cta_strategies = strategy.get_cta_strategies(platform)
+    platform_config = strategy.get_platform_config(platform)
 
     # Check hook strength
     if slides:
@@ -3973,29 +4251,44 @@ def _generate_engagement_boost_rule_based(
                 "action_text": "Frage einbauen",
             })
 
-    # Check CTA
+    # Check CTA (using dynamic CTA strategies from social-content.json)
     if not cta_text and not any(s.get("cta_text") for s in slides):
+        # Build suggestion text from dynamic CTA strategies
+        cta_examples = []
+        for cs in cta_strategies[:3]:
+            examples = cs.get("examples", [])
+            if examples:
+                cta_examples.append(f"'{examples[0]}'")
+        cta_example_str = ", ".join(cta_examples) if cta_examples else "'Link in Bio fuer mehr Infos!', 'Speichere diesen Post!'"
         suggestions.append({
             "priority": "high",
             "category": "cta",
-            "suggestion": "Es fehlt ein Call-to-Action. Fuege z.B. 'Link in Bio fuer mehr Infos!', 'Speichere diesen Post!' oder 'Markiere jemanden, der das braucht!' hinzu.",
+            "suggestion": f"Es fehlt ein Call-to-Action. Fuege z.B. {cta_example_str} hinzu. Ein guter CTA kann die Interaktionsrate um bis zu 25% steigern.",
             "estimated_boost": "+25%",
             "action_text": "CTA hinzufuegen",
         })
 
-    # Check caption length
+    # Check caption length (using dynamic platform config from social-content.json)
+    ideal_min = 150
+    ideal_max = 300
+    if platform_config:
+        caption_rules = platform_config.get("caption_rules", {})
+        ideal_range = caption_rules.get("ideal_length_range", [])
+        if len(ideal_range) == 2:
+            ideal_min, ideal_max = ideal_range
+
     if caption:
         caption_len = len(caption)
         if "instagram" in platform:
-            if caption_len < 100:
+            if caption_len < ideal_min * 0.6:
                 suggestions.append({
                     "priority": "medium",
                     "category": "length",
-                    "suggestion": "Die Caption ist recht kurz. Instagram belohnt laengere Captions (150-300 Zeichen), da sie die Verweildauer erhoehen und dem Algorithmus signalisieren, dass der Content wertvoll ist.",
+                    "suggestion": f"Die Caption ist recht kurz. Instagram belohnt laengere Captions ({ideal_min}-{ideal_max} Zeichen), da sie die Verweildauer erhoehen und dem Algorithmus signalisieren, dass der Content wertvoll ist.",
                     "estimated_boost": "+10%",
                     "action_text": "Caption erweitern",
                 })
-            elif caption_len > 500:
+            elif caption_len > ideal_max * 2:
                 suggestions.append({
                     "priority": "low",
                     "category": "length",
@@ -4021,23 +4314,34 @@ def _generate_engagement_boost_rule_based(
             "action_text": "Caption schreiben",
         })
 
-    # Check hashtags
+    # Check hashtags (using dynamic config for ideal counts)
+    hashtag_min = 5
+    hashtag_max = 15
+    hashtag_ideal = 10
+    if platform_config:
+        caption_rules = platform_config.get("caption_rules", {})
+        hashtag_cfg = caption_rules.get("hashtag_count", {})
+        if hashtag_cfg:
+            hashtag_min = hashtag_cfg.get("min", 5)
+            hashtag_max = hashtag_cfg.get("max", 15)
+            hashtag_ideal = hashtag_cfg.get("ideal", 10)
+
     if hashtags:
         hashtag_count = hashtags.count("#")
         if "instagram" in platform:
-            if hashtag_count < 5:
+            if hashtag_count < hashtag_min:
                 suggestions.append({
                     "priority": "medium",
                     "category": "hashtags",
-                    "suggestion": f"Nur {hashtag_count} Hashtags. Fuer optimale Reichweite nutze 10-15 relevante Hashtags. Mische populaere (#Auslandsjahr, #HighSchool) mit Nischen-Hashtags (#TREFFSprachreisen).",
+                    "suggestion": f"Nur {hashtag_count} Hashtags. Fuer optimale Reichweite nutze {hashtag_min}-{hashtag_max} relevante Hashtags (ideal: {hashtag_ideal}). Mische populaere (#Auslandsjahr, #HighSchool) mit Nischen-Hashtags (#TREFFSprachreisen).",
                     "estimated_boost": "+15%",
                     "action_text": "Hashtags ergaenzen",
                 })
-            elif hashtag_count > 25:
+            elif hashtag_count > hashtag_max + 10:
                 suggestions.append({
                     "priority": "low",
                     "category": "hashtags",
-                    "suggestion": f"{hashtag_count} Hashtags sind zu viele. Instagram empfiehlt 3-5 hochrelevante Hashtags fuer maximale Reichweite.",
+                    "suggestion": f"{hashtag_count} Hashtags sind zu viele. Die empfohlene Anzahl liegt bei {hashtag_min}-{hashtag_max} hochrelevanten Hashtags fuer maximale Reichweite.",
                     "estimated_boost": "+5%",
                     "action_text": "Hashtags reduzieren",
                 })
