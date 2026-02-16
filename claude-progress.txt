@@ -1,5 +1,141 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Features #251, #252: KI-Integration Phase 4
+**Date:** 2026-02-16
+**Features:** #251, #252
+**Status:** BOTH PASSING
+
+---
+
+### Feature #251: KI-Prompt-History & Favoriten
+**Status:** PASSING
+
+#### What was implemented:
+1. **PromptHistory SQLAlchemy Model** — Stores every AI prompt call with: prompt_type, prompt_text, options (JSON), result_text, tokens_used, estimated_cost, model, is_favorite, created_at
+2. **Backend API endpoints** (`/api/ai/history`):
+   - `GET /history` — List with pagination, type filter, favorites filter, search
+   - `POST /history` — Create new entry
+   - `GET /history/stats` — Summary stats (total, favorites, by_type, tokens, cost)
+   - `GET /history/{id}` — Get single entry
+   - `PATCH /history/{id}/favorite` — Toggle favorite
+   - `DELETE /history/{id}` — Delete entry
+3. **PromptHistoryView.vue** — Full page with:
+   - Stats cards (total, favorites, tokens, estimated cost)
+   - Type filter chips (Text, Bild, Hashtags, Optimierung, Video-Script) with counts
+   - Favorites-only toggle
+   - Debounced search in prompt text
+   - Star icon to toggle favorites
+   - "Nochmal verwenden" button (stores prompt in sessionStorage, navigates to creator)
+   - Delete with confirmation
+   - Color-coded type badges, token/cost display per entry
+   - Pagination
+4. **Route & Navigation** — `/ai/prompt-history` route, "KI-Tools" sidebar nav section
+
+#### Verification:
+- Browser: All filters (type, favorites, search) working correctly
+- Browser: Favorite toggle with toast notification
+- Browser: Zero JS console errors
+- Mock data grep: Zero matches
+- Data persistence: SQLite database (survives server restart)
+- Git commit: ff4d488
+
+---
+
+### Feature #252: Smart-Scheduling KI-Vorschlaege
+**Status:** PASSING
+
+#### What was implemented:
+1. **Backend endpoint** (`GET /api/ai/smart-schedule`):
+   - Analyzes historical post times for the user
+   - Generates heatmap (7 days x 24 hours) with engagement scores
+   - Platform-specific best practices (Instagram Feed, Story, TikTok)
+   - Peak hours, best days, scoring algorithm (practice + history)
+   - Conflict detection with already-scheduled posts
+   - Warnings: over-posting (>1/day), time conflicts (<2h gap), weekend
+   - Returns best_time, recommended_slots (top 5), mini-calendar data, platform tip
+
+2. **SmartScheduler.vue** component:
+   - Date picker with day name display
+   - "Bester Zeitpunkt" one-click blue gradient button
+   - 5 recommended time slots in grid with score bars and labels (Optimal/Gut/Moeglich)
+   - Conflict indicators (red dot) on time slots
+   - Expandable heatmap (hours 06-22) with color-coded bars and legend
+   - Mini week calendar (8 days) with post count dots
+   - Warning banners (yellow for warnings, blue for info)
+   - Green "Geplant fuer: [date], [time] Uhr" summary bar when time selected
+   - Platform-specific tip display
+
+3. **Integration into Step3Finalize.vue**:
+   - SmartScheduler placed between Captions/Hashtags and Export Quality
+   - v-model binding for schedule selection
+   - Auto-sets post status to "scheduled" when date+time are selected
+
+#### Verification:
+- Browser: SmartScheduler renders in Step 3 of Post Creator
+- Browser: "Bester Zeitpunkt" button applies 17:00 correctly
+- Browser: Time slots clickable with visual feedback (blue ring)
+- Browser: Heatmap expandable with color-coded hour bars
+- Browser: Green summary bar shows selected date/time
+- Browser: Mini calendar displays week overview
+- Browser: Zero JS console errors
+- API: Correct responses for Instagram Feed (Wed), TikTok (Sat with weekend warning)
+- Mock data grep: Zero matches
+- Git commit: 29de587
+
+---
+
+### Current state:
+- Features #251, #252 marked as PASSING
+
+## Session - Features #242, #243, #244: Template System Phase 3
+**Date:** 2026-02-16
+**Features:** #242, #243, #244
+**Status:** ALL PASSING
+
+### Feature #242: Template-Galerie mit Kategorie-Filter
+- Created TemplateGalleryView.vue with visual grid of template cards
+- TemplateCard.vue with iframe srcdoc live previews, category/platform/country badges
+- Filter sidebar with checkboxes for 11 categories, 4 formats, 5 countries
+- Search bar filtering by template name
+- Favorites toggle (heart icon) with backend persistence (TemplateFavorite model)
+- Backend: template_favorites API routes, search parameter on templates endpoint
+- Responsive grid: 2-col mobile, 3-col tablet, 4-col desktop
+
+### Feature #243: Template-Vorschau Modal mit Details
+- TemplatePreviewModal.vue with large iframe preview, metadata display
+- Category-specific descriptions, platform suitability tags, theme tags
+- Placeholder fields listed, Verwenden/Anpassen action buttons
+- Arrow navigation between templates (buttons + keyboard ArrowLeft/ArrowRight)
+- ESC to close, backdrop click to close, position indicator (1/N)
+
+### Feature #244: Visueller Template-Editor
+- TemplateEditorView.vue - full WYSIWYG editor (963 lines)
+- Canvas: 3 format options (1:1, 4:5, 9:16) with scaled rendering
+- Left toolbar: add text (T), headline placeholder (H), image, rect, circle, line
+- Drag-to-move with mouse tracking, 8-directional resize handles
+- Right panel: HINTERGRUND (background color/gradient), TEXT EIGENSCHAFTEN (content, color, font, size, weight, alignment, opacity, X/Y position), EBENEN (layer z-order management)
+- Undo/Redo stack (max 50) with Ctrl+Z / Ctrl+Y keyboard shortcuts
+- Delete key support, duplicate/delete toolbar buttons
+- Save modal: name, category, format, element count, placeholder extraction
+- HTML/CSS serialization for saving to database via POST /api/templates
+- Verified: all toolbar buttons, canvas interaction, property editing, format switching, undo/redo, save-to-DB, zero console errors
+
+### Files created/modified:
+- NEW: frontend/src/views/TemplateEditorView.vue
+- NEW: frontend/src/views/TemplateGalleryView.vue
+- NEW: frontend/src/components/templates/TemplateCard.vue
+- NEW: frontend/src/components/templates/TemplatePreviewModal.vue
+- NEW: backend/app/models/template_favorite.py
+- NEW: backend/app/api/routes/template_favorites.py
+- MOD: frontend/src/router/index.js (added routes)
+- MOD: frontend/src/components/layout/SidebarNav.vue (added nav items)
+- MOD: frontend/src/views/LibraryView.vue (added tabs)
+- MOD: backend/app/main.py (registered template_favorites router)
+- MOD: backend/app/api/routes/templates.py (added search param)
+- MOD: backend/app/models/__init__.py (added TemplateFavorite)
+
+---
+
 ## Session - Feature #241: Multi-Slide / Carousel Post Support
 **Date:** 2026-02-16
 **Feature ID:** #241
