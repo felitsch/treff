@@ -1,4 +1,8 @@
-"""Authentication routes."""
+"""Authentication routes.
+
+Handles user registration, login, token refresh, logout, and profile management.
+All endpoints except login/register require a valid JWT Bearer token.
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +29,18 @@ from app.schemas.auth import (
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register New User",
+    description="Create a new user account with email and password. The email must be unique. Returns the created user profile.",
+    responses={
+        201: {"description": "User successfully created"},
+        400: {"description": "Email already registered"},
+        422: {"description": "Validation error (invalid email, password too short)"},
+    },
+)
 async def register(request: UserRegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new user."""
     # Check if email already exists
@@ -55,7 +70,16 @@ async def register(request: UserRegisterRequest, db: AsyncSession = Depends(get_
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Login",
+    description="Authenticate with email and password. Returns a JWT access token (1h validity) and refresh token (7d validity). Include the access token in the `Authorization: Bearer <token>` header for protected endpoints.",
+    responses={
+        200: {"description": "Login successful, tokens returned"},
+        401: {"description": "Invalid email or password"},
+    },
+)
 async def login(request: UserLoginRequest, db: AsyncSession = Depends(get_db)):
     """Login with email and password."""
     result = await db.execute(select(User).where(User.email == request.email))
@@ -77,7 +101,16 @@ async def login(request: UserLoginRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    summary="Refresh Access Token",
+    description="Exchange an expired access token for a new one using a valid refresh token. Both a new access token and refresh token are returned.",
+    responses={
+        200: {"description": "New tokens issued"},
+        401: {"description": "Invalid or expired refresh token"},
+    },
+)
 async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     """Refresh access token using refresh token."""
     import jwt
@@ -113,13 +146,30 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
     )
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    summary="Logout",
+    description="Logout the current user. Since JWTs are stateless, this is a client-side operation. The client should discard the access and refresh tokens.",
+    responses={
+        200: {"description": "Logout successful"},
+    },
+)
 async def logout():
     """Logout (client-side token removal)."""
     return {"message": "Successfully logged out"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get Current User",
+    description="Return the profile of the currently authenticated user based on the JWT token.",
+    responses={
+        200: {"description": "User profile returned"},
+        401: {"description": "Not authenticated or token expired"},
+        404: {"description": "User not found in database"},
+    },
+)
 async def get_current_user(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
@@ -138,7 +188,17 @@ async def get_current_user(
     )
 
 
-@router.put("/profile", response_model=UserResponse)
+@router.put(
+    "/profile",
+    response_model=UserResponse,
+    summary="Update Profile",
+    description="Update the current user's display name. Only the provided fields are updated; omitted fields remain unchanged.",
+    responses={
+        200: {"description": "Profile updated successfully"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "User not found"},
+    },
+)
 async def update_profile(
     request: UserUpdateRequest,
     user_id: int = Depends(get_current_user_id),

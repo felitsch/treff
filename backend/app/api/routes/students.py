@@ -1,4 +1,7 @@
-"""Student CRUD routes."""
+"""Student routes.
+
+Manage exchange student profiles with countries, personality presets, and individual dashboards.
+"""
 
 from typing import Optional, List
 from datetime import date

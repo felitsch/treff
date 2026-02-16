@@ -1,4 +1,8 @@
-"""Post routes."""
+"""Post routes.
+
+CRUD operations for social media posts. Supports filtering, sorting, pagination,
+multi-platform creation, batch status updates, draft management, and scheduling.
+"""
 
 import json
 import uuid
@@ -10,6 +14,7 @@ from sqlalchemy import select, or_, func, and_
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.cache import invalidate_cache
 from app.models.post import Post
 
 router = APIRouter()
@@ -17,6 +22,16 @@ router = APIRouter()
 
 def post_to_dict(post: Post) -> dict:
     """Convert a Post model to a plain dict to avoid lazy-loading issues."""
+    # Calculate engagement rate: (likes + comments + shares) / reach
+    perf_likes = getattr(post, "perf_likes", None) or 0
+    perf_comments = getattr(post, "perf_comments", None) or 0
+    perf_shares = getattr(post, "perf_shares", None) or 0
+    perf_saves = getattr(post, "perf_saves", None) or 0
+    perf_reach = getattr(post, "perf_reach", None) or 0
+    engagement_rate = None
+    if perf_reach > 0:
+        engagement_rate = round(((perf_likes + perf_comments + perf_shares) / perf_reach) * 100, 2)
+
     return {
         "id": post.id,
         "user_id": post.user_id,
@@ -47,23 +62,39 @@ def post_to_dict(post: Post) -> dict:
         "posted_at": post.posted_at.isoformat() if post.posted_at else None,
         "created_at": post.created_at.isoformat() if post.created_at else None,
         "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+        # Performance metrics
+        "perf_likes": getattr(post, "perf_likes", None),
+        "perf_comments": getattr(post, "perf_comments", None),
+        "perf_shares": getattr(post, "perf_shares", None),
+        "perf_saves": getattr(post, "perf_saves", None),
+        "perf_reach": getattr(post, "perf_reach", None),
+        "perf_updated_at": getattr(post, "perf_updated_at", None).isoformat() if getattr(post, "perf_updated_at", None) else None,
+        "engagement_rate": engagement_rate,
     }
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="List Posts",
+    description="List all posts with optional filters (category, platform, status, country, date range, student), sorting, and pagination. When `page` and `limit` are provided, returns paginated results with metadata. Otherwise returns a flat array.",
+    responses={
+        200: {"description": "List of posts (paginated or flat array)"},
+        401: {"description": "Not authenticated"},
+    },
+)
 async def list_posts(
-    category: Optional[str] = None,
-    platform: Optional[str] = None,
-    status: Optional[str] = None,
-    country: Optional[str] = None,
-    search: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
-    sort_by: Optional[str] = Query(default="created_at", pattern="^(created_at|updated_at|title|scheduled_date)$"),
-    student_id: Optional[int] = None,
-    sort_direction: Optional[str] = Query(default="desc", pattern="^(asc|desc)$"),
-    page: Optional[int] = Query(default=None, ge=1),
-    limit: Optional[int] = Query(default=None, ge=1, le=100),
+    category: Optional[str] = Query(default=None, description="Filter by content category (e.g., 'Laender-Spotlight')"),
+    platform: Optional[str] = Query(default=None, description="Filter by platform ('instagram', 'tiktok')"),
+    status: Optional[str] = Query(default=None, description="Filter by post status ('draft', 'scheduled', 'published', 'archived')"),
+    country: Optional[str] = Query(default=None, description="Filter by country ('USA', 'Kanada', 'Australien', etc.)"),
+    search: Optional[str] = Query(default=None, description="Full-text search across title, slides, and captions"),
+    date_from: Optional[str] = Query(default=None, description="Filter posts created on or after this date (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(default=None, description="Filter posts created on or before this date (YYYY-MM-DD)"),
+    sort_by: Optional[str] = Query(default="created_at", pattern="^(created_at|updated_at|title|scheduled_date)$", description="Sort field"),
+    student_id: Optional[int] = Query(default=None, description="Filter by associated student ID"),
+    sort_direction: Optional[str] = Query(default="desc", pattern="^(asc|desc)$", description="Sort direction"),
+    page: Optional[int] = Query(default=None, ge=1, description="Page number (1-based) for pagination"),
+    limit: Optional[int] = Query(default=None, ge=1, le=100, description="Items per page (max 100)"),
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -400,7 +431,11 @@ async def batch_update_status(
     }
 
 
-@router.get("/{post_id}")
+@router.get(
+    "/{post_id}",
+    summary="Get Post by ID",
+    description="Retrieve a single post by its ID. Returns all post fields including captions, hashtags, scheduling info, and performance metrics.",
+)
 async def get_post(
     post_id: int,
     user_id: int = Depends(get_current_user_id),
@@ -416,7 +451,12 @@ async def get_post(
     return post_to_dict(post)
 
 
-@router.post("", status_code=201)
+@router.post(
+    "",
+    status_code=201,
+    summary="Create Post",
+    description="Create a new social media post. Supports all fields including category, platform, template, captions, hashtags, CTA, scheduling, and student/story-arc association.",
+)
 async def create_post(
     post_data: dict,
     user_id: int = Depends(get_current_user_id),
@@ -438,10 +478,15 @@ async def create_post(
     await db.refresh(post)
     result = post_to_dict(post)
     await db.commit()
+    invalidate_cache("dashboard", "analytics", "overview", "categories", "platforms", "countries", "frequency", "goals", "content_mix")
     return result
 
 
-@router.put("/{post_id}")
+@router.put(
+    "/{post_id}",
+    summary="Update Post",
+    description="Update an existing post. Only the provided fields are modified; omitted fields remain unchanged.",
+)
 async def update_post(
     post_id: int,
     post_data: dict,
@@ -477,10 +522,15 @@ async def update_post(
     await db.refresh(post)
     response = post_to_dict(post)
     await db.commit()
+    invalidate_cache("dashboard", "analytics", "overview", "categories", "platforms", "countries", "frequency", "goals", "content_mix")
     return response
 
 
-@router.delete("/{post_id}")
+@router.delete(
+    "/{post_id}",
+    summary="Delete Post",
+    description="Permanently delete a post and all associated data (slides, interactive elements, relations).",
+)
 async def delete_post(
     post_id: int,
     user_id: int = Depends(get_current_user_id),
@@ -496,6 +546,7 @@ async def delete_post(
 
     await db.delete(post)
     await db.commit()
+    invalidate_cache("dashboard", "analytics", "overview", "categories", "platforms", "countries", "frequency", "goals", "content_mix")
     return {"message": "Post deleted"}
 
 

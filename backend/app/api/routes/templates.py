@@ -1,15 +1,21 @@
-"""Template routes."""
+"""Template routes.
+
+CRUD operations for HTML/CSS post templates. Supports system defaults,
+user-created custom templates, categories, platform formats, and country theming.
+"""
 
 import json
 from typing import Optional
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.core.sanitizer import sanitize_html, sanitize_css
+from app.core.cache import api_cache, invalidate_cache
 from app.models.template import Template
 
 
@@ -56,6 +62,7 @@ def template_to_dict(t: Template) -> dict:
 
 @router.get("")
 async def list_templates(
+    request: Request,
     category: Optional[str] = None,
     platform_format: Optional[str] = None,
     country: Optional[str] = None,
@@ -67,7 +74,44 @@ async def list_templates(
     """List all templates with optional filters.
 
     ownership: 'system' for default templates, 'custom' for user-created, None for all.
+    Responses are cached for 1 hour with automatic invalidation on template changes.
     """
+    # Build cache key from query params
+    cache_params = {
+        "category": category,
+        "platform_format": platform_format,
+        "country": country,
+        "search": search,
+        "ownership": ownership,
+    }
+    cache_key = api_cache._build_key("templates", cache_params)
+
+    # Check cache
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        # Check If-None-Match for 304
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == entry.etag:
+            return JSONResponse(
+                status_code=304,
+                content=None,
+                headers={
+                    "ETag": f'"{entry.etag}"',
+                    "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+                    "X-Cache": "HIT",
+                },
+            )
+        return JSONResponse(
+            content=entry.value,
+            headers={
+                "ETag": f'"{entry.etag}"',
+                "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+                "X-Cache": "HIT",
+                "X-Cache-Age": str(entry.age_seconds),
+            },
+        )
+
+    # Cache miss - query database
     query = select(Template)
 
     if category:
@@ -86,7 +130,18 @@ async def list_templates(
     query = query.order_by(Template.category, Template.name)
     result = await db.execute(query)
     templates = result.scalars().all()
-    return [template_to_dict(t) for t in templates]
+    data = [template_to_dict(t) for t in templates]
+
+    # Store in cache
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(
+        content=data,
+        headers={
+            "ETag": f'"{new_entry.etag}"',
+            "Cache-Control": "private, max-age=3600",
+            "X-Cache": "MISS",
+        },
+    )
 
 
 @router.get("/{template_id}")
@@ -142,6 +197,7 @@ async def create_template(
     await db.refresh(template)
     result = template_to_dict(template)
     await db.commit()
+    invalidate_cache("templates")
     return result
 
 
@@ -173,6 +229,7 @@ async def update_template(
     await db.refresh(template)
     result = template_to_dict(template)
     await db.commit()
+    invalidate_cache("templates")
     return result
 
 
@@ -192,6 +249,7 @@ async def delete_template(
 
     await db.delete(template)
     await db.commit()
+    invalidate_cache("templates")
     return {"message": "Template deleted"}
 
 
@@ -234,6 +292,7 @@ async def duplicate_template(
     await db.refresh(duplicate)
     result_dict = template_to_dict(duplicate)
     await db.commit()
+    invalidate_cache("templates")
     return result_dict
 
 

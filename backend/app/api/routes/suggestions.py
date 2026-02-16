@@ -1,4 +1,7 @@
-"""Content Suggestions routes."""
+"""Content suggestion routes.
+
+AI-generated content suggestions based on the current content mix and posting gaps.
+"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession

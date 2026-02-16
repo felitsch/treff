@@ -18,6 +18,7 @@ import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -376,6 +377,111 @@ async function fetchAnalytics() {
   }
 }
 
+// Performance trend data
+const performanceTrendPeriod = ref('month')
+const performanceTrendData = ref([])
+const performanceTrendLoading = ref(false)
+
+// Performance reminder data
+const performanceReminder = ref({ posts: [], count: 0 })
+
+const performanceTrendChartData = computed(() => {
+  return {
+    labels: performanceTrendData.value.map(d => d.label),
+    datasets: [
+      {
+        label: 'Engagement Rate (%)',
+        data: performanceTrendData.value.map(d => d.engagement_rate),
+        borderColor: '#22C55E',
+        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+        pointBackgroundColor: '#22C55E',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Likes',
+        data: performanceTrendData.value.map(d => d.likes),
+        borderColor: '#EF4444',
+        backgroundColor: 'transparent',
+        pointBackgroundColor: '#EF4444',
+        pointRadius: 3,
+        borderWidth: 1.5,
+        borderDash: [5, 5],
+        tension: 0.3,
+        yAxisID: 'y1',
+      },
+      {
+        label: 'Reichweite',
+        data: performanceTrendData.value.map(d => d.reach),
+        borderColor: '#3B82F6',
+        backgroundColor: 'transparent',
+        pointBackgroundColor: '#3B82F6',
+        pointRadius: 3,
+        borderWidth: 1.5,
+        borderDash: [5, 5],
+        tension: 0.3,
+        yAxisID: 'y1',
+      },
+    ],
+  }
+})
+
+const performanceTrendChartOptions = computed(() => {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: { usePointStyle: true, pointStyle: 'circle', padding: 12, font: { size: 11 } },
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        padding: 10,
+        cornerRadius: 8,
+      },
+    },
+    scales: {
+      x: { display: true, grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 15 } },
+      y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Eng. Rate (%)', color: '#22C55E', font: { size: 10 } }, beginAtZero: true, ticks: { color: '#22C55E', font: { size: 10 } }, grid: { color: 'rgba(156,163,175,0.1)' } },
+      y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Anzahl', color: '#9CA3AF', font: { size: 10 } }, beginAtZero: true, ticks: { color: '#9CA3AF', font: { size: 10 } }, grid: { drawOnChartArea: false } },
+    },
+  }
+})
+
+async function fetchPerformanceTrend() {
+  performanceTrendLoading.value = true
+  try {
+    const res = await api.get(`/api/analytics/performance-trend?period=${performanceTrendPeriod.value}`)
+    performanceTrendData.value = res.data.data || []
+  } catch (err) {
+    console.error('Failed to load performance trend:', err)
+    performanceTrendData.value = []
+  } finally {
+    performanceTrendLoading.value = false
+  }
+}
+
+async function fetchPerformanceReminder() {
+  try {
+    const res = await api.get('/api/analytics/performance-reminder')
+    performanceReminder.value = res.data
+  } catch { /* ignore */ }
+}
+
+watch(performanceTrendPeriod, () => {
+  fetchPerformanceTrend()
+})
+
 // Workflow hint: check if posting goals are configured in settings
 const goalsNotConfigured = ref(false)
 async function checkGoalsConfig() {
@@ -391,6 +497,8 @@ async function checkGoalsConfig() {
 onMounted(() => {
   fetchAnalytics()
   checkGoalsConfig()
+  fetchPerformanceTrend()
+  fetchPerformanceReminder()
 })
 </script>
 
@@ -645,6 +753,67 @@ onMounted(() => {
             <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ c.country }}</p>
           </div>
         </div>
+      </BaseCard>
+
+      <!-- Performance Reminder Banner -->
+      <div v-if="performanceReminder.count > 0" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-3" data-testid="performance-reminder">
+        <span class="text-2xl">📝</span>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
+            {{ performanceReminder.count }} Post{{ performanceReminder.count > 1 ? 's' : '' }} warten auf Metriken-Eingabe
+          </p>
+          <p class="text-xs text-amber-600 dark:text-amber-400">
+            Trage Likes, Kommentare und Reichweite fuer Posts der letzten Woche ein.
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <router-link
+            v-for="rp in performanceReminder.posts.slice(0, 3)"
+            :key="rp.id"
+            :to="`/create/post/${rp.id}/edit`"
+            class="px-3 py-1.5 text-xs font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+          >
+            #{{ rp.id }}
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Performance Trend Chart -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="performance-trend-chart">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">📈 Performance-Trend</h2>
+        </template>
+        <template #headerAction>
+          <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <button
+              v-for="(label, key) in { week: '7 Tage', month: '30 Tage', quarter: 'Quartal', year: 'Jahr' }"
+              :key="key"
+              @click="performanceTrendPeriod = key"
+              class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+              :class="performanceTrendPeriod === key
+                ? 'bg-white dark:bg-gray-600 text-green-600 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              :data-testid="'perf-trend-period-' + key"
+            >
+              {{ label }}
+            </button>
+          </div>
+        </template>
+
+        <div v-if="performanceTrendLoading" class="h-64 flex items-center justify-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+        </div>
+        <div v-else class="h-64" data-testid="performance-trend-line-chart">
+          <Line
+            :data="performanceTrendChartData"
+            :options="performanceTrendChartOptions"
+          />
+        </div>
+      </BaseCard>
+
+      <!-- Top Posts Ranking -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="top-posts-section">
+        <TopPostsRanking />
       </BaseCard>
     </div>
 

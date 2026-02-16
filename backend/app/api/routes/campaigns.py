@@ -1,4 +1,7 @@
-"""Campaign Management routes — CRUD + AI-powered post plan generation."""
+"""Campaign routes.
+
+Multi-post marketing campaigns with AI-powered plan generation.
+"""
 
 import json
 import logging

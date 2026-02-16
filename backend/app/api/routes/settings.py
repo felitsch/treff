@@ -1,4 +1,7 @@
-"""Settings routes."""
+"""Settings routes.
+
+Application settings (brand colors, API keys, posting goals) per user.
+"""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession

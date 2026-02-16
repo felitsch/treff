@@ -1,4 +1,8 @@
-"""Story Arc routes - CRUD for multi-part story series."""
+"""Story Arc routes.
+
+Multi-episode story arcs following a student's journey. Supports arc creation wizard,
+chapter suggestions, and timeline tracking.
+"""
 
 import logging
 from typing import Optional

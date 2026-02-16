@@ -1,12 +1,21 @@
-"""Analytics routes."""
+"""Analytics routes.
 
+Dashboard analytics: category distribution, platform breakdown, country mix,
+posting frequency, template usage, content mix balance, and goal tracking.
+"""
+
+import csv
+import io
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from typing import Optional
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.cache import api_cache
 from app.models.post import Post
 from app.models.asset import Asset
 from app.models.calendar_entry import CalendarEntry
@@ -18,10 +27,25 @@ router = APIRouter()
 
 @router.get("/overview")
 async def get_overview(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get analytics overview: total posts, this week, this month."""
+    """Get analytics overview: total posts, this week, this month.
+    Cached for 5 minutes."""
+    cache_key = api_cache._build_key("overview", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == entry.etag:
+            return JSONResponse(status_code=304, content=None, headers={
+                "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}", "X-Cache": "HIT",
+            })
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
     now = datetime.now(timezone.utc)
     week_start = now - timedelta(days=now.weekday())
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -48,19 +72,37 @@ async def get_overview(
     )
     posts_this_month = month_result.scalar() or 0
 
-    return {
+    data = {
         "total_posts": total,
         "posts_this_week": posts_this_week,
         "posts_this_month": posts_this_month,
     }
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=300", "X-Cache": "MISS",
+    })
 
 
 @router.get("/dashboard")
 async def get_dashboard_data(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get all dashboard data in a single API call."""
+    """Get all dashboard data in a single API call. Cached for 5 minutes."""
+    cache_key = api_cache._build_key("dashboard", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == entry.etag:
+            return JSONResponse(status_code=304, content=None, headers={
+                "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}", "X-Cache": "HIT",
+            })
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
     now = datetime.now(timezone.utc)
     week_start = now - timedelta(days=now.weekday())
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -183,7 +225,7 @@ async def get_dashboard_data(
         for s in suggestions_raw
     ]
 
-    return {
+    data = {
         "stats": {
             "posts_this_week": posts_this_week,
             "scheduled_posts": scheduled_posts,
@@ -195,6 +237,10 @@ async def get_dashboard_data(
         "calendar_entries": calendar_entries,
         "suggestions": suggestions,
     }
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=300", "X-Cache": "MISS",
+    })
 
 
 @router.get("/frequency")
@@ -295,44 +341,83 @@ async def get_frequency(
 
 @router.get("/categories")
 async def get_categories(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get category distribution."""
+    """Get category distribution. Cached for 15 minutes."""
+    cache_key = api_cache._build_key("categories", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
     result = await db.execute(
         select(Post.category, func.count(Post.id))
         .where(Post.user_id == user_id)
         .group_by(Post.category)
     )
-    return [{"category": row[0], "count": row[1]} for row in result.all()]
+    data = [{"category": row[0], "count": row[1]} for row in result.all()]
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=900", "X-Cache": "MISS",
+    })
 
 
 @router.get("/platforms")
 async def get_platforms(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get platform distribution."""
+    """Get platform distribution. Cached for 15 minutes."""
+    cache_key = api_cache._build_key("platforms", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
     result = await db.execute(
         select(Post.platform, func.count(Post.id))
         .where(Post.user_id == user_id)
         .group_by(Post.platform)
     )
-    return [{"platform": row[0], "count": row[1]} for row in result.all()]
+    data = [{"platform": row[0], "count": row[1]} for row in result.all()]
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=900", "X-Cache": "MISS",
+    })
 
 
 @router.get("/countries")
 async def get_countries(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get country distribution."""
+    """Get country distribution. Cached for 15 minutes."""
+    cache_key = api_cache._build_key("countries", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
     result = await db.execute(
         select(Post.country, func.count(Post.id))
         .where(Post.user_id == user_id, Post.country.isnot(None))
         .group_by(Post.country)
     )
-    return [{"country": row[0], "count": row[1]} for row in result.all()]
+    data = [{"country": row[0], "count": row[1]} for row in result.all()]
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=900", "X-Cache": "MISS",
+    })
 
 
 @router.get("/templates")
@@ -686,3 +771,424 @@ async def get_content_mix(
             "countries": target_countries,
         },
     }
+
+
+@router.put("/performance/{post_id}")
+async def update_performance(
+    post_id: int,
+    data: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update performance metrics for a specific post (manually entered).
+
+    Body:
+    - likes: int (optional)
+    - comments: int (optional)
+    - shares: int (optional)
+    - saves: int (optional)
+    - reach: int (optional)
+    """
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Update only provided fields
+    field_map = {
+        "likes": "perf_likes",
+        "comments": "perf_comments",
+        "shares": "perf_shares",
+        "saves": "perf_saves",
+        "reach": "perf_reach",
+    }
+    for key, col in field_map.items():
+        if key in data:
+            val = data[key]
+            if val is not None:
+                val = max(0, int(val))
+            setattr(post, col, val)
+
+    post.perf_updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(post)
+
+    # Calculate engagement rate
+    likes = post.perf_likes or 0
+    comments = post.perf_comments or 0
+    shares = post.perf_shares or 0
+    reach = post.perf_reach or 0
+    engagement_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else None
+
+    return {
+        "id": post.id,
+        "perf_likes": post.perf_likes,
+        "perf_comments": post.perf_comments,
+        "perf_shares": post.perf_shares,
+        "perf_saves": post.perf_saves,
+        "perf_reach": post.perf_reach,
+        "perf_updated_at": post.perf_updated_at.isoformat() if post.perf_updated_at else None,
+        "engagement_rate": engagement_rate,
+    }
+
+
+@router.get("/performance/{post_id}")
+async def get_performance(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get performance metrics for a specific post."""
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    likes = post.perf_likes or 0
+    comments = post.perf_comments or 0
+    shares = post.perf_shares or 0
+    reach = post.perf_reach or 0
+    engagement_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else None
+
+    return {
+        "id": post.id,
+        "title": post.title,
+        "perf_likes": post.perf_likes,
+        "perf_comments": post.perf_comments,
+        "perf_shares": post.perf_shares,
+        "perf_saves": post.perf_saves,
+        "perf_reach": post.perf_reach,
+        "perf_updated_at": post.perf_updated_at.isoformat() if post.perf_updated_at else None,
+        "engagement_rate": engagement_rate,
+    }
+
+
+@router.get("/top-posts")
+async def get_top_posts(
+    sort_by: Optional[str] = Query(default="engagement_rate", pattern="^(engagement_rate|likes|comments|shares|saves|reach)$"),
+    limit: int = Query(default=10, ge=1, le=50),
+    period: Optional[str] = Query(default=None, pattern="^(week|month|quarter|year)$"),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get top-performing posts ranked by engagement rate or specific metric.
+
+    Args:
+        sort_by: Metric to sort by (engagement_rate, likes, comments, shares, saves, reach)
+        limit: Number of posts to return (max 50)
+        period: Optional time period filter (week, month, quarter, year)
+    """
+    now = datetime.now(timezone.utc)
+    conditions = [Post.user_id == user_id]
+
+    # At least one performance metric must be set
+    conditions.append(
+        (Post.perf_likes.isnot(None)) |
+        (Post.perf_comments.isnot(None)) |
+        (Post.perf_shares.isnot(None)) |
+        (Post.perf_reach.isnot(None))
+    )
+
+    # Apply period filter
+    if period:
+        period_map = {
+            "week": timedelta(days=7),
+            "month": timedelta(days=30),
+            "quarter": timedelta(days=90),
+            "year": timedelta(days=365),
+        }
+        start_date = now - period_map.get(period, timedelta(days=30))
+        conditions.append(Post.created_at >= start_date)
+
+    result = await db.execute(
+        select(Post).where(*conditions)
+    )
+    posts = result.scalars().all()
+
+    # Build ranked list with computed engagement rate
+    import json as _json
+    ranked = []
+    for p in posts:
+        likes = p.perf_likes or 0
+        comments = p.perf_comments or 0
+        shares = p.perf_shares or 0
+        saves = p.perf_saves or 0
+        reach = p.perf_reach or 0
+        eng_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else 0.0
+
+        # Get thumbnail
+        thumbnail_url = None
+        try:
+            slides = _json.loads(p.slide_data) if p.slide_data else []
+            if slides and isinstance(slides, list) and len(slides) > 0:
+                first_slide = slides[0]
+                thumbnail_url = first_slide.get("background_image") or first_slide.get("image_url") or first_slide.get("thumbnail")
+        except (ValueError, TypeError, KeyError):
+            pass
+
+        ranked.append({
+            "id": p.id,
+            "title": p.title,
+            "category": p.category,
+            "platform": p.platform,
+            "country": p.country,
+            "status": p.status,
+            "thumbnail_url": thumbnail_url,
+            "perf_likes": p.perf_likes,
+            "perf_comments": p.perf_comments,
+            "perf_shares": p.perf_shares,
+            "perf_saves": p.perf_saves,
+            "perf_reach": p.perf_reach,
+            "engagement_rate": eng_rate,
+            "perf_updated_at": p.perf_updated_at.isoformat() if p.perf_updated_at else None,
+            "posted_at": p.posted_at.isoformat() if p.posted_at else None,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        })
+
+    # Sort by chosen metric
+    sort_map = {
+        "engagement_rate": lambda x: x["engagement_rate"],
+        "likes": lambda x: x["perf_likes"] or 0,
+        "comments": lambda x: x["perf_comments"] or 0,
+        "shares": lambda x: x["perf_shares"] or 0,
+        "saves": lambda x: x["perf_saves"] or 0,
+        "reach": lambda x: x["perf_reach"] or 0,
+    }
+    sort_fn = sort_map.get(sort_by, sort_map["engagement_rate"])
+    ranked.sort(key=sort_fn, reverse=True)
+
+    return {
+        "posts": ranked[:limit],
+        "total_with_metrics": len(ranked),
+        "sort_by": sort_by,
+    }
+
+
+@router.get("/performance-trend")
+async def get_performance_trend(
+    period: str = Query(default="month", pattern="^(week|month|quarter|year)$"),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get aggregated performance metrics over time for trend analysis.
+
+    Returns data points with aggregated likes, comments, shares, saves, reach,
+    and average engagement rate for each time bucket.
+    """
+    now = datetime.now(timezone.utc)
+    period_map = {
+        "week": (timedelta(days=7), 7),
+        "month": (timedelta(days=30), 30),
+        "quarter": (timedelta(days=90), 13),
+        "year": (timedelta(days=365), 12),
+    }
+    delta, num_buckets = period_map.get(period, (timedelta(days=30), 30))
+    start_date = now - delta
+
+    result = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+            Post.created_at >= start_date,
+            (Post.perf_likes.isnot(None)) |
+            (Post.perf_comments.isnot(None)) |
+            (Post.perf_shares.isnot(None)) |
+            (Post.perf_reach.isnot(None)),
+        )
+    )
+    posts = result.scalars().all()
+
+    data = []
+    if period in ("week", "month"):
+        # Day-level buckets
+        for i in range(num_buckets):
+            day = (start_date + timedelta(days=i)).date()
+            day_posts = [p for p in posts if p.created_at.date() == day]
+            likes = sum(p.perf_likes or 0 for p in day_posts)
+            comments = sum(p.perf_comments or 0 for p in day_posts)
+            shares = sum(p.perf_shares or 0 for p in day_posts)
+            saves = sum(p.perf_saves or 0 for p in day_posts)
+            reach = sum(p.perf_reach or 0 for p in day_posts)
+            eng_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else 0
+            data.append({
+                "label": day.strftime("%d.%m."),
+                "date": day.isoformat(),
+                "post_count": len(day_posts),
+                "likes": likes,
+                "comments": comments,
+                "shares": shares,
+                "saves": saves,
+                "reach": reach,
+                "engagement_rate": eng_rate,
+            })
+    elif period == "quarter":
+        # Week-level buckets
+        for w in range(num_buckets):
+            w_start = start_date + timedelta(weeks=w)
+            w_end = w_start + timedelta(days=6)
+            w_posts = [p for p in posts if w_start.date() <= p.created_at.date() <= w_end.date()]
+            likes = sum(p.perf_likes or 0 for p in w_posts)
+            comments = sum(p.perf_comments or 0 for p in w_posts)
+            shares = sum(p.perf_shares or 0 for p in w_posts)
+            saves = sum(p.perf_saves or 0 for p in w_posts)
+            reach = sum(p.perf_reach or 0 for p in w_posts)
+            eng_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else 0
+            data.append({
+                "label": f"KW {w_start.strftime('%d.%m.')}",
+                "date": w_start.date().isoformat(),
+                "post_count": len(w_posts),
+                "likes": likes,
+                "comments": comments,
+                "shares": shares,
+                "saves": saves,
+                "reach": reach,
+                "engagement_rate": eng_rate,
+            })
+    elif period == "year":
+        # Month-level buckets
+        for m_offset in range(num_buckets):
+            m = (now.month - 11 + m_offset) % 12
+            if m == 0:
+                m = 12
+            y = now.year if (now.month - 11 + m_offset) > 0 else now.year - 1
+            m_posts = [p for p in posts if p.created_at.month == m and p.created_at.year == y]
+            likes = sum(p.perf_likes or 0 for p in m_posts)
+            comments = sum(p.perf_comments or 0 for p in m_posts)
+            shares = sum(p.perf_shares or 0 for p in m_posts)
+            saves = sum(p.perf_saves or 0 for p in m_posts)
+            reach = sum(p.perf_reach or 0 for p in m_posts)
+            eng_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else 0
+            month_names = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                           "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+            data.append({
+                "label": month_names[m - 1],
+                "date": f"{y}-{m:02d}-01",
+                "post_count": len(m_posts),
+                "likes": likes,
+                "comments": comments,
+                "shares": shares,
+                "saves": saves,
+                "reach": reach,
+                "engagement_rate": eng_rate,
+            })
+
+    return {"period": period, "data": data}
+
+
+@router.get("/performance-reminder")
+async def get_performance_reminder(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posts from last week that have no performance metrics entered yet.
+
+    Returns posts that were posted 7-14 days ago with no metrics,
+    as a reminder to enter social media performance data.
+    """
+    now = datetime.now(timezone.utc)
+    week_ago = now - timedelta(days=7)
+    two_weeks_ago = now - timedelta(days=14)
+
+    result = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+            Post.status == "posted",
+            Post.posted_at >= two_weeks_ago,
+            Post.posted_at <= week_ago,
+            Post.perf_likes.is_(None),
+            Post.perf_reach.is_(None),
+        ).order_by(Post.posted_at.desc())
+    )
+    posts = result.scalars().all()
+
+    return {
+        "posts": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "category": p.category,
+                "platform": p.platform,
+                "posted_at": p.posted_at.isoformat() if p.posted_at else None,
+            }
+            for p in posts
+        ],
+        "count": len(posts),
+        "message": f"{len(posts)} Posts warten auf Metriken-Eingabe" if posts else "Alle Posts haben Metriken",
+    }
+
+
+@router.get("/performance-export")
+async def export_performance_csv(
+    period: Optional[str] = Query(default=None, pattern="^(week|month|quarter|year)$"),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export post performance data as CSV file.
+
+    Args:
+        period: Optional time period filter (week, month, quarter, year)
+    """
+    now = datetime.now(timezone.utc)
+    conditions = [Post.user_id == user_id]
+
+    if period:
+        period_map = {
+            "week": timedelta(days=7),
+            "month": timedelta(days=30),
+            "quarter": timedelta(days=90),
+            "year": timedelta(days=365),
+        }
+        start_date = now - period_map.get(period, timedelta(days=30))
+        conditions.append(Post.created_at >= start_date)
+
+    result = await db.execute(
+        select(Post).where(*conditions).order_by(Post.created_at.desc())
+    )
+    posts = result.scalars().all()
+
+    # Build CSV
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";")
+    writer.writerow([
+        "ID", "Titel", "Kategorie", "Plattform", "Land", "Status",
+        "Likes", "Kommentare", "Shares", "Saves", "Reichweite",
+        "Engagement Rate (%)", "Erstellt", "Gepostet", "Metriken aktualisiert"
+    ])
+
+    for p in posts:
+        likes = p.perf_likes or 0
+        comments = p.perf_comments or 0
+        shares = p.perf_shares or 0
+        reach = p.perf_reach or 0
+        eng_rate = round(((likes + comments + shares) / reach) * 100, 2) if reach > 0 else ""
+        writer.writerow([
+            p.id,
+            p.title or "",
+            p.category or "",
+            p.platform or "",
+            p.country or "",
+            p.status or "",
+            p.perf_likes if p.perf_likes is not None else "",
+            p.perf_comments if p.perf_comments is not None else "",
+            p.perf_shares if p.perf_shares is not None else "",
+            p.perf_saves if p.perf_saves is not None else "",
+            p.perf_reach if p.perf_reach is not None else "",
+            eng_rate,
+            p.created_at.strftime("%Y-%m-%d %H:%M") if p.created_at else "",
+            p.posted_at.strftime("%Y-%m-%d %H:%M") if p.posted_at else "",
+            p.perf_updated_at.strftime("%Y-%m-%d %H:%M") if p.perf_updated_at else "",
+        ])
+
+    output.seek(0)
+    filename = f"treff_performance_{now.strftime('%Y%m%d')}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

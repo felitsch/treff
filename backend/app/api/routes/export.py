@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-"""Export routes."""
+"""Export routes.
+
+Render posts to PNG/PDF images, batch export carousels, and download previously exported files.
+"""
 
 import os
 import uuid

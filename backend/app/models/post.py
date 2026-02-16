@@ -38,6 +38,16 @@ class Post(Base):
     episode_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Explicit episode ordering within a story arc (1-based)
     student_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("students.id", ondelete="SET NULL"), nullable=True)  # Links post to a student profile
     linked_post_group_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # UUID grouping sibling posts across platforms
+    recurring_rule_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("recurring_post_rules.id", ondelete="SET NULL"), nullable=True)  # Links to recurrence rule
+    is_recurring_instance: Mapped[Optional[bool]] = mapped_column(Integer, nullable=True, default=None)  # True if auto-generated from rule
+    # Performance metrics (manually entered social media stats)
+    perf_likes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    perf_comments: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    perf_shares: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    perf_saves: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    perf_reach: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    perf_updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
     exported_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     posted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

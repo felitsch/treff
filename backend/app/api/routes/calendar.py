@@ -1,4 +1,8 @@
-"""Calendar routes."""
+"""Calendar routes.
+
+Content calendar with scheduling, gap detection, platform lanes, episode ordering,
+CSV/iCal/PDF export and import, seasonal markers, and recurring post placeholders.
+"""
 
 import csv
 import io
@@ -36,6 +40,8 @@ def post_to_calendar_dict(post: Post) -> dict:
         "story_arc_id": post.story_arc_id,
         "episode_number": post.episode_number,
         "linked_post_group_id": post.linked_post_group_id,
+        "recurring_rule_id": post.recurring_rule_id,
+        "is_recurring_instance": bool(post.is_recurring_instance) if post.is_recurring_instance is not None else None,
         "created_at": post.created_at.isoformat() if post.created_at else None,
     }
 

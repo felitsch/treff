@@ -10,6 +10,7 @@ import CtaPicker from '@/components/posts/CtaPicker.vue'
 import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import RelatedPostsPanel from '@/components/posts/RelatedPostsPanel.vue'
+import PostPerformanceInput from '@/components/posts/PostPerformanceInput.vue'
 import { useStudentStore } from '@/stores/students'
 
 const route = useRoute()
@@ -1077,6 +1078,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             :format="post?.platform || 'instagram_feed'"
             :posting-time="''"
             @apply-suggestion="onApplyEngagementSuggestion"
+          />
+        </div>
+
+        <!-- Performance Metrics Input (for posted posts) -->
+        <div class="mt-4" v-if="post && (post.status === 'posted' || post.status === 'exported' || post.status === 'archived')">
+          <PostPerformanceInput
+            :post-id="Number(postId)"
+            :initial-data="post"
           />
         </div>
       </div>

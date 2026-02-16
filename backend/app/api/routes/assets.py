@@ -1,4 +1,8 @@
-"""Asset routes."""
+"""Asset routes.
+
+Upload, crop, trim, and manage media assets (images, videos, audio). Includes
+stock photo search and import from Unsplash/Pexels.
+"""
 
 import json
 import logging
