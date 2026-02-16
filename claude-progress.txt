@@ -1,5 +1,91 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #265: Turso/SQLite Datenbank-Migrationen
+**Date:** 2026-02-16
+**Feature ID:** #265
+**Status:** PASSING
+
+### What was implemented:
+Complete Alembic-based database migration system for the TREFF Post-Generator.
+
+1. **Alembic Configuration**
+   - Installed Alembic 1.18.4 and added to requirements.txt
+   - Configured alembic.ini with project-specific settings
+   - Created custom env.py with:
+     - Automatic model metadata discovery (all 32 tables)
+     - Synchronous SQLite engine for migrations (separate from async app engine)
+     - SQLite batch mode for ALTER TABLE compatibility (render_as_batch=True)
+     - sys.path configuration for app module imports
+
+2. **Initial Baseline Migration** (a1b2c3d4e5f6)
+   - Comprehensive CREATE TABLE for all 32 models
+   - Includes: users, posts, templates, assets, students, story_arcs, story_episodes,
+     calendar_entries, content_suggestions, export_history, settings, hooks,
+     humor_formats, hashtag_sets, ctas, post_interactive_elements, series_reminders,
+     video_overlays, music_tracks, video_templates, video_exports, recurring_formats,
+     post_relations, pipeline_items, campaigns, campaign_posts, template_favorites,
+     video_scripts, prompt_history, background_tasks, post_slides, recurring_post_rules
+   - Full upgrade() and downgrade() functions with correct dependency ordering
+   - All indexes, foreign keys, and unique constraints captured
+   - Stamped on existing database (no destructive changes)
+
+3. **FK Constraint Fix Migration** (1dd2f40ff200)
+   - Adds ON DELETE SET NULL to posts.recurring_rule_id foreign key
+   - Uses batch_alter_table for SQLite compatibility
+   - Stamped on existing database
+
+4. **Migration CLI Script** (migrate.py)
+   - Commands: upgrade, downgrade, current, history, heads, generate, stamp, check
+   - User-friendly output with clear status messages
+   - Supports autogenerate for new migrations
+   - Includes help text and error handling
+
+5. **API Endpoint** (GET /api/health/migrations)
+   - Returns: status, current_revision, head_revision, pending_count, pending_migrations, history
+   - Handles: Alembic not installed, config missing, DB errors
+   - Full OpenAPI documentation with example response
+
+6. **App Startup Integration**
+   - Logs migration status on server startup (INFO for up-to-date, WARNING for pending)
+   - Non-blocking: skips gracefully if Alembic is not installed
+
+7. **Documentation**
+   - Comprehensive migrations/README with:
+     - All CLI commands with examples
+     - API endpoint documentation
+     - Creating new migration workflow (5 steps)
+     - Deployment workflow (3 steps)
+     - Existing database setup instructions
+
+### Files created:
+- backend/alembic.ini — Alembic configuration
+- backend/migrate.py — CLI migration management script
+- backend/migrations/env.py — Alembic environment with model metadata
+- backend/migrations/README — Documentation
+- backend/migrations/script.py.mako — Template for new migrations
+- backend/migrations/versions/001_a1b2c3d4e5f6_initial_schema.py — Baseline (32 tables)
+- backend/migrations/versions/1dd2f40ff200_*.py — FK constraint fix
+
+### Files modified:
+- backend/requirements.txt — Added alembic>=1.13.0
+- backend/app/api/routes/health.py — Added /health/migrations endpoint
+- backend/app/main.py — Added migration status logging on startup
+
+### Verification completed:
+- API: /api/health/migrations returns correct JSON with status "up_to_date"
+- API: /api/health shows 33 tables (32 + alembic_version)
+- CLI: migrate.py check returns "Database is up to date"
+- CLI: migrate.py current/history/heads all work correctly
+- Browser: Dashboard loads without errors after integration
+- Browser: Login and authentication flow works
+- Console: Zero JavaScript errors
+- Mock data grep: Zero matches in all new files
+- Server restart: Migration data persists (alembic_version table in SQLite)
+- Git commit: cdc2046
+
+### Current state:
+- Feature #265 marked as PASSING
+
 ## Session - Features #251, #252: KI-Integration Phase 4
 **Date:** 2026-02-16
 **Features:** #251, #252
