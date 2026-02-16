@@ -24,6 +24,7 @@ from app.models.video_template import VideoTemplate
 from app.models.video_export import VideoExport
 from app.models.recurring_format import RecurringFormat
 from app.models.post_relation import PostRelation
+from app.models.pipeline_item import PipelineItem
 
 __all__ = [
     "User",
@@ -50,4 +51,5 @@ __all__ = [
     "VideoExport",
     "RecurringFormat",
     "PostRelation",
+    "PipelineItem",
 ]
