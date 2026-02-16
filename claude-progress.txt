@@ -10337,3 +10337,50 @@ Feature #217 required video-related tours: an overview tour explaining the video
 ### Current state:
 - Feature #217 marked as PASSING
 - 225/225 features passing (100%)
+
+---
+
+## Session - Feature #229: Globales Toast/Notification System
+**Date:** 2026-02-16
+**Feature ID:** #229
+**Status:** PASSING
+
+### What was implemented:
+Enhanced the existing toast system to meet all feature requirements:
+
+1. **useToast Composable** - Enhanced with:
+   - `warning()` method (yellow variant, 5s auto-dismiss)
+   - `clear()` method to dismiss all toasts at once
+   - `visibleToasts` computed property (capped at MAX_VISIBLE)
+   - FIFO stack limit: max 3 toasts visible, oldest removed when exceeded
+
+2. **ToastItem.vue** (NEW) - Extracted as reusable component with:
+   - 4 variants: success (green), error (red), warning (yellow), info (blue)
+   - Icon per type (checkmark, cross, warning triangle, info circle)
+   - Close button with aria-label
+   - Dark mode support
+   - data-testid for automated testing
+
+3. **ToastContainer.vue** - Refactored to use ToastItem component:
+   - Fixed top-right position (z-[9999])
+   - TransitionGroup with slide-in/slide-out animation
+   - Delegated rendering to ToastItem
+
+4. **VideoTemplatesView.vue** - Fixed broken addToast calls to use toast.success/error
+
+### Files created/modified:
+- frontend/src/composables/useToast.js (modified) - Added warning(), clear(), FIFO stack, visibleToasts
+- frontend/src/components/common/ToastItem.vue (NEW) - Reusable toast component (~67 lines)
+- frontend/src/components/common/ToastContainer.vue (modified) - Uses ToastItem
+- frontend/src/views/VideoTemplatesView.vue (modified) - Fixed addToast -> toast.success/error
+
+### Verification completed:
+- Browser: Success toast visible in snapshot with checkmark icon
+- Browser: Error toasts (red) visible in screenshot for background API errors
+- Browser: Multiple toasts stacking (3 visible simultaneously in screenshot)
+- Browser: Close button present and functional
+- Mock data grep: Zero matches in modified files
+- Git commit: f1e7b1a
+
+### Current state:
+- Feature #229 marked as PASSING
