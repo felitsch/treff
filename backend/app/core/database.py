@@ -204,6 +204,56 @@ else:
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
+async def turso_batch_execute(statements: list[str]) -> list[dict]:
+    """Send multiple SQL statements in a single Turso pipeline request.
+
+    Returns a list of per-statement results: {"type": "ok", ...} or {"type": "error", ...}.
+    Falls back to sequential execution if Turso is not configured.
+    """
+    if not settings.TURSO_DATABASE_URL:
+        # Local SQLite: execute sequentially via engine
+        results = []
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            for sql in statements:
+                try:
+                    await conn.execute(text(sql))
+                    results.append({"type": "ok"})
+                except Exception as e:
+                    results.append({"type": "error", "error": str(e)})
+        return results
+
+    # Turso: batch via single HTTP pipeline request
+    pipeline_requests = [{"type": "execute", "stmt": {"sql": s, "args": []}} for s in statements]
+    pipeline_requests.append({"type": "close"})
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{_base_url}/v2/pipeline",
+            headers={"Authorization": f"Bearer {_token}"},
+            json={"requests": pipeline_requests},
+            timeout=30.0,
+        )
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Exclude the close response (last item) and validate count
+    stmt_results = data.get("results", [])[:-1]
+    if len(stmt_results) != len(statements):
+        logger.warning(
+            "Turso pipeline returned %d results for %d statements",
+            len(stmt_results), len(statements),
+        )
+
+    results = []
+    for r in stmt_results:
+        if r.get("type") == "ok":
+            results.append({"type": "ok"})
+        else:
+            results.append({"type": "error", "error": r.get("error", {}).get("message", "unknown")})
+    return results
+
+
 class Base(DeclarativeBase):
     """Base class for all database models."""
     pass

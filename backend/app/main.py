@@ -49,278 +49,144 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting TREFF Post-Generator backend...")
 
-    # Create database tables
+    from sqlalchemy import text
+
+    # ── Schema check: skip all DDL if DB is already up to date ──
+    # Probe the newest column (assets.marked_unused) — if it exists, the schema
+    # is fully migrated and we can skip create_all + all ALTER TABLEs.
+    # IMPORTANT: Update this probe whenever a new ALTER TABLE migration is added.
+    # It must reference the LAST column in the alter_stmts list below.
+    schema_ready = False
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created/verified")
-
-    # Check Alembic migration status
-    try:
-        from pathlib import Path as _Path
-        from alembic.config import Config as _AlembicConfig
-        from alembic.script import ScriptDirectory as _ScriptDir
-        from alembic.runtime.migration import MigrationContext as _MigCtx
-        from sqlalchemy import create_engine as _create_engine
-        from sqlalchemy.pool import NullPool as _NullPool
-
-        _backend_dir = _Path(__file__).resolve().parent.parent
-        _ini = _backend_dir / "alembic.ini"
-        if _ini.exists():
-            _cfg = _AlembicConfig(str(_ini))
-            _cfg.set_main_option("script_location", str(_backend_dir / "migrations"))
-            _script = _ScriptDir.from_config(_cfg)
-            _head = _script.get_current_head()
-            _db_path = str(_backend_dir / "treff.db")
-            _eng = _create_engine(f"sqlite:///{_db_path}", poolclass=_NullPool)
-            with _eng.connect() as _conn:
-                _ctx = _MigCtx.configure(_conn)
-                _current = _ctx.get_current_revision()
-            _eng.dispose()
-            if _current == _head:
-                logger.info("Alembic migrations: up to date (revision %s)", _current)
-            elif _current is None:
-                logger.warning("Alembic migrations: no revision stamped yet. Run 'python migrate.py stamp head'")
+        try:
+            await conn.execute(text("SELECT marked_unused FROM assets LIMIT 0"))
+            schema_ready = True
+            logger.info("Database schema already up to date — skipping DDL")
+        except Exception as exc:
+            err_msg = str(exc).lower()
+            if "no such column" in err_msg or "no such table" in err_msg:
+                schema_ready = False
             else:
-                logger.warning("Alembic migrations: PENDING! Current=%s, Head=%s. Run 'python migrate.py upgrade'", _current, _head)
-    except ImportError:
-        pass  # Alembic not installed, skip check
-    except Exception as e:
-        logger.debug("Alembic migration check skipped: %s", e)
+                logger.error("Schema probe failed unexpectedly: %s", exc)
+                raise
 
-    # Migrate: add video-specific columns to assets table if missing
-    async with engine.begin() as conn:
-        from sqlalchemy import text
-        try:
-            await conn.execute(text("ALTER TABLE assets ADD COLUMN duration_seconds FLOAT"))
-            logger.info("Added duration_seconds column to assets table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE assets ADD COLUMN thumbnail_path VARCHAR"))
-            logger.info("Added thumbnail_path column to assets table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE students ADD COLUMN personality_preset TEXT"))
-            logger.info("Added personality_preset column to students table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN story_arc_id INTEGER REFERENCES story_arcs(id)"))
-            logger.info("Added story_arc_id column to posts table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN episode_number INTEGER"))
-            logger.info("Added episode_number column to posts table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN linked_post_group_id VARCHAR"))
-            logger.info("Added linked_post_group_id column to posts table")
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN student_id INTEGER REFERENCES students(id) ON DELETE SET NULL"))
-            logger.info("Added student_id column to posts table")
-        except Exception:
-            pass  # Column already exists
-        # Vercel file persistence: store file bytes as base64 in DB
-        try:
-            await conn.execute(text("ALTER TABLE assets ADD COLUMN file_data TEXT"))
-            logger.info("Added file_data column to assets table")
-        except Exception:
-            pass
-        try:
-            await conn.execute(text("ALTER TABLE music_tracks ADD COLUMN file_data TEXT"))
-            logger.info("Added file_data column to music_tracks table")
-        except Exception:
-            pass
-        try:
-            await conn.execute(text("ALTER TABLE video_overlays ADD COLUMN rendered_data TEXT"))
-            logger.info("Added rendered_data column to video_overlays table")
-        except Exception:
-            pass
-        try:
-            await conn.execute(text("ALTER TABLE content_suggestions ADD COLUMN suggested_format VARCHAR"))
-            logger.info("Added suggested_format column to content_suggestions table")
-        except Exception:
-            pass
-        # Recurring posts columns
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN recurring_rule_id INTEGER REFERENCES recurring_post_rules(id) ON DELETE SET NULL"))
-            logger.info("Added recurring_rule_id column to posts table")
-        except Exception:
-            pass
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN is_recurring_instance INTEGER"))
-            logger.info("Added is_recurring_instance column to posts table")
-        except Exception:
-            pass
-        # Performance tracking columns
-        for col_name in ["perf_likes", "perf_comments", "perf_shares", "perf_saves", "perf_reach"]:
-            try:
-                await conn.execute(text(f"ALTER TABLE posts ADD COLUMN {col_name} INTEGER"))
-                logger.info(f"Added {col_name} column to posts table")
-            except Exception:
-                pass
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN perf_updated_at DATETIME"))
-            logger.info("Added perf_updated_at column to posts table")
-        except Exception:
-            pass
-        # Asset management enhancements: multi-size thumbnails, EXIF, garbage collection
-        # Content Pillar column on posts
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN pillar_id VARCHAR"))
-            logger.info("Added pillar_id column to posts table")
-        except Exception:
-            pass  # Column already exists
-        # Hook formula tracking column on posts
-        try:
-            await conn.execute(text("ALTER TABLE posts ADD COLUMN hook_formula VARCHAR(100)"))
-            logger.info("Added hook_formula column to posts table")
-        except Exception:
-            pass  # Column already exists
-        for col_sql in [
+    if not schema_ready:
+        # Full schema bootstrap (first deploy or after schema change)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created/verified")
+
+        # ── ALTER TABLE migrations ──
+        alter_stmts = [
+            "ALTER TABLE assets ADD COLUMN duration_seconds FLOAT",
+            "ALTER TABLE assets ADD COLUMN thumbnail_path VARCHAR",
+            "ALTER TABLE students ADD COLUMN personality_preset TEXT",
+            "ALTER TABLE posts ADD COLUMN story_arc_id INTEGER REFERENCES story_arcs(id)",
+            "ALTER TABLE posts ADD COLUMN episode_number INTEGER",
+            "ALTER TABLE posts ADD COLUMN linked_post_group_id VARCHAR",
+            "ALTER TABLE posts ADD COLUMN student_id INTEGER REFERENCES students(id) ON DELETE SET NULL",
+            "ALTER TABLE assets ADD COLUMN file_data TEXT",
+            "ALTER TABLE music_tracks ADD COLUMN file_data TEXT",
+            "ALTER TABLE video_overlays ADD COLUMN rendered_data TEXT",
+            "ALTER TABLE content_suggestions ADD COLUMN suggested_format VARCHAR",
+            "ALTER TABLE posts ADD COLUMN recurring_rule_id INTEGER REFERENCES recurring_post_rules(id) ON DELETE SET NULL",
+            "ALTER TABLE posts ADD COLUMN is_recurring_instance INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_likes INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_comments INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_shares INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_saves INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_reach INTEGER",
+            "ALTER TABLE posts ADD COLUMN perf_updated_at DATETIME",
+            "ALTER TABLE posts ADD COLUMN pillar_id VARCHAR",
+            "ALTER TABLE posts ADD COLUMN hook_formula VARCHAR(100)",
             "ALTER TABLE assets ADD COLUMN thumbnail_small VARCHAR",
             "ALTER TABLE assets ADD COLUMN thumbnail_medium VARCHAR",
             "ALTER TABLE assets ADD COLUMN thumbnail_large VARCHAR",
             "ALTER TABLE assets ADD COLUMN exif_data TEXT",
             "ALTER TABLE assets ADD COLUMN last_used_at DATETIME",
             "ALTER TABLE assets ADD COLUMN marked_unused INTEGER",
-        ]:
+        ]
+
+        if IS_VERCEL:
+            # Batch all ALTER TABLEs in a single Turso pipeline request
+            from app.core.database import turso_batch_execute
+            results = await turso_batch_execute(alter_stmts)
+            for stmt, result in zip(alter_stmts, results):
+                if result.get("type") == "ok":
+                    col_name = stmt.split("ADD COLUMN ")[1].split(" ")[0]
+                    logger.info(f"Migration: added {col_name}")
+        else:
+            # Local: individual execution for clearer error handling
+            async with engine.begin() as conn:
+                for stmt in alter_stmts:
+                    try:
+                        await conn.execute(text(stmt))
+                        col_name = stmt.split("ADD COLUMN ")[1].split(" ")[0]
+                        logger.info(f"Migration: added {col_name}")
+                    except Exception:
+                        pass  # Column already exists
+
+    # ── Alembic check (local only — useless on Vercel with Turso) ──
+    if not IS_VERCEL:
+        try:
+            from pathlib import Path as _Path
+            from alembic.config import Config as _AlembicConfig
+            from alembic.script import ScriptDirectory as _ScriptDir
+            from alembic.runtime.migration import MigrationContext as _MigCtx
+            from sqlalchemy import create_engine as _create_engine
+            from sqlalchemy.pool import NullPool as _NullPool
+
+            _backend_dir = _Path(__file__).resolve().parent.parent
+            _ini = _backend_dir / "alembic.ini"
+            if _ini.exists():
+                _cfg = _AlembicConfig(str(_ini))
+                _cfg.set_main_option("script_location", str(_backend_dir / "migrations"))
+                _script = _ScriptDir.from_config(_cfg)
+                _head = _script.get_current_head()
+                _db_path = str(_backend_dir / "treff.db")
+                _eng = _create_engine(f"sqlite:///{_db_path}", poolclass=_NullPool)
+                with _eng.connect() as _conn:
+                    _ctx = _MigCtx.configure(_conn)
+                    _current = _ctx.get_current_revision()
+                _eng.dispose()
+                if _current == _head:
+                    logger.info("Alembic migrations: up to date (revision %s)", _current)
+                elif _current is None:
+                    logger.warning("Alembic migrations: no revision stamped yet. Run 'python migrate.py stamp head'")
+                else:
+                    logger.warning("Alembic migrations: PENDING! Current=%s, Head=%s. Run 'python migrate.py upgrade'", _current, _head)
+        except ImportError:
+            pass  # Alembic not installed, skip check
+        except Exception as e:
+            logger.debug("Alembic migration check skipped: %s", e)
+
+    # ── Seed data (single session for all seeds) ──
+    SEED_FUNCTIONS = [
+        (seed_default_users, "default user(s)"),
+        (seed_default_templates, "default templates"),
+        (seed_story_teaser_templates, "story-teaser templates"),
+        (seed_story_series_templates, "story-series templates"),
+        (seed_treff_standard_templates, "TREFF standard templates"),
+        (seed_default_suggestions, "content suggestions"),
+        (seed_humor_formats, "humor formats"),
+        (seed_hashtag_sets, "hashtag sets"),
+        (seed_default_ctas, "CTAs"),
+        (seed_music_tracks, "music tracks"),
+        (seed_video_templates, "video templates"),
+        (seed_recurring_formats, "recurring formats"),
+        (seed_content_pillars, "content pillars"),
+        (seed_audio_suggestions, "audio suggestions"),
+    ]
+
+    async with async_session() as session:
+        for seed_fn, label in SEED_FUNCTIONS:
             try:
-                await conn.execute(text(col_sql))
-                logger.info(f"Migration: {col_sql.split('ADD COLUMN ')[1].split(' ')[0]} added to assets")
-            except Exception:
-                pass
-
-    # Seed default user (critical for Vercel where DB is ephemeral)
-    async with async_session() as session:
-        try:
-            count = await seed_default_users(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default user(s)")
-        except Exception as e:
-            logger.error(f"Failed to seed default user: {e}")
-
-    # Seed default templates if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_default_templates(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default templates")
-        except Exception as e:
-            logger.error(f"Failed to seed templates: {e}")
-
-    # Seed story-teaser templates if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_story_teaser_templates(session)
-            if count > 0:
-                logger.info(f"Seeded {count} story-teaser templates")
-        except Exception as e:
-            logger.error(f"Failed to seed story-teaser templates: {e}")
-
-    # Seed story-series templates if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_story_series_templates(session)
-            if count > 0:
-                logger.info(f"Seeded {count} story-series templates")
-        except Exception as e:
-            logger.error(f"Failed to seed story-series templates: {e}")
-
-    # Seed TREFF Standard-Templates (10 production-ready templates)
-    async with async_session() as session:
-        try:
-            count = await seed_treff_standard_templates(session)
-            if count > 0:
-                logger.info(f"Seeded {count} TREFF standard templates")
-        except Exception as e:
-            logger.error(f"Failed to seed TREFF standard templates: {e}")
-
-    # Seed default content suggestions if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_default_suggestions(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default content suggestions")
-        except Exception as e:
-            logger.error(f"Failed to seed suggestions: {e}")
-
-    # Seed default humor formats if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_humor_formats(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default humor formats")
-        except Exception as e:
-            logger.error(f"Failed to seed humor formats: {e}")
-
-    # Seed default hashtag sets if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_hashtag_sets(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default hashtag sets")
-        except Exception as e:
-            logger.error(f"Failed to seed hashtag sets: {e}")
-
-    # Seed default CTAs if not already present
-    async with async_session() as session:
-        try:
-            count = await seed_default_ctas(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default CTAs")
-        except Exception as e:
-            logger.error(f"Failed to seed CTAs: {e}")
-
-    # Seed default music tracks for audio library
-    async with async_session() as session:
-        try:
-            count = await seed_music_tracks(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default music tracks")
-        except Exception as e:
-            logger.error(f"Failed to seed music tracks: {e}")
-
-    # Seed default video branding templates (intro/outro)
-    async with async_session() as session:
-        try:
-            count = await seed_video_templates(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default video branding templates")
-        except Exception as e:
-            logger.error(f"Failed to seed video templates: {e}")
-
-    # Seed default recurring formats (Running Gags)
-    async with async_session() as session:
-        try:
-            count = await seed_recurring_formats(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default recurring formats")
-        except Exception as e:
-            logger.error(f"Failed to seed recurring formats: {e}")
-
-    # Seed default content pillars
-    async with async_session() as session:
-        try:
-            count = await seed_content_pillars(session)
-            if count > 0:
-                logger.info(f"Seeded {count} default content pillars")
-        except Exception as e:
-            logger.error(f"Failed to seed content pillars: {e}")
-
-    # Seed audio suggestions for trending audio library
-    async with async_session() as session:
-        try:
-            count = await seed_audio_suggestions(session)
-            if count > 0:
-                logger.info(f"Seeded {count} audio suggestions")
-        except Exception as e:
-            logger.error(f"Failed to seed audio suggestions: {e}")
+                count = await seed_fn(session)
+                if count > 0:
+                    logger.info(f"Seeded {count} {label}")
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Failed to seed {label}: {e}")
 
     yield
 
