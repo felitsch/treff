@@ -1581,3 +1581,482 @@ async def get_dashboard_widgets(
         "performance_pulse": performance_pulse,
         "active_campaigns": active_campaigns,
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /api/analytics/strategy-health
+# Strategy IST-vs-SOLL Dashboard — compares actual posts against strategy targets
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/strategy-health")
+async def get_strategy_health(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Compare actual posts (last 30 days) against all strategy target values.
+
+    Returns:
+        pillar_health: IST vs SOLL for each of the 7 content pillars
+        journey_health: IST vs SOLL for 3 buyer journey phases
+        country_health: IST vs SOLL for country rotation
+        platform_health: IST vs SOLL for platform mix
+        video_ratio: Reels/TikTok % vs 40% target
+        posting_frequency: This week actual vs strategy target (3-5/week)
+        hook_usage: Which hook formulas were used this week
+        recommendations: Top 3 actionable recommendations
+        overall_score: Weighted health score 0-100
+    """
+    import json as _json
+    from pathlib import Path
+
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = now - timedelta(days=30)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # ── Load strategy configs ──
+    project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+    content_strategy_path = project_root / "frontend" / "src" / "config" / "content-strategy.json"
+    social_content_path = project_root / "frontend" / "src" / "config" / "social-content.json"
+
+    content_strategy = {}
+    social_content = {}
+    try:
+        with open(content_strategy_path, "r", encoding="utf-8") as f:
+            content_strategy = _json.load(f)
+    except (FileNotFoundError, _json.JSONDecodeError):
+        pass
+    try:
+        with open(social_content_path, "r", encoding="utf-8") as f:
+            social_content = _json.load(f)
+    except (FileNotFoundError, _json.JSONDecodeError):
+        pass
+
+    # ── Fetch all posts from last 30 days ──
+    result = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+            Post.created_at >= thirty_days_ago,
+        )
+    )
+    posts = result.scalars().all()
+    total_posts = len(posts)
+
+    # ── Fetch posts from this week for frequency + hook tracking ──
+    result_week = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+            Post.created_at >= week_start,
+        )
+    )
+    week_posts = result_week.scalars().all()
+
+    # ════════════════════════════════════════════════════
+    # 1. PILLAR HEALTH — 7 content pillars IST vs SOLL
+    # ════════════════════════════════════════════════════
+    pillars_config = content_strategy.get("content_pillars", [])
+    pillar_targets = {p["id"]: p.get("distribution_percent", 0) for p in pillars_config}
+    pillar_names = {p["id"]: p.get("name", p["id"]) for p in pillars_config}
+    pillar_emojis = {p["id"]: p.get("emoji", "") for p in pillars_config}
+
+    # Map post categories to pillar IDs
+    category_to_pillar = {
+        "laender_spotlight": "laender_spotlight",
+        "erfahrungsberichte": "erfahrungsberichte",
+        "infografiken": "infografiken",
+        "fristen_cta": "fristen_cta",
+        "tipps_tricks": "tipps_tricks",
+        "faq": "faq",
+        "foto_posts": "behind_the_scenes",
+        "reel_tiktok_thumbnails": "erfahrungsberichte",
+        "story_posts": "behind_the_scenes",
+        "story_teaser": "behind_the_scenes",
+    }
+
+    # Count posts per pillar (use pillar_id field if available, else map from category)
+    pillar_counts = {}
+    for p in posts:
+        pillar = p.pillar_id or category_to_pillar.get(p.category, p.category)
+        pillar_counts[pillar] = pillar_counts.get(pillar, 0) + 1
+
+    pillar_health = []
+    for pillar_id in pillar_targets:
+        target_pct = pillar_targets[pillar_id]
+        actual_count = pillar_counts.get(pillar_id, 0)
+        actual_pct = round((actual_count / total_posts) * 100, 1) if total_posts > 0 else 0
+        # Score: how close to target (100% = perfect match)
+        if target_pct > 0:
+            ratio = actual_pct / target_pct
+            score = min(100, round(ratio * 100))
+        else:
+            score = 100 if actual_pct == 0 else 50
+
+        pillar_health.append({
+            "id": pillar_id,
+            "name": pillar_names.get(pillar_id, pillar_id),
+            "emoji": pillar_emojis.get(pillar_id, ""),
+            "target_pct": target_pct,
+            "actual_pct": actual_pct,
+            "actual_count": actual_count,
+            "score": score,
+            "status": "green" if score >= 80 else ("yellow" if score >= 50 else "red"),
+        })
+
+    # ════════════════════════════════════════════════════
+    # 2. BUYER JOURNEY HEALTH — 3 phases IST vs SOLL
+    # ════════════════════════════════════════════════════
+    journey_stages = content_strategy.get("buyer_journey", {}).get("stages", [])
+    journey_targets = {s["id"]: s.get("target_share", 0) for s in journey_stages}
+    journey_names = {s["id"]: s.get("name", s["id"]) for s in journey_stages}
+
+    # Map pillars to their primary journey stages
+    pillar_journey_map = {}
+    for p_config in pillars_config:
+        stages = p_config.get("buyer_journey_stage", [])
+        pillar_journey_map[p_config["id"]] = stages
+
+    journey_counts = {"awareness": 0, "consideration": 0, "decision": 0}
+    for p in posts:
+        pillar = p.pillar_id or category_to_pillar.get(p.category, p.category)
+        stages = pillar_journey_map.get(pillar, ["awareness"])
+        for stage in stages:
+            if stage in journey_counts:
+                journey_counts[stage] += 1
+
+    # Normalize: total journey attributions
+    journey_total = sum(journey_counts.values()) or 1
+
+    journey_health = []
+    for stage_id in ["awareness", "consideration", "decision"]:
+        target_pct = journey_targets.get(stage_id, 33)
+        actual_pct = round((journey_counts[stage_id] / journey_total) * 100, 1)
+        if target_pct > 0:
+            ratio = actual_pct / target_pct
+            score = min(100, round(ratio * 100))
+        else:
+            score = 100
+        journey_health.append({
+            "id": stage_id,
+            "name": journey_names.get(stage_id, stage_id),
+            "target_pct": target_pct,
+            "actual_pct": actual_pct,
+            "actual_count": journey_counts[stage_id],
+            "score": score,
+            "status": "green" if score >= 80 else ("yellow" if score >= 50 else "red"),
+        })
+
+    # ════════════════════════════════════════════════════
+    # 3. COUNTRY ROTATION HEALTH
+    # ════════════════════════════════════════════════════
+    country_targets = content_strategy.get("content_calendar", {}).get("country_rotation", {}).get("distribution", {
+        "usa": 30, "canada": 20, "australia": 20, "newzealand": 15, "ireland": 15,
+    })
+    country_labels = {
+        "usa": "USA", "canada": "Kanada", "australia": "Australien",
+        "newzealand": "Neuseeland", "ireland": "Irland",
+    }
+
+    country_counts = {}
+    for p in posts:
+        if p.country:
+            country_counts[p.country] = country_counts.get(p.country, 0) + 1
+
+    country_total = sum(country_counts.values()) or 1
+    country_health = []
+    for country_id, target_pct in country_targets.items():
+        actual_count = country_counts.get(country_id, 0)
+        actual_pct = round((actual_count / country_total) * 100, 1) if country_total > 0 else 0
+        if target_pct > 0:
+            ratio = actual_pct / target_pct
+            score = min(100, round(ratio * 100))
+        else:
+            score = 100
+        country_health.append({
+            "id": country_id,
+            "name": country_labels.get(country_id, country_id),
+            "target_pct": target_pct,
+            "actual_pct": actual_pct,
+            "actual_count": actual_count,
+            "score": score,
+            "status": "green" if score >= 80 else ("yellow" if score >= 50 else "red"),
+        })
+
+    # ════════════════════════════════════════════════════
+    # 4. PLATFORM MIX HEALTH
+    # ════════════════════════════════════════════════════
+    # Target from social-content.json: use posting frequency ratios
+    platform_freq = social_content.get("platforms", {})
+    platform_ideal = {}
+    for key, plat_data in platform_freq.items():
+        freq = plat_data.get("posting_frequency", {})
+        platform_ideal[key] = freq.get("ideal_per_week", 3)
+
+    # Simplified mapping: combine instagram_feed + instagram_stories = "Instagram"
+    platform_counts = {}
+    for p in posts:
+        platform_counts[p.platform] = platform_counts.get(p.platform, 0) + 1
+
+    platform_total = sum(platform_counts.values()) or 1
+    platform_labels_map = {
+        "instagram_feed": "Instagram Feed",
+        "instagram_story": "Instagram Story",
+        "tiktok": "TikTok",
+    }
+
+    # Derive target percentages from ideal frequencies
+    total_ideal = sum(platform_ideal.values()) or 1
+    platform_health = []
+    for plat_id in ["instagram_feed", "instagram_story", "tiktok"]:
+        # Map platform key (instagram_stories in config -> instagram_story in posts)
+        config_key = plat_id
+        if plat_id == "instagram_story":
+            config_key = "instagram_stories"
+
+        ideal = platform_ideal.get(config_key, 3)
+        target_pct = round((ideal / total_ideal) * 100, 1)
+        actual_count = platform_counts.get(plat_id, 0)
+        actual_pct = round((actual_count / platform_total) * 100, 1) if platform_total > 0 else 0
+
+        if target_pct > 0:
+            ratio = actual_pct / target_pct
+            score = min(100, round(ratio * 100))
+        else:
+            score = 100
+
+        platform_health.append({
+            "id": plat_id,
+            "name": platform_labels_map.get(plat_id, plat_id),
+            "target_pct": target_pct,
+            "actual_pct": actual_pct,
+            "actual_count": actual_count,
+            "score": score,
+            "status": "green" if score >= 80 else ("yellow" if score >= 50 else "red"),
+        })
+
+    # ════════════════════════════════════════════════════
+    # 5. VIDEO RATIO — Reels percentage (target: 40%)
+    # ════════════════════════════════════════════════════
+    reel_count = 0
+    for p in posts:
+        if p.platform == "tiktok":
+            reel_count += 1
+        elif p.platform == "instagram_feed":
+            # Check if it's a Reel based on category or slide data
+            if p.category == "reel_tiktok_thumbnails":
+                reel_count += 1
+
+    video_pct = round((reel_count / total_posts) * 100, 1) if total_posts > 0 else 0
+    video_target = 40
+    video_score = min(100, round((video_pct / video_target) * 100)) if video_target > 0 else 100
+
+    video_ratio = {
+        "actual_pct": video_pct,
+        "target_pct": video_target,
+        "actual_count": reel_count,
+        "total_posts": total_posts,
+        "score": video_score,
+        "status": "green" if video_score >= 80 else ("yellow" if video_score >= 50 else "red"),
+    }
+
+    # ════════════════════════════════════════════════════
+    # 6. POSTING FREQUENCY — This week vs strategy target
+    # ════════════════════════════════════════════════════
+    posting_freq_config = content_strategy.get("content_calendar", {}).get("posting_frequency", {})
+    freq_target_min = posting_freq_config.get("minimum", 3)
+    freq_target_max = posting_freq_config.get("maximum", 7)
+    freq_target_optimal = posting_freq_config.get("optimal", 5)
+
+    week_post_count = len(week_posts)
+
+    # Calculate days remaining in week
+    days_elapsed = now.weekday() + 1  # Monday=1, Sunday=7
+    days_remaining = 7 - days_elapsed
+
+    if week_post_count >= freq_target_min:
+        freq_score = min(100, round((week_post_count / freq_target_optimal) * 100))
+    else:
+        freq_score = round((week_post_count / freq_target_min) * 100) if freq_target_min > 0 else 0
+
+    # Trend arrow: compare to expected pace
+    expected_pace = round(freq_target_optimal * (days_elapsed / 7), 1)
+    if week_post_count >= expected_pace:
+        freq_trend = "on_track"
+    elif week_post_count >= expected_pace * 0.5:
+        freq_trend = "behind"
+    else:
+        freq_trend = "at_risk"
+
+    posting_frequency = {
+        "actual": week_post_count,
+        "target_min": freq_target_min,
+        "target_max": freq_target_max,
+        "target_optimal": freq_target_optimal,
+        "days_elapsed": days_elapsed,
+        "days_remaining": days_remaining,
+        "expected_pace": expected_pace,
+        "score": freq_score,
+        "trend": freq_trend,
+        "status": "green" if freq_score >= 80 else ("yellow" if freq_score >= 50 else "red"),
+    }
+
+    # ════════════════════════════════════════════════════
+    # 7. HOOK FORMULA USAGE — which of 10 hooks used this week
+    # ════════════════════════════════════════════════════
+    hook_formulas_config = social_content.get("hook_formulas", {}).get("formulas", [])
+    all_hook_ids = [h["id"] for h in hook_formulas_config]
+    all_hook_names = {h["id"]: h.get("name", h["id"]) for h in hook_formulas_config}
+
+    # Track which hooks were used (via caption analysis - simplified: check if caption
+    # starts with patterns matching hook templates)
+    used_hooks = set()
+    for p in week_posts:
+        caption = (p.caption_instagram or p.caption_tiktok or "").lower().strip()
+        if not caption:
+            continue
+        # Simple heuristic matching
+        for hook in hook_formulas_config:
+            hook_id = hook["id"]
+            examples = [ex.lower() for ex in hook.get("examples", [])]
+            template_lower = hook.get("template", "").lower()
+
+            # Check if caption starts with a pattern matching this hook
+            if hook_id == "knowledge_gap" and ("was ich gerne" in caption[:60] or "keiner" in caption[:40] or "niemand" in caption[:40]):
+                used_hooks.add(hook_id)
+            elif hook_id == "comparison" and ("vs." in caption[:60] or "vs " in caption[:60] or "vergleich" in caption[:60]):
+                used_hooks.add(hook_id)
+            elif hook_id == "myth_buster" and ("mythos" in caption[:30] or "luegen" in caption[:40] or "falsch" in caption[:40]):
+                used_hooks.add(hook_id)
+            elif hook_id == "pov" and caption[:4] == "pov:":
+                used_hooks.add(hook_id)
+            elif hook_id == "list" and any(caption[:20].startswith(f"{n} ") for n in ["3", "5", "7", "10"]):
+                used_hooks.add(hook_id)
+            elif hook_id == "question" and caption.endswith("?") and len(caption) < 120:
+                used_hooks.add(hook_id)
+            elif hook_id == "before_after" and ("vorher" in caption[:40] or "nachher" in caption[:40] or "erwartung" in caption[:50]):
+                used_hooks.add(hook_id)
+            elif hook_id == "emotional_opener" and ("stell dir vor" in caption[:50] or "ich werde nie vergessen" in caption[:50]):
+                used_hooks.add(hook_id)
+            elif hook_id == "controversy" and ("unpopular opinion" in caption[:50] or "harte wahrheit" in caption[:50]):
+                used_hooks.add(hook_id)
+            elif hook_id == "social_proof" and ("ueber" in caption[:30] and ("schueler" in caption[:50] or "teilnehmer" in caption[:50])):
+                used_hooks.add(hook_id)
+
+    hook_usage = []
+    for hook in hook_formulas_config:
+        hook_usage.append({
+            "id": hook["id"],
+            "name": hook.get("name", hook["id"]),
+            "effectiveness": hook.get("effectiveness", 5),
+            "used": hook["id"] in used_hooks,
+        })
+
+    hooks_used_count = len(used_hooks)
+    hooks_total = len(all_hook_ids)
+
+    # ════════════════════════════════════════════════════
+    # 8. TOP-3 RECOMMENDATIONS
+    # ════════════════════════════════════════════════════
+    recommendations = []
+
+    # Sort health items by score (worst first) for recommendations
+    all_issues = []
+
+    # Video ratio
+    if video_ratio["score"] < 80:
+        all_issues.append({
+            "priority": 1 if video_ratio["score"] < 50 else 2,
+            "type": "video",
+            "message": f"Mehr Reels posten (aktuell {video_ratio['actual_pct']}%, Ziel {video_ratio['target_pct']}%)",
+            "icon": "film",
+            "score": video_ratio["score"],
+        })
+
+    # Missing countries
+    for ch in country_health:
+        if ch["actual_count"] == 0:
+            all_issues.append({
+                "priority": 2,
+                "type": "country",
+                "message": f"{ch['name']}-Content fehlt (Ziel: {ch['target_pct']}%)",
+                "icon": "globe-europe-africa",
+                "score": 0,
+            })
+
+    # Journey imbalance
+    for jh in journey_health:
+        if jh["score"] < 60:
+            phase_label = {
+                "awareness": "Awareness",
+                "consideration": "Consideration",
+                "decision": "Decision",
+            }.get(jh["id"], jh["id"])
+            all_issues.append({
+                "priority": 2,
+                "type": "journey",
+                "message": f"Mehr {phase_label}-Phase CTAs ({jh['actual_pct']}% statt {jh['target_pct']}%)",
+                "icon": "arrow-trending-up",
+                "score": jh["score"],
+            })
+
+    # Pillar imbalance
+    for ph in pillar_health:
+        if ph["score"] < 50:
+            all_issues.append({
+                "priority": 3,
+                "type": "pillar",
+                "message": f"Mehr {ph['name']} {ph['emoji']} ({ph['actual_pct']}% statt {ph['target_pct']}%)",
+                "icon": "squares-2x2",
+                "score": ph["score"],
+            })
+
+    # Posting frequency
+    if posting_frequency["score"] < 80:
+        all_issues.append({
+            "priority": 1,
+            "type": "frequency",
+            "message": f"Posting-Frequenz erhoehen ({posting_frequency['actual']}/{posting_frequency['target_optimal']} diese Woche)",
+            "icon": "calendar",
+            "score": posting_frequency["score"],
+        })
+
+    # Sort by priority then score
+    all_issues.sort(key=lambda x: (x["priority"], x["score"]))
+    recommendations = all_issues[:3]
+
+    # ════════════════════════════════════════════════════
+    # 9. OVERALL HEALTH SCORE (weighted)
+    # ════════════════════════════════════════════════════
+    # Weights: pillar 25%, journey 20%, country 15%, platform 15%, video 15%, frequency 10%
+    avg_pillar = sum(ph["score"] for ph in pillar_health) / len(pillar_health) if pillar_health else 50
+    avg_journey = sum(jh["score"] for jh in journey_health) / len(journey_health) if journey_health else 50
+    avg_country = sum(ch["score"] for ch in country_health) / len(country_health) if country_health else 50
+    avg_platform = sum(pl["score"] for pl in platform_health) / len(platform_health) if platform_health else 50
+
+    overall_score = round(
+        avg_pillar * 0.25 +
+        avg_journey * 0.20 +
+        avg_country * 0.15 +
+        avg_platform * 0.15 +
+        video_ratio["score"] * 0.15 +
+        posting_frequency["score"] * 0.10
+    )
+    overall_status = "green" if overall_score >= 80 else ("yellow" if overall_score >= 50 else "red")
+
+    return {
+        "overall_score": overall_score,
+        "overall_status": overall_status,
+        "total_posts_30d": total_posts,
+        "pillar_health": pillar_health,
+        "journey_health": journey_health,
+        "country_health": country_health,
+        "platform_health": platform_health,
+        "video_ratio": video_ratio,
+        "posting_frequency": posting_frequency,
+        "hook_usage": {
+            "hooks": hook_usage,
+            "used_count": hooks_used_count,
+            "total_count": hooks_total,
+        },
+        "recommendations": recommendations,
+    }

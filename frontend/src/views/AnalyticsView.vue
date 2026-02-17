@@ -23,6 +23,7 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
 import ReportGenerator from '@/components/analytics/ReportGenerator.vue'
+import StrategyHealthPanel from '@/components/analytics/StrategyHealthPanel.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -41,6 +42,7 @@ ChartJS.register(
 const loading = ref(true)
 const error = ref(null)
 const tourRef = ref(null)
+const strategyHealthRef = ref(null)
 
 // Overview stats
 const overview = ref({
@@ -715,6 +717,22 @@ onMounted(() => {
 
     <!-- Analytics content -->
     <div v-else data-tour="analytics-charts" class="space-y-6">
+      <!-- Strategy Health Panel (IST vs. SOLL) — prominent first element -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="strategy-health-section" data-tour="analytics-strategy">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-[#4C8BC2]/10 rounded-lg flex items-center justify-center">
+              <AppIcon name="presentation-chart-line" class="w-5 h-5 text-[#4C8BC2]" />
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Strategie-Check</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">IST vs. SOLL — bist du auf Kurs?</p>
+            </div>
+          </div>
+        </template>
+        <StrategyHealthPanel ref="strategyHealthRef" />
+      </BaseCard>
+
       <!-- Overview stats cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="overview-stats">
         <!-- Total posts -->
