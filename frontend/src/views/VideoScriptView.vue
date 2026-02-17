@@ -10,6 +10,7 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import AudioSuggestionPanel from '@/components/video/AudioSuggestionPanel.vue'
+import VoiceoverEditor from '@/components/video/VoiceoverEditor.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -33,6 +34,7 @@ const timingTemplates = ref({})
 // Step 3: Hook Formula
 const hookFormulas = ref([])
 const selectedHookId = ref('')
+const hookPerformanceMap = ref({}) // hook_id -> { usage_count, avg_engagement_rate }
 
 // Step 4: Generated script
 const generatedScript = ref(null)
@@ -48,6 +50,23 @@ const editForm = ref({})
 
 // Audio sidebar
 const showAudioSidebar = ref(false)
+
+// Voiceover tab (Step 4)
+const scriptTab = ref('scenes')  // 'scenes' | 'voiceover'
+const voiceoverEditorRef = ref(null)
+
+/** Generate voiceover for current script context */
+async function generateVoiceover() {
+  if (!voiceoverEditorRef.value) return
+  await voiceoverEditorRef.value.generate({
+    topic: topic.value,
+    duration_seconds: duration.value,
+    platform: platform.value,
+    tone: tone.value,
+    hook_formula_id: selectedHookId.value,
+    country: country.value,
+  })
+}
 
 /** Computed platform filter for AudioSuggestionPanel */
 const audioPlatformFilter = computed(() => {
@@ -173,10 +192,23 @@ async function loadTimingTemplates() {
 async function loadHookFormulas() {
   try {
     const platMap = { reels: 'instagram_reels', tiktok: 'tiktok', story: 'instagram_stories' }
-    const { data } = await api.get('/api/video-scripts/hook-formulas', {
-      params: { platform: platMap[platform.value] || 'instagram_reels' },
-    })
-    hookFormulas.value = data.formulas || []
+    const [formulaRes, perfRes] = await Promise.allSettled([
+      api.get('/api/video-scripts/hook-formulas', {
+        params: { platform: platMap[platform.value] || 'instagram_reels' },
+      }),
+      api.get('/api/analytics/hook-performance'),
+    ])
+    if (formulaRes.status === 'fulfilled') {
+      hookFormulas.value = formulaRes.value.data.formulas || []
+    }
+    if (perfRes.status === 'fulfilled') {
+      const perfData = perfRes.value.data
+      const map = {}
+      for (const h of (perfData.hook_stats || [])) {
+        map[h.id] = { usage_count: h.usage_count, avg_engagement_rate: h.avg_engagement_rate }
+      }
+      hookPerformanceMap.value = map
+    }
   } catch (e) {
     console.error('Failed to load hook formulas:', e)
   }
@@ -300,6 +332,7 @@ function resetWizard() {
   generatedScript.value = null
   topic.value = ''
   selectedHookId.value = ''
+  scriptTab.value = 'scenes'
 }
 
 function nextStep() {
@@ -532,6 +565,15 @@ function formatDuration(seconds) {
               <p v-if="hook.examples && hook.examples.length" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 italic">
                 z.B. "{{ hook.examples[0] }}"
               </p>
+              <!-- Hook performance stats badge -->
+              <p v-if="hookPerformanceMap[hook.id]" class="text-xs mt-1 flex items-center gap-2" data-testid="hook-stats-badge">
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                  {{ hookPerformanceMap[hook.id].usage_count }}x genutzt
+                </span>
+                <span v-if="hookPerformanceMap[hook.id].avg_engagement_rate" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+                  {{ hookPerformanceMap[hook.id].avg_engagement_rate }}% Engagement
+                </span>
+              </p>
             </div>
             <div class="ml-4 flex flex-col items-center">
               <div class="flex items-center gap-0.5">
@@ -610,7 +652,7 @@ function formatDuration(seconds) {
         </div>
 
         <!-- Timeline visualization -->
-        <div class="relative">
+        <div v-if="scriptTab === 'scenes'" class="relative">
           <div class="flex h-8 rounded-lg overflow-hidden">
             <div
               v-for="(scene, i) in generatedScript.scenes"
@@ -632,10 +674,57 @@ function formatDuration(seconds) {
             <span>{{ formatDuration(generatedScript.duration_seconds) }}</span>
           </div>
         </div>
+
+        <!-- Tab Switcher: Szenen / Voiceover -->
+        <div class="flex items-center gap-1 border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <button
+            @click="scriptTab = 'scenes'"
+            :class="[
+              'px-4 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1.5',
+              scriptTab === 'scenes'
+                ? 'bg-blue-600 text-white font-medium'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+            ]"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            </svg>
+            Szenen
+          </button>
+          <button
+            @click="scriptTab = 'voiceover'"
+            :class="[
+              'px-4 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1.5',
+              scriptTab === 'voiceover'
+                ? 'bg-blue-600 text-white font-medium'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+            ]"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            Voiceover
+          </button>
+        </div>
       </div>
 
-      <!-- Scene Cards -->
-      <div class="space-y-4">
+      <!-- Voiceover Tab Content -->
+      <div v-if="scriptTab === 'voiceover'">
+        <VoiceoverEditor
+          ref="voiceoverEditorRef"
+          :initialTopic="topic"
+          :initialPlatform="platform"
+          :initialDuration="duration"
+          :initialTone="tone"
+          :initialHookFormulaId="selectedHookId"
+          :initialCountry="country"
+          :showForm="true"
+          :compact="false"
+        />
+      </div>
+
+      <!-- Scene Cards (only in Szenen tab) -->
+      <div v-if="scriptTab === 'scenes'" class="space-y-4">
         <div
           v-for="(scene, i) in generatedScript.scenes"
           :key="i"
@@ -729,8 +818,8 @@ function formatDuration(seconds) {
         </div>
       </div>
 
-      <!-- Visual Notes -->
-      <div v-if="generatedScript.visual_notes" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+      <!-- Visual Notes (scenes tab only) -->
+      <div v-if="scriptTab === 'scenes' && generatedScript.visual_notes" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
         <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Visuelle Hinweise</h3>
         <p class="text-sm text-blue-700 dark:text-blue-400">{{ generatedScript.visual_notes }}</p>
       </div>

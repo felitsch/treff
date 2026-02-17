@@ -6596,3 +6596,404 @@ async def repurpose_video(
         "message": f"{len(derivatives)} Video-Derivat(e) erfolgreich erstellt"
             + (" und im Kalender verteilt" if schedule_across_week else ""),
     }
+
+
+# ──────────────────────────────────────────────
+# Voiceover-Text-Generator mit Hook-Formeln (V-07)
+# ──────────────────────────────────────────────
+
+# Word-per-minute constants for voiceover timing
+_WORDS_PER_MINUTE = 150  # average speaking speed in German
+
+# Duration -> target word count
+_DURATION_WORDS = {
+    15: 38,   # ~150 wpm * 15/60
+    30: 75,
+    45: 113,
+    60: 150,
+    90: 225,
+}
+
+_COUNTRY_NAMES_VO = {
+    "usa": "USA", "canada": "Kanada", "australia": "Australien",
+    "newzealand": "Neuseeland", "ireland": "Irland",
+}
+
+_VOICEOVER_TONES = {
+    "jugendlich": "jugendlich, locker, ansprechend fuer 14-18-Jaehrige, aber serioes genug fuer Eltern",
+    "emotional": "emotional, warmherzig, Gaensehaut-Momente, persoenlich",
+    "witzig": "humorvoll, selbstironisch, Augenzwinkern, leicht frech",
+    "motivierend": "motivierend, empowernd, 'Du kannst das!'-Energie",
+    "informativ": "sachlich aber nicht langweilig, Fakten unterhaltsam verpackt",
+    "storytelling": "erzaehlerisch, wie eine Mini-Geschichte, Spannung aufbauen",
+    "provokant": "provokant, Erwartungen brechen, kontraintuitiv",
+}
+
+
+def _generate_voiceover_rule_based(
+    topic: str,
+    duration_seconds: int,
+    hook_formula: Optional[dict],
+    platform: str,
+    tone: str,
+    country: Optional[str],
+) -> list[dict]:
+    """Generate 3 voiceover text variants using rule-based templates.
+
+    Each variant has timing-marked segments with [MM:SS] prefixes,
+    strategic pauses [...] and [Beat], and respects word count limits.
+    """
+    import random
+
+    target_words = _DURATION_WORDS.get(duration_seconds, int(duration_seconds * _WORDS_PER_MINUTE / 60))
+    country_name = _COUNTRY_NAMES_VO.get(country, "das Gastland")
+
+    # Timing breakpoints based on duration
+    if duration_seconds <= 15:
+        segments = [
+            {"time": "0:00", "label": "Hook", "pct": 0.25},
+            {"time": f"0:{int(duration_seconds*0.25):02d}", "label": "Hauptteil", "pct": 0.50},
+            {"time": f"0:{int(duration_seconds*0.75):02d}", "label": "CTA", "pct": 0.25},
+        ]
+    elif duration_seconds <= 30:
+        segments = [
+            {"time": "0:00", "label": "Hook", "pct": 0.20},
+            {"time": f"0:{int(duration_seconds*0.20):02d}", "label": "Ueberleitung", "pct": 0.15},
+            {"time": f"0:{int(duration_seconds*0.35):02d}", "label": "Hauptteil", "pct": 0.40},
+            {"time": f"0:{int(duration_seconds*0.75):02d}", "label": "CTA", "pct": 0.25},
+        ]
+    else:
+        segments = [
+            {"time": "0:00", "label": "Hook", "pct": 0.12},
+            {"time": f"0:{int(duration_seconds*0.12):02d}", "label": "Ueberleitung", "pct": 0.10},
+            {"time": f"0:{int(duration_seconds*0.22):02d}", "label": "Hauptteil 1", "pct": 0.25},
+            {"time": f"0:{int(duration_seconds*0.47):02d}", "label": "Hauptteil 2", "pct": 0.20},
+            {"time": f"0:{int(duration_seconds*0.67):02d}", "label": "Beweis/Beispiel", "pct": 0.15},
+            {"time": f"0:{int(duration_seconds*0.82):02d}", "label": "CTA", "pct": 0.18},
+        ]
+
+    # Hook openers per formula
+    hook_openers = {
+        "knowledge_gap": [
+            f"Wusstest du, dass Austauschschueler in {country_name} etwas erleben, was kein Schulunterricht ersetzen kann?",
+            f"Die meisten denken, ein Auslandsjahr ist nur Urlaub. [Beat] Falsch gedacht.",
+            f"Was waere, wenn ich dir sage, dass {country_name} dein Leben komplett veraendern kann?",
+        ],
+        "pov": [
+            f"POV: Du bist gerade in {country_name} angekommen und alles ist anders als du dachtest...",
+            f"POV: Dein erster Tag an einer Highschool in {country_name}. Du verstehst nur die Haelfte.",
+            f"POV: Du oeffnest die Tuer und deine Gastfamilie steht da mit einem Willkommens-Schild...",
+        ],
+        "hot_take": [
+            f"Unpopular Opinion: Ein Highschool-Jahr bringt dir mehr als jedes Studium. [Beat] Und hier ist warum.",
+            f"Heisse These: {country_name} ist das beste Land fuer ein Austauschjahr. Aendere meinen Verstand.",
+            f"Kontrovers, aber wahr: Die meisten bereuen es NICHT gegangen zu sein...",
+        ],
+        "storytelling": [
+            f"Vor einem Jahr stand ich genau hier... in Deutschland... und wusste nicht, dass {country_name} alles aendern wuerde.",
+            f"Es war mein dritter Tag in {country_name}, als etwas Unerwartetes passierte...",
+            f"Die Geschichte, die ich euch jetzt erzaehle, hat mein Leben veraendert. [Beat] Wirklich.",
+        ],
+        "listicle": [
+            f"3 Dinge die ich in {country_name} gelernt habe, die mir keiner vorher gesagt hat.",
+            f"Die 5 groessten Ueberraschungen meines Auslandsjahres in {country_name}.",
+            f"Nummer 1 wird euch ueberraschen: Die Top 3 Gruende fuer ein Jahr in {country_name}.",
+        ],
+        "challenge": [
+            f"Ich challenge dich: Bewirb dich JETZT fuer ein Auslandsjahr. [Beat] Hier ist warum.",
+            f"Kannst du dir vorstellen, ein ganzes Jahr in {country_name} zu leben? Challenge accepted.",
+            f"Mach den Test: Bist du bereit fuer das Abenteuer deines Lebens in {country_name}?",
+        ],
+    }
+
+    # Pick hook formula texts
+    formula_id = hook_formula.get("id", "knowledge_gap") if hook_formula else "knowledge_gap"
+    available_hooks = hook_openers.get(formula_id, hook_openers["knowledge_gap"])
+
+    # Ueberleitung templates
+    ueberleitungen = [
+        "Und das Beste daran ist...",
+        "Lass mich euch erzaehlen...",
+        f"Also, {topic}... [Beat]",
+        "Klingt verrueckt, oder? Aber hoert zu...",
+        "Und das ist erst der Anfang...",
+    ]
+
+    # Main content templates
+    hauptteil_parts = [
+        f"Bei TREFF Sprachreisen erlebst du nicht einfach einen Urlaub. Du lebst in einer echten Familie, gehst auf eine echte Highschool, und wirst Teil einer neuen Kultur.",
+        f"Stell dir vor: Jeden Morgen gehst du in eine Highschool in {country_name}. Mittags isst du in der Cafeteria mit deinen neuen Freunden. Abends kochst du mit deiner Gastfamilie.",
+        f"Das Schulsystem in {country_name} ist komplett anders als in Deutschland. Du waehlst deine Faecher selbst, machst Sport nach der Schule, und erlebst Dinge, die es bei uns einfach nicht gibt.",
+        f"Ueber 200 Schueler gehen jedes Jahr mit TREFF ins Ausland. Seit 1984. ... Das sind Tausende von Geschichten, Freundschaften und unvergesslichen Momenten.",
+        f"Dein Englisch wird in {country_name} so gut, wie es kein Schulunterricht je schaffen koennte. [Beat] Versprochen.",
+    ]
+
+    # CTA templates
+    ctas = [
+        "Folgt TREFF Sprachreisen fuer mehr! Link in Bio fuer alle Infos.",
+        "Willst du auch nach {c}? Schreib uns eine DM! [Beat] Wir helfen dir.",
+        "Speicher dieses Video und schick es deinen Eltern. Die muessen das sehen.",
+        "Tagge jemanden, der das UNBEDINGT hoeren muss!",
+        "Link in Bio — da findest du alles, was du wissen musst. Trau dich!",
+    ]
+
+    variants = []
+    for v_idx in range(3):
+        hook_text = available_hooks[v_idx % len(available_hooks)]
+        ueberleitung = random.choice(ueberleitungen)
+        main_parts = random.sample(hauptteil_parts, min(2, len(hauptteil_parts)))
+        cta_text = ctas[v_idx % len(ctas)].replace("{c}", country_name)
+
+        # Build timed sections
+        sections = []
+        for i, seg in enumerate(segments):
+            seg_words = max(5, int(target_words * seg["pct"]))
+
+            if seg["label"] == "Hook":
+                text = hook_text
+            elif seg["label"] == "Ueberleitung":
+                text = ueberleitung
+            elif seg["label"].startswith("Hauptteil"):
+                part_idx = 0 if "1" in seg["label"] or seg["label"] == "Hauptteil" else 1
+                text = main_parts[min(part_idx, len(main_parts) - 1)]
+            elif seg["label"] == "Beweis/Beispiel":
+                text = random.choice([
+                    f"Das sagen echte TREFF-Schueler. Ueber 40 Jahre Erfahrung sprechen fuer sich.",
+                    f"Meine Freundin war letztes Jahr in {country_name} und sagt: 'Es war die beste Entscheidung meines Lebens.'",
+                ])
+            elif seg["label"] == "CTA":
+                text = cta_text
+            else:
+                text = f"{topic}..."
+
+            sections.append({
+                "time_marker": seg["time"],
+                "label": seg["label"],
+                "text": text,
+                "target_words": seg_words,
+                "actual_words": len(text.split()),
+            })
+
+        # Build full voiceover text
+        full_text = "\n\n".join(
+            f"[{s['time_marker']}] {s['text']}"
+            for s in sections
+        )
+
+        total_words = sum(s["actual_words"] for s in sections)
+        estimated_duration = round(total_words / _WORDS_PER_MINUTE * 60, 1)
+
+        formula_name = hook_formula.get("name", "Knowledge Gap") if hook_formula else "Knowledge Gap"
+
+        variants.append({
+            "variant_number": v_idx + 1,
+            "hook_formula": formula_name,
+            "tone": tone,
+            "sections": sections,
+            "full_text": full_text,
+            "total_words": total_words,
+            "target_words": target_words,
+            "estimated_duration_seconds": estimated_duration,
+            "target_duration_seconds": duration_seconds,
+        })
+
+    return variants
+
+
+@router.post("/generate-voiceover")
+async def generate_voiceover(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate voiceover text with timing markers and hook formulas.
+
+    Returns 3 variants with different hooks/tones for comparison.
+
+    Body:
+    - topic (str, required): Video topic
+    - duration_seconds (int): 15, 30, 60, or 90 (default: 30)
+    - hook_formula_id (str, optional): Hook formula ID from social-content.json
+    - platform (str): reels, tiktok, story (default: reels)
+    - tone (str): Tone of voice (default: jugendlich)
+    - country (str, optional): Country code
+    """
+    topic = request.get("topic", "")
+    if not topic:
+        raise HTTPException(status_code=400, detail="topic is required")
+
+    duration_seconds = request.get("duration_seconds", 30)
+    hook_formula_id = request.get("hook_formula_id")
+    platform = request.get("platform", "reels")
+    tone = request.get("tone", "jugendlich")
+    country = request.get("country")
+
+    # Validate duration
+    valid_durations = [15, 30, 45, 60, 90]
+    if duration_seconds not in valid_durations:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid duration_seconds: {duration_seconds}. Must be one of {valid_durations}",
+        )
+
+    # Load strategy for hook formulas
+    strategy = StrategyLoader.instance()
+
+    # Resolve hook formula
+    hook_formula = None
+    if hook_formula_id:
+        formulas = strategy.get_hook_formulas()
+        for f in formulas:
+            if f.get("id") == hook_formula_id:
+                hook_formula = f
+                break
+    if not hook_formula:
+        platform_map = {"reels": "instagram_reels", "tiktok": "tiktok", "story": "instagram_stories"}
+        hook_formula = strategy.get_weighted_hook(platform_map.get(platform, "instagram_reels"))
+
+    # Pick country if not specified
+    if not country:
+        country = strategy.pick_weighted_country()
+
+    # Try Gemini first, fall back to rule-based
+    variants = []
+    source = "rule_based"
+
+    api_key = None
+    try:
+        result = await db.execute(
+            select(Setting).where(Setting.user_id == user_id, Setting.key == "gemini_api_key")
+        )
+        setting = result.scalar_one_or_none()
+        api_key = setting.value if setting else os.environ.get("GEMINI_API_KEY", "")
+    except Exception:
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+
+    if api_key:
+        try:
+            from google import genai
+            from google.genai import types
+
+            target_words = _DURATION_WORDS.get(duration_seconds, int(duration_seconds * _WORDS_PER_MINUTE / 60))
+            country_name = _COUNTRY_NAMES_VO.get(country, "das Gastland")
+            tone_desc = _VOICEOVER_TONES.get(tone, _VOICEOVER_TONES["jugendlich"])
+            formula_name = hook_formula.get("name", "") if hook_formula else ""
+            formula_template = hook_formula.get("template", "") if hook_formula else ""
+
+            prompt = f"""Du bist ein Voiceover-Texter fuer TREFF Sprachreisen Social Media.
+
+AUFGABE: Erstelle 3 verschiedene Voiceover-Texte fuer ein {duration_seconds}-Sekunden-Video.
+
+THEMA: {topic}
+PLATTFORM: {platform}
+LAND: {country_name}
+DAUER: {duration_seconds} Sekunden
+ZIEL-WORTANZAHL: ~{target_words} Woerter (bei ~150 Woertern/Minute)
+TONALITAET: {tone_desc}
+HOOK-FORMEL: {formula_name} - "{formula_template}"
+
+REGELN:
+1. Jeder Text MUSS mit Timing-Markierungen versehen sein: [0:00] Text [0:05] Text...
+2. Verwende strategische Pausen: "..." fuer dramatische Pause, "[Beat]" fuer Rhythmus-Pause
+3. Texte muessen SPRECHBAR sein — kurze Saetze, natuerlicher Rhythmus
+4. Die erste Zeile MUSS der Hook-Formel folgen
+5. Die letzte Zeile ist IMMER ein Call-to-Action
+6. Alle Texte auf Deutsch, jugendlich aber serioes
+7. Zielgruppe: 14-18 jaehrige deutsche Schueler (Eltern lesen mit!)
+8. Jede Variante nutzt eine ANDERE Hook-Variante aber die gleiche Formel
+
+Antworte NUR im JSON-Format:
+{{
+  "variants": [
+    {{
+      "variant_number": 1,
+      "hook_formula": "{formula_name}",
+      "tone": "{tone}",
+      "sections": [
+        {{"time_marker": "0:00", "label": "Hook", "text": "Der Hook-Text"}},
+        {{"time_marker": "0:05", "label": "Hauptteil", "text": "..."}},
+        {{"time_marker": "0:25", "label": "CTA", "text": "..."}}
+      ],
+      "full_text": "[0:00] Hook... [0:05] Hauptteil... [0:25] CTA..."
+    }}
+  ]
+}}"""
+
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.9,
+                    max_output_tokens=4096,
+                ),
+            )
+            response_text = response.text.strip()
+            if response_text.startswith("```"):
+                lines = response_text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].strip() == "```":
+                    lines = lines[:-1]
+                response_text = "\n".join(lines)
+
+            data = json.loads(response_text)
+            raw_variants = data.get("variants", [])
+
+            for v in raw_variants:
+                sections = v.get("sections", [])
+                total_words = sum(len(s.get("text", "").split()) for s in sections)
+                full_text = v.get("full_text", "")
+                if not full_text:
+                    full_text = "\n\n".join(f"[{s['time_marker']}] {s['text']}" for s in sections)
+
+                variants.append({
+                    "variant_number": v.get("variant_number", 0),
+                    "hook_formula": v.get("hook_formula", formula_name),
+                    "tone": v.get("tone", tone),
+                    "sections": [
+                        {
+                            "time_marker": s.get("time_marker", "0:00"),
+                            "label": s.get("label", ""),
+                            "text": s.get("text", ""),
+                            "actual_words": len(s.get("text", "").split()),
+                        }
+                        for s in sections
+                    ],
+                    "full_text": full_text,
+                    "total_words": total_words,
+                    "target_words": target_words,
+                    "estimated_duration_seconds": round(total_words / _WORDS_PER_MINUTE * 60, 1),
+                    "target_duration_seconds": duration_seconds,
+                })
+            source = "gemini"
+            logger.info("Gemini voiceover generation succeeded for topic=%s", topic)
+
+        except Exception as e:
+            logger.warning("Gemini voiceover generation failed: %s", e)
+            variants = []
+
+    # Fall back to rule-based if no Gemini results
+    if not variants:
+        variants = _generate_voiceover_rule_based(
+            topic=topic,
+            duration_seconds=duration_seconds,
+            hook_formula=hook_formula,
+            platform=platform,
+            tone=tone,
+            country=country,
+        )
+
+    return {
+        "topic": topic,
+        "duration_seconds": duration_seconds,
+        "platform": platform,
+        "tone": tone,
+        "country": country,
+        "hook_formula": hook_formula.get("name", "") if hook_formula else "",
+        "variants": variants,
+        "variant_count": len(variants),
+        "source": source,
+        "words_per_minute": _WORDS_PER_MINUTE,
+    }
