@@ -41,6 +41,7 @@ class Post(Base):
     recurring_rule_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("recurring_post_rules.id", ondelete="SET NULL"), nullable=True)  # Links to recurrence rule
     is_recurring_instance: Mapped[Optional[bool]] = mapped_column(Integer, nullable=True, default=None)  # True if auto-generated from rule
     pillar_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Content pillar ID (e.g. 'erfahrungsberichte', 'laender_spotlight')
+    hook_formula: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # Hook formula ID from hookFormulas.js (e.g. 'knowledge_gap', 'myth_buster', 'pov')
     # Performance metrics (manually entered social media stats)
     perf_likes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     perf_comments: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

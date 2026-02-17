@@ -24,6 +24,7 @@ import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
 import ReportGenerator from '@/components/analytics/ReportGenerator.vue'
 import StrategyHealthPanel from '@/components/analytics/StrategyHealthPanel.vue'
+import HookPerformanceChart from '@/components/analytics/HookPerformanceChart.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -1031,6 +1032,22 @@ onMounted(() => {
       <!-- Top Posts Ranking -->
       <BaseCard padding="lg" :header-divider="false" data-testid="top-posts-section">
         <TopPostsRanking />
+      </BaseCard>
+
+      <!-- Hook Performance Analysis -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="hook-performance-section">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <AppIcon name="bolt" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Hook-Analyse</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Welche Hook-Formeln funktionieren am besten?</p>
+            </div>
+          </div>
+        </template>
+        <HookPerformanceChart />
       </BaseCard>
 
       <!-- Report Generator -->

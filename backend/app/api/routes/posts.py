@@ -57,6 +57,7 @@ def post_to_dict(post: Post) -> dict:
         "recurring_rule_id": post.recurring_rule_id,
         "is_recurring_instance": bool(post.is_recurring_instance) if post.is_recurring_instance is not None else None,
         "pillar_id": getattr(post, "pillar_id", None),
+        "hook_formula": getattr(post, "hook_formula", None),
         "scheduled_date": post.scheduled_date.isoformat() if post.scheduled_date else None,
         "scheduled_time": post.scheduled_time,
         "exported_at": post.exported_at.isoformat() if post.exported_at else None,

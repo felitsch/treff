@@ -176,6 +176,12 @@ async def lifespan(app: FastAPI):
             logger.info("Added pillar_id column to posts table")
         except Exception:
             pass  # Column already exists
+        # Hook formula tracking column on posts
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN hook_formula VARCHAR(100)"))
+            logger.info("Added hook_formula column to posts table")
+        except Exception:
+            pass  # Column already exists
         for col_sql in [
             "ALTER TABLE assets ADD COLUMN thumbnail_small VARCHAR",
             "ALTER TABLE assets ADD COLUMN thumbnail_medium VARCHAR",

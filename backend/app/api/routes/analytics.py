@@ -2060,3 +2060,154 @@ async def get_strategy_health(
         },
         "recommendations": recommendations,
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /api/analytics/hook-performance
+# Hook Performance Tracking — aggregates posts per hook formula with engagement
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/hook-performance")
+async def get_hook_performance(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregate posts per hook formula with usage frequency and average engagement.
+
+    Returns:
+        hook_stats: Per-formula stats (usage count, avg engagement, last used)
+        unused_hooks: Formulas never used — recommendation to try
+        top_hooks_this_week: Top 3 most-used hook formulas this week
+        total_posts_with_hook: Count of posts that have a hook_formula set
+    """
+    import json as _json
+    from pathlib import Path
+
+    now = datetime.utcnow()
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # ── Load hook formulas from social-content.json ──
+    project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+    social_content_path = project_root / "frontend" / "src" / "config" / "social-content.json"
+
+    social_content = {}
+    try:
+        with open(social_content_path, "r", encoding="utf-8") as f:
+            social_content = _json.load(f)
+    except (FileNotFoundError, _json.JSONDecodeError):
+        pass
+
+    hook_formulas_config = social_content.get("hook_formulas", {}).get("formulas", [])
+    all_hook_ids = [h["id"] for h in hook_formulas_config]
+    hook_meta = {h["id"]: h for h in hook_formulas_config}
+
+    # ── Fetch all posts with hook_formula set ──
+    result = await db.execute(
+        select(Post).where(
+            Post.user_id == user_id,
+        )
+    )
+    all_posts = result.scalars().all()
+
+    # Count posts per hook_formula
+    hook_counts = {}  # hook_id -> list of posts
+    total_with_hook = 0
+    for p in all_posts:
+        hook = getattr(p, "hook_formula", None)
+        if hook:
+            total_with_hook += 1
+            if hook not in hook_counts:
+                hook_counts[hook] = []
+            hook_counts[hook].append(p)
+
+    # ── Build per-formula stats ──
+    hook_stats = []
+    for hook_config in hook_formulas_config:
+        hook_id = hook_config["id"]
+        posts_using = hook_counts.get(hook_id, [])
+        usage_count = len(posts_using)
+
+        # Calculate average engagement for posts using this hook
+        engagement_rates = []
+        total_likes = 0
+        total_comments = 0
+        total_reach = 0
+        for p in posts_using:
+            likes = getattr(p, "perf_likes", None) or 0
+            comments = getattr(p, "perf_comments", None) or 0
+            shares = getattr(p, "perf_shares", None) or 0
+            reach = getattr(p, "perf_reach", None) or 0
+            total_likes += likes
+            total_comments += comments
+            total_reach += reach
+            if reach > 0:
+                eng_rate = round(((likes + comments + shares) / reach) * 100, 2)
+                engagement_rates.append(eng_rate)
+
+        avg_engagement = round(sum(engagement_rates) / len(engagement_rates), 2) if engagement_rates else None
+        avg_likes = round(total_likes / usage_count) if usage_count > 0 else 0
+        avg_comments = round(total_comments / usage_count) if usage_count > 0 else 0
+
+        # Last used date
+        last_used = None
+        if posts_using:
+            latest = max(posts_using, key=lambda p: p.created_at)
+            last_used = latest.created_at.isoformat() if latest.created_at else None
+
+        hook_stats.append({
+            "id": hook_id,
+            "name": hook_config.get("name", hook_id),
+            "category": hook_config.get("category", ""),
+            "strategy_effectiveness": hook_config.get("effectiveness", 5),
+            "usage_count": usage_count,
+            "avg_engagement_rate": avg_engagement,
+            "avg_likes": avg_likes,
+            "avg_comments": avg_comments,
+            "total_reach": total_reach,
+            "last_used": last_used,
+            "tip": hook_config.get("tip", ""),
+        })
+
+    # Sort by usage count descending
+    hook_stats.sort(key=lambda x: x["usage_count"], reverse=True)
+
+    # ── Unused hooks (never used) ──
+    unused_hooks = [
+        {
+            "id": h["id"],
+            "name": h.get("name", h["id"]),
+            "effectiveness": h.get("effectiveness", 5),
+            "tip": h.get("tip", ""),
+            "category": h.get("category", ""),
+        }
+        for h in hook_formulas_config
+        if h["id"] not in hook_counts
+    ]
+
+    # ── Top 3 hooks this week ──
+    week_hook_counts = {}
+    for p in all_posts:
+        hook = getattr(p, "hook_formula", None)
+        if hook and p.created_at and p.created_at >= week_start:
+            week_hook_counts[hook] = week_hook_counts.get(hook, 0) + 1
+
+    top_hooks_week = sorted(week_hook_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_hooks_this_week = [
+        {
+            "id": hook_id,
+            "name": hook_meta.get(hook_id, {}).get("name", hook_id),
+            "count": count,
+        }
+        for hook_id, count in top_hooks_week
+    ]
+
+    return {
+        "hook_stats": hook_stats,
+        "unused_hooks": unused_hooks,
+        "top_hooks_this_week": top_hooks_this_week,
+        "total_posts": len(all_posts),
+        "total_posts_with_hook": total_with_hook,
+        "hook_coverage_pct": round((total_with_hook / len(all_posts)) * 100, 1) if all_posts else 0,
+    }
