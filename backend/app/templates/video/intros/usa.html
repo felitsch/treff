@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>TREFF USA Intro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #002868 0%, #1A1A2E 50%, #BF0A30 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .stars-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(2px 2px at 10% 15%, rgba(255,255,255,0.6) 50%, transparent 100%),
+                  radial-gradient(2px 2px at 25% 35%, rgba(255,255,255,0.5) 50%, transparent 100%),
+                  radial-gradient(3px 3px at 50% 10%, rgba(255,255,255,0.7) 50%, transparent 100%),
+                  radial-gradient(2px 2px at 75% 25%, rgba(255,255,255,0.4) 50%, transparent 100%),
+                  radial-gradient(2px 2px at 90% 45%, rgba(255,255,255,0.6) 50%, transparent 100%),
+                  radial-gradient(3px 3px at 15% 65%, rgba(255,255,255,0.5) 50%, transparent 100%),
+                  radial-gradient(2px 2px at 40% 80%, rgba(255,255,255,0.4) 50%, transparent 100%),
+                  radial-gradient(2px 2px at 85% 75%, rgba(255,255,255,0.6) 50%, transparent 100%);
+      animation: twinkle 2s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    .stripes {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 300px;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(191,10,48,0.4) 0px,
+        rgba(191,10,48,0.4) 20px,
+        transparent 20px,
+        transparent 40px
+      );
+      animation: slide-up 1s ease-out forwards;
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    @keyframes slide-up {
+      to { opacity: 0.6; transform: translateY(0); }
+    }
+    .logo-container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      animation: fade-in 0.8s ease-out 0.3s forwards;
+      opacity: 0;
+    }
+    @keyframes fade-in {
+      to { opacity: 1; }
+    }
+    .treff-logo {
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+    }
+    .treff-logo .accent { color: #FDD000; }
+    .country-name {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      animation: scale-in 0.6s ease-out 0.6s forwards;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    @keyframes scale-in {
+      to { opacity: 1; transform: scale(1); }
+    }
+    .flag-emoji {
+      font-size: 80px;
+      margin-bottom: 30px;
+      animation: bounce-in 0.5s ease-out 0.9s forwards;
+      opacity: 0;
+    }
+    @keyframes bounce-in {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .tagline {
+      font-size: 28px;
+      font-weight: 400;
+      opacity: 0;
+      animation: fade-in 0.6s ease-out 1.2s forwards;
+      color: rgba(255,255,255,0.9);
+      margin-top: 24px;
+    }
+    .custom-text {
+      font-size: 24px;
+      margin-top: 16px;
+      opacity: 0;
+      animation: fade-in 0.5s ease-out 1.5s forwards;
+      color: #FDD000;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-overlay"></div>
+  <div class="stripes"></div>
+  <div class="logo-container">
+    <div class="flag-emoji">&#x1F1FA;&#x1F1F8;</div>
+    <div class="treff-logo">TREFF <span class="accent">&times;</span> USA</div>
+    <div class="country-name">&#9733; Your American Dream &#9733;</div>
+    <div class="tagline">{{custom_text}}</div>
+  </div>
+</body>
+</html>

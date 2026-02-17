@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>TREFF Irland Intro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(180deg, #87CEEB 0%, #169B62 35%, #0D6B3D 60%, #1A1A2E 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .rolling-hills {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 500px;
+      background: linear-gradient(180deg, transparent 0%, rgba(22,155,98,0.4) 40%, rgba(13,107,61,0.6) 100%);
+      clip-path: ellipse(120% 60% at 50% 100%);
+      animation: hills-rise 1s ease-out forwards;
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    @keyframes hills-rise { to { opacity: 1; transform: translateY(0); } }
+    .clovers {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+    }
+    .clover {
+      position: absolute;
+      font-size: 50px;
+      opacity: 0;
+      animation: clover-float 4s ease-in-out infinite;
+    }
+    .clover:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; font-size: 40px; }
+    .clover:nth-child(2) { top: 25%; right: 20%; animation-delay: 0.7s; font-size: 35px; }
+    .clover:nth-child(3) { top: 60%; left: 8%; animation-delay: 1.2s; }
+    .clover:nth-child(4) { top: 45%; right: 10%; animation-delay: 0.3s; font-size: 30px; }
+    .clover:nth-child(5) { top: 75%; left: 25%; animation-delay: 1.5s; font-size: 45px; }
+    .clover:nth-child(6) { top: 15%; left: 60%; animation-delay: 0.9s; font-size: 28px; }
+    @keyframes clover-float {
+      0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+      20% { opacity: 0.5; }
+      80% { opacity: 0.4; }
+      100% { opacity: 0; transform: translateY(-100px) rotate(180deg); }
+    }
+    .gold-accent {
+      position: absolute;
+      top: 150px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,165,0,0.4) 0%, transparent 70%);
+      animation: gold-pulse 2s ease-in-out infinite alternate;
+    }
+    @keyframes gold-pulse {
+      0% { transform: scale(1); opacity: 0.4; }
+      100% { transform: scale(1.3); opacity: 0.7; }
+    }
+    .logo-container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      animation: fade-in 0.8s ease-out 0.3s forwards;
+      opacity: 0;
+    }
+    @keyframes fade-in { to { opacity: 1; } }
+    .treff-logo {
+      font-size: 68px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
+    }
+    .treff-logo .accent { color: #FDD000; }
+    .country-name {
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      animation: scale-in 0.6s ease-out 0.6s forwards;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    @keyframes scale-in { to { opacity: 1; transform: scale(1); } }
+    .flag-emoji {
+      font-size: 80px;
+      margin-bottom: 30px;
+      animation: bounce-in 0.5s ease-out 0.9s forwards;
+      opacity: 0;
+    }
+    @keyframes bounce-in {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .tagline {
+      font-size: 28px;
+      font-weight: 400;
+      opacity: 0;
+      animation: fade-in 0.6s ease-out 1.2s forwards;
+      color: rgba(255,255,255,0.9);
+      margin-top: 24px;
+    }
+    .custom-text {
+      font-size: 24px;
+      margin-top: 16px;
+      opacity: 0;
+      animation: fade-in 0.5s ease-out 1.5s forwards;
+      color: #FDD000;
+    }
+  </style>
+</head>
+<body>
+  <div class="rolling-hills"></div>
+  <div class="gold-accent"></div>
+  <div class="clovers">
+    <div class="clover">&#9752;</div>
+    <div class="clover">&#9752;</div>
+    <div class="clover">&#9752;</div>
+    <div class="clover">&#9752;</div>
+    <div class="clover">&#9752;</div>
+    <div class="clover">&#9752;</div>
+  </div>
+  <div class="logo-container">
+    <div class="flag-emoji">&#x1F1EE;&#x1F1EA;</div>
+    <div class="treff-logo">TREFF <span class="accent">&times;</span> Irland</div>
+    <div class="country-name">&#9752; Cead Mile Failte &#9752;</div>
+    <div class="tagline">{{custom_text}}</div>
+  </div>
+</body>
+</html>

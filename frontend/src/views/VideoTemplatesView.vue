@@ -408,12 +408,12 @@ onMounted(() => {
 
             <!-- Header -->
             <div class="flex items-start gap-3 mb-3">
-              <!-- Color preview circle -->
+              <!-- Color preview with country-specific gradient -->
               <div
-                class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-                :style="{ background: `linear-gradient(135deg, ${tmpl.primary_color}, ${tmpl.secondary_color})` }"
+                class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-inner"
+                :style="{ background: tmpl.background_gradient || `linear-gradient(135deg, ${tmpl.primary_color}, ${tmpl.secondary_color})` }"
               >
-                {{ tmpl.template_type === 'intro' ? 'IN' : 'OUT' }}
+                {{ tmpl.country_flag || (tmpl.template_type === 'intro' ? 'IN' : 'OUT') }}
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ tmpl.name }}</h3>
@@ -427,7 +427,8 @@ onMounted(() => {
                     {{ tmpl.template_type === 'intro' ? 'Intro' : 'Outro' }}
                   </span>
                   <span class="text-xs text-gray-500">{{ tmpl.style_icon }} {{ tmpl.style_label }}</span>
-                  <span v-if="tmpl.country_flag" class="text-xs">{{ tmpl.country_flag }}</span>
+                  <span v-if="tmpl.country_flag" class="text-xs">{{ tmpl.country_flag }} {{ tmpl.country_label }}</span>
+                  <span v-if="tmpl.motif" class="text-xs text-amber-500 font-medium capitalize">{{ tmpl.motif.replace('_', ' ') }}</span>
                   <span class="text-xs text-gray-400">{{ tmpl.duration_seconds }}s</span>
                 </div>
               </div>

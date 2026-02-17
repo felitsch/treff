@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>TREFF Kanada Intro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(180deg, #FFFFFF 0%, #FF0000 40%, #8B0000 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .maple-leaves {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+    }
+    .leaf {
+      position: absolute;
+      font-size: 60px;
+      opacity: 0;
+      animation: fall 3s ease-in-out infinite;
+    }
+    .leaf:nth-child(1) { left: 10%; animation-delay: 0s; }
+    .leaf:nth-child(2) { left: 30%; animation-delay: 0.5s; font-size: 40px; }
+    .leaf:nth-child(3) { left: 50%; animation-delay: 1s; }
+    .leaf:nth-child(4) { left: 70%; animation-delay: 0.3s; font-size: 50px; }
+    .leaf:nth-child(5) { left: 85%; animation-delay: 0.8s; }
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(1920px) rotate(360deg); opacity: 0; }
+    }
+    .logo-container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      animation: fade-in 0.8s ease-out 0.3s forwards;
+      opacity: 0;
+    }
+    @keyframes fade-in { to { opacity: 1; } }
+    .treff-logo {
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
+    }
+    .treff-logo .accent { color: #FDD000; }
+    .country-name {
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      animation: scale-in 0.6s ease-out 0.6s forwards;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    @keyframes scale-in { to { opacity: 1; transform: scale(1); } }
+    .flag-emoji {
+      font-size: 80px;
+      margin-bottom: 30px;
+      animation: bounce-in 0.5s ease-out 0.9s forwards;
+      opacity: 0;
+    }
+    @keyframes bounce-in {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .tagline {
+      font-size: 28px;
+      font-weight: 400;
+      opacity: 0;
+      animation: fade-in 0.6s ease-out 1.2s forwards;
+      color: rgba(255,255,255,0.9);
+      margin-top: 24px;
+    }
+    .custom-text {
+      font-size: 24px;
+      margin-top: 16px;
+      opacity: 0;
+      animation: fade-in 0.5s ease-out 1.5s forwards;
+      color: #FDD000;
+    }
+  </style>
+</head>
+<body>
+  <div class="maple-leaves">
+    <div class="leaf">&#127809;</div>
+    <div class="leaf">&#127809;</div>
+    <div class="leaf">&#127809;</div>
+    <div class="leaf">&#127809;</div>
+    <div class="leaf">&#127809;</div>
+  </div>
+  <div class="logo-container">
+    <div class="flag-emoji">&#x1F1E8;&#x1F1E6;</div>
+    <div class="treff-logo">TREFF <span class="accent">&times;</span> Kanada</div>
+    <div class="country-name">O Canada!</div>
+    <div class="tagline">{{custom_text}}</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>TREFF Neuseeland Outro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(180deg, #87CEEB 0%, #228B22 50%, #006400 80%, #1A1A2E 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .fern-bg {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 400px;
+      background: linear-gradient(180deg, transparent, rgba(0,60,0,0.4));
+    }
+    .logo-container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      animation: fade-in 0.6s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes fade-in { to { opacity: 1; } }
+    .treff-logo {
+      font-size: 60px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      margin-bottom: 30px;
+    }
+    .treff-logo .accent { color: #FDD000; }
+    .flag-emoji {
+      font-size: 60px;
+      margin-bottom: 20px;
+      animation: fade-in 0.5s ease-out 0.2s forwards;
+      opacity: 0;
+    }
+    .cta-text {
+      font-size: 32px;
+      font-weight: 700;
+      color: #FDD000;
+      margin-bottom: 40px;
+      animation: slide-up 0.5s ease-out 0.4s forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    @keyframes slide-up { to { opacity: 1; transform: translateY(0); } }
+    .social-handles {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: fade-in 0.5s ease-out 0.8s forwards;
+      opacity: 0;
+      font-size: 28px;
+      color: rgba(255,255,255,0.85);
+    }
+    .website {
+      font-size: 32px;
+      color: #FDD000;
+      font-weight: 600;
+      margin-top: 30px;
+      animation: fade-in 0.5s ease-out 1.2s forwards;
+      opacity: 0;
+    }
+    .custom-text {
+      font-size: 24px;
+      margin-top: 20px;
+      opacity: 0;
+      animation: fade-in 0.5s ease-out 1.5s forwards;
+      color: rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="fern-bg"></div>
+  <div class="logo-container">
+    <div class="flag-emoji">&#x1F1F3;&#x1F1FF;</div>
+    <div class="treff-logo">TREFF <span class="accent">Sprachreisen</span></div>
+    <div class="cta-text">Neuseeland ab 19.800 EUR - Kia Ora!</div>
+    <div class="social-handles">
+      <span>Instagram: @treff_sprachreisen</span>
+      <span>TikTok: @treff_sprachreisen</span>
+    </div>
+    <div class="website">www.treff-sprachreisen.de</div>
+    <div class="custom-text">{{custom_text}}</div>
+  </div>
+</body>
+</html>

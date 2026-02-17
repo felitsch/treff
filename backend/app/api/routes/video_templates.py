@@ -110,6 +110,12 @@ def _template_to_dict(tmpl: VideoTemplate) -> dict:
     country_info = COUNTRY_META.get(tmpl.country) if tmpl.country else None
     style_info = STYLE_META.get(tmpl.style, STYLE_META["default"])
 
+    # Extract country-specific motif and HTML template path from config
+    motif = config.get("motif") if config else None
+    html_template = config.get("html_template") if config else None
+    country_accent = config.get("country_accent") if config else None
+    background_gradient = config.get("background_gradient") if config else None
+
     return {
         "id": tmpl.id,
         "name": tmpl.name,
@@ -132,6 +138,10 @@ def _template_to_dict(tmpl: VideoTemplate) -> dict:
         "website_url": tmpl.website_url,
         "cta_text": tmpl.cta_text,
         "branding_config": config,
+        "motif": motif,
+        "html_template": html_template,
+        "country_accent": country_accent,
+        "background_gradient": background_gradient,
         "is_default": tmpl.is_default,
         "preview_image_path": tmpl.preview_image_path,
         "created_at": tmpl.created_at.isoformat() if tmpl.created_at else None,
@@ -322,10 +332,11 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
     """Generate a branding video clip (intro or outro) using ffmpeg.
 
     Creates a video with TREFF branding elements:
-    - Solid or gradient background in TREFF colors
+    - Solid or gradient background in TREFF/country-specific colors
     - Centered text overlay (brand name, tagline)
     - Social handles for outro templates
-    - Specified duration
+    - Country-specific color theming
+    - Specified duration (3-5 seconds)
     """
     duration = template.duration_seconds
     primary = template.primary_color or "#4C8BC2"
@@ -340,6 +351,7 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
 
     # Determine background style
     bg_style = config.get("background", "gradient_blue_yellow")
+    country_accent = config.get("country_accent", secondary)
 
     # Build drawtext filter chain for brand elements
     text_filters = []
@@ -348,7 +360,7 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
     text_overlay = config.get("text_overlay", "TREFF Sprachreisen")
     if text_overlay:
         # Escape special characters for ffmpeg drawtext
-        escaped_text = text_overlay.replace("'", "\\'").replace(":", "\\:")
+        escaped_text = text_overlay.replace("'", "\\'").replace(":", "\\:").replace("×", "x")
         text_filters.append(
             f"drawtext=text='{escaped_text}':"
             f"fontsize={int(target_w * 0.06)}:fontcolor=white:"
@@ -356,18 +368,20 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
             f"enable='between(t,0.3,{duration})'"
         )
 
-    # Subtitle text
+    # Subtitle text (country-specific subtitle like "Your American Dream")
     subtitle = config.get("subtitle")
     if subtitle:
         escaped_sub = subtitle.replace("'", "\\'").replace(":", "\\:")
+        # Use country accent color for subtitle if available
+        sub_color = f"white@0.9"
         text_filters.append(
             f"drawtext=text='{escaped_sub}':"
-            f"fontsize={int(target_w * 0.035)}:fontcolor=white@0.9:"
+            f"fontsize={int(target_w * 0.035)}:fontcolor={sub_color}:"
             f"x=(w-text_w)/2:y=(h-text_h)/2+{int(target_h * 0.03)}:"
             f"enable='between(t,0.6,{duration})'"
         )
 
-    # For outro: social handles and CTA
+    # For outro: social handles, CTA, and country-specific pricing
     if template.template_type == "outro":
         show_social = config.get("show_social_handles", True)
         if show_social and template.social_handle_instagram:
@@ -390,9 +404,11 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
         show_website = config.get("show_website", True)
         if show_website and template.website_url:
             web_text = template.website_url.replace("'", "\\'").replace(":", "\\:")
+            # Use country accent or secondary for website text
+            web_color = country_accent if template.country else secondary
             text_filters.append(
                 f"drawtext=text='{web_text}':"
-                f"fontsize={int(target_w * 0.032)}:fontcolor={secondary}:"
+                f"fontsize={int(target_w * 0.032)}:fontcolor={web_color}:"
                 f"x=(w-text_w)/2:y=h*0.82:"
                 f"enable='between(t,1.2,{duration})'"
             )
@@ -400,19 +416,31 @@ def _generate_branding_video(template: VideoTemplate, target_w: int, target_h: i
         show_cta = config.get("show_cta", True)
         if show_cta and template.cta_text:
             cta_text = template.cta_text.replace("'", "\\'").replace(":", "\\:")
+            # Use yellow/gold for CTA to stand out
+            cta_color = "#FDD000" if template.country else secondary
             text_filters.append(
                 f"drawtext=text='{cta_text}':"
-                f"fontsize={int(target_w * 0.04)}:fontcolor={secondary}:"
+                f"fontsize={int(target_w * 0.04)}:fontcolor={cta_color}:"
                 f"x=(w-text_w)/2:y=h*0.6:"
                 f"enable='between(t,0.5,{duration})'"
             )
 
     # Build the ffmpeg color source + filter
-    # Use gradients or solid colors based on style
+    # Country-specific background colors for more distinctive templates
     if "dark" in bg_style:
         bg_color = "0x1A1A2E"
     elif "white" in bg_style:
         bg_color = "0xFFFFFF"
+    elif "usa" in bg_style:
+        bg_color = "0x002868"  # Navy blue for USA
+    elif "canada" in bg_style:
+        bg_color = "0xCC0000"  # Deep red for Canada
+    elif "australia" in bg_style or "surf" in bg_style:
+        bg_color = "0xCC8040"  # Sandy earth tone for Australia
+    elif "nz" in bg_style or "fern" in bg_style:
+        bg_color = "0x1B6B1B"  # Forest green for NZ
+    elif "ireland" in bg_style or "green_gold" in bg_style:
+        bg_color = "0x148050"  # Irish green
     elif "yellow" in bg_style:
         bg_color = primary.replace("#", "0x")
     else:
