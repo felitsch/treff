@@ -33,6 +33,8 @@ from app.models.prompt_history import PromptHistory
 from app.models.recurring_post_rule import RecurringPostRule
 from app.models.background_task import BackgroundTask
 from app.models.content_pillar import ContentPillar
+from app.models.audio_suggestion import AudioSuggestion
+from app.models.shot_list import ShotList
 
 __all__ = [
     "User",
@@ -68,4 +70,6 @@ __all__ = [
     "RecurringPostRule",
     "BackgroundTask",
     "ContentPillar",
+    "AudioSuggestion",
+    "ShotList",
 ]

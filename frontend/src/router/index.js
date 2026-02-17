@@ -527,6 +527,20 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'video/shot-lists',
+        name: 'ShotListGenerator',
+        component: () => import('@/views/StudentShotListView.vue'),
+        meta: {
+          requiresAuth: true,
+          title: 'Shot-List & Filming-Guide',
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'Video-Tools', path: '/create/video' },
+            { label: 'Shot-Lists', path: '/video/shot-lists' },
+          ],
+        },
+      },
 
       // ═══════════════════════════════════════════════════════
       // REDIRECTS: Old routes → new equivalents (no 404s)
