@@ -14,6 +14,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import { toSeasonalMarkers, getMonthConfig } from '@/config/seasonalCalendar'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -598,12 +599,22 @@ function getRecyclingSuggestion(dateStr) {
 }
 
 // Fetch seasonal markers (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn, etc.)
+// Merges backend API markers with frontend seasonalCalendar.js config for richer data.
 async function fetchSeasonalMarkers() {
+  // Get markers from the frontend seasonal calendar config
+  const configMarkers = toSeasonalMarkers(currentMonth.value, currentYear.value)
+
   try {
     const { data } = await api.get(`/api/calendar/seasonal-markers?month=${currentMonth.value}&year=${currentYear.value}`)
-    seasonalMarkers.value = data.markers || []
+    const apiMarkers = data.markers || []
+
+    // Merge: use API markers as base, add config markers that don't overlap (by date+label)
+    const existingKeys = new Set(apiMarkers.map(m => `${m.date}|${m.label}`))
+    const uniqueConfigMarkers = configMarkers.filter(m => !existingKeys.has(`${m.date}|${m.label}`))
+    seasonalMarkers.value = [...apiMarkers, ...uniqueConfigMarkers]
   } catch (err) {
-    seasonalMarkers.value = []
+    // Fallback to config-only markers if API fails
+    seasonalMarkers.value = configMarkers
   }
 }
 
