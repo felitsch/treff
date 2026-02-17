@@ -3,6 +3,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { getCountryTheme } from '@/composables/useCountryTheme'
+import VideoInbox from '@/components/students/VideoInbox.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -406,6 +408,17 @@ onMounted(() => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Video Inbox Section -->
+      <div class="mb-6" data-testid="student-video-inbox">
+        <VideoInbox
+          :student-id="student.id"
+          compact
+          :max-items="5"
+          @item-processed="loadDashboard"
+          @count-changed="(count) => stats.pipeline_count = count"
+        />
       </div>
 
       <!-- Posts Section -->
