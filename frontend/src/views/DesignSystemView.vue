@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import PostPreviewCard from '@/components/posts/PostPreviewCard.vue'
+import PostPreviewCardTikTok from '@/components/posts/PostPreviewCardTikTok.vue'
+import PostPreviewGrid from '@/components/posts/PostPreviewGrid.vue'
 
 const activeSection = ref('colors')
 
@@ -14,7 +17,78 @@ const sections = [
   { id: 'shadows', label: 'Shadows', icon: '🌑' },
   { id: 'spacing', label: 'Spacing', icon: '📐' },
   { id: 'radius', label: 'Radius', icon: '⬜' },
+  { id: 'previews', label: 'Post Previews', icon: '📱' },
 ]
+
+// ── Demo post data for Post Preview Cards ──
+const demoPostInstagram = ref({
+  id: 1,
+  title: 'Dein Highschool-Jahr in den USA',
+  caption_instagram: 'Erlebe das Abenteuer deines Lebens! Ein Schuljahr an einer amerikanischen High School mit TREFF Sprachreisen.',
+  hashtags_instagram: '#highschool #usa #austausch #treff #sprachreisen',
+  platform: 'instagram_feed',
+  country: 'usa',
+  status: 'scheduled',
+  slide_data: JSON.stringify([
+    { headline: 'USA Highschool', subheadline: 'Dein Abenteuer wartet', body_text: 'Erlebe den American Dream hautnah' },
+    { headline: 'Slide 2', subheadline: 'Neue Freunde', body_text: 'Finde Freunde fuer ein ganzes Leben' },
+  ]),
+})
+
+const demoPostTikTok = ref({
+  id: 2,
+  title: 'Kanada Erfahrung - TREFF',
+  caption_tiktok: 'So sieht ein Tag an einer kanadischen High School aus!',
+  hashtags_tiktok: '#kanada #highschool #exchange #fyp',
+  platform: 'tiktok',
+  country: 'kanada',
+  status: 'draft',
+  slide_data: '[]',
+})
+
+const demoPostAustralia = ref({
+  id: 3,
+  title: 'Down Under erleben',
+  caption_instagram: 'Australien: Surfen, Kanguruhs und die beste Zeit deines Lebens.',
+  hashtags_instagram: '#australien #downunder #exchange',
+  platform: 'instagram_feed',
+  country: 'australien',
+  status: 'posted',
+  slide_data: '[]',
+})
+
+const demoPostNZ = ref({
+  id: 4,
+  title: 'Neuseeland Abenteuer',
+  caption_tiktok: 'Neuseeland hat mein Leben veraendert!',
+  hashtags_tiktok: '#neuseeland #nz #exchange',
+  platform: 'tiktok',
+  country: 'neuseeland',
+  status: 'exported',
+  slide_data: '[]',
+})
+
+const demoPostIreland = ref({
+  id: 5,
+  title: 'Irland entdecken',
+  caption_instagram: 'Gruene Huegel, warme Menschen und eine unvergessliche Zeit in Irland.',
+  hashtags_instagram: '#irland #ireland #exchange #treff',
+  platform: 'instagram_feed',
+  country: 'irland',
+  status: 'reminded',
+  slide_data: '[]',
+})
+
+const demoPosts = ref([
+  demoPostInstagram.value,
+  demoPostTikTok.value,
+  demoPostAustralia.value,
+  demoPostNZ.value,
+  demoPostIreland.value,
+])
+
+const previewSlideIndex = ref(0)
+const previewSize = ref('md')
 
 const primaryShades = [
   { key: '50',  hex: '#EBF3FA', bg: 'bg-primary-50',  text: 'text-gray-900' },
@@ -551,6 +625,81 @@ const scrollToSection = (id) => {
           </ul>
         </div>
       </div>
+    </section>
+
+    <!-- ═══ POST PREVIEW CARDS ═══ -->
+    <section id="section-previews" class="mb-12" data-testid="design-system-previews">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Post Preview Cards</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        Realistische Instagram- und TikTok-Mockup-Karten. Zeigen, wie Posts auf den jeweiligen Plattformen aussehen werden.
+      </p>
+
+      <!-- Size selector -->
+      <div class="flex items-center gap-2 mb-6">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Groesse:</span>
+        <button
+          v-for="s in ['sm', 'md', 'lg']"
+          :key="s"
+          @click="previewSize = s"
+          :class="[
+            'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
+            previewSize === s ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
+          ]"
+          :data-testid="'preview-size-' + s"
+        >
+          {{ s.toUpperCase() }}
+        </button>
+      </div>
+
+      <!-- Individual Cards -->
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Instagram Feed Mockup</h3>
+      <div class="flex flex-wrap gap-6 mb-8" data-testid="preview-instagram-section">
+        <PostPreviewCard
+          :post="demoPostInstagram"
+          :size="previewSize"
+          :show-caption="true"
+          :current-slide-index="previewSlideIndex"
+          @slide-change="previewSlideIndex = $event"
+          @click="function(){}"
+        />
+        <PostPreviewCard
+          :post="demoPostAustralia"
+          :size="previewSize"
+          :show-caption="true"
+          @click="function(){}"
+        />
+        <PostPreviewCard
+          :post="demoPostIreland"
+          :size="previewSize"
+          :show-caption="true"
+          @click="function(){}"
+        />
+      </div>
+
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">TikTok Mockup</h3>
+      <div class="flex flex-wrap gap-6 mb-8" data-testid="preview-tiktok-section">
+        <PostPreviewCardTikTok
+          :post="demoPostTikTok"
+          :size="previewSize"
+          :show-caption="true"
+          @click="function(){}"
+        />
+        <PostPreviewCardTikTok
+          :post="demoPostNZ"
+          :size="previewSize"
+          :show-caption="true"
+          @click="function(){}"
+        />
+      </div>
+
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Preview Grid (gemischt)</h3>
+      <PostPreviewGrid
+        :posts="demoPosts"
+        :size="previewSize"
+        :show-caption="true"
+        platform-filter="all"
+        @post-click="function(){}"
+      />
     </section>
   </div>
 </template>
