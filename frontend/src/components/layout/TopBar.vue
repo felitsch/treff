@@ -3,7 +3,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTour } from '@/composables/useTour'
+import { useToast } from '@/composables/useToast'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
+import NotificationHistoryPanel from '@/components/common/NotificationHistoryPanel.vue'
 import ProgressIndicator from '@/components/common/ProgressIndicator.vue'
 import tourConfigs from '@/tours/tourConfigs'
 
@@ -14,6 +16,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const { requestTourStart, hasSeenTour, loadTourProgress, loadedFromBackend } = useTour()
+const { unreadCount, toggleHistoryPanel } = useToast()
 
 // ─── Route-to-tourKey mapping ─────────────────────────────
 // Maps route paths to tour config keys
@@ -146,6 +149,32 @@ if (localStorage.getItem('darkMode') === 'true') {
 
       <!-- Series Notification Bell -->
       <NotificationPanel />
+
+      <!-- Notification History Bell -->
+      <div class="relative">
+        <button
+          id="notification-history-bell"
+          @click="toggleHistoryPanel"
+          class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 focus-ring transition-colors relative"
+          aria-label="Benachrichtigungs-Verlauf"
+          data-testid="notification-history-bell"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+          </svg>
+          <!-- Unread badge -->
+          <span
+            v-if="unreadCount > 0"
+            class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold bg-red-500 text-white rounded-full leading-none"
+            data-testid="notification-history-badge"
+          >
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Notification History Panel (slide-in from right) -->
+      <NotificationHistoryPanel />
 
       <!-- Tour Restart Button (visible on ALL authenticated pages) -->
       <div
