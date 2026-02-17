@@ -17,6 +17,7 @@ import BrandingSelector from '@/components/video/BrandingSelector.vue'
 import LowerThirdEditor from '@/components/video/LowerThirdEditor.vue'
 import MusicSelector from '@/components/video/MusicSelector.vue'
 import MultiPlatformExport from '@/components/video/MultiPlatformExport.vue'
+import ContentMultiplierPanel from '@/components/video/ContentMultiplierPanel.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -58,6 +59,7 @@ const sections = [
   { key: 'music', label: '4. Musik', icon: '🎵', description: 'Hintergrundmusik auswaehlen und mischen' },
   { key: 'preview', label: '5. Vorschau', icon: '👁️', description: 'Finales Video mit allen Overlays' },
   { key: 'export', label: '6. Export', icon: '📤', description: 'Multi-Format-Export fuer alle Plattformen' },
+  { key: 'multiply', label: '7. Multiplizieren', icon: '🚀', description: '1 Video → 5 Formate als Draft-Posts' },
 ]
 
 const expandedSections = ref({
@@ -67,6 +69,7 @@ const expandedSections = ref({
   music: false,
   preview: false,
   export: false,
+  multiply: false,
 })
 
 // Section completion status
@@ -77,6 +80,7 @@ const sectionStatus = computed(() => ({
   music: musicConfig.value.enabled && musicConfig.value.trackId ? 'complete' : 'optional',
   preview: selectedAsset.value ? 'ready' : 'locked',
   export: selectedAsset.value ? 'ready' : 'locked',
+  multiply: selectedAsset.value ? 'ready' : 'locked',
 }))
 
 function toggleSection(key) {
@@ -447,6 +451,18 @@ onMounted(() => {
               :lowerThird="lowerThird"
               :musicConfig="musicConfig"
               @export-complete="onExportComplete"
+            />
+          </div>
+
+          <!-- 7. Content Multiplier -->
+          <div v-if="section.key === 'multiply'">
+            <div v-if="!selectedAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+              Bitte waehle zuerst ein Video aus (Schritt 1).
+            </div>
+            <ContentMultiplierPanel
+              v-else
+              :videoAsset="selectedAsset"
+              @generated="onExportComplete"
             />
           </div>
         </div>
