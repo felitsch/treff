@@ -1,5 +1,77 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Features #314 & #321: Strategy Dashboard & Hook Performance Tracking
+**Date:** 2026-02-17
+**Features:** #314 (SI-04), #321 (SI-06)
+**Status:** BOTH PASSING
+
+### Feature #314: SI-04: Strategie-IST-vs-SOLL Dashboard
+**Status:** PASSING (already implemented by previous session, verified and committed)
+
+- Backend endpoint GET /api/analytics/strategy-health: Full implementation with 9 dimensions
+- Frontend StrategyHealthPanel.vue: Radial progress, pillar bars, journey/country/platform health
+- Integrated as first element in AnalyticsView.vue with "Strategie-Check" header
+- All 10 feature steps verified with browser automation
+- Zero console errors, zero mock data patterns
+- Commit: 6158d4e
+
+### Feature #321: SI-06: Hook-Performance-Tracking & Optimierung
+**Status:** PASSING
+
+#### What was implemented:
+
+1. **Post Model Extension:**
+   - Added `hook_formula` field (String(100), nullable) to Post model
+   - Auto-migration in main.py lifespan (ALTER TABLE posts ADD COLUMN hook_formula)
+   - Added hook_formula to post_to_dict serializer
+
+2. **Backend Endpoint GET /api/analytics/hook-performance:**
+   - Per-formula stats: usage_count, avg_engagement_rate, avg_likes, avg_comments, total_reach, last_used
+   - Unused hooks list (formulas never used → recommendation to try)
+   - Top 3 hooks this week
+   - Coverage stats (total_posts_with_hook, hook_coverage_pct)
+   - Fixed timezone-aware vs naive datetime comparison bug
+
+3. **Frontend HookPerformanceChart.vue (~200 lines):**
+   - Summary stats grid: Posts mit Hook, Hook-Abdeckung %, Formeln genutzt, Ungenutzte Formeln
+   - Dual bar chart: Usage frequency (blue) + Effectiveness rating (yellow) per formula
+   - Category icons per hook type (curiosity, emotion, urgency, comparison, list)
+   - Top 3 diese Woche section with medal-style ranking
+   - Noch ungenutzt section with dashed border cards
+
+4. **AnalyticsView Integration:**
+   - "Hook-Analyse" section with purple bolt icon after Top Posts Ranking
+   - Subtitle: "Welche Hook-Formeln funktionieren am besten?"
+
+5. **VideoScriptView Enhancement:**
+   - Hook formula buttons now show performance badges ("Xx genutzt", "X% Engagement")
+   - Loads hook performance data via /api/analytics/hook-performance alongside formulas
+
+#### Files created/modified:
+- backend/app/models/post.py (modified - added hook_formula field)
+- backend/app/main.py (modified - added migration)
+- backend/app/api/routes/posts.py (modified - added hook_formula to post_to_dict)
+- backend/app/api/routes/analytics.py (modified - added hook-performance endpoint)
+- frontend/src/components/analytics/HookPerformanceChart.vue (NEW)
+- frontend/src/views/AnalyticsView.vue (modified - added HookPerformanceChart import + section)
+- frontend/src/views/VideoScriptView.vue (modified - added hook performance badges)
+
+#### Verification completed:
+- Browser: Analytics page loads with Hook-Analyse section (zero errors)
+- Browser: All testids found: hook-usage-bars, top-hooks-week, unused-hooks
+- API: POST /api/posts with hook_formula saves correctly
+- API: GET /api/analytics/hook-performance reflects saved hook data
+- API: hook_formula returned in post detail response
+- Cleanup: Test post created and deleted successfully
+- Mock data grep: Zero matches
+- Git commit: 2fd62bb
+
+### Current state:
+- Features #314 and #321 both marked as PASSING
+- 317/322 features passing (98.4%)
+
+---
+
 ## Session - Feature #320: V-10: Trending-Audio & Musik-Integration fuer Reels/TikTok
 **Date:** 2026-02-17
 **Feature ID:** #320
