@@ -7,7 +7,7 @@
     "api/index.py": {
       "maxDuration": 60,
       "memory": 1024,
-      "runtime": "python3.11",
+      "runtime": "@vercel/python@3.11",
       "excludeFiles": "{*.png,*.zip,*.csv,tests/**,test_*.py,.playwright-mcp/**,backend/venv/**}"
     }
   },
