@@ -99,13 +99,14 @@ const routes = [
       {
         path: 'create/video',
         name: 'CreateVideo',
-        component: () => import('@/views/VideoComposerView.vue'),
+        component: () => import('@/views/create/VideoCreateView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Brand This Video',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
-            { label: 'Video', path: '/create/video' },
+            { label: 'Brand This Video', path: '/create/video' },
           ],
         },
       },
@@ -242,7 +243,7 @@ const routes = [
         children: [
           {
             path: '',
-            redirect: '/library/templates',
+            redirect: '/library/assets',
           },
           {
             path: 'templates',

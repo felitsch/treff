@@ -21,8 +21,8 @@ const createOptions = [
     iconBg: 'bg-purple-100 dark:bg-purple-900/40',
   },
   {
-    title: 'Video erstellen',
-    description: 'Video-Content fuer Reels und TikTok mit Thumbnails, Overlays und Export.',
+    title: 'Brand This Video',
+    description: 'Unified Video-Pipeline: Upload, Branding (Intro/Outro), Lower Third, Musik und Multi-Format-Export.',
     icon: '🎬',
     path: '/create/video',
     color: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
