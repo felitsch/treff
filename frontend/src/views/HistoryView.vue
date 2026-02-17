@@ -11,6 +11,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -100,22 +101,22 @@ function isPresetActive(days) {
 }
 
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍' },
-  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬' },
-  { id: 'infografiken', label: 'Infografiken', icon: '📊' },
-  { id: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰' },
-  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡' },
-  { id: 'faq', label: 'FAQ', icon: '❓' },
-  { id: 'foto_posts', label: 'Foto-Posts', icon: '📸' },
-  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬' },
-  { id: 'story_posts', label: 'Story-Posts', icon: '📱' },
-  { id: 'story_teaser', label: 'Story-Teaser', icon: '👉' },
+  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe' },
+  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble' },
+  { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
+  { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
+  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb' },
+  { id: 'faq', label: 'FAQ', icon: 'question-mark-circle' },
+  { id: 'foto_posts', label: 'Foto-Posts', icon: 'camera' },
+  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: 'film' },
+  { id: 'story_posts', label: 'Story-Posts', icon: 'device-mobile' },
+  { id: 'story_teaser', label: 'Story-Teaser', icon: 'arrow-right' },
 ]
 
 const platforms = [
-  { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷' },
-  { id: 'instagram_story', label: 'Instagram Story', icon: '📱' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera' },
+  { id: 'instagram_story', label: 'Instagram Story', icon: 'device-mobile' },
+  { id: 'tiktok', label: 'TikTok', icon: 'musical-note' },
 ]
 
 const statuses = [
@@ -153,7 +154,7 @@ function categoryLabel(catId) {
 
 function categoryIcon(catId) {
   const cat = categories.find(c => c.id === catId)
-  return cat ? cat.icon : '📄'
+  return cat ? cat.icon : 'document-text'
 }
 
 // Platform helpers
@@ -164,7 +165,7 @@ function platformLabel(platId) {
 
 function platformIcon(platId) {
   const plat = platforms.find(p => p.id === platId)
-  return plat ? plat.icon : '📱'
+  return plat ? plat.icon : 'device-mobile'
 }
 
 // Status helpers
@@ -766,7 +767,7 @@ onUnmounted(() => {
             ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
             : 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
-          <span>☑️</span>
+          <AppIcon name="check-circle" class="w-4 h-4 inline-block" />
           <span>{{ selectionMode ? 'Abbrechen' : 'Auswaehlen' }}</span>
         </button>
         <button
@@ -804,7 +805,7 @@ onUnmounted(() => {
         :disabled="selectedCount === 0 || batchExporting"
         class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span>{{ batchExporting ? '⏳' : '📦' }}</span>
+        <AppIcon :name="batchExporting ? 'clock' : 'archive'" class="w-4 h-4 inline-block" />
         <span>{{ batchExporting ? 'Exportiere...' : `Batch-Export (${selectedCount})` }}</span>
       </button>
     </div>
@@ -815,7 +816,7 @@ onUnmounted(() => {
         <!-- Search -->
         <div class="flex-1 min-w-[200px]">
           <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <AppIcon name="magnifying-glass" class="w-4 h-4 inline-block absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               v-model="searchQuery"
               type="text"
@@ -836,7 +837,7 @@ onUnmounted(() => {
         >
           <option value="">Alle Kategorien</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-            {{ cat.icon }} {{ cat.label }}
+            {{ cat.label }}
           </option>
         </select>
 
@@ -849,7 +850,7 @@ onUnmounted(() => {
         >
           <option value="">Alle Plattformen</option>
           <option v-for="plat in platforms" :key="plat.id" :value="plat.id">
-            {{ plat.icon }} {{ plat.label }}
+            {{ plat.label }}
           </option>
         </select>
 
@@ -913,7 +914,7 @@ onUnmounted(() => {
 
       <!-- Date range filter row -->
       <div class="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">📅 Zeitraum:</span>
+        <span class="text-sm font-medium text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="calendar" class="w-4 h-4 inline-block" /> Zeitraum:</span>
 
         <!-- Quick presets -->
         <div class="flex gap-1.5">
@@ -1046,10 +1047,10 @@ onUnmounted(() => {
 
           <!-- Thumbnail -->
           <div
-            class="w-16 h-16 rounded-lg flex-shrink-0 bg-gradient-to-br flex items-center justify-center text-white text-2xl"
+            class="w-16 h-16 rounded-lg flex-shrink-0 bg-gradient-to-br flex items-center justify-center text-white"
             :class="categoryColor(post.category)"
           >
-            {{ categoryIcon(post.category) }}
+            <AppIcon :name="categoryIcon(post.category)" class="w-7 h-7 inline-block" />
           </div>
 
           <!-- Post info -->
@@ -1062,13 +1063,13 @@ onUnmounted(() => {
             <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <!-- Category -->
               <span class="inline-flex items-center gap-1">
-                <span>{{ categoryIcon(post.category) }}</span>
+                <AppIcon :name="categoryIcon(post.category)" class="w-3.5 h-3.5 inline-block" />
                 <span>{{ categoryLabel(post.category) }}</span>
               </span>
               <span class="text-gray-300 dark:text-gray-600">|</span>
               <!-- Platform -->
               <span class="inline-flex items-center gap-1">
-                <span>{{ platformIcon(post.platform) }}</span>
+                <AppIcon :name="platformIcon(post.platform)" class="w-3.5 h-3.5 inline-block" />
                 <span>{{ platformLabel(post.platform) }}</span>
               </span>
               <!-- Country -->
@@ -1083,7 +1084,7 @@ onUnmounted(() => {
               <template v-if="post.student_id && getStudentName(post.student_id)">
                 <span class="text-gray-300 dark:text-gray-600">|</span>
                 <span class="inline-flex items-center gap-1">
-                  <span>🎓</span>
+                  <AppIcon name="academic-cap" class="w-3.5 h-3.5 inline-block" />
                   <span>{{ getStudentName(post.student_id) }}</span>
                 </span>
               </template>
@@ -1106,11 +1107,11 @@ onUnmounted(() => {
           <!-- Scheduled info -->
           <div v-if="post.scheduled_date && post.scheduled_time" class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 text-right">
             <div class="flex items-center gap-1">
-              <span>📅</span>
+              <AppIcon name="calendar" class="w-3.5 h-3.5 inline-block" />
               <span>{{ formatDateShort(post.scheduled_date) }}</span>
             </div>
             <div class="flex items-center gap-1">
-              <span>🕐</span>
+              <AppIcon name="clock" class="w-3.5 h-3.5 inline-block" />
               <span>{{ post.scheduled_time }} Uhr</span>
             </div>
           </div>
@@ -1124,7 +1125,7 @@ onUnmounted(() => {
               :title="post.status === 'scheduled' || post.status === 'reminded' ? 'Umplanen' : 'Planen'"
               :aria-label="post.status === 'scheduled' || post.status === 'reminded' ? 'Umplanen' : 'Planen'"
             >
-              {{ post.status === 'scheduled' || post.status === 'reminded' ? '🔄' : '📅' }}
+              <AppIcon :name="post.status === 'scheduled' || post.status === 'reminded' ? 'arrow-path' : 'calendar'" class="w-4 h-4 inline-block" />
             </button>
             <button
               v-if="post.status === 'scheduled' || post.status === 'reminded' || post.status === 'exported'"
@@ -1133,7 +1134,7 @@ onUnmounted(() => {
               title="Als veroeffentlicht markieren"
               aria-label="Als veroeffentlicht markieren"
             >
-              ✅
+              <AppIcon name="check-circle" class="w-4 h-4 inline-block" />
             </button>
             <button
               @click="duplicatePost(post)"
@@ -1142,7 +1143,16 @@ onUnmounted(() => {
               title="Duplizieren"
               aria-label="Duplizieren"
             >
-              {{ duplicating === post.id ? '⏳' : '📋' }}
+              <AppIcon :name="duplicating === post.id ? 'clock' : 'clipboard-list'" class="w-4 h-4 inline-block" />
+            </button>
+            <button
+              @click="router.push(`/create/post/${post.id}/edit?repurpose=true`)"
+              class="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+              title="Fuer andere Plattform anpassen"
+              aria-label="Fuer andere Plattform anpassen"
+              data-testid="repurpose-history-btn"
+            >
+              <AppIcon name="arrow-path" class="w-4 h-4 inline-block" />
             </button>
             <button
               @click="editPost(post.id)"
@@ -1150,7 +1160,7 @@ onUnmounted(() => {
               title="Bearbeiten"
               aria-label="Bearbeiten"
             >
-              ✏️
+              <AppIcon name="pencil-square" class="w-4 h-4 inline-block" />
             </button>
             <button
               @click="confirmDeletePost(post)"
@@ -1158,7 +1168,7 @@ onUnmounted(() => {
               title="Loeschen"
               aria-label="Loeschen"
             >
-              🗑️
+              <AppIcon name="trash" class="w-4 h-4 inline-block" />
             </button>
           </div>
         </div>
@@ -1171,7 +1181,7 @@ onUnmounted(() => {
       data-tour="history-recycling"
       class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-3 mt-4 flex items-center gap-3"
     >
-      <span class="text-xl flex-shrink-0">♻️</span>
+      <AppIcon name="arrow-path" class="w-6 h-6 inline-block flex-shrink-0 text-amber-600" />
       <p class="text-xs text-amber-700 dark:text-amber-400">
         <strong>Content-Recycling Tipp:</strong> Dupliziere erfolgreiche Posts und passe sie leicht an — so sparst du Zeit und nutzt bewaehrte Inhalte erneut!
       </p>
@@ -1225,7 +1235,7 @@ onUnmounted(() => {
         <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 z-10">
           <div class="text-center">
             <div class="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-              <span class="text-2xl">⚠️</span>
+              <AppIcon name="exclamation-triangle" class="w-7 h-7 inline-block text-red-500" />
             </div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Post loeschen?</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 break-words">
@@ -1262,7 +1272,7 @@ onUnmounted(() => {
           <div>
             <div class="flex items-center gap-3 mb-4">
               <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <span class="text-xl">📅</span>
+                <AppIcon name="calendar" class="w-6 h-6 inline-block" />
               </div>
               <div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ postToSchedule?.status === 'scheduled' || postToSchedule?.status === 'reminded' ? 'Post umplanen' : 'Post planen' }}</h3>

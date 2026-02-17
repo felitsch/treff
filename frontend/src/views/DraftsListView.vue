@@ -159,6 +159,14 @@ onMounted(() => {
 
           <div class="flex items-center gap-2 flex-shrink-0">
             <button
+              @click="router.push(`/create/post/${draft.id}/edit`)"
+              class="px-3 py-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+              title="Fuer andere Plattform anpassen"
+              data-testid="repurpose-draft-btn"
+            >
+              🔄 Anpassen
+            </button>
+            <button
               @click="openDraft(draft)"
               class="px-3 py-1.5 text-xs font-medium text-[#3B7AB1] dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
             >

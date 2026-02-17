@@ -11,7 +11,9 @@ import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import RelatedPostsPanel from '@/components/posts/RelatedPostsPanel.vue'
 import PostPerformanceInput from '@/components/posts/PostPerformanceInput.vue'
+import RepurposePanel from '@/components/pipeline/RepurposePanel.vue'
 import { useStudentStore } from '@/stores/students'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,6 +30,14 @@ const notFound = ref(false)
 const slides = ref([])
 const currentPreviewSlide = ref(0)
 const selectedStudentId = ref(null)
+
+// Repurpose panel modal
+const showRepurposePanel = ref(false)
+
+function onRepurposeSaved(result) {
+  showRepurposePanel.value = false
+  toast.success(`Angepasster Post #${result.post_id} als Draft gespeichert!`, 3000)
+}
 
 // Sibling posts (multi-platform linked posts)
 const siblingPosts = ref([])
@@ -187,15 +197,15 @@ function onCliffhangerGenerated(data) {
 
 // Categories for display
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍' },
-  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬' },
-  { id: 'infografiken', label: 'Infografiken', icon: '📊' },
-  { id: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰' },
-  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡' },
-  { id: 'faq', label: 'FAQ', icon: '❓' },
-  { id: 'foto_posts', label: 'Foto-Posts', icon: '📸' },
-  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬' },
-  { id: 'story_posts', label: 'Story-Posts', icon: '📱' },
+  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt' },
+  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right' },
+  { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
+  { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
+  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb' },
+  { id: 'faq', label: 'FAQ', icon: 'question-mark-circle' },
+  { id: 'foto_posts', label: 'Foto-Posts', icon: 'camera' },
+  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: 'film' },
+  { id: 'story_posts', label: 'Story-Posts', icon: 'device-phone-mobile' },
 ]
 
 const categoryObj = computed(() => categories.find(c => c.id === post.value?.category))
@@ -449,11 +459,15 @@ function handleCtrlS(e) {
   }
 }
 
-onMounted(() => {
-  loadPost()
+onMounted(async () => {
+  await loadPost()
   startListening()
   studentStore.fetchStudents()
   window.addEventListener('keydown', handleCtrlS, true)
+  // Auto-open repurpose panel if ?repurpose=true query param is present
+  if (route.query.repurpose === 'true' && post.value) {
+    showRepurposePanel.value = true
+  }
 })
 
 onUnmounted(() => {
@@ -497,6 +511,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </h1>
       </div>
       <div v-if="post" class="flex gap-2">
+        <!-- Repurpose button -->
+        <button
+          @click="showRepurposePanel = true"
+          class="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 border border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+          title="Fuer andere Plattform anpassen"
+          data-testid="repurpose-btn"
+        >
+          <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Anpassen
+        </button>
         <!-- Undo / Redo buttons -->
         <button
           @click="undo"
@@ -553,7 +576,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       <div class="space-y-4">
         <!-- Post info bar -->
         <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-600 dark:text-gray-400">
-          <span v-if="categoryObj">{{ categoryObj.icon }} {{ categoryObj.label }}</span>
+          <span v-if="categoryObj" class="flex items-center gap-1"><AppIcon :name="categoryObj.icon" class="w-4 h-4 inline-block" /> {{ categoryObj.label }}</span>
           <span>&middot;</span>
           <span>{{ post.platform }}</span>
           <span v-if="post.country">&middot; {{ post.country }}</span>
@@ -571,7 +594,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <div v-if="siblingPosts.length > 0" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
-              <span class="text-sm">🔗</span>
+              <AppIcon name="link" class="w-4 h-4 inline-block" />
               <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Verknuepfte Plattform-Posts</span>
             </div>
             <button
@@ -579,7 +602,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               class="px-3 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1.5"
               data-testid="sync-siblings-btn"
             >
-              &#x1F504; Synchronisieren
+              <AppIcon name="arrow-path" class="w-3 h-3 inline-block" /> Synchronisieren
             </button>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -594,9 +617,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-900/50': sib.platform === 'tiktok',
               }"
             >
-              <span v-if="sib.platform === 'instagram_feed'">📷</span>
-              <span v-else-if="sib.platform === 'instagram_story'">📱</span>
-              <span v-else-if="sib.platform === 'tiktok'">🎵</span>
+              <AppIcon v-if="sib.platform === 'instagram_feed'" name="camera" class="w-4 h-4 inline-block" />
+              <AppIcon v-else-if="sib.platform === 'instagram_story'" name="device-phone-mobile" class="w-4 h-4 inline-block" />
+              <AppIcon v-else-if="sib.platform === 'tiktok'" name="musical-note" class="w-4 h-4 inline-block" />
               {{ sib.platform === 'instagram_feed' ? 'IG Feed' : sib.platform === 'instagram_story' ? 'IG Story' : 'TikTok' }}
               <span class="opacity-60">#{{ sib.id }}</span>
             </router-link>
@@ -610,7 +633,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <div v-if="showSyncDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showSyncDialog = false">
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-xl">🔄</span>
+              <AppIcon name="arrow-path" class="w-6 h-6 inline-block" />
               <h3 class="text-lg font-bold text-gray-900 dark:text-white">Aenderungen synchronisieren</h3>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -627,7 +650,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300': sib.platform === 'tiktok',
                 }"
               >
-                {{ sib.platform === 'instagram_feed' ? '📷 IG Feed' : sib.platform === 'instagram_story' ? '📱 IG Story' : '🎵 TikTok' }}
+                <AppIcon :name="sib.platform === 'instagram_feed' ? 'camera' : sib.platform === 'instagram_story' ? 'device-phone-mobile' : 'musical-note'" class="w-3 h-3 inline-block" /> {{ sib.platform === 'instagram_feed' ? 'IG Feed' : sib.platform === 'instagram_story' ? 'IG Story' : 'TikTok' }}
                 #{{ sib.id }}
               </span>
             </div>
@@ -951,7 +974,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Student-Verknuepfung -->
         <div v-if="studentStore.students.length > 0" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">🎓 Student verknuepfen</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="academic-cap" class="w-5 h-5 inline-block" /> Student verknuepfen</label>
           <select
             v-model="selectedStudentId"
             class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
@@ -1155,6 +1178,24 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               Entfernen
             </button>
           </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Repurpose Panel Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showRepurposePanel"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click.self="showRepurposePanel = false"
+        data-testid="repurpose-modal"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto mx-4 p-6">
+          <RepurposePanel
+            :post="post"
+            @saved="onRepurposeSaved"
+            @close="showRepurposePanel = false"
+          />
         </div>
       </div>
     </Teleport>
