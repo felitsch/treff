@@ -12,6 +12,7 @@ import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import RelatedPostsPanel from '@/components/posts/RelatedPostsPanel.vue'
 import PostPerformanceInput from '@/components/posts/PostPerformanceInput.vue'
 import RepurposePanel from '@/components/pipeline/RepurposePanel.vue'
+import VideoRepurposeWizard from '@/components/video/VideoRepurposeWizard.vue'
 import { useStudentStore } from '@/stores/students'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
@@ -37,6 +38,21 @@ const showRepurposePanel = ref(false)
 function onRepurposeSaved(result) {
   showRepurposePanel.value = false
   toast.success(`Angepasster Post #${result.post_id} als Draft gespeichert!`, 3000)
+}
+
+// Video repurpose wizard modal
+const showVideoRepurpose = ref(false)
+
+/** Whether source post is a video/reel type */
+const isVideoPost = computed(() => {
+  const p = post.value?.platform?.toLowerCase() || ''
+  return p.includes('reel') || p.includes('tiktok') || p === 'instagram_reels'
+})
+
+function onVideoRepurposeGenerated(result) {
+  showVideoRepurpose.value = false
+  const count = result.derivative_count || result.derivatives?.length || 0
+  toast.success(`${count} Video-Derivat(e) erstellt!`, 3000)
 }
 
 // Sibling posts (multi-platform linked posts)
@@ -519,6 +535,16 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           data-testid="repurpose-btn"
         >
           <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Anpassen
+        </button>
+        <!-- Video Repurpose button (only for Reels/TikTok posts) -->
+        <button
+          v-if="isVideoPost"
+          @click="showVideoRepurpose = true"
+          class="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 border border-pink-300 dark:border-pink-600 text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/20"
+          title="Video in alle Formate umwandeln"
+          data-testid="video-repurpose-btn"
+        >
+          <AppIcon name="video-camera" class="w-4 h-4 inline-block" /> Video-Pipeline
         </button>
         <!-- Undo / Redo buttons -->
         <button
@@ -1195,6 +1221,37 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             :post="post"
             @saved="onRepurposeSaved"
             @close="showRepurposePanel = false"
+          />
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Video Repurpose Wizard Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showVideoRepurpose"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click.self="showVideoRepurpose = false"
+        data-testid="video-repurpose-modal"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto mx-4">
+          <div class="flex items-center justify-between px-6 pt-5 pb-2">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <AppIcon name="film" class="w-5 h-5" /> Video-Content-Pipeline
+            </h2>
+            <button
+              @click="showVideoRepurpose = false"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <VideoRepurposeWizard
+            :post="post"
+            @generated="onVideoRepurposeGenerated"
+            @close="showVideoRepurpose = false"
           />
         </div>
       </div>

@@ -6479,3 +6479,120 @@ async def get_strategy_context(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Strategy context failed: {str(e)}")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# POST /api/ai/repurpose-video
+# Video-First Content Repurposing Pipeline (Feature #319)
+# ═══════════════════════════════════════════════════════════════════════
+
+@router.post("/repurpose-video")
+async def repurpose_video(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Repurpose a video/reel post into multiple platform-specific derivatives.
+
+    Takes a source Reel or TikTok post and generates derivatives for multiple
+    target formats, each with platform-optimized captions, hashtags, and format.
+
+    Body:
+    - source_post_id: int - The source post ID (should be a Reel or TikTok post)
+    - target_formats: list[str] - Array of target formats to generate
+    - schedule_across_week: bool (optional) - Whether to distribute drafts across the week
+    """
+    from app.services.content_multiplier import multiply_content
+    from app.core.cache import invalidate_cache
+
+    source_post_id = request.get("source_post_id")
+    target_formats = request.get("target_formats", [])
+    schedule_across_week = request.get("schedule_across_week", False)
+
+    if not source_post_id:
+        raise HTTPException(status_code=400, detail="source_post_id is required")
+    if not target_formats or not isinstance(target_formats, list):
+        raise HTTPException(status_code=400, detail="target_formats must be a non-empty list")
+
+    # Validate formats
+    valid_formats = ["instagram_feed", "instagram_story", "tiktok", "carousel"]
+    for fmt in target_formats:
+        if fmt not in valid_formats:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid format: {fmt}. Valid: {', '.join(valid_formats)}"
+            )
+
+    # Fetch source post
+    result = await db.execute(
+        select(Post).where(Post.id == source_post_id, Post.user_id == user_id)
+    )
+    source_post = result.scalar_one_or_none()
+    if not source_post:
+        raise HTTPException(status_code=404, detail="Source post not found")
+
+    # Generate derivatives via multiply service
+    derivatives = await multiply_content(
+        source_post=source_post,
+        target_formats=target_formats,
+        user_id=user_id,
+        db=db,
+    )
+
+    # Optionally schedule across the week
+    if schedule_across_week and derivatives:
+        base_date = datetime.now(timezone.utc).replace(hour=17, minute=0, second=0, microsecond=0)
+        # If today is past posting time, start from tomorrow
+        if datetime.now(timezone.utc).hour >= 17:
+            base_date += timedelta(days=1)
+
+        optimal_times = ["17:00", "18:00", "12:00", "19:00", "11:00"]
+        for i, deriv in enumerate(derivatives):
+            scheduled_date = base_date + timedelta(days=i)
+            scheduled_time = optimal_times[i % len(optimal_times)]
+            try:
+                post_result = await db.execute(
+                    select(Post).where(Post.id == deriv["post_id"], Post.user_id == user_id)
+                )
+                deriv_post = post_result.scalar_one_or_none()
+                if deriv_post:
+                    deriv_post.scheduled_date = scheduled_date
+                    deriv_post.scheduled_time = scheduled_time
+                    deriv_post.status = "scheduled"
+                    deriv["scheduled_date"] = scheduled_date.isoformat()
+                    deriv["scheduled_time"] = scheduled_time
+            except Exception as e:
+                logger.warning(f"Failed to schedule derivative {deriv['post_id']}: {e}")
+
+    # Load repurposing workflow metadata from social-content config
+    workflow_metadata = []
+    try:
+        strategy = StrategyLoader.instance()
+        repurposing_config = strategy.social_content.get("content_repurposing", {})
+        workflows = repurposing_config.get("workflows", [])
+        effort_map = {"niedrig": {"label": "Niedrig", "minutes": 2}, "mittel": {"label": "Mittel", "minutes": 8}, "hoch": {"label": "Hoch", "minutes": 15}}
+        for w in workflows:
+            if w.get("source") in (source_post.platform, "instagram_reels") or w.get("target") in target_formats:
+                effort = effort_map.get(w.get("effort", "mittel"), {"label": "Mittel", "minutes": 8})
+                workflow_metadata.append({
+                    "source": w["source"],
+                    "target": w["target"],
+                    "transformation": w.get("transformation", ""),
+                    "effort_level": effort["label"],
+                    "effort_minutes": effort["minutes"],
+                })
+    except Exception:
+        pass
+
+    invalidate_cache("dashboard", "analytics", "overview")
+
+    return {
+        "source_post_id": source_post_id,
+        "source_platform": source_post.platform,
+        "derivatives": derivatives,
+        "derivative_count": len(derivatives),
+        "scheduled": schedule_across_week,
+        "workflow_metadata": workflow_metadata,
+        "message": f"{len(derivatives)} Video-Derivat(e) erfolgreich erstellt"
+            + (" und im Kalender verteilt" if schedule_across_week else ""),
+    }

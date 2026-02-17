@@ -504,6 +504,20 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'video/repurpose/:id?',
+        name: 'VideoRepurpose',
+        component: () => import('@/views/VideoRepurposeView.vue'),
+        meta: {
+          requiresAuth: true,
+          title: 'Video-Repurposing',
+          breadcrumb: [
+            { label: 'Home', path: '/home' },
+            { label: 'Video-Tools', path: '/create/video' },
+            { label: 'Repurposing', path: '/video/repurpose' },
+          ],
+        },
+      },
 
       // ═══════════════════════════════════════════════════════
       // REDIRECTS: Old routes → new equivalents (no 404s)
