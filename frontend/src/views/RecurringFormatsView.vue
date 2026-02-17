@@ -107,7 +107,7 @@ async function fetchFormats() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     formats.value = await res.json()
   } catch (err) {
-    console.error('Fetch formats error:', err)
+    // Error toast shown by API interceptor
     showToast('Formate konnten nicht geladen werden.', 'error')
   } finally {
     loading.value = false
@@ -138,7 +138,7 @@ async function createFormat() {
     await fetchFormats()
     showToast('Format erstellt!')
   } catch (err) {
-    console.error('Create format error:', err)
+    // Error toast shown by API interceptor
     showToast('Format konnte nicht erstellt werden.', 'error')
   }
 }
@@ -167,7 +167,7 @@ async function updateFormat(id) {
     await fetchFormats()
     showToast('Format aktualisiert!')
   } catch (err) {
-    console.error('Update format error:', err)
+    // Error toast shown by API interceptor
     showToast('Format konnte nicht aktualisiert werden.', 'error')
   }
 }
@@ -187,7 +187,7 @@ async function toggleActive(fmt) {
     await fetchFormats()
     showToast(fmt.is_active ? 'Format deaktiviert' : 'Format aktiviert')
   } catch (err) {
-    console.error('Toggle active error:', err)
+    // Error toast shown by API interceptor
     showToast('Status konnte nicht geaendert werden.', 'error')
   }
 }
@@ -207,7 +207,7 @@ async function deleteFormat(id) {
     await fetchFormats()
     showToast('Format geloescht!')
   } catch (err) {
-    console.error('Delete format error:', err)
+    // Error toast shown by API interceptor
     showToast(err.message || 'Format konnte nicht geloescht werden.', 'error')
   }
 }
@@ -242,7 +242,7 @@ async function runAIGeneration() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     aiResult.value = await res.json()
   } catch (err) {
-    console.error('AI generation error:', err)
+    // Error toast shown by API interceptor
     showToast('KI-Generierung fehlgeschlagen.', 'error')
   } finally {
     aiLoading.value = false

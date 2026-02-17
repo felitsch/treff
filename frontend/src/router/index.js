@@ -536,6 +536,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
+})
+
+// ─── Navigation direction tracking ──────────────────────────
+// Tracks whether the user navigated forward (deeper) or backward (up)
+// so that page transitions can slide in the appropriate direction.
+router.transitionDirection = 'forward'
+
+router.beforeResolve((to, from) => {
+  const toDepth = to.path.split('/').filter(Boolean).length
+  const fromDepth = from.path.split('/').filter(Boolean).length
+  router.transitionDirection = toDepth >= fromDepth ? 'forward' : 'backward'
 })
 
 // ─── Navigation guard ───────────────────────────────────────

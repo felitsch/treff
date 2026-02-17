@@ -109,7 +109,7 @@ async function loadStudents() {
     const response = await api.get('/api/students')
     students.value = response.data
   } catch (err) {
-    console.error('Failed to load students:', err)
+    // Error toast shown by API interceptor
   } finally {
     loadingStudents.value = false
   }
@@ -149,7 +149,7 @@ async function suggestTitles() {
     })
     titleSuggestions.value = response.data.suggestions || []
   } catch (err) {
-    console.error('Failed to suggest titles:', err)
+    // Error toast shown by API interceptor
     toast.error('Titelvorschlaege konnten nicht geladen werden')
   } finally {
     loadingTitleSuggestions.value = false
@@ -181,7 +181,7 @@ async function suggestChapters() {
       description: ep.description,
     }))
   } catch (err) {
-    console.error('Failed to suggest chapters:', err)
+    // Error toast shown by API interceptor
     toast.error('Kapitelvorschlaege konnten nicht geladen werden')
   } finally {
     loadingEpisodes.value = false
@@ -239,7 +239,7 @@ async function loadAssets() {
     const response = await api.get('/api/assets')
     assets.value = (response.data || []).filter(a => a.file_type === 'image')
   } catch (err) {
-    console.error('Failed to load assets:', err)
+    // Error toast shown by API interceptor
   } finally {
     loadingAssets.value = false
   }

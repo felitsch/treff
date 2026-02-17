@@ -1,16 +1,22 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import SidebarNav from './SidebarNav.vue'
 import TopBar from './TopBar.vue'
 import BreadcrumbNav from './BreadcrumbNav.vue'
 import { useReminders } from '@/composables/useReminders'
 import { useSeriesReminders } from '@/composables/useSeriesReminders'
 
+const router = useRouter()
 const sidebarCollapsed = ref(false)
 const isMobileOverlay = ref(false)
 const { startPolling, stopPolling } = useReminders()
 const { startPolling: startSeriesPolling, stopPolling: stopSeriesPolling } = useSeriesReminders()
+
+// Page transition direction: forward slides left, backward slides right
+const transitionName = computed(() => {
+  return router.transitionDirection === 'backward' ? 'page-slide-back' : 'page-slide'
+})
 
 const TABLET_BREAKPOINT = 1024
 
@@ -94,7 +100,13 @@ onUnmounted(() => {
       <BreadcrumbNav />
 
       <main id="main-content" class="flex-1 overflow-y-auto p-6" role="main" aria-label="Hauptinhalt">
-        <RouterView />
+        <RouterView v-slot="{ Component, route }">
+          <Transition :name="transitionName" mode="out-in">
+            <div :key="route.path" class="page-wrapper">
+              <component :is="Component" />
+            </div>
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

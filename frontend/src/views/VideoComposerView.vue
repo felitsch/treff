@@ -100,7 +100,7 @@ async function fetchVideoAssets() {
     const resp = await api.get('/api/assets', { params: { file_type: 'video' } })
     videoAssets.value = resp.data
   } catch (err) {
-    console.error('Failed to load video assets:', err)
+    // Error toast shown by API interceptor
   } finally {
     loadingAssets.value = false
   }
@@ -186,7 +186,7 @@ async function fetchPreview() {
     })
     previewData.value = resp.data
   } catch (err) {
-    console.error('Preview failed:', err)
+    // Error toast shown by API interceptor
     previewData.value = null
   } finally {
     previewLoading.value = false

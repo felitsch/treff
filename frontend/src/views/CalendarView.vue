@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
+import api from '@/utils/api'
 import ContentMixPanel from '@/components/calendar/ContentMixPanel.vue'
 import CalendarExportImport from '@/components/calendar/CalendarExportImport.vue'
 import RecurringPostSettings from '@/components/calendar/RecurringPostSettings.vue'
@@ -418,15 +419,10 @@ async function fetchCalendar() {
     if (platformFilter.value) {
       url += `&platform=${platformFilter.value}`
     }
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(url)
     postsByDate.value = data.posts_by_date || {}
     totalPosts.value = data.total_posts || 0
   } catch (err) {
-    console.error('Calendar fetch error:', err)
     error.value = 'Kalender konnte nicht geladen werden.'
   } finally {
     loading.value = false
@@ -442,16 +438,11 @@ async function fetchWeek() {
     if (platformFilter.value) {
       url += `&platform=${platformFilter.value}`
     }
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(url)
     weekPostsByDate.value = data.posts_by_date || {}
     weekStartDate.value = data.start_date || null
     weekEndDate.value = data.end_date || null
   } catch (err) {
-    console.error('Week fetch error:', err)
     error.value = 'Wochenansicht konnte nicht geladen werden.'
   } finally {
     loading.value = false
@@ -462,14 +453,10 @@ async function fetchWeek() {
 async function fetchUnscheduled() {
   loadingUnscheduled.value = true
   try {
-    const res = await fetch('/api/calendar/unscheduled', {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get('/api/calendar/unscheduled')
     unscheduledPosts.value = data.posts || []
   } catch (err) {
-    console.error('Unscheduled fetch error:', err)
+    // Error toast shown by interceptor
   } finally {
     loadingUnscheduled.value = false
   }
@@ -478,25 +465,17 @@ async function fetchUnscheduled() {
 // Fetch gap dates for the current month
 async function fetchGaps() {
   try {
-    const res = await fetch(`/api/calendar/gaps?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/gaps?month=${currentMonth.value}&year=${currentYear.value}`)
     gapDates.value = new Set(data.gaps || [])
   } catch (err) {
-    console.error('Gaps fetch error:', err)
+    // Error toast shown by interceptor
   }
 }
 
 // Fetch recycling suggestions for gap days in current month
 async function fetchRecyclingSuggestions() {
   try {
-    const res = await fetch(`/api/recycling/calendar-suggestions?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/recycling/calendar-suggestions?month=${currentMonth.value}&year=${currentYear.value}`)
     const map = {}
     for (const s of (data.suggestions || [])) {
       if (s.suggested_post) {
@@ -505,7 +484,6 @@ async function fetchRecyclingSuggestions() {
     }
     recyclingSuggestions.value = map
   } catch (err) {
-    console.error('Recycling suggestions fetch error:', err)
     recyclingSuggestions.value = {}
   }
 }
@@ -514,14 +492,9 @@ async function fetchRecyclingSuggestions() {
 async function fetchArcTimeline() {
   if (!showArcTimeline.value) return
   try {
-    const res = await fetch(`/api/calendar/arc-timeline?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/arc-timeline?month=${currentMonth.value}&year=${currentYear.value}`)
     arcTimelineData.value = data.arcs || []
   } catch (err) {
-    console.error('Arc timeline fetch error:', err)
     arcTimelineData.value = []
   }
 }
@@ -627,14 +600,9 @@ function getRecyclingSuggestion(dateStr) {
 // Fetch seasonal markers (Bewerbungsfristen, Abflugzeiten, Schuljahresbeginn, etc.)
 async function fetchSeasonalMarkers() {
   try {
-    const res = await fetch(`/api/calendar/seasonal-markers?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/seasonal-markers?month=${currentMonth.value}&year=${currentYear.value}`)
     seasonalMarkers.value = data.markers || []
   } catch (err) {
-    console.error('Seasonal markers fetch error:', err)
     seasonalMarkers.value = []
   }
 }
@@ -648,14 +616,9 @@ function getMarkersForDate(dateStr) {
 // Fetch recurring format placeholders
 async function fetchRecurringPlaceholders() {
   try {
-    const res = await fetch(`/api/calendar/recurring-placeholders?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/recurring-placeholders?month=${currentMonth.value}&year=${currentYear.value}`)
     recurringPlaceholders.value = data.placeholders || []
   } catch (err) {
-    console.error('Recurring placeholders fetch error:', err)
     recurringPlaceholders.value = []
   }
 }
@@ -683,14 +646,10 @@ function getMarkerColorClasses(color) {
 // Fetch goal stats
 async function fetchStats() {
   try {
-    const res = await fetch('/api/calendar/stats', {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get('/api/calendar/stats')
     goalStats.value = data
   } catch (err) {
-    console.error('Stats fetch error:', err)
+    // Error toast shown by interceptor
   }
 }
 
@@ -714,15 +673,10 @@ async function fetchQueue() {
     if (platformFilter.value) {
       url += `?platform=${platformFilter.value}`
     }
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(url)
     queuePosts.value = data.posts || []
     queueCount.value = data.count || 0
   } catch (err) {
-    console.error('Queue fetch error:', err)
     error.value = 'Warteschlange konnte nicht geladen werden.'
   } finally {
     loading.value = false
@@ -733,15 +687,10 @@ async function fetchQueue() {
 async function fetchPlatformLanes() {
   lanesLoading.value = true
   try {
-    const res = await fetch(`/api/calendar/platform-lanes?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/platform-lanes?month=${currentMonth.value}&year=${currentYear.value}`)
     platformLanes.value = data.lanes || []
     crossPlatformStats.value = data.cross_platform_stats || {}
   } catch (err) {
-    console.error('Platform lanes fetch error:', err)
     platformLanes.value = []
   } finally {
     lanesLoading.value = false
@@ -751,14 +700,10 @@ async function fetchPlatformLanes() {
 // Fetch cross-platform stats
 async function fetchCrossPlatformStats() {
   try {
-    const res = await fetch(`/api/calendar/cross-platform-stats?month=${currentMonth.value}&year=${currentYear.value}`, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { data } = await api.get(`/api/calendar/cross-platform-stats?month=${currentMonth.value}&year=${currentYear.value}`)
     detailedCrossStats.value = data
   } catch (err) {
-    console.error('Cross-platform stats fetch error:', err)
+    // Error toast shown by interceptor
   }
 }
 
@@ -980,19 +925,9 @@ async function confirmMultiMove() {
   let failedCount = 0
   const results = await Promise.allSettled(
     postsToMove.map(p =>
-      fetch(`/api/posts/${p.id}/schedule`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
-          scheduled_date: targetDate,
-          scheduled_time: targetTime,
-        }),
-      }).then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
+      api.put(`/api/posts/${p.id}/schedule`, {
+        scheduled_date: targetDate,
+        scheduled_time: targetTime,
       })
     )
   )
@@ -1048,28 +983,15 @@ function toggleStatusDropdown(postId) {
 
 async function changePostStatus(post, newStatus) {
   statusDropdownPost.value = null
-  const oldStatus = post.status
   try {
-    const res = await fetch(`/api/posts/${post.id}/status`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.accessToken}`,
-      },
-      body: JSON.stringify({ status: newStatus }),
-    })
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      throw new Error(errData.detail || `HTTP ${res.status}`)
-    }
+    await api.put(`/api/posts/${post.id}/status`, { status: newStatus })
     // Update locally
     post.status = newStatus
     toast.success(`Status geaendert: ${getStatusMeta(newStatus).label}`)
     // Refresh to keep everything in sync
     await fetchData()
   } catch (err) {
-    console.error('Status change error:', err)
-    toast.error(`Statusaenderung fehlgeschlagen: ${err.message}`)
+    // Error toast shown by interceptor
   }
 }
 
@@ -1077,19 +999,7 @@ async function batchChangeStatus(newStatus) {
   if (selectedPostIds.value.size === 0) return
   const postIds = [...selectedPostIds.value]
   try {
-    const res = await fetch('/api/posts/batch-status', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.accessToken}`,
-      },
-      body: JSON.stringify({ post_ids: postIds, status: newStatus }),
-    })
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      throw new Error(errData.detail || `HTTP ${res.status}`)
-    }
-    const result = await res.json()
+    const { data: result } = await api.put('/api/posts/batch-status', { post_ids: postIds, status: newStatus })
     if (result.updated_count > 0) {
       toast.success(`${result.updated_count} Posts auf "${getStatusMeta(newStatus).label}" geaendert`)
     }
@@ -1099,8 +1009,7 @@ async function batchChangeStatus(newStatus) {
     clearSelection()
     await fetchData()
   } catch (err) {
-    console.error('Batch status change error:', err)
-    toast.error(`Batch-Statusaenderung fehlgeschlagen: ${err.message}`)
+    // Error toast shown by interceptor
   }
 }
 
@@ -1237,24 +1146,15 @@ async function onDrop(event, dateStr) {
 async function validateEpisodeOrder(postId, targetDate) {
   validatingOrder.value = true
   try {
-    const res = await fetch('/api/calendar/validate-episode-order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.accessToken}`,
-      },
-      body: JSON.stringify({
-        post_id: postId,
-        target_date: targetDate,
-      }),
+    const { data } = await api.post('/api/calendar/validate-episode-order', {
+      post_id: postId,
+      target_date: targetDate,
     })
-    if (!res.ok) return
-    const data = await res.json()
     episodeConflicts.value = data.conflicts || []
     episodeWarnings.value = data.warnings || []
     episodeInfo.value = data.episode_info || null
   } catch (err) {
-    console.error('Episode order validation error:', err)
+    // Error toast shown by interceptor
   } finally {
     validatingOrder.value = false
   }
@@ -1292,69 +1192,44 @@ async function confirmSchedule() {
   try {
     // Use episode-aware scheduling for arc posts, regular for others
     const isArcPost = post.story_arc_id
-    let res
 
     if (isArcPost) {
       // Re-open dialog for arc posts to handle conflicts
       // (optimistic update already applied, will rollback on failure)
-      res = await fetch('/api/calendar/schedule-episode', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
-          post_id: post.id,
-          scheduled_date: newDate,
-          scheduled_time: newTime,
-          force: episodeConflicts.value.length > 0,
-          shift_following: shiftFollowing.value,
-        }),
+      const { data } = await api.post('/api/calendar/schedule-episode', {
+        post_id: post.id,
+        scheduled_date: newDate,
+        scheduled_time: newTime,
+        force: episodeConflicts.value.length > 0,
+        shift_following: shiftFollowing.value,
       })
 
-      if (res.ok) {
-        const data = await res.json()
-        if (!data.success) {
-          // Order conflict - rollback optimistic update and re-show dialog
-          rollbackPost(originalState)
-          scheduleError.value = data.message || 'Reihenfolge-Konflikt'
-          episodeConflicts.value = data.conflicts || []
-          episodeWarnings.value = data.warnings || []
-          schedulingPost.value = post
-          scheduleTargetDate.value = newDate
-          scheduleTime.value = newTime
-          showTimeDialog.value = true
-          return
-        }
+      if (!data.success) {
+        // Order conflict - rollback optimistic update and re-show dialog
+        rollbackPost(originalState)
+        scheduleError.value = data.message || 'Reihenfolge-Konflikt'
+        episodeConflicts.value = data.conflicts || []
+        episodeWarnings.value = data.warnings || []
+        schedulingPost.value = post
+        scheduleTargetDate.value = newDate
+        scheduleTime.value = newTime
+        showTimeDialog.value = true
+        return
       }
     } else {
       // Regular scheduling for non-arc posts
-      res = await fetch(`/api/posts/${post.id}/schedule`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
-          scheduled_date: newDate,
-          scheduled_time: newTime,
-        }),
+      await api.put(`/api/posts/${post.id}/schedule`, {
+        scheduled_date: newDate,
+        scheduled_time: newTime,
       })
-    }
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      throw new Error(errData.detail || `HTTP ${res.status}`)
     }
 
     // Success! Show toast and refresh to ensure consistency
     toast.success(`"${postTitle}" auf ${formatDateForDisplay(newDate)} verschoben`)
     await Promise.all([fetchData(), fetchUnscheduled()])
   } catch (err) {
-    console.error('Schedule error:', err)
     // Rollback optimistic update on failure
     rollbackPost(originalState)
-    toast.error(`Fehler beim Verschieben: ${err.message}`)
     // Refresh to ensure UI matches server state
     await Promise.all([fetchData(), fetchUnscheduled()])
   } finally {
@@ -1391,14 +1266,10 @@ async function exportCalendarCSV() {
     if (platformFilter.value) {
       url += `&platform=${platformFilter.value}`
     }
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const res = await api.get(url, { responseType: 'blob' })
 
-    const blob = await res.blob()
     // Extract filename from Content-Disposition header or use default
-    const disposition = res.headers.get('Content-Disposition')
+    const disposition = res.headers?.['content-disposition']
     let filename = `TREFF_calendar_${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}.csv`
     if (disposition) {
       const match = disposition.match(/filename="?([^"]+)"?/)
@@ -1406,7 +1277,7 @@ async function exportCalendarCSV() {
     }
 
     // Trigger download
-    const downloadUrl = URL.createObjectURL(blob)
+    const downloadUrl = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = downloadUrl
     a.download = filename
@@ -1415,7 +1286,6 @@ async function exportCalendarCSV() {
     document.body.removeChild(a)
     URL.revokeObjectURL(downloadUrl)
   } catch (err) {
-    console.error('CSV export error:', err)
     error.value = 'CSV-Export fehlgeschlagen.'
   }
 }
@@ -1494,9 +1364,7 @@ watch(scheduleTargetDate, async (newDate) => {
 const recurringFormatsCount = ref(-1)
 async function checkRecurringFormats() {
   try {
-    const { data } = await fetch('/api/recurring-formats', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
-    }).then(r => r.json())
+    const { data } = await api.get('/api/recurring-formats')
     recurringFormatsCount.value = Array.isArray(data) ? data.length : 0
   } catch { recurringFormatsCount.value = 0 }
 }

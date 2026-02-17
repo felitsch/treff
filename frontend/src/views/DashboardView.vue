@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useApi } from '@/composables/useApi'
 import api from '@/utils/api'
+import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import WelcomeFlow from '@/components/common/WelcomeFlow.vue'
 import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
@@ -17,9 +19,7 @@ import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const router = useRouter()
-
-const loading = ref(true)
-const error = ref(null)
+const { execute: apiExecute, loading, error } = useApi()
 const tourRef = ref(null)
 const showWelcomeFlow = ref(false)
 const welcomeCheckDone = ref(false)
@@ -210,14 +210,12 @@ async function generateSuggestions() {
 }
 
 async function fetchDashboardData() {
-  loading.value = true
-  error.value = null
-  try {
-    const res = await api.get('/api/analytics/dashboard')
-    stats.value = res.data.stats
-    recentPosts.value = res.data.recent_posts
-    calendarEntries.value = res.data.calendar_entries
-    suggestions.value = res.data.suggestions || []
+  const result = await apiExecute(() => api.get('/api/analytics/dashboard'))
+  if (result) {
+    stats.value = result.stats
+    recentPosts.value = result.recent_posts
+    calendarEntries.value = result.calendar_entries
+    suggestions.value = result.suggestions || []
 
     // Trigger animated counters after data load
     setTimeout(() => {
@@ -225,11 +223,6 @@ async function fetchDashboardData() {
       animateCounter(stats.value.scheduled_posts, 'scheduled_posts')
       animateCounter(stats.value.draft_posts || 0, 'draft_posts')
     }, 100)
-  } catch (err) {
-    console.error('Failed to load dashboard data:', err)
-    error.value = 'Dashboard-Daten konnten nicht geladen werden.'
-  } finally {
-    loading.value = false
   }
 }
 
@@ -239,45 +232,30 @@ async function checkWelcomeStatus() {
     const settings = res.data
     // Check welcome flow first (shows before page-specific tour)
     if (!settings.welcome_completed || settings.welcome_completed === 'false') {
-      // First time user - show welcome flow immediately
       showWelcomeFlow.value = true
     }
     // Check if API keys are configured (for workflow hint)
     if (!settings.gemini_api_key && !settings.openai_api_key) {
       apiKeysMissing.value = true
     }
-  } catch (err) {
-    console.error('Failed to check welcome status:', err)
+  } catch {
+    // Non-critical: silently ignore (toast from interceptor if needed)
   } finally {
-    // Mark check as done so TourSystem can conditionally render
     welcomeCheckDone.value = true
   }
 }
 
 async function handleWelcomeComplete() {
   showWelcomeFlow.value = false
-  try {
-    await api.put('/api/settings', { welcome_completed: 'true' })
-  } catch (err) {
-    console.error('Failed to save welcome status:', err)
-  }
-  // After welcome flow, start the page-specific tour
-  setTimeout(() => {
-    tourRef.value?.startTour()
-  }, 400)
+  // Fire-and-forget: errors handled by interceptor
+  api.put('/api/settings', { welcome_completed: 'true' }).catch(() => {})
+  setTimeout(() => { tourRef.value?.startTour() }, 400)
 }
 
 async function handleWelcomeSkip() {
   showWelcomeFlow.value = false
-  try {
-    await api.put('/api/settings', { welcome_completed: 'true' })
-  } catch (err) {
-    console.error('Failed to save welcome status:', err)
-  }
-  // After skipping welcome, start the page-specific tour
-  setTimeout(() => {
-    tourRef.value?.startTour()
-  }, 400)
+  api.put('/api/settings', { welcome_completed: 'true' }).catch(() => {})
+  setTimeout(() => { tourRef.value?.startTour() }, 400)
 }
 
 // Current greeting based on time of day
@@ -382,15 +360,12 @@ onMounted(() => {
     </div>
 
     <!-- ═══ ERROR STATE ═══ -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
-      <p class="text-red-600 dark:text-red-400">{{ error }}</p>
-      <button
-        @click="fetchDashboardData"
-        class="mt-3 px-4 py-2 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
-      >
-        Erneut versuchen
-      </button>
-    </div>
+    <ErrorBanner
+      v-else-if="error"
+      :message="error"
+      :retryable="true"
+      @retry="fetchDashboardData"
+    />
 
     <!-- ═══ DASHBOARD CONTENT ═══ -->
     <div v-else class="space-y-6">
@@ -433,7 +408,7 @@ onMounted(() => {
       <!-- ─── Stat Cards with Animated Counters ─── -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="dashboard-stats">
         <!-- Posts this week -->
-        <BaseCard hoverable clickable padding="md" @click="router.push('/library/history')">
+        <BaseCard hoverable clickable padding="md" class="stagger-item" @click="router.push('/library/history')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -454,7 +429,7 @@ onMounted(() => {
         </BaseCard>
 
         <!-- Scheduled Posts -->
-        <BaseCard hoverable clickable padding="md" @click="router.push('/calendar')">
+        <BaseCard hoverable clickable padding="md" class="stagger-item" @click="router.push('/calendar')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -475,7 +450,7 @@ onMounted(() => {
         </BaseCard>
 
         <!-- Drafts -->
-        <BaseCard hoverable clickable padding="md" @click="router.push('/library/history?status=draft')">
+        <BaseCard hoverable clickable padding="md" class="stagger-item" @click="router.push('/library/history?status=draft')">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -535,7 +510,7 @@ onMounted(() => {
               <div
                 v-for="post in recentPosts"
                 :key="post.id"
-                class="group relative rounded-lg overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-700 hover:border-[#4C8BC2]/50 dark:hover:border-[#4C8BC2]/50 transition-all hover:shadow-md hover:-translate-y-0.5"
+                class="stagger-item group relative rounded-lg overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-700 hover:border-[#4C8BC2]/50 dark:hover:border-[#4C8BC2]/50 transition-all hover:shadow-md hover:-translate-y-0.5"
                 @click="router.push(`/create/post/${post.id}/edit`)"
               >
                 <!-- Thumbnail or Category Placeholder -->

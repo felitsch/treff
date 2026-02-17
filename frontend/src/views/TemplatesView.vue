@@ -895,7 +895,7 @@ onMounted(() => {
             clickable
             padding="none"
             :header-divider="false"
-            class="group relative"
+            class="stagger-item group relative"
             @click="openEditor(template)"
             data-testid="template-card"
           >

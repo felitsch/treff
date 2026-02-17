@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import api from '@/utils/api'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -82,11 +83,7 @@ watch(() => props.show, async (newVal) => {
 async function loadExistingRule() {
   loadingRule.value = true
   try {
-    const res = await fetch('/api/recurring-posts', {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-    if (!res.ok) return
-    const rules = await res.json()
+    const { data: rules } = await api.get('/api/recurring-posts')
     const found = rules.find(r => r.source_post_id === props.postId)
     if (found) {
       existingRule.value = found
@@ -136,28 +133,13 @@ async function createRule() {
       body.max_occurrences = maxOccurrences.value
     }
 
-    const res = await fetch('/api/recurring-posts', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${auth.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || `HTTP ${res.status}`)
-    }
-
-    const result = await res.json()
+    const { data: result } = await api.post('/api/recurring-posts', body)
     toast.success(`Wiederkehrend: ${result.generated_instances} Posts erstellt`)
     existingRule.value = result
     emit('created', result)
     close()
   } catch (err) {
-    console.error('Error creating recurring rule:', err)
-    toast.error('Fehler: ' + (err.message || 'Regel konnte nicht erstellt werden'))
+    // Error toast shown by interceptor
   } finally {
     loading.value = false
   }
@@ -167,24 +149,13 @@ async function deleteRule() {
   if (!existingRule.value) return
   loading.value = true
   try {
-    const res = await fetch(`/api/recurring-posts/${existingRule.value.id}?delete_future=true`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    })
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || `HTTP ${res.status}`)
-    }
-
-    const result = await res.json()
+    const { data: result } = await api.delete(`/api/recurring-posts/${existingRule.value.id}?delete_future=true`)
     toast.success(`Wiederkehr-Regel geloescht (${result.deleted_future_instances} zukuenftige Posts entfernt)`)
     existingRule.value = null
     emit('deleted')
     close()
   } catch (err) {
-    console.error('Error deleting recurring rule:', err)
-    toast.error('Fehler beim Loeschen: ' + (err.message || ''))
+    // Error toast shown by interceptor
   } finally {
     loading.value = false
   }

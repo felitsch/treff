@@ -75,7 +75,7 @@ async function fetchArcs() {
     const { data } = await api.get('/api/story-arcs', { params })
     arcs.value = data
   } catch (err) {
-    console.error('Failed to fetch story arcs:', err)
+    // Error toast shown by API interceptor
     toast.error('Fehler beim Laden der Story-Arcs.')
   } finally {
     loading.value = false

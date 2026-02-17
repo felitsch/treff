@@ -51,6 +51,12 @@ const switchTab = (tab) => {
     </div>
 
     <!-- Child view content -->
-    <router-view />
+    <router-view v-slot="{ Component, route: childRoute }">
+      <Transition name="page-slide" mode="out-in">
+        <div :key="childRoute.path">
+          <component :is="Component" />
+        </div>
+      </Transition>
+    </router-view>
   </div>
 </template>

@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
+import { useApi } from '@/composables/useApi'
+import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
@@ -107,7 +109,7 @@ async function fetchHashtagSets() {
     const res = await api.get('/api/hashtag-sets')
     hashtagSets.value = res.data.hashtag_sets || []
   } catch (err) {
-    console.error('Failed to load hashtag sets:', err)
+    // Error toast shown by API interceptor
   } finally {
     hashtagSetsLoading.value = false
   }
@@ -133,7 +135,7 @@ async function createHashtagSet() {
     newHashtagSet.value = { name: '', hashtags: '', category: '', country: '' }
     showCreateHashtagForm.value = false
   } catch (err) {
-    console.error('Failed to create hashtag set:', err)
+    // Error toast shown by API interceptor
   } finally {
     savingHashtagSet.value = false
   }
@@ -173,7 +175,7 @@ async function saveEditHashtagSet(id) {
     if (idx !== -1) hashtagSets.value[idx] = res.data
     editingHashtagSetId.value = null
   } catch (err) {
-    console.error('Failed to update hashtag set:', err)
+    // Error toast shown by API interceptor
   } finally {
     savingHashtagSet.value = false
   }
@@ -184,7 +186,7 @@ async function deleteHashtagSet(id) {
     await api.delete(`/api/hashtag-sets/${id}`)
     hashtagSets.value = hashtagSets.value.filter(s => s.id !== id)
   } catch (err) {
-    console.error('Failed to delete hashtag set:', err)
+    // Error toast shown by API interceptor
   }
 }
 
@@ -230,7 +232,7 @@ async function fetchSettings() {
     // Fetch hashtag sets
     await fetchHashtagSets()
   } catch (err) {
-    console.error('Failed to load settings:', err)
+    // Error toast shown by API interceptor
     error.value = 'Einstellungen konnten nicht geladen werden.'
   } finally {
     loading.value = false
@@ -271,7 +273,7 @@ async function saveSettings() {
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false }, 3000)
   } catch (err) {
-    console.error('Failed to save settings:', err)
+    // Error toast shown by API interceptor
     error.value = 'Einstellungen konnten nicht gespeichert werden.'
   } finally {
     saving.value = false
@@ -299,7 +301,7 @@ async function fetchSocialStrategy() {
     const res = await api.get('/api/content-strategy/social-strategy')
     socialStrategy.value = res.data
   } catch (err) {
-    console.error('Failed to load social strategy:', err)
+    // Error toast shown by API interceptor
     socialStrategyError.value = 'Social-Content-Strategie konnte nicht geladen werden.'
   } finally {
     socialStrategyLoading.value = false

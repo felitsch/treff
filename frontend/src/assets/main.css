@@ -439,6 +439,90 @@
   }
 }
 
+/* ── Page Transition Animations ───────────────────────────────────── */
+/* Forward navigation: fade + slide left */
+.page-slide-enter-active,
+.page-slide-leave-active {
+  transition: opacity 250ms ease-out, transform 250ms ease-out;
+}
+
+.page-slide-enter-from {
+  opacity: 0;
+  transform: translateX(24px);
+}
+
+.page-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+/* Backward navigation: fade + slide right */
+.page-slide-back-enter-active,
+.page-slide-back-leave-active {
+  transition: opacity 250ms ease-out, transform 250ms ease-out;
+}
+
+.page-slide-back-enter-from {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+
+.page-slide-back-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+
+/* Page wrapper prevents layout shift during transitions */
+.page-wrapper {
+  min-height: 0;
+}
+
+/* ── Stagger Animation for Card Grids ────────────────────────────── */
+/* Apply .stagger-grid to the parent container and .stagger-item to each card.
+   Cards fade in and slide up with a sequential 50ms delay per card. */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: stagger-fade-in 300ms ease-out forwards;
+}
+
+/* Generate delay classes for up to 20 items */
+.stagger-item:nth-child(1)  { animation-delay:   0ms; }
+.stagger-item:nth-child(2)  { animation-delay:  50ms; }
+.stagger-item:nth-child(3)  { animation-delay: 100ms; }
+.stagger-item:nth-child(4)  { animation-delay: 150ms; }
+.stagger-item:nth-child(5)  { animation-delay: 200ms; }
+.stagger-item:nth-child(6)  { animation-delay: 250ms; }
+.stagger-item:nth-child(7)  { animation-delay: 300ms; }
+.stagger-item:nth-child(8)  { animation-delay: 350ms; }
+.stagger-item:nth-child(9)  { animation-delay: 400ms; }
+.stagger-item:nth-child(10) { animation-delay: 450ms; }
+.stagger-item:nth-child(11) { animation-delay: 500ms; }
+.stagger-item:nth-child(12) { animation-delay: 550ms; }
+.stagger-item:nth-child(n+13) { animation-delay: 600ms; }
+
+/* ── Skeleton-to-Content Transition ──────────────────────────────── */
+/* Smooth crossfade from skeleton placeholder to loaded content */
+.skeleton-fade-enter-active,
+.skeleton-fade-leave-active {
+  transition: opacity 200ms ease;
+}
+
+.skeleton-fade-enter-from,
+.skeleton-fade-leave-to {
+  opacity: 0;
+}
+
 /* ── Non-layer Scrollbar Defaults ─────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 8px;

@@ -18,7 +18,7 @@ async function loadDrafts() {
     const res = await api.get('/api/posts/drafts/list')
     drafts.value = res.data?.drafts || []
   } catch (err) {
-    console.error('Failed to load drafts:', err)
+    // Error toast shown by API interceptor
     toast.error('Entwuerfe konnten nicht geladen werden.', 4000)
   } finally {
     loading.value = false

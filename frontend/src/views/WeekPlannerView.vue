@@ -163,7 +163,7 @@ async function generatePlan() {
     planGenerated.value = true
     toast.success(`Wochenplan mit ${data.total_suggestions} Vorschlaegen generiert!`)
   } catch (err) {
-    console.error('Weekly planner error:', err)
+    // Error toast shown by API interceptor
     toast.error('Wochenplan konnte nicht generiert werden.')
   } finally {
     loading.value = false
@@ -207,7 +207,7 @@ function onDrop(event, targetDayIndex) {
 
     toast.info(`Verschoben nach ${daySlots.value[targetDayIndex].day}`)
   } catch (err) {
-    console.error('Drop error:', err)
+    // Error toast shown by API interceptor
   }
   dragItem.value = null
   dragSourceDay.value = null
@@ -317,7 +317,7 @@ async function adoptPlan() {
       router.push('/calendar')
     }, 1500)
   } catch (err) {
-    console.error('Adopt plan error:', err)
+    // Error toast shown by API interceptor
     toast.error('Plan konnte nicht uebernommen werden.')
   } finally {
     adopting.value = false

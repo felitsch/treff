@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
+import { useApi } from '@/composables/useApi'
+import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import AssetCropModal from '@/components/assets/AssetCropModal.vue'
 import VideoTrimmer from '@/components/assets/VideoTrimmer.vue'
 import ImageEditTools from '@/components/assets/ImageEditTools.vue'
@@ -200,18 +202,19 @@ const hasActiveFilters = computed(() => {
   return selectedFilter.value !== 'all' || selectedCategory.value !== 'all' || selectedCountry.value !== 'all' || searchQuery.value.trim() !== ''
 })
 
+const { execute: apiExecute } = useApi()
+
 // Fetch all assets (filtering is done client-side via filteredAssets computed)
 async function fetchAssets() {
   loading.value = true
   error.value = null
-  try {
-    const response = await api.get('/api/assets')
-    assets.value = response.data
-  } catch (err) {
-    error.value = err.response?.data?.detail || 'Fehler beim Laden der Assets'
-  } finally {
-    loading.value = false
+  const result = await apiExecute(() => api.get('/api/assets'))
+  if (result) {
+    assets.value = result
+  } else {
+    error.value = 'Fehler beim Laden der Assets'
   }
+  loading.value = false
 }
 
 // Upload file
@@ -275,6 +278,7 @@ async function uploadFile(file) {
     uploadCountry.value = ''
     uploadTags.value = ''
   } catch (err) {
+    // Error toast shown by API interceptor; set local error for inline display
     uploadError.value = err.response?.data?.detail || 'Upload fehlgeschlagen'
   } finally {
     // Small delay so user sees 100% completion
@@ -326,13 +330,12 @@ function onFileSelect(e) {
 
 // Delete asset
 async function deleteAsset(assetId) {
-  try {
-    await api.delete(`/api/assets/${assetId}`)
+  const result = await apiExecute(() => api.delete(`/api/assets/${assetId}`))
+  if (result !== null) {
     assets.value = assets.value.filter(a => a.id !== assetId)
     showDeleteConfirm.value = null
-  } catch (err) {
-    error.value = err.response?.data?.detail || 'Loeschen fehlgeschlagen'
   }
+  // Error toast shown by API interceptor
 }
 
 // Clear all filters
@@ -390,6 +393,7 @@ async function searchStockPhotos() {
     })
     stockResults.value = response.data.results || []
   } catch (err) {
+    // Error toast shown by API interceptor; set local error for inline display
     stockError.value = err.response?.data?.detail || 'Fehler bei der Stock-Foto-Suche'
   } finally {
     stockLoading.value = false
@@ -425,6 +429,7 @@ async function importStockPhoto(photo) {
     assets.value.unshift(response.data)
     stockImportSuccess.value = { ...stockImportSuccess.value, [photo.id]: true }
   } catch (err) {
+    // Error toast shown by API interceptor; set local error for inline display
     stockError.value = err.response?.data?.detail || 'Import fehlgeschlagen'
   } finally {
     stockImporting.value = { ...stockImporting.value, [photo.id]: false }
@@ -718,7 +723,7 @@ onMounted(fetchAssets)
         <div
           v-for="asset in filteredAssets"
           :key="asset.id"
-          class="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+          class="stagger-item group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
           :data-testid="`asset-${asset.id}`"
         >
           <!-- Image/Video/Audio thumbnail -->

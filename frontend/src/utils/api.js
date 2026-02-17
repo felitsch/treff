@@ -20,12 +20,73 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor for token refresh
+// ─── Centralized Error Handling ─────────────────────────────────────
+// All API errors flow through this interceptor. It handles:
+// - 401: Token refresh + login redirect
+// - 403: Permission denied toast
+// - 404: Not found toast
+// - 422: Validation error with field-specific messages
+// - 429: Rate limit with retry timer
+// - 500: Generic server error toast
+// - Network errors: Connectivity toast
+
+/**
+ * Extract a user-friendly error message from a 422 validation response.
+ * FastAPI returns { detail: [{ loc: [..., "field"], msg: "...", type: "..." }] }
+ * @param {Object} data - The response data
+ * @returns {string} Formatted validation error message
+ */
+function extractValidationErrors(data) {
+  const detail = data?.detail
+  if (Array.isArray(detail)) {
+    const fieldErrors = detail.map((err) => {
+      const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : 'Feld'
+      const msg = err.msg || 'Ungueltiger Wert'
+      return `${field}: ${msg}`
+    })
+    if (fieldErrors.length <= 3) {
+      return fieldErrors.join('\n')
+    }
+    return `${fieldErrors.slice(0, 3).join('\n')}\n(+${fieldErrors.length - 3} weitere Fehler)`
+  }
+  if (typeof detail === 'string') return detail
+  return 'Validierungsfehler. Bitte pruefe deine Eingaben.'
+}
+
+/**
+ * Show a rate-limit toast with a countdown retry timer.
+ * Looks for Retry-After header; defaults to 30 s.
+ * @param {Object} error - Axios error object
+ * @param {Object} toast - Toast composable instance
+ */
+function showRateLimitToast(error, toast) {
+  const retryAfter = parseInt(error.response?.headers?.['retry-after'], 10)
+  const seconds = retryAfter && retryAfter > 0 ? retryAfter : 30
+  const detail = error.response?.data?.detail
+  const baseMsg = typeof detail === 'string' && detail
+    ? detail
+    : 'Zu viele Anfragen.'
+  toast.warning(`${baseMsg} Bitte warte ${seconds} Sekunden.`, seconds * 1000)
+}
+
+// Map common English API messages to German
+const messageTranslations = {
+  'Post not found': 'Post wurde nicht gefunden.',
+  'Template not found': 'Vorlage wurde nicht gefunden.',
+  'Asset not found': 'Asset wurde nicht gefunden.',
+  'Not authenticated': 'Nicht authentifiziert. Bitte melde dich erneut an.',
+  'Invalid credentials': 'Ungueltige Anmeldedaten.',
+  'Email already registered': 'Diese E-Mail-Adresse ist bereits registriert.',
+  'Not Found': 'Die angeforderte Ressource wurde nicht gefunden.',
+}
+
+// Response interceptor for centralized error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
+    // ── 401 Unauthorized: Token refresh + redirect ──
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
@@ -47,44 +108,57 @@ api.interceptors.response.use(
           return Promise.reject(refreshError)
         }
       }
+      // No refresh token available - redirect to login
+      localStorage.removeItem('access_token')
+      window.location.href = '/login'
+      return Promise.reject(error)
     }
 
-    // Show error toast for non-401 errors (401 is handled by token refresh above)
-    if (error.response?.status !== 401) {
+    // ── Toast for non-401 errors ──
+    // Skip toast if the request explicitly opts out (e.g. config._silent = true)
+    if (error.response?.status !== 401 && !originalRequest?._silent) {
       const toast = useToast()
-      // Map common English API messages to German
-      const messageTranslations = {
-        'Post not found': 'Post wurde nicht gefunden.',
-        'Template not found': 'Vorlage wurde nicht gefunden.',
-        'Asset not found': 'Asset wurde nicht gefunden.',
-        'Not authenticated': 'Nicht authentifiziert. Bitte melde dich erneut an.',
-        'Invalid credentials': 'Ungueltige Anmeldedaten.',
-        'Email already registered': 'Diese E-Mail-Adresse ist bereits registriert.',
-        'Not Found': 'Die angeforderte Ressource wurde nicht gefunden.',
-      }
-      // Extract user-friendly message from API response
+      const status = error.response?.status
       const detail = error.response?.data?.detail
+
       let message
+
+      // ── 422 Validation Error: Field-specific messages ──
+      if (status === 422) {
+        message = extractValidationErrors(error.response?.data)
+        toast.warning(message, 8000)
+        // Attach parsed field errors to the error object for components
+        error.validationErrors = Array.isArray(detail)
+          ? detail.reduce((acc, err) => {
+              const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : '_general'
+              acc[field] = err.msg || 'Ungueltiger Wert'
+              return acc
+            }, {})
+          : {}
+        return Promise.reject(error)
+      }
+
+      // ── 429 Rate Limited: Toast with retry timer ──
+      if (status === 429) {
+        showRateLimitToast(error, toast)
+        return Promise.reject(error)
+      }
+
+      // ── Other status codes ──
       if (typeof detail === 'string' && messageTranslations[detail]) {
-        // Known English message with a German translation
         message = messageTranslations[detail]
-      } else if (typeof detail === 'string' && error.response?.status !== 500) {
-        // Non-500 detail strings are often user-friendly (e.g. validation errors in German)
+      } else if (typeof detail === 'string' && status !== 500) {
         message = detail
-      } else if (error.response?.status === 429) {
-        // Rate limit - use backend detail (already German) or fallback
-        message = (typeof detail === 'string' && detail)
-          ? detail
-          : 'Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.'
-      } else if (error.response?.status === 404) {
+      } else if (status === 404) {
         message = 'Die angeforderte Ressource wurde nicht gefunden.'
-      } else if (error.response?.status === 500) {
+      } else if (status === 500) {
         message = 'Ein Serverfehler ist aufgetreten. Bitte versuche es spaeter erneut.'
-      } else if (error.response?.status === 403) {
+      } else if (status === 403) {
         message = 'Zugriff verweigert. Du hast keine Berechtigung fuer diese Aktion.'
-      } else if (error.response?.status) {
-        message = `Fehler bei der Anfrage (${error.response.status}). Bitte versuche es erneut.`
+      } else if (status) {
+        message = `Fehler bei der Anfrage (${status}). Bitte versuche es erneut.`
       } else {
+        // Network error (no response at all)
         message = 'Netzwerkfehler. Bitte pruefe deine Internetverbindung.'
       }
       toast.error(message)

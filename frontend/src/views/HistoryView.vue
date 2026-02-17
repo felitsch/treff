@@ -3,8 +3,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import api from '@/utils/api'
+import { useApi } from '@/composables/useApi'
 import { useToast } from '@/composables/useToast'
 import { useStudentStore } from '@/stores/students'
+import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
@@ -13,9 +15,7 @@ import BaseCard from '@/components/common/BaseCard.vue'
 const router = useRouter()
 const toast = useToast()
 const studentStore = useStudentStore()
-
-const loading = ref(true)
-const error = ref(null)
+const { execute: apiExecute, loading, error } = useApi()
 const posts = ref([])
 const tourRef = ref(null)
 
@@ -260,44 +260,37 @@ function clearFilters() {
 
 // Fetch posts from API with pagination
 async function fetchPosts(resetPage = true) {
-  loading.value = true
-  error.value = null
   if (resetPage) {
     currentPage.value = 1
   }
-  try {
-    const params = {}
-    if (filterCategory.value) params.category = filterCategory.value
-    if (filterPlatform.value) params.platform = filterPlatform.value
-    if (filterStatus.value) params.status = filterStatus.value
-    if (filterCountry.value) params.country = filterCountry.value
-    if (searchQuery.value && searchQuery.value.trim()) params.search = searchQuery.value.trim()
-    if (filterDateFrom.value) params.date_from = filterDateFrom.value
-    if (filterDateTo.value) params.date_to = filterDateTo.value
-    params.sort_by = sortBy.value
-    params.sort_direction = sortDirection.value
-    params.page = currentPage.value
-    params.limit = postsPerPage.value
+  const params = {}
+  if (filterCategory.value) params.category = filterCategory.value
+  if (filterPlatform.value) params.platform = filterPlatform.value
+  if (filterStatus.value) params.status = filterStatus.value
+  if (filterCountry.value) params.country = filterCountry.value
+  if (searchQuery.value && searchQuery.value.trim()) params.search = searchQuery.value.trim()
+  if (filterDateFrom.value) params.date_from = filterDateFrom.value
+  if (filterDateTo.value) params.date_to = filterDateTo.value
+  params.sort_by = sortBy.value
+  params.sort_direction = sortDirection.value
+  params.page = currentPage.value
+  params.limit = postsPerPage.value
 
-    const response = await api.get('/api/posts', { params })
+  const result = await apiExecute(() => api.get('/api/posts', { params }))
+  if (result) {
     // Handle paginated response
-    if (response.data && response.data.items) {
-      posts.value = response.data.items
-      totalPosts.value = response.data.total
-      totalPages.value = response.data.total_pages
-      currentPage.value = response.data.page
+    if (result.items) {
+      posts.value = result.items
+      totalPosts.value = result.total
+      totalPages.value = result.total_pages
+      currentPage.value = result.page
     } else {
       // Backward compatible: flat array response
-      posts.value = response.data
-      totalPosts.value = response.data.length
+      posts.value = result
+      totalPosts.value = result.length
       totalPages.value = 1
       currentPage.value = 1
     }
-  } catch (err) {
-    console.error('Failed to fetch posts:', err)
-    error.value = 'Fehler beim Laden der Posts. Bitte versuche es erneut.'
-  } finally {
-    loading.value = false
   }
 }
 
@@ -390,7 +383,7 @@ async function executeSchedule() {
     showScheduleDialog.value = false
     postToSchedule.value = null
   } catch (err) {
-    console.error('Failed to schedule post:', err)
+    // Error toast shown by interceptor; set local error for dialog display
     scheduleError.value = err.response?.data?.detail || 'Fehler beim Planen des Posts.'
   } finally {
     scheduling.value = false
@@ -440,7 +433,6 @@ async function executeDelete() {
         await fetchPosts(false)
       }
     } else {
-      console.error('Failed to delete post:', err)
       // Error toast is shown by global API interceptor
     }
   } finally {
@@ -460,7 +452,6 @@ async function markAsPosted(post) {
       posts.value[idx] = response.data
     }
   } catch (err) {
-    console.error('Failed to mark post as posted:', err)
     // Error toast is shown by global API interceptor
   }
 }
@@ -475,7 +466,7 @@ async function duplicatePost(post) {
     currentPage.value = 1
     await fetchPosts(false)
   } catch (err) {
-    console.error('Failed to duplicate post:', err)
+    // Error toast shown by API interceptor
   } finally {
     duplicating.value = null
   }
@@ -704,8 +695,8 @@ async function executeBatchExport() {
     selectedPostIds.value = new Set()
     selectionMode.value = false
   } catch (err) {
-    console.error('Batch export failed:', err)
-    toast.error('Batch-Export fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 5000)
+    // Error toast shown by API interceptor; show specific batch failure detail
+    toast.error('Batch-Export fehlgeschlagen.', 5000)
   } finally {
     batchExporting.value = false
   }
@@ -971,15 +962,12 @@ onUnmounted(() => {
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
-      <p class="text-red-600 dark:text-red-400 mb-3">{{ error }}</p>
-      <button
-        @click="fetchPosts"
-        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-      >
-        Erneut versuchen
-      </button>
-    </div>
+    <ErrorBanner
+      v-else-if="error"
+      :message="error"
+      :retryable="true"
+      @retry="fetchPosts"
+    />
 
     <!-- Empty state - no posts at all -->
     <EmptyState
@@ -1017,7 +1005,7 @@ onUnmounted(() => {
       <div
         v-for="post in filteredPosts"
         :key="post.id"
-        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border transition-shadow"
+        class="stagger-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border transition-shadow"
         :class="[
           selectionMode && isPostSelected(post.id)
             ? 'border-[#3B7AB1] bg-blue-50/50 dark:bg-blue-900/10 shadow-md'
