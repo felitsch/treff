@@ -1,5 +1,81 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #320: V-10: Trending-Audio & Musik-Integration fuer Reels/TikTok
+**Date:** 2026-02-17
+**Feature ID:** #320
+**Status:** PASSING
+
+### What was implemented:
+Complete trending audio & music integration system for Instagram Reels and TikTok video content.
+
+**Backend (already existed from prior sessions, verified working):**
+1. **AudioSuggestion Model** (`backend/app/models/audio_suggestion.py`):
+   - Fields: title, artist, platform (tiktok/instagram/both), mood (energetic/emotional/funny/chill/dramatic), tempo (slow/medium/fast), trending_score (1-10), url_hint, suitable_for (JSON array), description, is_royalty_free, is_default, user_id
+   - Registered in models/__init__.py
+
+2. **Audio Suggestions API** (`backend/app/api/routes/audio_suggestions.py`):
+   - GET /api/audio-suggestions - List with filters (platform, mood, tempo, content_pillar, is_royalty_free), sorted by trending_score
+   - GET /api/audio-suggestions/moods - Available mood categories with counts
+   - GET /api/audio-suggestions/platforms - Available platforms with counts
+   - GET /api/audio-suggestions/{id} - Single suggestion
+   - POST /api/audio-suggestions - Create custom suggestion (validated fields)
+   - DELETE /api/audio-suggestions/{id} - Delete user-created (system defaults protected)
+   - Registered at /api/audio-suggestions prefix in main.py
+
+3. **Seed Data** (`backend/app/core/seed_audio_suggestions.py`):
+   - 26 curated audio suggestions across all moods, tempos, platforms
+   - Country-specific tracks (Celtic Folk for Ireland, Didgeridoo for Australia, Country Road for USA/Canada)
+   - Mix of trending and royalty-free tracks
+   - Seeded on startup via main.py lifespan
+
+4. **Video Script Integration** (backend/app/api/routes/video_scripts.py):
+   - SCENE_MOOD_MAP maps scene types to preferred audio moods
+   - _pick_audio_for_scene() selects best matching audio per scene
+   - Audio loaded from DB and integrated into generated scripts as music_note field
+
+**Frontend (new integration work this session):**
+5. **AudioSuggestionPanel.vue** (`frontend/src/components/video/AudioSuggestionPanel.vue`):
+   - Browseable audio library with real-time API filtering
+   - Mood pills (Energetisch, Emotional, Witzig, Chill, Dramatisch)
+   - Platform, Tempo, Content-Pillar dropdowns
+   - Royalty-free toggle
+   - Suggestion cards with: title, artist, 1-5 star trending score, mood/tempo/platform badges, "Passt zu" content pillar tags, description, "Zum Original" link
+   - Emits `select` event, accepts `platformFilter`, `contentPillarFilter`, `compact` props
+
+6. **VideoScriptView.vue Integration** (modified):
+   - Added Audio toggle button in script header bar
+   - Audio sidebar (w-80) appears on right side when toggled
+   - Context-aware: auto-filters by selected platform and category
+   - Selecting audio applies music_note to scenes (editing scene or all empty scenes)
+   - Responsive: sidebar on desktop, stacked on mobile
+   - Music icon added to scene "Musik" labels
+
+7. **VideoCreateView.vue Integration** (already done by prior session, verified):
+   - "Trending-Audio-Empfehlungen anzeigen" toggle in Music section
+   - AudioSuggestionPanel in compact mode below MusicSelector
+   - Selection updates musicConfig track name
+
+### Verification completed:
+- E2E Playwright test: Login, navigate, generate script, toggle Audio sidebar - PASS
+- Audio panel loads 15 filtered tracks (Instagram + Erfahrungsberichte context) - PASS
+- Mood filter (Chill) reduces to 5 tracks - PASS
+- Audio selection triggers toast notification - PASS
+- Platform filter dropdown present and working - PASS
+- Sidebar toggle on/off - PASS
+- VideoCreateView audio panel loads 26 tracks with all filters - PASS
+- POST /api/audio-suggestions creates custom suggestion (id=27) - PASS
+- Server restart persistence: RESTART_TEST_320 survived restart - PASS
+- DELETE cleanup: test data removed successfully - PASS
+- Mock data grep: Zero matches for globalThis/devStore/mockData patterns - PASS
+- Zero console errors throughout testing - PASS
+- Git commit: 7c0f791
+
+### Current state:
+- Feature #320 marked as PASSING
+- 316/322 features passing (98.1%)
+
+---
+
 ## Session - Feature #303: P-04: One-Click Multi-Platform Export
 **Date:** 2026-02-17
 **Feature ID:** #303
