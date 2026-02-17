@@ -4,11 +4,14 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import PostPreviewCard from '@/components/posts/PostPreviewCard.vue'
 import PostPreviewCardTikTok from '@/components/posts/PostPreviewCardTikTok.vue'
 import PostPreviewGrid from '@/components/posts/PostPreviewGrid.vue'
+import TCountryThemeProvider from '@/components/ui/TCountryThemeProvider.vue'
+import { useCountryTheme, getCountryKeys, COUNTRY_THEMES } from '@/composables/useCountryTheme'
 
 const activeSection = ref('colors')
 
 const sections = [
   { id: 'colors', label: 'Farben', icon: '🎨' },
+  { id: 'country-themes', label: 'Country Themes', icon: '🌍' },
   { id: 'typography', label: 'Typografie', icon: '📝' },
   { id: 'buttons', label: 'Buttons', icon: '🔘' },
   { id: 'cards', label: 'Cards', icon: '📦' },
@@ -19,6 +22,11 @@ const sections = [
   { id: 'radius', label: 'Radius', icon: '⬜' },
   { id: 'previews', label: 'Post Previews', icon: '📱' },
 ]
+
+// Country theme demo state
+const selectedCountry = ref('usa')
+const countryTheme = useCountryTheme(selectedCountry)
+const allCountryKeys = getCountryKeys()
 
 // ── Demo post data for Post Preview Cards ──
 const demoPostInstagram = ref({
@@ -258,6 +266,193 @@ const scrollToSection = (id) => {
           <div>
             <div class="text-xs font-medium text-gray-700 dark:text-gray-300">treff-light</div>
             <div class="text-[10px] font-mono text-gray-400">#F5F5F5</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ COUNTRY THEMES ═══ -->
+    <section id="section-country-themes" class="mb-12" data-testid="country-themes-section">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Country Themes</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        Laenderspezifische Farbpaletten mit dynamischem Theme-Switching. Jedes Land hat eigene Primaer-, Sekundaer- und Akzentfarben,
+        Gradient-Utilities und CSS Custom Properties.
+      </p>
+
+      <!-- Country Selector -->
+      <div class="flex flex-wrap gap-2 mb-6" data-testid="country-theme-selector">
+        <button
+          v-for="key in allCountryKeys"
+          :key="key"
+          @click="selectedCountry = key"
+          :data-testid="'country-btn-' + key"
+          :class="[
+            'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 border-2',
+            selectedCountry === key
+              ? 'border-current shadow-md scale-105'
+              : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700',
+          ]"
+          :style="selectedCountry === key ? { backgroundColor: COUNTRY_THEMES[key].primaryColor, color: '#FFFFFF', borderColor: COUNTRY_THEMES[key].secondaryColor } : {}"
+        >
+          {{ COUNTRY_THEMES[key].emoji }} {{ COUNTRY_THEMES[key].label }}
+        </button>
+      </div>
+
+      <!-- Active Theme Display -->
+      <TCountryThemeProvider :country="selectedCountry" subtle data-testid="country-theme-provider">
+        <template #default="{ theme, primaryColor, secondaryColor, accentColor, gradientClass, borderClass, bgClass, textClass, label, emoji, palette, isCountryTheme, cssVars, gradientStyle }">
+          <div class="rounded-xl p-6 border-2 transition-all duration-300" :style="{ borderColor: primaryColor }">
+
+            <!-- Theme Header -->
+            <div class="flex items-center gap-3 mb-6">
+              <span class="text-3xl">{{ emoji }}</span>
+              <div>
+                <h3 class="text-lg font-bold" :style="{ color: primaryColor }" data-testid="country-theme-label">{{ label }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Composable: <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">useCountryTheme('{{ countryTheme.countryKey.value }}')</code>
+                </p>
+              </div>
+            </div>
+
+            <!-- Color Swatches -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Farbpalette</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+              <div
+                v-for="(color, name) in palette"
+                :key="name"
+                class="flex flex-col items-center"
+              >
+                <div
+                  class="w-full h-14 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600"
+                  :style="{ backgroundColor: color }"
+                ></div>
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 mt-1.5">{{ name }}</span>
+                <span class="text-[10px] font-mono text-gray-400">{{ color }}</span>
+              </div>
+            </div>
+
+            <!-- Token Values -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Theme Tokens</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div class="w-6 h-6 rounded-md shadow-sm" :style="{ backgroundColor: primaryColor }"></div>
+                <div>
+                  <div class="text-xs font-medium text-gray-700 dark:text-gray-300">Primary</div>
+                  <div class="text-[10px] font-mono text-gray-400" data-testid="country-primary-color">{{ primaryColor }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div class="w-6 h-6 rounded-md shadow-sm border border-gray-200" :style="{ backgroundColor: secondaryColor }"></div>
+                <div>
+                  <div class="text-xs font-medium text-gray-700 dark:text-gray-300">Secondary</div>
+                  <div class="text-[10px] font-mono text-gray-400" data-testid="country-secondary-color">{{ secondaryColor }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div class="w-6 h-6 rounded-md shadow-sm" :style="{ backgroundColor: accentColor }"></div>
+                <div>
+                  <div class="text-xs font-medium text-gray-700 dark:text-gray-300">Accent</div>
+                  <div class="text-[10px] font-mono text-gray-400" data-testid="country-accent-color">{{ accentColor }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gradient Previews -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Gradient Utilities</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              <div>
+                <div
+                  class="h-16 rounded-lg shadow-sm"
+                  :style="gradientStyle"
+                  data-testid="country-gradient-preview"
+                ></div>
+                <code class="text-[10px] font-mono text-gray-400 mt-1 block">{{ gradientClass }} (Light)</code>
+              </div>
+              <div>
+                <div
+                  class="h-16 rounded-lg shadow-sm"
+                  :style="countryTheme.gradientDarkStyle.value"
+                ></div>
+                <code class="text-[10px] font-mono text-gray-400 mt-1 block">{{ gradientClass }}-dark (Dark Mode)</code>
+              </div>
+            </div>
+
+            <!-- CSS Classes Reference -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">CSS-Klassen</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <div class="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">gradientClass</div>
+                <code class="text-xs font-mono" :style="{ color: primaryColor }">{{ gradientClass }}</code>
+              </div>
+              <div class="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">borderClass</div>
+                <code class="text-xs font-mono" :style="{ color: primaryColor }">{{ borderClass }}</code>
+              </div>
+              <div class="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">bgClass</div>
+                <code class="text-xs font-mono" :style="{ color: primaryColor }">{{ bgClass }}</code>
+              </div>
+              <div class="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">textClass</div>
+                <code class="text-xs font-mono" :style="{ color: primaryColor }">{{ textClass }}</code>
+              </div>
+            </div>
+
+            <!-- CSS Custom Properties -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">CSS Custom Properties</h4>
+            <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 font-mono text-xs space-y-1">
+              <div v-for="(value, varName) in cssVars" :key="varName" class="flex items-center gap-2">
+                <span class="text-gray-500 dark:text-gray-400">{{ varName }}:</span>
+                <span :style="{ color: value.startsWith('#') || value.startsWith('rgb') ? primaryColor : 'inherit' }">{{ value.length > 60 ? value.substring(0, 60) + '...' : value }}</span>
+              </div>
+            </div>
+
+            <!-- Live Demo: Themed Card -->
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-6 mb-3">Live Demo: Themed Card</h4>
+            <div
+              class="p-5 rounded-xl border-2 transition-all duration-300"
+              :style="{ borderColor: primaryColor, background: theme.gradientSubtle }"
+              data-testid="country-themed-card"
+            >
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" :style="{ backgroundColor: primaryColor }">
+                  {{ label.charAt(0) }}
+                </div>
+                <div>
+                  <h5 class="font-semibold text-gray-900 dark:text-white">Highschool in {{ label }}</h5>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Erlebe das Abenteuer deines Lebens!</p>
+                </div>
+              </div>
+              <div class="h-2 rounded-full" :style="gradientStyle"></div>
+            </div>
+          </div>
+        </template>
+      </TCountryThemeProvider>
+
+      <!-- All Countries Overview (Compact Grid) -->
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mt-8 mb-4">Alle Laender-Paletten</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="country-palettes-grid">
+        <div
+          v-for="key in allCountryKeys"
+          :key="key"
+          class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm"
+        >
+          <div class="h-12 flex items-center justify-center text-white font-semibold text-sm" :style="{ background: COUNTRY_THEMES[key].gradient }">
+            {{ COUNTRY_THEMES[key].emoji }} {{ COUNTRY_THEMES[key].label }}
+          </div>
+          <div class="p-3 bg-white dark:bg-gray-800">
+            <div class="flex gap-1.5">
+              <div
+                v-for="(color, name) in COUNTRY_THEMES[key].palette"
+                :key="name"
+                class="flex-1 h-6 rounded"
+                :style="{ backgroundColor: color }"
+                :title="name + ': ' + color"
+              ></div>
+            </div>
+            <div class="mt-2 text-[10px] font-mono text-gray-400">
+              treff-{{ key === 'newzealand' ? 'nz' : key }}
+            </div>
           </div>
         </div>
       </div>

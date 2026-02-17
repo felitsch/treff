@@ -238,6 +238,23 @@ export default {
         'slide-right': 'slide-right 250ms ease-out',
         'shimmer':     'shimmer 1.5s ease-in-out infinite',
       },
+
+      // === Country Gradient Backgrounds (via backgroundImage) ===
+      backgroundImage: {
+        'gradient-usa':       'linear-gradient(135deg, #B22234 0%, #002147 50%, #6B9BD2 100%)',
+        'gradient-canada':    'linear-gradient(135deg, #FF0000 0%, #C41E3A 50%, #FFF5E1 100%)',
+        'gradient-australia': 'linear-gradient(135deg, #8B4513 0%, #CC7722 50%, #006994 100%)',
+        'gradient-nz':        'linear-gradient(135deg, #1B4D3E 0%, #4CAF50 50%, #5CB8E6 100%)',
+        'gradient-ireland':   'linear-gradient(135deg, #169B62 0%, #FF8C00 50%, #FFFFFF 100%)',
+        'gradient-adventure': 'linear-gradient(135deg, #3B7AB1 0%, #FDD000 50%, #FF6B35 100%)',
+        // Dark mode variants (used via dark: prefix)
+        'gradient-usa-dark':       'linear-gradient(135deg, #8B1A29 0%, #001733 50%, #4A7AAF 100%)',
+        'gradient-canada-dark':    'linear-gradient(135deg, #CC0000 0%, #9B1830 50%, #D4C4A8 100%)',
+        'gradient-australia-dark': 'linear-gradient(135deg, #6B3410 0%, #A66019 50%, #005070 100%)',
+        'gradient-nz-dark':        'linear-gradient(135deg, #143D30 0%, #3D8B40 50%, #4A9BC2 100%)',
+        'gradient-ireland-dark':   'linear-gradient(135deg, #127A4E 0%, #CC7000 50%, #D4D4D4 100%)',
+        'gradient-adventure-dark': 'linear-gradient(135deg, #2F628E 0%, #CAA600 50%, #CC5529 100%)',
+      },
     },
   },
   plugins: [],

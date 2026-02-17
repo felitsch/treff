@@ -690,6 +690,275 @@ async def get_seasonal_markers(
     }
 
 
+# ========== STRATEGY RECOMMENDATIONS ==========
+
+
+# Content pillar targets (percentage distribution)
+PILLAR_TARGETS = {
+    "erfahrungsberichte": {"target_pct": 30, "label": "Erfahrungsberichte"},
+    "laender_spotlight": {"target_pct": 20, "label": "Laender-Spotlights"},
+    "tipps_tricks": {"target_pct": 20, "label": "Tipps & Tricks"},
+    "fristen_cta": {"target_pct": 10, "label": "Fristen & CTAs"},
+    "faq": {"target_pct": 10, "label": "FAQ"},
+    "behind_the_scenes": {"target_pct": 5, "label": "Behind the Scenes"},
+    "infografiken": {"target_pct": 5, "label": "Infografiken"},
+}
+
+# Platform posting goals per week
+PLATFORM_GOALS = {
+    "instagram_feed": {"min": 3, "ideal": 4, "label": "IG Feed"},
+    "instagram_story": {"min": 5, "ideal": 7, "label": "IG Story"},
+    "instagram_reel": {"min": 2, "ideal": 3, "label": "IG Reel"},
+    "tiktok": {"min": 5, "ideal": 7, "label": "TikTok"},
+}
+
+# Optimal posting times by platform
+OPTIMAL_POSTING_TIMES = {
+    "instagram_feed": {
+        "weekday": ["17:00", "18:00", "19:00", "20:00"],
+        "weekend": ["11:00", "12:00", "13:00", "14:00"],
+    },
+    "instagram_story": {
+        "weekday": ["07:30", "12:00", "17:30", "20:00"],
+        "weekend": ["10:00", "14:00", "18:00"],
+    },
+    "instagram_reel": {
+        "weekday": ["18:00", "19:00", "20:00"],
+        "weekend": ["11:00", "12:00", "15:00"],
+    },
+    "tiktok": {
+        "weekday": ["16:00", "17:00", "19:00", "21:00"],
+        "weekend": ["10:00", "12:00", "15:00", "19:00"],
+    },
+}
+
+# Seasonal context by month
+SEASONAL_CONTEXT = {
+    1: "Januar = Neustart & Aufbruch. Abreise AU/NZ. Neujahrsmotivation nutzen, Fruehbewerbungen pushen.",
+    2: "Februar = Bewerbungsphase. Kanada-Abreise. Laender-Vergleiche und Bewerbungs-Tipps priorisieren.",
+    3: "Maerz = Fristen-Countdown. USA Classic Frist! JuBi Messe. Irland-Spotlight (St. Patrick's Day).",
+    4: "April = Bewerbungsendspurt. USA Select + Kanada Fristen. Osterferien fuer Beratung nutzen.",
+    5: "Mai = Letzte Fristen (Irland, AU/NZ). Vorbereitungs-Content fuer Herbstabreisende.",
+    6: "Juni = Rueckkehrer-Saison! Emotionale Erfahrungsberichte. Interviews mit Rueckkehrern.",
+    7: "Juli = Sommer-Fernweh. Sommerferien BW. Abreise AU/NZ Term 3. Canada Day + 4th of July.",
+    8: "August = HAUPTABREISE USA/Kanada/Irland! Emotionalster Monat. Flughafen-Content!",
+    9: "September = Schulstart international. Neue Interessenten gewinnen. Einleben-Phase Content.",
+    10: "Oktober = Stipendien-Deadline. Halloween. Herbstferien. Thanksgiving Kanada.",
+    11: "November = JuBi Messe Herbst. Thanksgiving USA. Infoveranstaltungen bewerben.",
+    12: "Dezember = Weihnachten weltweit. Rueckkehr AU/NZ. Jahresrueckblick erstellen.",
+}
+
+# Countries for distribution tracking
+ALL_COUNTRIES = ["usa", "kanada", "australien", "neuseeland", "irland"]
+
+
+@router.get("/strategy-recommendations")
+async def get_strategy_recommendations(
+    week: Optional[str] = Query(None, description="ISO week format: YYYY-Www (e.g. 2026-W08)"),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Analyze scheduled posts for a given week and return strategy recommendations.
+
+    Checks:
+    - Total post count vs weekly goals
+    - Platform distribution (missing platforms?)
+    - Content pillar distribution
+    - Country distribution
+    - Video/Reel content ratio
+    - Seasonal context for the month
+    - Optimal posting times
+    """
+    import re
+
+    # Parse the week parameter
+    now = datetime.now()
+    if week:
+        # Parse ISO week: 2026-W08
+        match = re.match(r"(\d{4})-W(\d{1,2})", week)
+        if not match:
+            raise HTTPException(status_code=400, detail="Invalid week format. Use YYYY-Www (e.g. 2026-W08)")
+        iso_year = int(match.group(1))
+        iso_week = int(match.group(2))
+        if iso_week < 1 or iso_week > 53:
+            raise HTTPException(status_code=400, detail="Week number must be 1-53")
+        # Get Monday of that ISO week
+        start_of_week = date.fromisocalendar(iso_year, iso_week, 1)
+    else:
+        # Default to current week
+        start_of_week = now.date() - timedelta(days=now.date().weekday())
+
+    end_of_week = start_of_week + timedelta(days=6)
+    start_dt = datetime(start_of_week.year, start_of_week.month, start_of_week.day, 0, 0, 0)
+    end_dt = datetime(end_of_week.year, end_of_week.month, end_of_week.day, 23, 59, 59)
+
+    # Fetch posts for this week
+    query = select(Post).where(and_(
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= start_dt,
+        Post.scheduled_date <= end_dt,
+    ))
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    total_posts = len(posts)
+
+    # Analyze by platform
+    platform_counts = {}
+    for post in posts:
+        pf = post.platform or "unknown"
+        platform_counts[pf] = platform_counts.get(pf, 0) + 1
+
+    # Analyze by category/pillar
+    pillar_counts = {}
+    for post in posts:
+        cat = post.category or "unknown"
+        pillar_counts[cat] = pillar_counts.get(cat, 0) + 1
+
+    # Analyze by country
+    country_counts = {}
+    for post in posts:
+        c = (post.country or "").lower()
+        if c:
+            country_counts[c] = country_counts.get(c, 0) + 1
+
+    # Calculate video content ratio (Reels + TikTok = video)
+    video_count = platform_counts.get("instagram_reel", 0) + platform_counts.get("tiktok", 0)
+    video_ratio = (video_count / total_posts * 100) if total_posts > 0 else 0
+
+    # Overall weekly goal: sum of ideal per platform (but avoid double counting)
+    # Simplified: 5 posts/week total is a good minimum target
+    weekly_goal = 5
+    reels_goal = PLATFORM_GOALS.get("instagram_reel", {}).get("ideal", 3)
+
+    # Build recommendations
+    recommendations = []
+    warnings = []
+    quick_actions = []
+
+    # 1. Total posting frequency
+    if total_posts < 3:
+        warnings.append({
+            "type": "low_frequency",
+            "severity": "high",
+            "message": f"Nur {total_posts} Posts geplant (Ziel: {weekly_goal}). Posting-Frequenz deutlich unter Strategie-Ziel!",
+            "icon": "\u26A0\uFE0F",
+        })
+    elif total_posts < weekly_goal:
+        recommendations.append({
+            "type": "low_frequency",
+            "message": f"Geplant: {total_posts} Posts (Ziel: {weekly_goal}). Noch {weekly_goal - total_posts} Posts empfohlen.",
+            "icon": "\U0001F4CA",
+        })
+
+    # 2. Missing platforms
+    for pf, goals in PLATFORM_GOALS.items():
+        count = platform_counts.get(pf, 0)
+        if count < goals["min"]:
+            pf_label = goals["label"]
+            recommendations.append({
+                "type": "missing_platform",
+                "platform": pf,
+                "message": f"{pf_label}: {count} geplant (Minimum: {goals['min']})",
+                "icon": "\U0001F4F1",
+            })
+            quick_actions.append({
+                "type": "add_platform",
+                "label": f"{pf_label} hinzufuegen",
+                "platform": pf,
+                "icon": "\u2795",
+            })
+
+    # 3. Video/Reel content check
+    if total_posts > 0 and video_count < reels_goal:
+        recommendations.append({
+            "type": "low_video",
+            "message": f"Reels/Video: {video_count} geplant (Ziel: {reels_goal}). Video-Content hat die hoechste Reichweite!",
+            "icon": "\U0001F3AC",
+        })
+        quick_actions.append({
+            "type": "add_reel",
+            "label": "Reel hinzufuegen",
+            "platform": "instagram_reel",
+            "icon": "\U0001F3AC",
+        })
+
+    # 4. Missing pillars
+    present_pillars = set(pillar_counts.keys())
+    for pillar_id, info in PILLAR_TARGETS.items():
+        if info["target_pct"] >= 10 and pillar_id not in present_pillars and total_posts >= 3:
+            recommendations.append({
+                "type": "missing_pillar",
+                "pillar": pillar_id,
+                "message": f"Kein {info['label']}-Post geplant (Ziel: {info['target_pct']}% des Content-Mix)",
+                "icon": "\U0001F4CC",
+            })
+            quick_actions.append({
+                "type": "add_pillar",
+                "label": f"{info['label']} hinzufuegen",
+                "category": pillar_id,
+                "icon": "\u2795",
+            })
+
+    # 5. Country distribution
+    present_countries = set(country_counts.keys())
+    if total_posts >= 3 and len(present_countries) <= 1:
+        missing = [c for c in ALL_COUNTRIES if c not in present_countries]
+        if missing:
+            country_labels = {
+                "usa": "USA", "kanada": "Kanada", "australien": "Australien",
+                "neuseeland": "Neuseeland", "irland": "Irland",
+            }
+            missing_labels = [country_labels.get(c, c) for c in missing[:3]]
+            recommendations.append({
+                "type": "unbalanced_countries",
+                "message": f"Nur {len(present_countries)} Land abgedeckt. Fehlt: {', '.join(missing_labels)}",
+                "icon": "\U0001F30D",
+            })
+            for c in missing[:2]:
+                quick_actions.append({
+                    "type": "add_country",
+                    "label": f"{country_labels.get(c, c)}-Post hinzufuegen",
+                    "country": c,
+                    "icon": "\U0001F30D",
+                })
+
+    # Seasonal context
+    month_num = start_of_week.month
+    seasonal_tip = SEASONAL_CONTEXT.get(month_num, "")
+
+    # Optimal posting times for the week
+    is_weekend = False  # We return both
+    optimal_times = {}
+    for pf, times in OPTIMAL_POSTING_TIMES.items():
+        optimal_times[pf] = {
+            "weekday": times["weekday"],
+            "weekend": times["weekend"],
+        }
+
+    return {
+        "week": f"{start_of_week.isocalendar()[0]}-W{start_of_week.isocalendar()[1]:02d}",
+        "start_date": start_of_week.isoformat(),
+        "end_date": end_of_week.isoformat(),
+        "summary": {
+            "total_posts": total_posts,
+            "weekly_goal": weekly_goal,
+            "video_count": video_count,
+            "video_ratio": round(video_ratio, 1),
+            "reels_goal": reels_goal,
+            "platform_counts": platform_counts,
+            "pillar_counts": pillar_counts,
+            "country_counts": country_counts,
+        },
+        "seasonal_context": seasonal_tip,
+        "recommendations": recommendations,
+        "warnings": warnings,
+        "quick_actions": quick_actions,
+        "optimal_posting_times": optimal_times,
+    }
+
+
 # ========== STORY ARC TIMELINE ==========
 
 # Colors assigned to arcs automatically (cycle through)
