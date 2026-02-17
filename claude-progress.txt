@@ -1,5 +1,121 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #308: I-06 Ergaenzung: Vollstaendige Base UI Component Library
+**Date:** 2026-02-17
+**Feature ID:** #308
+**Status:** PASSING
+
+### What was implemented:
+Complete Base UI Component Library with 6 new Vue 3 components + barrel export + showcase page.
+
+1. **TButton.vue** (~170 lines)
+   - Variants: primary, secondary, ghost, danger
+   - Sizes: sm, md, lg
+   - States: loading (spinner), disabled, block (full-width)
+   - Slots: default, icon-left, icon-right
+   - Supports: router-link (to prop), external links (href prop)
+
+2. **TBadge.vue** (~130 lines)
+   - Variants: draft (gray), scheduled (blue), exported (yellow), posted (green), error (red), info (primary), warning (orange)
+   - Sizes: sm, md
+   - Features: dot indicator, removable (X button), pill/rounded shape
+
+3. **TInput.vue** (~175 lines)
+   - Full v-model support
+   - Props: label, placeholder, error, helperText, type, disabled, required, size
+   - Slots: prefix (icon), suffix
+   - Textarea mode with configurable rows
+   - Error state: red border + error icon + error message
+   - Auto-generated unique IDs, aria attributes
+
+4. **TModal.vue** (~155 lines)
+   - Sizes: sm, md, lg, full
+   - Slots: header, default (body), footer
+   - Features: backdrop blur, backdrop click to close, Escape key, focus trap (useFocusTrap)
+   - Teleport to body, body scroll lock, transition animations
+   - Closable and persistent options
+
+5. **TEmptyState.vue** (~155 lines)
+   - 8 built-in Heroicon SVG paths: inbox, search, document, photo, calendar, users, chart, video
+   - Props: icon, title, description, actionLabel, actionRoute, compact
+   - Slots: icon (custom illustration), default, action
+   - CTA as router-link or button
+
+6. **TCountryAccent.vue** (~130 lines)
+   - Modes: border-left, border-top, gradient-bar, bg (background tint)
+   - Sizes: sm, md, lg
+   - Uses useCountryTheme composable for country colors
+   - Scoped slot: primaryColor, secondaryColor, accentColor, label, emoji
+   - Dark mode CSS variable support
+
+7. **index.js** — Barrel export of all 7 components (6 new + TCountryThemeProvider)
+
+8. **UIShowcaseView.vue** — Visual showcase page at /ui-showcase with all variants
+
+### Files created:
+- frontend/src/components/ui/TButton.vue (NEW)
+- frontend/src/components/ui/TBadge.vue (NEW)
+- frontend/src/components/ui/TInput.vue (NEW)
+- frontend/src/components/ui/TModal.vue (NEW)
+- frontend/src/components/ui/TEmptyState.vue (NEW)
+- frontend/src/components/ui/TCountryAccent.vue (NEW)
+- frontend/src/components/ui/index.js (NEW)
+- frontend/src/views/UIShowcaseView.vue (NEW)
+- frontend/src/router/index.js (modified - added /ui-showcase route)
+
+### Verification completed:
+- Browser: All components render on /ui-showcase page
+- TButton: 17 instances (4 variants, 3 sizes, loading, disabled, icons, block)
+- TBadge: 15 instances (7 variants, dot, sizes, removable)
+- TInput: 8 instances (default, required, error, disabled, sizes, prefix, textarea)
+- TModal: Opens/closes correctly, title "Post bearbeiten", TInput inside, footer buttons
+- TEmptyState: 4 instances with different icons and states
+- TCountryAccent: 20 instances across 4 modes (border-left, border-top, gradient-bar, bg)
+- Console: Zero JavaScript errors
+- Mock data grep: Zero matches for globalThis/devStore/mockData/testData patterns
+- Git commit: eaa1449
+
+### Current state:
+- Feature #308 marked as PASSING
+- ~309/322 features passing
+
+---
+
+## Session - Feature #280: Posting-Strategie-Konfiguration fuer Smart-Features
+**Date:** 2026-02-17
+**Feature ID:** #280
+**Status:** PASSING
+
+### What was done:
+
+1. **Frontend Config Modules (3 new files):**
+   - `frontend/src/config/postingStrategy.js` (341 lines) — Platform-specific posting rules with frequency, best times, max posts/day, content formats, caption rules for Instagram Feed/Stories/Reels and TikTok. Includes helper functions: getStrategyForPlatform, evaluatePostingTime, getBestDaysSorted, getFrequencySummary.
+   - `frontend/src/config/hookFormulas.js` (310 lines) — 10 hook formula templates (knowledge_gap, comparison, myth_buster, pov, list, question, expectation_reality, emotional_opener, countdown_urgency, behind_scenes) with categories, effectiveness ratings, platform suitability, and helper functions.
+   - `frontend/src/config/hashtagSets.js` (403 lines) — Brand, niche, country, and trending hashtag groups for 5 countries. 11 predefined sets, platform limits, and buildOptimizedSet helper for auto-generating balanced hashtag mixes.
+
+2. **Backend API Endpoints (1 new file + 1 modified):**
+   - `backend/app/api/routes/config_endpoints.py` (233 lines) — Three authenticated GET endpoints:
+     - `/api/config/posting-strategy` — Platform strategy with frequency, best times, content formats
+     - `/api/config/hook-formulas` — Hook templates with optional `?platform=` filter
+     - `/api/config/hashtag-sets` — Hashtag groups with optional `?country=` filter and recommended sets
+   - `backend/app/main.py` — Added config_endpoints router registration
+
+3. **Component Integrations (3 modified files):**
+   - `SmartScheduler.vue` — Added "Posting Strategy Info" panel (Min/Ideal/Max frequency, best days) and time evaluation warnings
+   - `AITextGenerator.vue` — Added "Hook Formula Suggestions" expandable panel with top 3 hooks, category badges, effectiveness ratings
+   - `HashtagManager.vue` — Added "Vordefinierte Hashtag-Sets" panel with optimized set builder and predefined set grid
+
+### Verification:
+- All 3 backend endpoints tested and returning correct JSON
+- Browser testing: 0 JavaScript errors, hook-formula-panel visible on wizard Step 5
+- No mock data, TODOs, or FIXMEs in production code
+- Linter auto-modified component files (emoji -> AppIcon) — changes preserved
+
+### Commit:
+- `93e54bd` feat: add centralized posting strategy configs and API endpoints (Feature #280)
+
+---
+
 ## Session - Feature #295: Login & Register Redesign (TREFF-Branding)
 **Date:** 2026-02-17
 **Feature ID:** #295
