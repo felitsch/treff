@@ -143,6 +143,39 @@ const weekPostsByDate = ref({})
 const weekStartDate = ref(null)
 const weekEndDate = ref(null)
 
+// Day view state
+const dayDate = ref(new Date().toISOString().split('T')[0]) // YYYY-MM-DD for current day
+const dayPosts = ref([])
+const dayPostsByHour = ref({})
+const dayAllDayPosts = ref([])
+const dayTotalPosts = ref(0)
+
+// Quick-Edit Modal state
+const showQuickEditModal = ref(false)
+const quickEditPost = ref(null)
+const quickEditTitle = ref('')
+const quickEditStatus = ref('')
+const quickEditTime = ref('')
+const quickEditSaving = ref(false)
+
+// Platform color definitions (for platform+status border coding)
+const platformColors = {
+  instagram_feed: { border: 'border-l-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', dot: 'bg-blue-500' },
+  instagram_story: { border: 'border-l-pink-500', bg: 'bg-pink-50 dark:bg-pink-900/20', dot: 'bg-pink-500' },
+  tiktok: { border: 'border-l-fuchsia-500', bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/20', dot: 'bg-fuchsia-500' },
+}
+
+// Status color indicators
+const statusColors = {
+  draft: { dot: 'bg-gray-400', ring: 'ring-gray-300' },
+  scheduled: { dot: 'bg-blue-500', ring: 'ring-blue-300' },
+  in_review: { dot: 'bg-orange-500', ring: 'ring-orange-300' },
+  reminded: { dot: 'bg-yellow-500', ring: 'ring-yellow-300' },
+  exported: { dot: 'bg-green-500', ring: 'ring-green-300' },
+  posted: { dot: 'bg-emerald-500', ring: 'ring-emerald-300' },
+  archived: { dot: 'bg-slate-400', ring: 'ring-slate-300' },
+}
+
 // Queue view state
 const queuePosts = ref([])
 const queueCount = ref(0)
@@ -238,6 +271,12 @@ const timeSlots = Array.from({ length: 18 }, (_, i) => {
   }
 })
 
+// Time slots for day view (0:00 - 23:00 full day)
+const dayTimeSlots = Array.from({ length: 24 }, (_, i) => ({
+  hour: i,
+  label: `${String(i).padStart(2, '0')}:00`,
+}))
+
 // Computed: current month label
 const currentMonthLabel = computed(() => {
   return `${monthNames[currentMonth.value - 1]} ${currentYear.value}`
@@ -293,6 +332,34 @@ const weekTotalPosts = computed(() => {
   }
   return count
 })
+
+// Computed: day view label (e.g., "Montag, 17. Februar 2026")
+const dayLabel = computed(() => {
+  if (!dayDate.value) return ''
+  const d = new Date(dayDate.value + 'T00:00:00')
+  const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1 // Monday-based
+  return `${dayNamesFull[dayIdx]}, ${d.getDate()}. ${monthNames[d.getMonth()]} ${d.getFullYear()}`
+})
+
+// Computed: check if day view date is today
+const isDayToday = computed(() => {
+  return dayDate.value === getTodayStr()
+})
+
+// Get posts at a specific hour for day view
+function getDayPostsAtHour(hour) {
+  return dayPostsByHour.value[String(hour)] || []
+}
+
+// Get platform color for border-left styling
+function getPlatformColor(platform) {
+  return platformColors[platform] || { border: 'border-l-gray-400', bg: 'bg-gray-50 dark:bg-gray-800', dot: 'bg-gray-400' }
+}
+
+// Get status color dot
+function getStatusDot(status) {
+  return statusColors[status] || { dot: 'bg-gray-400', ring: 'ring-gray-300' }
+}
 
 // Get posts at a specific time slot for a specific day in weekly view
 function getPostsAtTimeSlot(dayDateStr, hour) {
@@ -419,12 +486,81 @@ function nextWeekNav() {
   weekDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// Navigation - Day view
+function prevDayNav() {
+  const d = new Date(dayDate.value + 'T00:00:00')
+  d.setDate(d.getDate() - 1)
+  dayDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function nextDayNav() {
+  const d = new Date(dayDate.value + 'T00:00:00')
+  d.setDate(d.getDate() + 1)
+  dayDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function goToToday() {
   const now = new Date()
   currentYear.value = now.getFullYear()
   currentMonth.value = now.getMonth() + 1
-  weekDate.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  weekDate.value = todayStr
+  dayDate.value = todayStr
   fetchData()
+}
+
+// Navigate to day view for a specific date (from month/week click)
+function goToDayView(dateStr) {
+  dayDate.value = dateStr
+  viewMode.value = 'day'
+  fetchData()
+}
+
+// Open new post creation with pre-filled date and optional time
+function openNewPostForSlot(dateStr, hour = null) {
+  const query = { date: dateStr }
+  if (hour !== null) {
+    query.time = `${String(hour).padStart(2, '0')}:00`
+  }
+  router.push({ path: '/create/quick', query })
+}
+
+// Quick-Edit Modal functions
+function openQuickEdit(post) {
+  quickEditPost.value = post
+  quickEditTitle.value = post.title || ''
+  quickEditStatus.value = post.status || 'draft'
+  quickEditTime.value = post.scheduled_time || ''
+  showQuickEditModal.value = true
+}
+
+async function saveQuickEdit() {
+  if (!quickEditPost.value) return
+  quickEditSaving.value = true
+  try {
+    await api.put(`/api/posts/${quickEditPost.value.id}`, {
+      title: quickEditTitle.value,
+      status: quickEditStatus.value,
+      scheduled_time: quickEditTime.value || null,
+    })
+    toast.success('Post aktualisiert')
+    showQuickEditModal.value = false
+    quickEditPost.value = null
+    fetchData()
+  } catch (err) {
+    toast.error('Fehler beim Speichern')
+  } finally {
+    quickEditSaving.value = false
+  }
+}
+
+function closeQuickEdit() {
+  showQuickEditModal.value = false
+  quickEditPost.value = null
+}
+
+function openFullEditor(postId) {
+  router.push(`/create/post/${postId}/edit`)
 }
 
 // Switch view mode
@@ -473,6 +609,27 @@ async function fetchWeek() {
     weekEndDate.value = data.end_date || null
   } catch (err) {
     error.value = 'Wochenansicht konnte nicht geladen werden.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fetch day data
+async function fetchDay() {
+  loading.value = true
+  error.value = null
+  try {
+    let url = `/api/calendar/day?date=${dayDate.value}`
+    if (platformFilter.value) {
+      url += `&platform=${platformFilter.value}`
+    }
+    const { data } = await api.get(url)
+    dayPosts.value = data.posts || []
+    dayPostsByHour.value = data.posts_by_hour || {}
+    dayAllDayPosts.value = data.all_day_posts || []
+    dayTotalPosts.value = data.total_posts || 0
+  } catch (err) {
+    error.value = 'Tagesansicht konnte nicht geladen werden.'
   } finally {
     loading.value = false
   }
@@ -804,6 +961,8 @@ function fetchData() {
     fetchRecurringPlaceholders()
   } else if (viewMode.value === 'week') {
     fetchWeek()
+  } else if (viewMode.value === 'day') {
+    fetchDay()
   } else if (viewMode.value === 'lanes') {
     fetchPlatformLanes()
     fetchCrossPlatformStats()
@@ -1333,6 +1492,8 @@ async function exportCalendarCSV() {
 function prevNav() {
   if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     prevMonthNav()
+  } else if (viewMode.value === 'day') {
+    prevDayNav()
   } else {
     prevWeekNav()
   }
@@ -1341,6 +1502,8 @@ function prevNav() {
 function nextNav() {
   if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     nextMonthNav()
+  } else if (viewMode.value === 'day') {
+    nextDayNav()
   } else {
     nextWeekNav()
   }
@@ -1350,6 +1513,9 @@ function nextNav() {
 const navLabel = computed(() => {
   if (viewMode.value === 'month' || viewMode.value === 'lanes') {
     return currentMonthLabel.value
+  }
+  if (viewMode.value === 'day') {
+    return dayLabel.value
   }
   return weekLabel.value
 })
@@ -1365,6 +1531,9 @@ const activePlatformLabel = computed(() => {
 const subtitleText = computed(() => {
   if (viewMode.value === 'month') {
     return `${totalPosts.value} ${totalPosts.value === 1 ? 'Post' : 'Posts'} in ${currentMonthLabel.value}${activePlatformLabel.value}`
+  }
+  if (viewMode.value === 'day') {
+    return `${dayTotalPosts.value} ${dayTotalPosts.value === 1 ? 'Post' : 'Posts'} an diesem Tag${activePlatformLabel.value}`
   }
   if (viewMode.value === 'queue') {
     return `${queueCount.value} ${queueCount.value === 1 ? 'anstehender Post' : 'anstehende Posts'}${activePlatformLabel.value}`
@@ -1382,6 +1551,13 @@ watch([currentMonth, currentYear], () => {
     fetchArcTimeline()
   } else if (viewMode.value === 'lanes') {
     fetchPlatformLanes()
+  }
+})
+
+// Watch dayDate changes (for day view)
+watch(dayDate, () => {
+  if (viewMode.value === 'day') {
+    fetchDay()
   }
 })
 
@@ -1507,6 +1683,15 @@ onUnmounted(() => {
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
           >
             Woche
+          </button>
+          <button
+            @click="setViewMode('day')"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="viewMode === 'day'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          >
+            Tag
           </button>
           <button
             @click="setViewMode('lanes')"
@@ -1664,8 +1849,8 @@ onUnmounted(() => {
           <button
             @click="prevNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors"
-            :title="viewMode === 'month' ? 'Vorheriger Monat' : 'Vorherige Woche'"
-            :aria-label="viewMode === 'month' ? 'Vorheriger Monat' : 'Vorherige Woche'"
+            :title="viewMode === 'month' ? 'Vorheriger Monat' : viewMode === 'day' ? 'Vorheriger Tag' : 'Vorherige Woche'"
+            :aria-label="viewMode === 'month' ? 'Vorheriger Monat' : viewMode === 'day' ? 'Vorheriger Tag' : 'Vorherige Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -1677,8 +1862,8 @@ onUnmounted(() => {
           <button
             @click="nextNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors"
-            :title="viewMode === 'month' ? 'Naechster Monat' : 'Naechste Woche'"
-            :aria-label="viewMode === 'month' ? 'Naechster Monat' : 'Naechste Woche'"
+            :title="viewMode === 'month' ? 'Naechster Monat' : viewMode === 'day' ? 'Naechster Tag' : 'Naechste Woche'"
+            :aria-label="viewMode === 'month' ? 'Naechster Monat' : viewMode === 'day' ? 'Naechster Tag' : 'Naechste Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -1965,11 +2150,13 @@ onUnmounted(() => {
           <!-- Day number -->
           <div class="flex items-center justify-between mb-1">
             <span
-              class="text-sm font-medium leading-none"
+              class="text-sm font-medium leading-none cursor-pointer hover:underline"
               :class="[
                 dayObj.isToday ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center' : '',
                 dayObj.isCurrentMonth ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-600',
               ]"
+              @click.stop="goToDayView(dayObj.dateStr)"
+              :title="'Tagesansicht: ' + dayObj.dateStr"
             >
               {{ dayObj.day }}
             </span>
@@ -2042,7 +2229,8 @@ onUnmounted(() => {
               @dragend="onDragEnd"
               @click.ctrl="togglePostSelection(post, $event)"
               @click.meta="togglePostSelection(post, $event)"
-              class="rounded-md px-1.5 py-1 border-l-3 text-xs cursor-grab active:cursor-grabbing truncate"
+              @click.exact="openQuickEdit(post)"
+              class="rounded-md px-1.5 py-1 border-l-3 text-xs cursor-pointer active:cursor-grabbing truncate"
               :class="[
                 getCategoryStyle(post.category).bg,
                 getCategoryStyle(post.category).text,
@@ -2050,7 +2238,7 @@ onUnmounted(() => {
                 getCategoryStyle(post.category).border,
                 isPostSelected(post.id) ? 'ring-2 ring-blue-500 ring-offset-1' : '',
               ]"
-              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''} – ${isMultiSelectMode ? 'Cmd+Klick zum Aus-/Abwaehlen' : 'Cmd+Klick fuer Mehrfachauswahl'}`"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''} – Klick zum Bearbeiten | Cmd+Klick fuer Mehrfachauswahl`"
             >
               <div class="flex items-center gap-1">
                 <!-- Selection checkbox in multi-select mode -->
@@ -2126,6 +2314,18 @@ onUnmounted(() => {
               +{{ dayObj.posts.length - 3 }} weitere
             </div>
           </div>
+
+          <!-- Add new post button for empty/non-full days -->
+          <button
+            v-if="dayObj.posts.length === 0 && dayObj.isCurrentMonth && !isPastDate(dayObj.dateStr)"
+            @click.stop="openNewPostForSlot(dayObj.dateStr)"
+            class="w-full mt-1 py-1 rounded-md border border-dashed border-gray-300 dark:border-gray-600 text-xs text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-1"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Post
+          </button>
 
           <!-- Drop zone indicator when dragging -->
           <div
@@ -2277,6 +2477,171 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
+      </div>
+    </BaseCard>
+
+    <!-- ==================== DAY VIEW (Timeline 00:00-23:00) ==================== -->
+    <BaseCard v-if="viewMode === 'day'" padding="none" :header-divider="false">
+      <!-- Day header with date info -->
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-14 h-14 rounded-xl flex flex-col items-center justify-center"
+              :class="isDayToday ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+            >
+              <span class="text-[10px] font-semibold uppercase leading-none">{{ dayLabel.split(',')[0] && dayLabel.split(',')[0].slice(0,2) }}</span>
+              <span class="text-xl font-bold leading-none mt-0.5">{{ new Date(dayDate + 'T00:00:00').getDate() }}</span>
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ dayLabel }}</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                {{ dayTotalPosts }} {{ dayTotalPosts === 1 ? 'Post' : 'Posts' }} geplant
+                <span v-if="isDayToday" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">Heute</span>
+              </p>
+            </div>
+          </div>
+          <button
+            @click="openNewPostForSlot(dayDate)"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Neuer Post
+          </button>
+        </div>
+      </div>
+
+      <!-- All-day posts row -->
+      <div v-if="dayAllDayPosts.length > 0" class="px-6 py-3 border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30">
+        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Ganztaegig</div>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="post in dayAllDayPosts"
+            :key="'day-allday-' + post.id"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg border-l-4 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
+            :class="[getPlatformColor(post.platform).border]"
+            @click="openQuickEdit(post)"
+          >
+            <span class="w-2 h-2 rounded-full flex-shrink-0" :class="getStatusDot(post.status).dot"></span>
+            <AppIcon :name="getCategoryIcon(post.category)" class="w-4 h-4 inline-block flex-shrink-0 text-gray-500 dark:text-gray-400" />
+            <span class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">{{ post.title || 'Unbenannt' }}</span>
+            <AppIcon :name="getPlatformIcon(post.platform)" class="w-3.5 h-3.5 inline-block flex-shrink-0 text-gray-400" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline (0:00 - 23:00) -->
+      <div class="max-h-[700px] overflow-y-auto" id="day-timeline-scroll">
+        <div
+          v-for="slot in dayTimeSlots"
+          :key="'day-slot-' + slot.hour"
+          class="flex border-b border-gray-100 dark:border-gray-700/50 min-h-[56px] group/slot"
+          :class="[
+            slot.hour >= 6 && slot.hour <= 8 ? 'bg-amber-50/30 dark:bg-amber-900/5' : '',
+            slot.hour >= 9 && slot.hour <= 17 ? '' : '',
+            slot.hour >= 18 ? 'bg-indigo-50/20 dark:bg-indigo-900/5' : '',
+          ]"
+        >
+          <!-- Time label -->
+          <div class="flex-shrink-0 w-[72px] py-2 px-3 text-right border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <span class="text-sm font-medium text-gray-400 dark:text-gray-500">{{ slot.label }}</span>
+          </div>
+
+          <!-- Time slot content area -->
+          <div
+            class="flex-1 py-1.5 px-3 min-h-[56px] transition-colors cursor-pointer hover:bg-blue-50/40 dark:hover:bg-blue-900/10"
+            @click.self="openNewPostForSlot(dayDate, slot.hour)"
+          >
+            <!-- Posts at this hour -->
+            <div v-if="getDayPostsAtHour(slot.hour).length > 0" class="space-y-2">
+              <div
+                v-for="post in getDayPostsAtHour(slot.hour)"
+                :key="'day-post-' + post.id"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer group/post"
+                :class="[getPlatformColor(post.platform).border]"
+                @click.stop="openQuickEdit(post)"
+              >
+                <!-- Status dot -->
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" :class="getStatusDot(post.status).dot"></span>
+
+                <!-- Post info -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <AppIcon :name="getCategoryIcon(post.category)" class="w-4 h-4 inline-block flex-shrink-0" :class="getCategoryStyle(post.category).text" />
+                    <span class="font-medium text-gray-900 dark:text-white truncate">{{ post.title || 'Unbenannt' }}</span>
+                  </div>
+                  <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="inline-flex items-center gap-1">
+                      <AppIcon :name="getPlatformIcon(post.platform)" class="w-3.5 h-3.5 inline-block" />
+                      {{ post.platform ? post.platform.replace(/_/g, ' ') : '' }}
+                    </span>
+                    <span v-if="post.scheduled_time" class="inline-flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      {{ post.scheduled_time }}
+                    </span>
+                    <span class="inline-flex items-center gap-1" :class="getStatusMeta(post.status).color">
+                      <AppIcon :name="getStatusMeta(post.status).icon" class="w-3.5 h-3.5 inline-block" />
+                      {{ getStatusMeta(post.status).label }}
+                    </span>
+                    <span v-if="post.category" class="inline-flex items-center gap-1">
+                      {{ getCategoryLabel(post.category) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action button -->
+                <button
+                  class="flex-shrink-0 opacity-0 group-hover/post:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  @click.stop="openFullEditor(post.id)"
+                  title="Im Editor oeffnen"
+                >
+                  <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty slot hint (visible on hover) -->
+            <div
+              v-if="getDayPostsAtHour(slot.hour).length === 0"
+              class="h-full flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity"
+            >
+              <span class="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Post hinzufuegen
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state for day view -->
+      <div v-if="dayTotalPosts === 0 && !loading" class="py-12 text-center">
+        <div class="mb-3">
+          <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          Keine Posts an diesem Tag
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Klicke auf einen Zeitslot oder den Button oben, um einen neuen Post zu erstellen.
+        </p>
+        <button
+          @click="openNewPostForSlot(dayDate)"
+          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Post erstellen
+        </button>
       </div>
     </BaseCard>
 
@@ -2603,6 +2968,30 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
+        <div v-if="viewMode === 'day'">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Plattformen</h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Instagram Feed</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-pink-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Instagram Story</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-fuchsia-500"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">TikTok</span>
+            </div>
+          </div>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 mt-3">Status</h3>
+          <div class="flex flex-wrap gap-3">
+            <div v-for="(meta, key) in statusMeta" :key="'legend-status-' + key" class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" :class="getStatusDot(key).dot"></span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">{{ meta.label }}</span>
+            </div>
+          </div>
+        </div>
         <div v-if="viewMode === 'month' && showSeasonalMarkers">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Saisonale Markierungen</h3>
           <div class="flex flex-wrap gap-3">
@@ -2681,7 +3070,7 @@ onUnmounted(() => {
 
     <!-- Empty state (not for queue view - it has its own) -->
     <EmptyState
-      v-if="!loading && !error && viewMode !== 'queue' && viewMode !== 'lanes' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
+      v-if="!loading && !error && viewMode !== 'queue' && viewMode !== 'lanes' && viewMode !== 'day' && (viewMode === 'month' ? totalPosts === 0 : weekTotalPosts === 0)"
       class="mt-6"
       svgIcon="calendar-days"
       title="Dein Kalender ist noch leer"
@@ -3032,6 +3421,107 @@ onUnmounted(() => {
     </Teleport>
     <TourSystem ref="tourRef" page-key="calendar" />
 
+    <!-- Quick-Edit Modal -->
+    <div
+      v-if="showQuickEditModal && quickEditPost"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closeQuickEdit"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Post bearbeiten</h3>
+          <button
+            @click="closeQuickEdit"
+            class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Post preview header -->
+        <div class="flex items-center gap-3 p-3 rounded-lg mb-4" :class="getPlatformColor(quickEditPost.platform).bg">
+          <span class="w-3 h-3 rounded-full flex-shrink-0" :class="getStatusDot(quickEditPost.status).dot"></span>
+          <AppIcon :name="getPlatformIcon(quickEditPost.platform)" class="w-5 h-5 inline-block" />
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ quickEditPost.platform ? quickEditPost.platform.replace(/_/g, ' ') : '' }}
+          </span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+            {{ quickEditPost.scheduled_date }}
+          </span>
+        </div>
+
+        <!-- Title -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel</label>
+          <input
+            v-model="quickEditTitle"
+            type="text"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Post-Titel..."
+          />
+        </div>
+
+        <!-- Status -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="(meta, key) in statusMeta"
+              :key="'qe-status-' + key"
+              @click="quickEditStatus = key"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-colors"
+              :class="quickEditStatus === key
+                ? meta.badge + ' border-current'
+                : 'border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'"
+            >
+              <AppIcon :name="meta.icon" class="w-3.5 h-3.5 inline-block" />
+              {{ meta.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Scheduled Time -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Uhrzeit</label>
+          <input
+            v-model="quickEditTime"
+            type="time"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <button
+            @click="openFullEditor(quickEditPost.id)"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors inline-flex items-center gap-1.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Voll bearbeiten
+          </button>
+          <div class="flex-1"></div>
+          <button
+            @click="closeQuickEdit"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Abbrechen
+          </button>
+          <button
+            @click="saveQuickEdit"
+            :disabled="quickEditSaving"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            <div v-if="quickEditSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span v-else>Speichern</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Export/Import Modal -->
     <CalendarExportImport
       :show="showExportImport"
@@ -3070,5 +3560,24 @@ onUnmounted(() => {
 .slide-up-leave-from {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* Responsive: Month view hidden on small screens, day/week preferred */
+@media (max-width: 767px) {
+  .month-view-only {
+    display: none;
+  }
+}
+
+/* Day timeline scrollbar styling */
+#day-timeline-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+#day-timeline-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+#day-timeline-scroll::-webkit-scrollbar-track {
+  background-color: transparent;
 }
 </style>

@@ -159,6 +159,69 @@ async def get_calendar_week(
     }
 
 
+@router.get("/day")
+async def get_calendar_day(
+    date_str: Optional[str] = Query(None, alias="date"),
+    platform: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get posts scheduled for a single day.
+    Optionally filter by platform (instagram_feed, instagram_story, tiktok)."""
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    else:
+        target_date = date.today()
+
+    start_dt = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0)
+    end_dt = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59)
+
+    conditions = [
+        Post.user_id == user_id,
+        Post.scheduled_date.isnot(None),
+        Post.scheduled_date >= start_dt,
+        Post.scheduled_date <= end_dt,
+    ]
+
+    if platform:
+        conditions.append(Post.platform == platform)
+
+    query = select(Post).where(and_(*conditions)).order_by(Post.scheduled_date)
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    # Group posts by hour for timeline display
+    posts_by_hour = {}
+    all_day_posts = []
+    all_posts = []
+    for post in posts:
+        post_dict = post_to_calendar_dict(post)
+        all_posts.append(post_dict)
+        if post.scheduled_time:
+            try:
+                hour = int(post.scheduled_time.split(":")[0])
+                hour_key = str(hour)
+                if hour_key not in posts_by_hour:
+                    posts_by_hour[hour_key] = []
+                posts_by_hour[hour_key].append(post_dict)
+            except (ValueError, IndexError):
+                all_day_posts.append(post_dict)
+        else:
+            all_day_posts.append(post_dict)
+
+    return {
+        "date": target_date.isoformat(),
+        "posts": all_posts,
+        "posts_by_hour": posts_by_hour,
+        "all_day_posts": all_day_posts,
+        "total_posts": len(all_posts),
+    }
+
+
 @router.get("/unscheduled")
 async def get_unscheduled_drafts(
     user_id: int = Depends(get_current_user_id),
