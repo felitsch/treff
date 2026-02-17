@@ -1,15 +1,24 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+/**
+ * StudentsView — Enhanced Students Hub
+ *
+ * Combines student management with Story Arc progress and Content Pipeline
+ * indicators. Student cards use country-themed borders via useCountryTheme.
+ * Quick "Create from Student" opens Smart Create with student context.
+ *
+ * @see Feature #294: C-08: Enhanced Students Hub
+ */
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudentStore } from '@/stores/students'
 import { useToast } from '@/composables/useToast'
+import { getCountryTheme, resolveCountryKey, COUNTRY_THEMES } from '@/composables/useCountryTheme'
 import PersonalityEditor from '@/components/students/PersonalityEditor.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
-import { STUDENT_CONTENT_TYPES, FREQUENCY_CONFIG, CONTENT_LIFECYCLE, getContentTypesForPhase } from '@/config/studentContentGuide'
 
 const router = useRouter()
 const store = useStudentStore()
@@ -17,21 +26,48 @@ const toast = useToast()
 
 const tourRef = ref(null)
 
-// Workflow hint: show Story-Arc hint when students exist but no arcs
-const storyArcCount = ref(-1) // -1 = not loaded yet
-async function checkStoryArcs() {
-  try {
-    const { data } = await api.get('/api/story-arcs')
-    storyArcCount.value = Array.isArray(data) ? data.length : 0
-  } catch { storyArcCount.value = 0 }
-}
-const showStoryArcHint = computed(() => {
-  return store.students.length > 0 && storyArcCount.value === 0
+// ── Hub Statistics ──
+const storyArcs = ref([])
+const pipelineCounts = ref({}) // { studentId: count }
+const hubStats = computed(() => {
+  const total = store.students.length
+  const active = store.students.filter(s => s.status === 'active').length
+  const withArcs = new Set(storyArcs.value.map(a => a.student_id)).size
+  const pendingContent = Object.values(pipelineCounts.value).reduce((s, c) => s + c, 0)
+  return { total, active, withArcs, pendingContent }
 })
 
-// Filters
+// ── Data Loading ──
+async function loadStoryArcs() {
+  try {
+    const { data } = await api.get('/api/story-arcs')
+    storyArcs.value = Array.isArray(data) ? data : []
+  } catch { storyArcs.value = [] }
+}
+
+async function loadPipelineCounts() {
+  try {
+    const { data } = await api.get('/api/pipeline/inbox', { params: { limit: 100 } })
+    const counts = {}
+    if (data && data.items) {
+      for (const item of data.items) {
+        if (item.student_id) {
+          counts[item.student_id] = (counts[item.student_id] || 0) + 1
+        }
+      }
+    }
+    pipelineCounts.value = counts
+  } catch { pipelineCounts.value = {} }
+}
+
+const showStoryArcHint = computed(() => {
+  return store.students.length > 0 && storyArcs.value.length === 0
+})
+
+// ── Filters ──
 const filterCountry = ref('')
 const filterStatus = ref('')
+const filterContentStatus = ref('') // 'new' = has pending pipeline items
 const searchQuery = ref('')
 
 // Form state
@@ -66,9 +102,9 @@ const countryFlags = {
 }
 
 const statusColors = {
-  active: 'bg-green-100 text-green-800',
-  upcoming: 'bg-blue-100 text-blue-800',
-  completed: 'bg-gray-100 text-gray-600',
+  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  upcoming: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  completed: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
 }
 
 function getEmptyForm() {
@@ -87,7 +123,16 @@ function getEmptyForm() {
   }
 }
 
-const filteredStudents = computed(() => store.students)
+const filteredStudents = computed(() => {
+  let result = store.students
+
+  // Content status filter
+  if (filterContentStatus.value === 'new') {
+    result = result.filter(s => (pipelineCounts.value[s.id] || 0) > 0)
+  }
+
+  return result
+})
 
 async function loadStudents() {
   const filters = {}
@@ -134,7 +179,6 @@ async function submitForm() {
   }
 
   const data = { ...formData.value }
-  // Clean empty strings to null for optional fields
   if (!data.city) data.city = null
   if (!data.school_name) data.school_name = null
   if (!data.host_family_name) data.host_family_name = null
@@ -191,6 +235,52 @@ function getStatusLabel(value) {
   return s ? s.label : value
 }
 
+// ── Country Theme Helpers ──
+function getStudentTheme(student) {
+  return getCountryTheme(student.country)
+}
+
+function getStudentBorderStyle(student) {
+  const theme = getStudentTheme(student)
+  return {
+    borderColor: theme.primaryColor,
+    borderLeftWidth: '4px',
+  }
+}
+
+function getStudentAvatarStyle(student) {
+  const theme = getStudentTheme(student)
+  return {
+    backgroundColor: theme.primaryColor + '15',
+    color: theme.primaryColor,
+  }
+}
+
+// ── Story Arc Helpers ──
+function getStudentArcs(studentId) {
+  return storyArcs.value.filter(a => a.student_id === studentId)
+}
+
+function getArcProgress(arc) {
+  const planned = arc.planned_episodes || 0
+  const published = arc.published_episodes || 0
+  if (planned === 0) return 0
+  return Math.min(100, Math.round((published / planned) * 100))
+}
+
+const arcStatusColors = {
+  active: '#22C55E',
+  paused: '#F59E0B',
+  draft: '#6B7280',
+  completed: '#3B82F6',
+}
+
+// ── Pipeline Helpers ──
+function getStudentPipelineCount(studentId) {
+  return pipelineCounts.value[studentId] || 0
+}
+
+// ── Personality Badge ──
 const toneIcons = {
   witzig: '😂',
   emotional: '🥺',
@@ -218,20 +308,30 @@ function getPersonalityBadge(student) {
   }
 }
 
+// ── Quick Actions ──
+function createFromStudent(student) {
+  router.push({ path: '/create/smart', query: { student_id: student.id } })
+}
+
+function viewStudentDetail(student) {
+  router.push(`/students/${student.id}`)
+}
+
 onMounted(() => {
   loadStudents()
-  checkStoryArcs()
+  loadStoryArcs()
+  loadPipelineCounts()
 })
 </script>
 
 <template>
-  <div class="p-6 max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6" data-tour="students-header">
+  <div class="min-h-screen" data-testid="students-hub">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4" data-tour="students-header">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Studenten</h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Verwalte Studentenprofile fuer Content-Serien
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Students Hub</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Schueler-Profile, Story-Arcs & Content-Pipeline auf einen Blick
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -243,13 +343,34 @@ onMounted(() => {
           &#10067; Tour
         </button>
         <button
-          class="bg-treff-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          class="btn-primary flex items-center gap-2"
           @click="openCreateForm"
           data-tour="students-add-btn"
+          data-testid="add-student-btn"
         >
           <span>+</span>
           <span>Student hinzufuegen</span>
         </button>
+      </div>
+    </div>
+
+    <!-- Hub Stats Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" data-testid="hub-stats">
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ hubStats.total }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Schueler gesamt</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ hubStats.active }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Aktiv</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ hubStats.withArcs }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Mit Story-Arcs</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="text-2xl font-bold text-secondary-600 dark:text-secondary-400">{{ hubStats.pendingContent }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pipeline-Items</div>
       </div>
     </div>
 
@@ -266,18 +387,20 @@ onMounted(() => {
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-wrap gap-3 mb-6">
+    <div class="flex flex-wrap gap-3 mb-6" data-testid="students-filters">
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Suche nach Name, Stadt, Schule..."
-        class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm w-64 dark:bg-gray-800 dark:text-white"
+        class="input-field w-64"
         @input="loadStudents"
+        data-testid="search-input"
       />
       <select
         v-model="filterCountry"
-        class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+        class="input-field w-auto"
         @change="loadStudents"
+        data-testid="filter-country"
       >
         <option value="">Alle Laender</option>
         <option v-for="c in countries" :key="c.value" :value="c.value">
@@ -286,20 +409,29 @@ onMounted(() => {
       </select>
       <select
         v-model="filterStatus"
-        class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+        class="input-field w-auto"
         @change="loadStudents"
+        data-testid="filter-status"
       >
         <option value="">Alle Status</option>
         <option v-for="s in statuses" :key="s.value" :value="s.value">
           {{ s.label }}
         </option>
       </select>
+      <select
+        v-model="filterContentStatus"
+        class="input-field w-auto"
+        data-testid="filter-content"
+      >
+        <option value="">Alle Inhalte</option>
+        <option value="new">Neue Pipeline-Items</option>
+      </select>
     </div>
 
     <!-- Loading -->
     <div v-if="store.loading" class="text-center py-12 text-gray-500">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-      <p class="mt-2">Lade Studenten...</p>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
+      <p class="mt-2 text-sm">Lade Studenten...</p>
     </div>
 
     <!-- Empty state -->
@@ -312,88 +444,145 @@ onMounted(() => {
       @action="showForm = true"
     />
 
-    <!-- Student list -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="students-list">
-      <BaseCard
+    <!-- Student Grid with Country-Themed Cards -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-tour="students-list" data-testid="students-grid">
+      <div
         v-for="(student, idx) in filteredStudents"
         :key="student.id"
-        padding="md"
-        hoverable
-        clickable
-        :header-divider="false"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-card hover:shadow-card-hover border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 cursor-pointer group"
+        :style="getStudentBorderStyle(student)"
         :data-tour="idx === 0 ? 'students-personality' : undefined"
-        @click="router.push(`/students/${student.id}`)"
+        :data-testid="'student-card-' + student.id"
+        @click="viewStudentDetail(student)"
       >
-        <!-- Header row with profile image -->
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex items-center gap-3">
-            <div class="w-14 h-14 rounded-full bg-treff-blue/10 flex items-center justify-center text-xl overflow-hidden flex-shrink-0">
-              <img
-                v-if="student.profile_image_url"
-                :src="student.profile_image_url"
-                :alt="student.name"
-                class="w-full h-full object-cover"
-              />
-              <span v-else class="text-2xl">{{ countryFlags[student.country] || '🌍' }}</span>
+        <!-- Country Gradient Top Bar -->
+        <div class="h-1.5" :style="{ background: getStudentTheme(student).gradient }"></div>
+
+        <div class="p-5">
+          <!-- Header: Avatar + Name + Status -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 rounded-full flex items-center justify-center text-xl overflow-hidden flex-shrink-0 ring-2 ring-offset-1 dark:ring-offset-gray-800"
+                :style="{ ...getStudentAvatarStyle(student), ringColor: getStudentTheme(student).primaryColor }"
+              >
+                <img
+                  v-if="student.profile_image_url"
+                  :src="student.profile_image_url"
+                  :alt="student.name"
+                  class="w-full h-full object-cover"
+                />
+                <span v-else class="text-lg font-bold" :style="{ color: getStudentTheme(student).primaryColor }">
+                  {{ student.name.charAt(0).toUpperCase() }}
+                </span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white text-sm leading-tight">{{ student.name }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {{ countryFlags[student.country] }} {{ getCountryLabel(student.country) }}
+                  <span v-if="student.city"> &middot; {{ student.city }}</span>
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 class="font-semibold text-gray-900 dark:text-white">{{ student.name }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ countryFlags[student.country] }} {{ getCountryLabel(student.country) }}
-                <span v-if="student.city"> &middot; {{ student.city }}</span>
+            <div class="flex flex-col items-end gap-1">
+              <span :class="['text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap', statusColors[student.status]]">
+                {{ getStatusLabel(student.status) }}
+              </span>
+              <!-- Pipeline Badge -->
+              <span
+                v-if="getStudentPipelineCount(student.id) > 0"
+                class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 dark:bg-secondary-900/30 dark:text-secondary-400 whitespace-nowrap"
+                data-testid="pipeline-badge"
+              >
+                {{ getStudentPipelineCount(student.id) }} neue Inhalte
+              </span>
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400 mb-3">
+            <p v-if="student.school_name" class="truncate">
+              <span class="text-gray-400">Schule:</span> {{ student.school_name }}
+            </p>
+            <p v-if="student.start_date || student.end_date" class="truncate">
+              <span class="text-gray-400">Zeitraum:</span>
+              {{ student.start_date || '?' }} bis {{ student.end_date || '?' }}
+            </p>
+            <p v-if="student.bio" class="line-clamp-1 text-gray-500 dark:text-gray-500">
+              {{ student.bio }}
+            </p>
+          </div>
+
+          <!-- Personality Badge -->
+          <div v-if="getPersonalityBadge(student)" class="mb-3">
+            <span class="inline-block px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-[10px] font-medium">
+              {{ getPersonalityBadge(student) }}
+            </span>
+          </div>
+
+          <!-- Story Arc Progress (Mini) -->
+          <div v-if="getStudentArcs(student.id).length > 0" class="mb-3" data-testid="story-arc-section">
+            <div class="text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Story-Arcs</div>
+            <div class="space-y-1.5">
+              <div
+                v-for="arc in getStudentArcs(student.id).slice(0, 2)"
+                :key="arc.id"
+                class="flex items-center gap-2"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-0.5">
+                    <span class="text-[10px] text-gray-700 dark:text-gray-300 truncate">{{ arc.title }}</span>
+                    <span class="text-[10px] text-gray-400 ml-1 flex-shrink-0">{{ getArcProgress(arc) }}%</span>
+                  </div>
+                  <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :style="{ width: getArcProgress(arc) + '%', backgroundColor: arcStatusColors[arc.status] || '#6B7280' }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <p v-if="getStudentArcs(student.id).length > 2" class="text-[10px] text-gray-400">
+                +{{ getStudentArcs(student.id).length - 2 }} weitere
               </p>
             </div>
           </div>
-          <span :class="['text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap', statusColors[student.status]]">
-            {{ getStatusLabel(student.status) }}
-          </span>
-        </div>
 
-        <!-- Details -->
-        <div class="space-y-1.5 text-sm text-gray-600 dark:text-gray-300 mb-4">
-          <p v-if="student.school_name">
-            <span class="text-gray-400">Schule:</span> {{ student.school_name }}
-          </p>
-          <p v-if="student.host_family_name">
-            <span class="text-gray-400">Gastfamilie:</span> {{ student.host_family_name }}
-          </p>
-          <p v-if="student.start_date || student.end_date">
-            <span class="text-gray-400">Zeitraum:</span>
-            {{ student.start_date || '?' }} bis {{ student.end_date || '?' }}
-          </p>
-          <p v-if="student.bio" class="line-clamp-2">
-            {{ student.bio }}
-          </p>
-          <p v-if="getPersonalityBadge(student)">
-            <span class="text-gray-400">Persoenlichkeit:</span>
-            <span class="inline-block ml-1 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
-              {{ getPersonalityBadge(student) }}
-            </span>
-          </p>
+          <!-- Actions -->
+          <div class="flex gap-1.5 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <button
+              class="flex-1 text-xs font-medium py-1.5 rounded-lg transition-colors hover:bg-opacity-10"
+              :style="{ color: getStudentTheme(student).primaryColor }"
+              :class="'hover:bg-gray-100 dark:hover:bg-gray-700'"
+              @click.stop="viewStudentDetail(student)"
+              data-testid="btn-details"
+            >
+              Details
+            </button>
+            <button
+              class="flex-1 text-xs font-medium text-primary-600 dark:text-primary-400 py-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+              @click.stop="createFromStudent(student)"
+              data-testid="btn-create-from-student"
+            >
+              Smart Create
+            </button>
+            <button
+              class="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              @click.stop="openEditForm(student)"
+              data-testid="btn-edit"
+            >
+              &#9998;
+            </button>
+            <button
+              class="text-xs font-medium text-red-500 px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              @click.stop="confirmDelete(student)"
+              data-testid="btn-delete"
+            >
+              &#128465;
+            </button>
+          </div>
         </div>
-
-        <!-- Actions -->
-        <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <button
-            class="flex-1 text-sm text-treff-blue hover:bg-treff-blue/10 rounded-lg py-1.5 transition-colors"
-            @click.stop="router.push(`/students/${student.id}`)"
-          >
-            Details
-          </button>
-          <button
-            class="flex-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg py-1.5 transition-colors"
-            @click.stop="openEditForm(student)"
-          >
-            Bearbeiten
-          </button>
-          <button
-            class="flex-1 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg py-1.5 transition-colors"
-            @click.stop="confirmDelete(student)"
-          >
-            Loeschen
-          </button>
-        </div>
-      </BaseCard>
+      </div>
     </div>
 
     <!-- Create/Edit Form Modal -->
@@ -410,24 +599,26 @@ onMounted(() => {
         <form @submit.prevent="submitForm" class="space-y-4">
           <!-- Name -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+            <label class="input-label">Name *</label>
             <input
               v-model="formData.name"
               type="text"
               required
               placeholder="z.B. Jonathan Mueller"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
+              data-testid="form-name"
             />
           </div>
 
           <!-- Country + Status -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land *</label>
+              <label class="input-label">Land *</label>
               <select
                 v-model="formData.country"
                 required
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+                class="input-field w-full"
+                data-testid="form-country"
               >
                 <option v-for="c in countries" :key="c.value" :value="c.value">
                   {{ countryFlags[c.value] }} {{ c.label }}
@@ -435,10 +626,11 @@ onMounted(() => {
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <label class="input-label">Status</label>
               <select
                 v-model="formData.status"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+                class="input-field w-full"
+                data-testid="form-status"
               >
                 <option v-for="s in statuses" :key="s.value" :value="s.value">
                   {{ s.label }}
@@ -449,76 +641,68 @@ onMounted(() => {
 
           <!-- City -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stadt</label>
+            <label class="input-label">Stadt</label>
             <input
               v-model="formData.city"
               type="text"
               placeholder="z.B. Vancouver"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
             />
           </div>
 
           <!-- School -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Schule</label>
+            <label class="input-label">Schule</label>
             <input
               v-model="formData.school_name"
               type="text"
               placeholder="z.B. Kitsilano Secondary"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
             />
           </div>
 
           <!-- Host Family -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gastfamilie</label>
+            <label class="input-label">Gastfamilie</label>
             <input
               v-model="formData.host_family_name"
               type="text"
               placeholder="z.B. Smith"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
             />
           </div>
 
           <!-- Date range -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Startdatum</label>
-              <input
-                v-model="formData.start_date"
-                type="date"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
-              />
+              <label class="input-label">Startdatum</label>
+              <input v-model="formData.start_date" type="date" class="input-field w-full" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enddatum</label>
-              <input
-                v-model="formData.end_date"
-                type="date"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
-              />
+              <label class="input-label">Enddatum</label>
+              <input v-model="formData.end_date" type="date" class="input-field w-full" />
             </div>
           </div>
 
           <!-- Bio -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
+            <label class="input-label">Bio</label>
             <textarea
               v-model="formData.bio"
               rows="3"
               placeholder="Kurze Beschreibung des Studenten..."
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
             ></textarea>
           </div>
 
           <!-- Fun Facts -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fun Facts</label>
+            <label class="input-label">Fun Facts</label>
             <textarea
               v-model="formData.fun_facts"
               rows="2"
               placeholder='z.B. ["Spielt Eishockey", "Liebt Poutine"]'
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              class="input-field w-full"
             ></textarea>
           </div>
 
@@ -531,15 +715,16 @@ onMounted(() => {
           <div class="flex gap-3 pt-2">
             <button
               type="button"
-              class="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              class="btn-ghost flex-1"
               @click="cancelForm"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              class="flex-1 bg-treff-blue text-white rounded-lg py-2 hover:bg-blue-600 transition-colors"
+              class="btn-primary flex-1"
               :disabled="store.loading"
+              data-testid="form-submit"
             >
               {{ editingStudent ? 'Speichern' : 'Erstellen' }}
             </button>
@@ -562,13 +747,13 @@ onMounted(() => {
         </p>
         <div class="flex gap-3">
           <button
-            class="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            class="btn-ghost flex-1"
             @click="cancelDelete"
           >
             Abbrechen
           </button>
           <button
-            class="flex-1 bg-red-500 text-white rounded-lg py-2 hover:bg-red-600 transition-colors"
+            class="btn-danger flex-1"
             @click="executeDelete"
           >
             Loeschen
