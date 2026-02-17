@@ -17,7 +17,6 @@
  * of the Pinia Store Architektur (I-05) decomposition.
  *
  * @see stores/contentDraft.js — Post-creation wizard state
- * @see stores/campaign.js     — Multi-post campaign planning state
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'

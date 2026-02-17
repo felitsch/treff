@@ -13,15 +13,11 @@
  *   import { useContentDraftStore } from '@/stores/contentDraft'
  *   const store = useContentDraftStore()
  *
- * For campaign features, use:
- *   import { useCampaignStore } from '@/stores/campaign'
- *
  * For content pipeline / student inbox, use:
  *   import { useContentPipelineStore } from '@/stores/contentPipeline'
  *
  * @deprecated Use useContentDraftStore instead
  * @see stores/contentDraft.js    — Vereinfachter Draft-State (Quick/Smart Create)
- * @see stores/campaign.js        — Multi-Post-Kampagnen-State
  * @see stores/contentPipeline.js — Student Inbox & Content-Verarbeitungs-Queue
  */
 import { useContentDraftStore } from './contentDraft'
@@ -37,7 +33,7 @@ export function useCreatePostStore() {
   if (!_deprecationWarned) {
     console.warn(
       '[DEPRECATED] useCreatePostStore is deprecated. ' +
-      'Migrate to useContentDraftStore, useCampaignStore, or useContentPipelineStore. ' +
+      'Migrate to useContentDraftStore or useContentPipelineStore. ' +
       'See stores/contentDraft.js for migration guide.'
     )
     _deprecationWarned = true
