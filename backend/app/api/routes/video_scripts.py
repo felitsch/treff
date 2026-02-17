@@ -19,6 +19,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.core.strategy_loader import StrategyLoader
 from app.models.video_script import VideoScript
+from app.models.audio_suggestion import AudioSuggestion
 from app.models.setting import Setting
 
 logger = logging.getLogger(__name__)
@@ -188,6 +189,70 @@ Antworte AUSSCHLIESSLICH im folgenden JSON-Format:
     return prompt
 
 
+# Map scene types to preferred audio moods
+SCENE_MOOD_MAP = {
+    "hook": ["energetic", "dramatic"],
+    "problem": ["dramatic", "emotional"],
+    "intro": ["chill", "energetic"],
+    "content": ["energetic", "chill"],
+    "content_2": ["chill", "energetic"],
+    "content_3": ["emotional", "energetic"],
+    "proof": ["emotional", "chill"],
+    "transition": ["chill", "emotional"],
+    "cta": ["energetic", "funny"],
+}
+
+
+def _pick_audio_for_scene(
+    scene_type: str,
+    audio_suggestions: list[dict],
+    tone: str,
+) -> str:
+    """Pick a suitable audio suggestion for a scene type based on mood mapping.
+
+    Returns a formatted music_note string with the track title and mood hint.
+    """
+    if not audio_suggestions:
+        return ""
+
+    preferred_moods = SCENE_MOOD_MAP.get(scene_type, ["energetic", "chill"])
+
+    # Map tone to mood preference override
+    tone_mood_map = {
+        "emotional": "emotional",
+        "witzig": "funny",
+        "motivierend": "energetic",
+        "provokant": "dramatic",
+    }
+    if tone in tone_mood_map:
+        preferred_moods = [tone_mood_map[tone]] + preferred_moods
+
+    # Find matching suggestions sorted by relevance
+    matches = []
+    for s in audio_suggestions:
+        mood_score = 0
+        if s["mood"] in preferred_moods:
+            mood_score = len(preferred_moods) - preferred_moods.index(s["mood"])
+        matches.append((mood_score, s["trending_score"], s))
+
+    matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    # Pick from top matches with some randomness
+    top = matches[:min(5, len(matches))]
+    chosen = random.choice(top)[2]
+
+    mood_labels = {
+        "energetic": "Energetisch",
+        "emotional": "Emotional",
+        "funny": "Witzig",
+        "chill": "Chill",
+        "dramatic": "Dramatisch",
+    }
+    mood_label = mood_labels.get(chosen["mood"], chosen["mood"])
+
+    return f"{mood_label}: '{chosen['title']}' ({chosen['artist']})"
+
+
 def _generate_rule_based_script(
     topic: str,
     platform: str,
@@ -195,6 +260,7 @@ def _generate_rule_based_script(
     hook_formula: Optional[dict],
     country: Optional[str],
     tone: str,
+    audio_suggestions: Optional[list[dict]] = None,
 ) -> dict:
     """Generate a rule-based video script as fallback when Gemini is unavailable."""
     timing = TIMING_TEMPLATES.get(duration, TIMING_TEMPLATES[30])
@@ -219,11 +285,14 @@ def _generate_rule_based_script(
         end_time = current_time + scene_template["duration"]
         scene_type = scene_template["scene_type"]
 
+        # Pick audio suggestion for this scene type
+        audio_hint = _pick_audio_for_scene(scene_type, audio_suggestions or [], tone) if audio_suggestions else ""
+
         if scene_type == "hook":
             voiceover = hook_text
             text_overlay = hook_text[:50] + ("..." if len(hook_text) > 50 else "")
             visual = random.choice(visuals)
-            music = "Attention-grabbing Beat Drop"
+            music = audio_hint or "Attention-grabbing Beat Drop"
             b_roll = f"Schnelle Montage: {', '.join(random.sample(visuals, min(2, len(visuals))))}"
         elif scene_type == "cta":
             cta_options = [
@@ -235,25 +304,25 @@ def _generate_rule_based_script(
             voiceover = random.choice(cta_options)
             text_overlay = "Link in Bio!"
             visual = "TREFF Logo + Website URL Einblendung"
-            music = "Upbeat Outro"
+            music = audio_hint or "Upbeat Outro"
             b_roll = "Montage von gluecklichen Austauschschuelern"
         elif scene_type in ("problem", "intro"):
             voiceover = f"Viele fragen sich: Wie ist ein Highschool-Jahr in {country_name} wirklich? {topic}"
             text_overlay = topic[:50]
             visual = f"B-Roll: {country_name} Alltagsszenen"
-            music = "Spannungsaufbau"
+            music = audio_hint or "Spannungsaufbau"
             b_roll = random.choice(visuals)
         elif scene_type == "proof":
             voiceover = f"Das sagen TREFF-Schueler die wirklich dort waren. Ueber 200 Teilnehmer pro Jahr seit 1984."
             text_overlay = "Seit 1984 - 200+ Schueler/Jahr"
             visual = "Testimonial-Clips oder Fotos von TREFF-Alumni"
-            music = "Emotional, aufbauend"
+            music = audio_hint or "Emotional, aufbauend"
             b_roll = "Collage von Schueler-Fotos"
         elif scene_type == "transition":
             voiceover = f"Also wenn du dir unsicher bist: {country_name} koennte genau das Richtige fuer dich sein."
             text_overlay = f"{country_name} wartet auf dich!"
             visual = f"Panorama-Aufnahme {country_name}"
-            music = "Uebergang, sanft"
+            music = audio_hint or "Uebergang, sanft"
             b_roll = random.choice(visuals)
         else:
             # content, content_2, content_3
@@ -267,7 +336,7 @@ def _generate_rule_based_script(
             voiceover = random.choice(content_options)
             text_overlay = voiceover[:40] + "..."
             visual = random.choice(visuals)
-            music = "Upbeat, modern"
+            music = audio_hint or "Upbeat, modern"
             b_roll = random.choice(visuals)
 
         scenes.append({
@@ -483,6 +552,35 @@ Alle Texte auf Deutsch. Antworte NUR im geforderten JSON-Format."""
             logger.warning("Gemini video script generation failed: %s", e)
             script_data = None
 
+    # Load audio suggestions for music_note integration
+    audio_suggestions_data = []
+    try:
+        audio_query = select(AudioSuggestion)
+        if platform in ("reels", "story"):
+            audio_query = audio_query.where(
+                AudioSuggestion.platform.in_(["instagram", "both"])
+            )
+        elif platform == "tiktok":
+            audio_query = audio_query.where(
+                AudioSuggestion.platform.in_(["tiktok", "both"])
+            )
+        audio_query = audio_query.order_by(desc(AudioSuggestion.trending_score))
+        audio_result = await db.execute(audio_query)
+        audio_rows = audio_result.scalars().all()
+        audio_suggestions_data = [
+            {
+                "title": a.title,
+                "artist": a.artist or "Unknown",
+                "mood": a.mood,
+                "tempo": a.tempo,
+                "trending_score": a.trending_score,
+                "suitable_for": json.loads(a.suitable_for) if a.suitable_for else [],
+            }
+            for a in audio_rows
+        ]
+    except Exception as e:
+        logger.warning("Failed to load audio suggestions for script: %s", e)
+
     # Fall back to rule-based
     if not script_data:
         script_data = _generate_rule_based_script(
@@ -492,6 +590,7 @@ Alle Texte auf Deutsch. Antworte NUR im geforderten JSON-Format."""
             hook_formula=hook_formula,
             country=country,
             tone=tone,
+            audio_suggestions=audio_suggestions_data,
         )
 
     # Save to database

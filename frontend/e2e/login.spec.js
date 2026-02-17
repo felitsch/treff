@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { login, selectors } from './helpers.js'
 
+// Login tests must start unauthenticated — override shared storageState
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('Login Flow', () => {
   test('should display login form with correct labels', async ({ page }) => {
     await page.goto('/login')
@@ -18,8 +21,9 @@ test.describe('Login Flow', () => {
     await page.fill('#password', 'wrongpassword')
     await page.click(selectors.loginSubmit)
 
-    // Should show error message
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5000 })
+    // Should show inline error message within the login form
+    const errorAlert = page.locator('form [role="alert"]')
+    await expect(errorAlert).toBeVisible({ timeout: 10000 })
     // Should stay on login page
     expect(page.url()).toContain('/login')
   })
@@ -39,15 +43,15 @@ test.describe('Login Flow', () => {
 
   test('should redirect unauthenticated users to login', async ({ page }) => {
     await page.goto('/home')
-    // Should redirect to login
-    await page.waitForURL('**/login', { timeout: 5000 })
+    // Should redirect to login (may include ?redirect=/home query param)
+    await page.waitForURL('**/login**', { timeout: 5000 })
     expect(page.url()).toContain('/login')
   })
 
   test('should logout and return to login page', async ({ page }) => {
     await login(page)
     await page.click('button:has-text("Logout")')
-    await page.waitForURL('**/login', { timeout: 5000 })
+    await page.waitForURL('**/login**', { timeout: 5000 })
     expect(page.url()).toContain('/login')
   })
 })

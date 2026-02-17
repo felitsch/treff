@@ -43,6 +43,10 @@ commands:
     description: Change directory
   - name: print
     description: Python print function (used in -c scripts)
+  - name: agent-browser
+    description: Browser automation CLI for AI agents
+  - name: playwright-cli
+    description: Playwright CLI browser automation tool
 
   # ==========================================
   # iOS Development Example

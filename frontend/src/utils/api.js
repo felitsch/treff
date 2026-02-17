@@ -87,7 +87,11 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     // ── 401 Unauthorized: Token refresh + redirect ──
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip auto-redirect for auth endpoints — let the login/register forms handle their own errors
+    const isAuthEndpoint = originalRequest?.url?.includes('/api/auth/login') ||
+                           originalRequest?.url?.includes('/api/auth/register')
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
 
       const refreshToken = localStorage.getItem('refresh_token')
