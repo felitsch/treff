@@ -1,5 +1,85 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #310: Dashboard 6-Widget-Architektur
+**Date:** 2026-02-17
+**Feature ID:** #310
+**Status:** PASSING
+
+### What was implemented:
+Added 4 new dashboard widgets and integrated them into a 6-widget grid layout on the Dashboard:
+
+1. **ContentQueueWidget.vue** - Shows next 5 scheduled posts as mini preview cards
+   - Countdown timers ("in 2 Stunden", "morgen", "in 3 Tagen")
+   - Quick-edit button on hover
+   - Platform icon + category color badge
+   - Empty state: "Keine geplanten Posts" with CTA
+
+2. **StudentInboxWidget.vue** - Shows new student content items
+   - Student avatar with initial, name, country flag
+   - Status badges (Neu/Analysiert)
+   - Quick-action buttons ("Post erstellen", "Spaeter")
+   - Time-ago formatting ("vor 2 Stunden")
+   - Yellow notification count badge
+
+3. **PerformancePulseWidget.vue** - Mini SVG line chart
+   - Last 4 weeks posting frequency (KW labels)
+   - Ist (blue line) vs. Soll (dashed yellow goal line)
+   - Trend arrow (up/down/stable) with colored badge
+   - Data points with value labels
+   - Legend: "Ist / Soll (3/Woche) / X% Ziel erreicht"
+
+4. **ActiveCampaignsWidget.vue** - Campaign progress bars
+   - Campaign title with goal icon
+   - Status badge (Aktiv/Entwurf/Fertig)
+   - Progress bar with percentage ("3/8 Posts fertig")
+   - Color-coded: green(80%+), blue(50%+), yellow(25%+), gray(<25%)
+   - Date range and platform badges
+   - Empty state: "Keine aktiven Kampagnen" with CTA
+
+5. **Backend Endpoint:** `GET /api/analytics/dashboard-widgets`
+   - Aggregates data from posts, pipeline_items, campaigns, settings tables
+   - Returns: content_queue, student_inbox, performance_pulse, active_campaigns
+   - Includes posting goal from user settings
+
+6. **DashboardView.vue Integration:**
+   - New 3x2 widget grid between stat cards and main content grid
+   - Widgets 5 & 6: Existing Calendar + AI Suggestions moved into grid
+   - Separate fetchWidgetData() call (non-blocking, independent from main dashboard data)
+   - Skeleton loading state for widget grid
+
+### Layout: 6 Widgets Grid
+- Desktop (lg): 3x2 grid - verified 3 columns (314px each)
+- Tablet (md): 2x3 grid - verified 2 columns (320px each)
+- Mobile: 1x6 stack - verified 1 column (327px)
+
+### Files created/modified:
+- frontend/src/components/dashboard/ContentQueueWidget.vue (NEW)
+- frontend/src/components/dashboard/StudentInboxWidget.vue (NEW)
+- frontend/src/components/dashboard/PerformancePulseWidget.vue (NEW)
+- frontend/src/components/dashboard/ActiveCampaignsWidget.vue (NEW)
+- frontend/src/views/DashboardView.vue (modified - imports, widget data, 6-widget grid)
+- backend/app/api/routes/analytics.py (modified - dashboard-widgets endpoint)
+
+### Verification completed:
+- Browser: All 4 new widgets PRESENT (data-testid verified)
+- Browser: 6 widgets in grid (childCount: 6)
+- Browser: Desktop 3-col grid layout verified
+- Browser: Tablet 2-col grid layout verified
+- Browser: Mobile 1-col stack layout verified
+- Browser: All empty states display correctly with German text
+- Browser: Performance Pulse shows chart with KW labels, Ist/Soll lines, trend
+- Browser: Each widget has refresh button and "Alle anzeigen" link
+- Browser: Existing sections (Recent Posts, Heatmap, Series, Recycling, Suggestions) still PRESENT
+- Mock data grep: Zero matches in all new/modified files
+- Console errors: 0 across all viewports
+- API endpoint: Returns real database data from posts/campaigns/pipeline/settings tables
+- Git commit: ab2fa56
+
+### Current state:
+- Feature #310 marked as PASSING
+
+---
+
 ## Session - Features #304 & #306: Page Transitions & Dark Mode Refinement
 **Date:** 2026-02-17
 **Feature IDs:** #304 (Page Transition Animations), #306 (Dark Mode Refinement)
