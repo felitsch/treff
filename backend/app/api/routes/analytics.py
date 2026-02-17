@@ -274,6 +274,9 @@ async def get_frequency(
     elif period == "quarter":
         start_date = now - timedelta(days=89)
         days_count = 90
+    elif period == "half_year":
+        start_date = now - timedelta(days=182)
+        days_count = 183
     elif period == "year":
         start_date = now - timedelta(days=364)
         days_count = 365
@@ -305,9 +308,10 @@ async def get_frequency(
                 "date": day.isoformat(),
                 "count": count,
             })
-    elif period == "quarter":
-        # Group by week (13 weeks)
-        for week_num in range(13):
+    elif period in ("quarter", "half_year"):
+        # Group by week
+        num_weeks = 13 if period == "quarter" else 26
+        for week_num in range(num_weeks):
             week_start = start_date + timedelta(weeks=week_num)
             week_end = week_start + timedelta(days=6)
             count = sum(
@@ -1196,6 +1200,63 @@ async def export_performance_csv(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/formats")
+async def get_formats(
+    request: Request,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get content format distribution: Feed vs Story vs Carousel vs Reel.
+
+    Derives format from platform + slide count:
+    - instagram_feed + 1 slide = "Feed"
+    - instagram_feed + 2+ slides = "Carousel"
+    - instagram_story = "Story"
+    - tiktok = "Reel"
+
+    Cached for 15 minutes.
+    """
+    import json as _json
+
+    cache_key = api_cache._build_key("formats", {"user_id": user_id})
+    entry = api_cache.get(cache_key)
+    if entry is not None:
+        return JSONResponse(content=entry.value, headers={
+            "ETag": f'"{entry.etag}"', "Cache-Control": f"private, max-age={entry.remaining_ttl}",
+            "X-Cache": "HIT", "X-Cache-Age": str(entry.age_seconds),
+        })
+
+    result = await db.execute(
+        select(Post.platform, Post.slide_data).where(Post.user_id == user_id)
+    )
+    rows = result.all()
+
+    format_counts = {"Feed": 0, "Carousel": 0, "Story": 0, "Reel": 0}
+    for platform, slide_data in rows:
+        if platform == "instagram_story":
+            format_counts["Story"] += 1
+        elif platform == "tiktok":
+            format_counts["Reel"] += 1
+        elif platform == "instagram_feed":
+            # Check slide count to distinguish Feed vs Carousel
+            try:
+                slides = _json.loads(slide_data) if slide_data else []
+                if isinstance(slides, list) and len(slides) > 1:
+                    format_counts["Carousel"] += 1
+                else:
+                    format_counts["Feed"] += 1
+            except (ValueError, TypeError):
+                format_counts["Feed"] += 1
+        else:
+            format_counts["Feed"] += 1
+
+    data = [{"format": k, "count": v} for k, v in format_counts.items() if v > 0]
+    new_entry = api_cache.set(cache_key, data)
+    return JSONResponse(content=data, headers={
+        "ETag": f'"{new_entry.etag}"', "Cache-Control": "private, max-age=900", "X-Cache": "MISS",
+    })
 
 
 @router.get("/heatmap")

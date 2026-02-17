@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { Line, Doughnut } from 'vue-chartjs'
+import { Line, Bar, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -28,6 +29,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -54,6 +56,9 @@ const platforms = ref([])
 
 // Country distribution
 const countries = ref([])
+
+// Format distribution (Feed, Carousel, Story, Reel)
+const formats = ref([])
 
 // Goals
 const goals = ref({
@@ -222,6 +227,152 @@ const categoryChartOptions = computed(() => {
   }
 })
 
+// Platform hex colors for Donut chart
+function platformHexColor(platform) {
+  const colors = {
+    instagram_feed: '#E1306C',
+    instagram_story: '#833AB4',
+    tiktok: '#00F2EA',
+  }
+  return colors[platform] || '#6B7280'
+}
+
+// Platform Donut chart data
+const platformChartData = computed(() => {
+  if (platforms.value.length === 0) {
+    return { labels: [], datasets: [] }
+  }
+  return {
+    labels: platforms.value.map(p => platformLabel(p.platform)),
+    datasets: [
+      {
+        data: platforms.value.map(p => p.count),
+        backgroundColor: platforms.value.map(p => platformHexColor(p.platform)),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        hoverBorderColor: '#ffffff',
+        hoverBorderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  }
+})
+
+// Platform Donut chart options (reuses category chart styling)
+const platformChartOptions = computed(() => {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '55%',
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: { size: 12 },
+          color: isDark ? '#D1D5DB' : '#374151',
+        },
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        titleFont: { size: 13, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function (context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const value = context.parsed
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0
+            return `${context.label}: ${value} (${percentage}%)`
+          },
+        },
+      },
+    },
+  }
+})
+
+// Format hex colors for Donut chart
+function formatHexColor(format) {
+  const colors = {
+    Feed: '#3B82F6',
+    Carousel: '#F59E0B',
+    Story: '#8B5CF6',
+    Reel: '#EF4444',
+  }
+  return colors[format] || '#6B7280'
+}
+
+// Total posts across formats (for percentage computation)
+const totalFormatPosts = computed(() => {
+  return formats.value.reduce((sum, f) => sum + f.count, 0)
+})
+
+// Format Donut chart data
+const formatChartData = computed(() => {
+  if (formats.value.length === 0) {
+    return { labels: [], datasets: [] }
+  }
+  return {
+    labels: formats.value.map(f => f.format),
+    datasets: [
+      {
+        data: formats.value.map(f => f.count),
+        backgroundColor: formats.value.map(f => formatHexColor(f.format)),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        hoverBorderColor: '#ffffff',
+        hoverBorderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  }
+})
+
+// Format Donut chart options
+const formatChartOptions = computed(() => {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '55%',
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: { size: 12 },
+          color: isDark ? '#D1D5DB' : '#374151',
+        },
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        titleFont: { size: 13, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function (context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const value = context.parsed
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0
+            return `${context.label}: ${value} (${percentage}%)`
+          },
+        },
+      },
+    },
+  }
+})
+
 // Frequency chart configuration
 const frequencyChartData = computed(() => {
   return {
@@ -336,6 +487,7 @@ const periodLabels = {
   week: 'Letzte 7 Tage',
   month: 'Letzte 30 Tage',
   quarter: 'Letztes Quartal',
+  half_year: 'Letzte 6 Monate',
   year: 'Letztes Jahr',
 }
 
@@ -361,11 +513,12 @@ async function fetchAnalytics() {
   loading.value = true
   error.value = null
   try {
-    const [overviewRes, categoriesRes, platformsRes, countriesRes, goalsRes, frequencyRes] = await Promise.all([
+    const [overviewRes, categoriesRes, platformsRes, countriesRes, formatsRes, goalsRes, frequencyRes] = await Promise.all([
       api.get('/api/analytics/overview'),
       api.get('/api/analytics/categories'),
       api.get('/api/analytics/platforms'),
       api.get('/api/analytics/countries'),
+      api.get('/api/analytics/formats'),
       api.get('/api/analytics/goals'),
       api.get(`/api/analytics/frequency?period=${frequencyPeriod.value}`),
     ])
@@ -374,6 +527,7 @@ async function fetchAnalytics() {
     categories.value = categoriesRes.data
     platforms.value = platformsRes.data
     countries.value = countriesRes.data
+    formats.value = formatsRes.data
     goals.value = goalsRes.data
     frequencyData.value = frequencyRes.data.data || []
   } catch (err) {
@@ -722,7 +876,7 @@ onMounted(() => {
           </div>
         </BaseCard>
 
-        <!-- Platform distribution -->
+        <!-- Platform distribution - Donut Chart -->
         <BaseCard padding="lg" title="Plattformverteilung" :header-divider="false" data-testid="platform-distribution" data-tour="analytics-platforms">
           <EmptyState
             v-if="platforms.length === 0"
@@ -733,50 +887,71 @@ onMounted(() => {
             actionTo="/create/quick"
             :compact="true"
           />
-          <div v-else class="space-y-4">
-            <div v-for="p in platforms" :key="p.platform" class="flex items-center gap-3">
-              <span class="text-xl">{{ platformIcon(p.platform) }}</span>
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-32">
-                {{ platformLabel(p.platform) }}
-              </span>
-              <div class="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-[#3B7AB1] rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-                  :style="{ width: Math.max(10, (p.count / totalPlatformPosts) * 100) + '%' }"
-                >
-                  <span class="text-xs font-bold text-white">{{ p.count }}</span>
-                </div>
-              </div>
+          <div v-else>
+            <div class="relative" style="height: 320px;" data-testid="platform-donut-chart">
+              <Doughnut
+                :data="platformChartData"
+                :options="platformChartOptions"
+              />
             </div>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {{ totalPlatformPosts }} Posts insgesamt
+            </p>
           </div>
         </BaseCard>
       </div>
 
-      <!-- Country distribution -->
-      <BaseCard padding="lg" title="Laenderverteilung" :header-divider="false" data-testid="country-distribution">
-        <EmptyState
-          v-if="countries.length === 0"
-          svgIcon="globe-alt"
-          title="Noch keine Laenderdaten"
-          description="Weise Posts Laender zu (USA, Kanada, Australien, Neuseeland, Irland), um die Verteilung hier zu sehen."
-          actionLabel="Post erstellen"
-          actionTo="/create/quick"
-          :compact="true"
-        />
-        <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div
-            v-for="c in countries"
-            :key="c.country"
-            class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 text-center"
-          >
-            <p class="text-2xl mb-1">
-              {{ c.country === 'usa' ? '🇺🇸' : c.country === 'canada' ? '🇨🇦' : c.country === 'australia' ? '🇦🇺' : c.country === 'newzealand' ? '🇳🇿' : c.country === 'ireland' ? '🇮🇪' : '🌍' }}
+      <!-- Format distribution - Donut Chart -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BaseCard padding="lg" title="Format-Verteilung" :header-divider="false" data-testid="format-distribution">
+          <EmptyState
+            v-if="formats.length === 0"
+            svgIcon="chart-bar"
+            title="Noch keine Daten"
+            description="Erstelle Posts, um die Format-Verteilung (Feed, Carousel, Story, Reel) hier zu sehen."
+            actionLabel="Post erstellen"
+            actionTo="/create/quick"
+            :compact="true"
+          />
+          <div v-else>
+            <div class="relative" style="height: 320px;" data-testid="format-donut-chart">
+              <Doughnut
+                :data="formatChartData"
+                :options="formatChartOptions"
+              />
+            </div>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {{ totalFormatPosts }} Posts insgesamt
             </p>
-            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ c.count }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ c.country }}</p>
           </div>
-        </div>
-      </BaseCard>
+        </BaseCard>
+
+        <!-- Country distribution (moved into 2-col grid for better layout) -->
+        <BaseCard padding="lg" title="Laenderverteilung" :header-divider="false" data-testid="country-distribution">
+          <EmptyState
+            v-if="countries.length === 0"
+            svgIcon="globe-alt"
+            title="Noch keine Laenderdaten"
+            description="Weise Posts Laender zu, um die Verteilung hier zu sehen."
+            actionLabel="Post erstellen"
+            actionTo="/create/quick"
+            :compact="true"
+          />
+          <div v-else class="grid grid-cols-2 gap-4">
+            <div
+              v-for="c in countries"
+              :key="c.country"
+              class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 text-center"
+            >
+              <p class="text-2xl mb-1">
+                {{ c.country === 'usa' ? '\uD83C\uDDFA\uD83C\uDDF8' : c.country === 'canada' ? '\uD83C\uDDE8\uD83C\uDDE6' : c.country === 'australia' ? '\uD83C\uDDE6\uD83C\uDDFA' : c.country === 'newzealand' ? '\uD83C\uDDF3\uD83C\uDDFF' : c.country === 'ireland' ? '\uD83C\uDDEE\uD83C\uDDEA' : '\uD83C\uDF0D' }}
+              </p>
+              <p class="text-lg font-bold text-gray-900 dark:text-white">{{ c.count }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ c.country }}</p>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
 
       <!-- Performance Reminder Banner -->
       <div v-if="performanceReminder.count > 0" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-3" data-testid="performance-reminder">
