@@ -673,7 +673,7 @@ defineExpose({ images, canAddMore })
       >
         <!-- Thumbnail preview -->
         <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-          <img v-if="upload.preview" :src="upload.preview" class="w-full h-full object-cover" />
+          <img v-if="upload.preview" :src="upload.preview" class="w-full h-full object-cover" :alt="upload.file?.name || 'Upload-Vorschau'" />
         </div>
 
         <!-- File info and progress -->

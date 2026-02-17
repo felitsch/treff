@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 const props = defineProps({
   asset: { type: Object, required: true },
@@ -13,6 +14,8 @@ const emit = defineEmits(['close', 'cropped'])
 const toast = useToast()
 const canvasRef = ref(null)
 const containerRef = ref(null)
+const cropModalRef = ref(null)
+const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(cropModalRef)
 
 // Crop state
 const cropX = ref(0)
@@ -255,6 +258,10 @@ watch(() => props.show, (val) => {
   if (val && props.asset) {
     imageLoaded.value = false
     nextTick(() => loadImage())
+    // Activate focus trap for accessibility
+    requestAnimationFrame(() => activateFocusTrap())
+  } else {
+    deactivateFocusTrap()
   }
 })
 
@@ -270,18 +277,22 @@ onMounted(() => {
   <Teleport to="body">
     <div
       v-if="show"
+      ref="cropModalRef"
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="crop-modal-title"
       data-testid="crop-modal"
     >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/60" @click="emit('close')"></div>
+      <div class="absolute inset-0 bg-black/60" @click="emit('close')" aria-hidden="true"></div>
 
       <!-- Modal Content -->
       <div class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Bild zuschneiden</h2>
+            <h2 id="crop-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Bild zuschneiden</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">
               {{ asset.original_filename || asset.filename }}
               <span v-if="asset.width && asset.height" class="ml-1">({{ asset.width }}&times;{{ asset.height }}px)</span>

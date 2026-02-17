@@ -12,6 +12,7 @@
  */
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 const props = defineProps({
   template: { type: Object, default: null },
@@ -27,6 +28,8 @@ const props = defineProps({
 const emit = defineEmits(['close', 'toggle-favorite', 'navigate'])
 
 const router = useRouter()
+const modalRef = ref(null)
+const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 // ─── Keyboard handling ────────────────────────────────────────────
 function handleKeydown(e) {
@@ -275,12 +278,15 @@ function editTemplate() {
   })
 }
 
-// Prevent body scroll when modal is open
+// Prevent body scroll and manage focus trap when modal is open
 watch(() => props.show, (isOpen) => {
   if (isOpen) {
     document.body.style.overflow = 'hidden'
+    // Activate focus trap after DOM update
+    requestAnimationFrame(() => activateFocusTrap())
   } else {
     document.body.style.overflow = ''
+    deactivateFocusTrap()
   }
 })
 </script>
@@ -297,13 +303,18 @@ watch(() => props.show, (isOpen) => {
     >
       <div
         v-if="show && template"
+        ref="modalRef"
         class="fixed inset-0 z-[9998] flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="template-preview-title"
         data-testid="template-preview-modal"
       >
         <!-- Backdrop -->
         <div
           class="absolute inset-0 bg-black/60 backdrop-blur-sm"
           @click="emit('close')"
+          aria-hidden="true"
         />
 
         <!-- Modal content -->
@@ -375,7 +386,7 @@ watch(() => props.show, (isOpen) => {
 
             <!-- Template name & favorite -->
             <div class="flex items-start gap-3 mb-4">
-              <h2 class="text-xl font-bold text-gray-900 dark:text-white flex-1" data-testid="modal-title">
+              <h2 id="template-preview-title" class="text-xl font-bold text-gray-900 dark:text-white flex-1" data-testid="modal-title">
                 {{ template.name }}
               </h2>
               <button

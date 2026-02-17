@@ -61,11 +61,21 @@ onUnmounted(() => {
 
 <template>
   <div class="flex h-screen overflow-hidden bg-treff-light dark:bg-treff-dark">
+    <!-- Skip-to-content link for keyboard users (WCAG 2.1 AA) -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:rounded-lg focus:bg-treff-blue focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+      data-testid="skip-to-content"
+    >
+      Zum Hauptinhalt springen
+    </a>
+
     <!-- Mobile overlay backdrop -->
     <div
       v-if="isMobileOverlay"
       class="fixed inset-0 z-30 bg-black/50 md:hidden"
       @click="closeMobileOverlay"
+      aria-hidden="true"
     />
 
     <!-- Sidebar - hidden on mobile unless overlay is active -->
@@ -83,7 +93,7 @@ onUnmounted(() => {
       <TopBar @toggle-sidebar="toggleSidebar" />
       <BreadcrumbNav />
 
-      <main class="flex-1 overflow-y-auto p-6">
+      <main id="main-content" class="flex-1 overflow-y-auto p-6" role="main" aria-label="Hauptinhalt">
         <RouterView />
       </main>
     </div>

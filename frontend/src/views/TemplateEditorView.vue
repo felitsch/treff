@@ -450,7 +450,7 @@ async function saveTemplate() {
     saveName.value = ''
   } catch (err) {
     toast.error('Fehler beim Speichern des Templates.')
-    console.error('Save template error:', err)
+    // Error toast shown by API interceptor
   } finally {
     saving.value = false
   }
@@ -474,7 +474,7 @@ async function loadTemplate(id) {
 
     toast.info(`Template "${t.name}" geladen. Bearbeite und speichere als Kopie.`)
   } catch (err) {
-    console.error('Failed to load template:', err)
+    // Error toast shown by API interceptor
   }
 }
 
@@ -693,7 +693,7 @@ const fontWeights = ['300', '400', '500', '600', '700', '800', '900']
                 justifyContent: 'center',
               }"
             >
-              <img v-if="el.src" :src="el.src" class="w-full h-full object-cover" />
+              <img v-if="el.src" :src="el.src" class="w-full h-full object-cover" alt="Template-Bildelement" />
               <span v-else class="text-gray-400" :style="{ fontSize: 16 * canvasScale + 'px' }">Bild</span>
             </div>
 

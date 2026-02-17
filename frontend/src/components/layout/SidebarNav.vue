@@ -152,6 +152,7 @@ const isActive = (path) => route.path.startsWith(path)
       'flex flex-col border-r border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 transition-all duration-300',
       collapsed ? 'w-16' : 'w-64',
     ]"
+    aria-label="Seitenleiste"
   >
     <!-- Logo -->
     <div class="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-700 px-4">

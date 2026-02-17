@@ -117,7 +117,7 @@ const fetchVideoAssets = async () => {
       a.file_type && a.file_type.startsWith('video/')
     )
   } catch (e) {
-    console.error('Failed to load video assets:', e)
+    // Error toast shown by API interceptor
   } finally {
     loadingAssets.value = false
   }
@@ -133,7 +133,7 @@ const fetchMusicTracks = async () => {
     musicTracks.value = tracksRes.data
     musicCategories.value = catsRes.data
   } catch (e) {
-    console.error('Failed to load music library:', e)
+    // Error toast shown by API interceptor
   } finally {
     loadingTracks.value = false
   }
@@ -146,7 +146,7 @@ const fetchUserAudioAssets = async () => {
       a.file_type && a.file_type.startsWith('audio/')
     )
   } catch (e) {
-    console.error('Failed to load audio assets:', e)
+    // Error toast shown by API interceptor
   }
 }
 
@@ -363,7 +363,7 @@ onMounted(async () => {
               >
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" />
+                    <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
                     <span v-else class="text-xl">🎬</span>
                   </div>
                   <div class="min-w-0 flex-1">

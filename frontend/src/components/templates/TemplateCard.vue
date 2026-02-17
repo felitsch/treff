@@ -143,8 +143,13 @@ const aspectClass = computed(() => {
 
 <template>
   <div
-    class="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+    class="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden focus-ring"
     @click="emit('select', template)"
+    @keydown.enter="emit('select', template)"
+    @keydown.space.prevent="emit('select', template)"
+    role="button"
+    tabindex="0"
+    :aria-label="'Template: ' + template.name"
     data-testid="template-card"
   >
     <!-- Thumbnail preview area -->

@@ -126,7 +126,7 @@ if (localStorage.getItem('darkMode') === 'true') {
 </script>
 
 <template>
-  <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 dark:bg-gray-900 dark:border-gray-700">
+  <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 dark:bg-gray-900 dark:border-gray-700" role="banner">
     <div class="flex items-center gap-4">
       <button
         class="md:hidden text-gray-500 hover:text-gray-700 focus-ring rounded-lg p-1"

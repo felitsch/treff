@@ -108,7 +108,7 @@ async function fetchVideoAssets() {
     const resp = await api.get('/api/assets', { params: { file_type: 'video' } })
     videoAssets.value = resp.data
   } catch (err) {
-    console.error('Failed to load video assets:', err)
+    // Error toast shown by API interceptor
   } finally {
     loadingAssets.value = false
   }
@@ -143,7 +143,7 @@ async function selectAsset(asset) {
     // Load export history for this asset
     fetchExportHistory(asset.id)
   } catch (err) {
-    console.error('Analysis failed:', err)
+    // Error toast shown by API interceptor
     toast.error('Video-Analyse fehlgeschlagen')
   } finally {
     analyzing.value = false
@@ -157,7 +157,7 @@ async function fetchExportHistory(assetId) {
     const resp = await api.get('/api/video-export', { params: { asset_id: assetId } })
     exportHistory.value = resp.data
   } catch (err) {
-    console.error('Failed to load export history:', err)
+    // Error toast shown by API interceptor
   } finally {
     loadingHistory.value = false
   }
@@ -278,7 +278,7 @@ async function deleteExport(exp) {
     exportHistory.value = exportHistory.value.filter(e => e.id !== exp.id)
     toast.success('Export geloescht')
   } catch (err) {
-    console.error('Delete failed:', err)
+    // Error toast shown by API interceptor
   }
 }
 
@@ -383,7 +383,7 @@ onMounted(() => {
               :data-testid="`library-video-${asset.id}`"
             >
               <div class="w-16 h-10 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" loading="lazy" />
+                <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" loading="lazy" :alt="asset.original_filename || 'Video-Vorschau'" />
                 <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🎥</div>
                 <span class="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">
                   {{ formatTime(asset.duration_seconds) }}
@@ -434,7 +434,7 @@ onMounted(() => {
             </h3>
             <div class="flex items-start gap-4">
               <div class="w-28 h-16 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" />
+                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
                 <div v-else class="w-full h-full flex items-center justify-center text-gray-400">🎥</div>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 text-xs">
@@ -526,7 +526,7 @@ onMounted(() => {
             <div class="flex items-center gap-6">
               <!-- Focus point visual -->
               <div class="relative w-40 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600" data-testid="focus-preview">
-                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" />
+                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
                 <!-- Focus indicator dot -->
                 <div
                   class="absolute w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
@@ -613,6 +613,10 @@ onMounted(() => {
                 v-model.number="quality"
                 class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 data-testid="quality-slider"
+                aria-label="Kompressionsqualitaet"
+                :aria-valuenow="quality"
+                aria-valuemin="1"
+                aria-valuemax="100"
               />
               <span class="text-xs text-gray-400 shrink-0">Hoch</span>
             </div>
@@ -715,7 +719,7 @@ onMounted(() => {
             <div class="flex-1">
               <p class="text-sm text-red-700 dark:text-red-400 font-medium">{{ exportError }}</p>
             </div>
-            <button @click="exportError = null" class="text-red-500 hover:text-red-700 text-sm">✕</button>
+            <button @click="exportError = null" class="text-red-500 hover:text-red-700 text-sm" aria-label="Fehlermeldung schliessen">✕</button>
           </div>
 
           <!-- Export Progress -->
