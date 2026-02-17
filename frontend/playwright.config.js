@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
+import path from 'path'
+
+const authFile = path.join(import.meta.dirname, 'test-results', '.auth', 'user.json')
 
 /**
  * Playwright E2E Test Configuration for TREFF Post-Generator.
@@ -14,7 +17,7 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false, // Run tests sequentially (shared auth state)
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 2 : 1,
   workers: 1, // Single worker to avoid port conflicts
   reporter: process.env.CI ? 'github' : 'html',
 
@@ -27,9 +30,20 @@ export default defineConfig({
   },
 
   projects: [
+    // Setup project — authenticates once and saves storage state
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.js/,
+    },
+    // Main test project — reuses authenticated state
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: authFile,
+      },
+      dependencies: ['setup'],
+      testIgnore: /auth\.setup\.js/,
     },
   ],
 

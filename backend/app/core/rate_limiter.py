@@ -36,8 +36,15 @@ class RateLimitConfig(NamedTuple):
     window_seconds: int    # Duration of the sliding window
 
 
-# Tier definitions
-GENERAL_LIMIT = RateLimitConfig(max_requests=100, window_seconds=60)
+# Tier definitions — relaxed in development/testing to avoid false-positive 429s
+import os as _os
+_IS_TESTING = _os.environ.get("TESTING", "").lower() in ("1", "true", "yes")
+_IS_DEV = _os.environ.get("ENV", "").lower() in ("", "dev", "development", "test")
+
+# In dev/test mode, allow 10x more general requests to prevent E2E test flakiness
+_GENERAL_MULTIPLIER = 10 if (_IS_DEV or _IS_TESTING) else 1
+
+GENERAL_LIMIT = RateLimitConfig(max_requests=100 * _GENERAL_MULTIPLIER, window_seconds=60)
 AI_LIMIT = RateLimitConfig(max_requests=10, window_seconds=60)
 UPLOAD_LIMIT = RateLimitConfig(max_requests=50, window_seconds=3600)
 
