@@ -18,6 +18,7 @@ import LowerThirdEditor from '@/components/video/LowerThirdEditor.vue'
 import MusicSelector from '@/components/video/MusicSelector.vue'
 import MultiPlatformExport from '@/components/video/MultiPlatformExport.vue'
 import ContentMultiplierPanel from '@/components/video/ContentMultiplierPanel.vue'
+import ThumbnailAISuggestions from '@/components/video/ThumbnailAISuggestions.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -57,9 +58,10 @@ const sections = [
   { key: 'branding', label: '2. Branding', icon: '🏷️', description: 'Intro/Outro-Templates fuer Laender-Branding' },
   { key: 'lowerthird', label: '3. Lower Third', icon: '💬', description: 'Name & Titel als Texteinblendung' },
   { key: 'music', label: '4. Musik', icon: '🎵', description: 'Hintergrundmusik auswaehlen und mischen' },
-  { key: 'preview', label: '5. Vorschau', icon: '👁️', description: 'Finales Video mit allen Overlays' },
-  { key: 'export', label: '6. Export', icon: '📤', description: 'Multi-Format-Export fuer alle Plattformen' },
-  { key: 'multiply', label: '7. Multiplizieren', icon: '🚀', description: '1 Video → 5 Formate als Draft-Posts' },
+  { key: 'thumbnail', label: '5. Thumbnail', icon: '🖼️', description: 'AI-Thumbnail aus Video-Frames mit Text-Overlay und A/B-Varianten' },
+  { key: 'preview', label: '6. Vorschau', icon: '👁️', description: 'Finales Video mit allen Overlays' },
+  { key: 'export', label: '7. Export', icon: '📤', description: 'Multi-Format-Export fuer alle Plattformen' },
+  { key: 'multiply', label: '8. Multiplizieren', icon: '🚀', description: '1 Video → 5 Formate als Draft-Posts' },
 ]
 
 const expandedSections = ref({
@@ -67,6 +69,7 @@ const expandedSections = ref({
   branding: false,
   lowerthird: false,
   music: false,
+  thumbnail: false,
   preview: false,
   export: false,
   multiply: false,
@@ -78,6 +81,7 @@ const sectionStatus = computed(() => ({
   branding: selectedIntro.value || selectedOutro.value ? 'complete' : 'optional',
   lowerthird: lowerThird.value.enabled && lowerThird.value.name ? 'complete' : 'optional',
   music: musicConfig.value.enabled && musicConfig.value.trackId ? 'complete' : 'optional',
+  thumbnail: selectedAsset.value ? 'ready' : 'locked',
   preview: selectedAsset.value ? 'ready' : 'locked',
   export: selectedAsset.value ? 'ready' : 'locked',
   multiply: selectedAsset.value ? 'ready' : 'locked',
@@ -348,7 +352,13 @@ onMounted(() => {
             v-model="musicConfig"
           />
 
-          <!-- 5. Preview -->
+          <!-- 5. Thumbnail AI -->
+          <ThumbnailAISuggestions
+            v-if="section.key === 'thumbnail'"
+            :videoAsset="selectedAsset"
+          />
+
+          <!-- 6. Preview -->
           <div v-if="section.key === 'preview'" class="space-y-4">
             <div v-if="!selectedAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
               Bitte waehle zuerst ein Video aus (Schritt 1).
