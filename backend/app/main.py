@@ -34,7 +34,7 @@ from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
 from app.core.seed_content_pillars import seed_content_pillars
 from app.schemas.responses import ERROR_CODES
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks, reports, content_pillars, video_thumbnails
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks, reports, content_pillars, video_thumbnails, config_endpoints
 
 logger = logging.getLogger(__name__)
 
@@ -788,6 +788,7 @@ app.include_router(smart_scheduling.router, prefix="/api/ai", tags=["Smart Sched
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Background Tasks"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(content_pillars.router, prefix="/api/content-pillars", tags=["Content Pillars"])
+app.include_router(config_endpoints.router, prefix="/api/config", tags=["Config"])
 
 
 if __name__ == "__main__":
