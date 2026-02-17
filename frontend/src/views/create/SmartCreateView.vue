@@ -19,6 +19,7 @@ import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -696,5 +697,8 @@ function startOver() {
         <p class="text-sm font-semibold text-gray-900 dark:text-white">Post wird gespeichert...</p>
       </div>
     </div>
+
+    <!-- Tour System -->
+    <TourSystem ref="tourRef" page-key="smart-create" />
   </div>
 </template>

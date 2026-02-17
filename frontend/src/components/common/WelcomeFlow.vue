@@ -39,54 +39,54 @@ const mainAreas = [
   {
     icon: 'pencil-square',
     title: 'Content-Erstellung',
-    desc: 'Posts erstellen mit Templates, KI-Texten und CTA-Bibliothek',
+    desc: 'Create Hub mit 4 Modi: Quick, Smart, Video & Campaign Create',
     color: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700',
     iconBg: 'bg-blue-100 dark:bg-blue-800',
-    pages: ['Post erstellen', 'Templates', 'Assets', 'Students'],
+    pages: ['Create Hub', 'Quick Create', 'Smart Create', 'Campaign'],
   },
   {
     icon: 'calendar',
     title: 'Planung',
-    desc: 'Content-Kalender, Wochenplaner und Story-Arcs organisieren',
+    desc: 'Content-Kalender (Monat/Woche/Tag), Wochenplaner und Story-Arcs',
     color: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700',
     iconBg: 'bg-amber-100 dark:bg-amber-800',
     pages: ['Kalender', 'Wochenplaner', 'Story-Arcs', 'Formate'],
   },
   {
-    icon: 'film',
-    title: 'Video-Tools',
-    desc: 'Video-Branding, Export, Audio-Mixer und Overlays',
+    icon: 'rectangle-stack',
+    title: 'Bibliothek',
+    desc: 'Assets, Templates & Posts vereint — alles an einem Ort',
     color: 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700',
     iconBg: 'bg-purple-100 dark:bg-purple-800',
-    pages: ['Video-Templates', 'Video-Export', 'Audio-Mixer', 'Overlays'],
+    pages: ['Assets', 'Templates', 'Post-Archiv', 'Students Hub'],
   },
   {
     icon: 'chart-bar',
-    title: 'Analyse',
-    desc: 'Performance tracken, Ziele setzen und Content optimieren',
+    title: 'Analyse & Video',
+    desc: 'Analytics mit Heatmap & Funnel, Video-Tools und Pipeline',
     color: 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700',
     iconBg: 'bg-green-100 dark:bg-green-800',
-    pages: ['Analytics', 'History', 'Dashboard'],
+    pages: ['Analytics', 'Dashboard', 'Video-Suite', 'Pipeline'],
   },
 ]
 
 // Workflow steps for step 3
 const workflowSteps = [
-  { icon: 'light-bulb', label: 'Idee', desc: 'Content-Vorschlaege oder eigene Ideen' },
-  { icon: 'clipboard-list', label: 'Planen', desc: 'Wochenplaner oder Kalender nutzen' },
-  { icon: 'pencil-square', label: 'Erstellen', desc: 'Post mit Templates und KI gestalten' },
-  { icon: 'calendar', label: 'Schedulen', desc: 'Datum und Uhrzeit festlegen' },
-  { icon: 'chart-bar', label: 'Analysieren', desc: 'Performance auswerten' },
+  { icon: 'light-bulb', label: 'Idee', desc: 'Dashboard-Vorschlaege, Student Inbox oder eigene Ideen' },
+  { icon: 'clipboard-list', label: 'Planen', desc: 'Wochenplaner oder Kalender (Monat/Woche/Tag)' },
+  { icon: 'pencil-square', label: 'Erstellen', desc: 'Create Hub: Quick, Smart, Video oder Campaign' },
+  { icon: 'calendar', label: 'Schedulen', desc: 'Datum und Uhrzeit im Kalender festlegen' },
+  { icon: 'chart-bar', label: 'Analysieren', desc: 'Analytics mit Heatmap, Funnel & Pillar-Balance' },
 ]
 
 // Connection data for step 4
 const connections = [
   {
-    from: 'Students',
+    from: 'Students Hub',
     fromIcon: 'user',
     to: 'Story-Arcs',
     toIcon: 'book-open',
-    desc: 'Studenten-Profile fuettern Story-Arcs mit persoenlichen Geschichten',
+    desc: 'Schueler-Profile fuettern Story-Arcs und Smart Create mit echten Geschichten',
     color: 'text-blue-500',
   },
   {
@@ -94,7 +94,7 @@ const connections = [
     fromIcon: 'book-open',
     to: 'Kalender',
     toIcon: 'calendar',
-    desc: 'Story-Arc Episoden erscheinen als Timeline im Kalender',
+    desc: 'Story-Arc Episoden erscheinen als Timeline im Kalender (Monat/Woche/Tag)',
     color: 'text-purple-500',
   },
   {
@@ -106,19 +106,19 @@ const connections = [
     color: 'text-amber-500',
   },
   {
-    from: 'Templates',
-    fromIcon: 'paint-brush',
-    to: 'Post erstellen',
+    from: 'Bibliothek',
+    fromIcon: 'rectangle-stack',
+    to: 'Create Hub',
     toIcon: 'pencil-square',
-    desc: 'Templates bilden die Grundlage fuer neue Posts',
+    desc: 'Assets und Templates aus der Bibliothek fliessen in alle 4 Create-Modi ein',
     color: 'text-green-500',
   },
   {
-    from: 'CTA-Bibliothek',
-    fromIcon: 'megaphone',
-    to: 'Post erstellen',
-    toIcon: 'pencil-square',
-    desc: 'Vorgefertigte Call-to-Actions fuer schnelle Post-Erstellung',
+    from: 'Pipeline',
+    fromIcon: 'funnel',
+    to: 'Dashboard',
+    toIcon: 'home',
+    desc: 'Pipeline-Status und Student Inbox erscheinen als Widgets im Dashboard',
     color: 'text-red-500',
   },
 ]
@@ -354,7 +354,7 @@ const connections = [
                         Ersten Post erstellen
                       </h3>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Waehle ein Template, lass die KI Texte generieren und passe alles an.
+                        Gehe zum Create Hub und waehle einen der 4 Modi: Quick, Smart, Video oder Campaign.
                       </p>
                     </div>
                   </div>
@@ -370,7 +370,7 @@ const connections = [
                         Im Kalender planen
                       </h3>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Plane deine Posts per Drag-and-Drop im Content-Kalender.
+                        Plane deine Posts per Drag-and-Drop im Kalender (Monats-, Wochen- oder Tagesansicht).
                       </p>
                     </div>
                   </div>

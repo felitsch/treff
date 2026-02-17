@@ -17,6 +17,7 @@
  */
 import { ref, computed, watch, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -253,6 +254,9 @@ function getTabCount(key) {
         </div>
       </Transition>
     </router-view>
+
+    <!-- Tour System (auto-start disabled to avoid overlap with child tours) -->
+    <TourSystem ref="tourRef" page-key="library" :auto-start="false" />
   </div>
 </template>
 

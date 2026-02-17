@@ -18,6 +18,7 @@ import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useCountryTheme } from '@/composables/useCountryTheme'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import TourSystem from '@/components/common/TourSystem.vue'
 
 const router = useRouter()
 
@@ -365,5 +366,8 @@ onMounted(() => {
         </button>
       </div>
     </div>
+
+    <!-- Tour System -->
+    <TourSystem ref="tourRef" page-key="create-hub" />
   </div>
 </template>
