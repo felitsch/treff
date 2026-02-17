@@ -15,6 +15,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import load_only
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
@@ -373,7 +374,17 @@ async def list_assets(
         date_from: Filter assets created on or after this date (ISO format: YYYY-MM-DD)
         date_to: Filter assets created on or before this date (ISO format: YYYY-MM-DD)
     """
-    query = select(Asset).where(Asset.user_id == user_id)
+    query = select(Asset).where(Asset.user_id == user_id).options(
+        load_only(
+            Asset.id, Asset.user_id, Asset.filename, Asset.original_filename,
+            Asset.file_path, Asset.file_type, Asset.file_size, Asset.width,
+            Asset.height, Asset.source, Asset.ai_prompt, Asset.category,
+            Asset.country, Asset.tags, Asset.usage_count, Asset.created_at,
+            Asset.duration_seconds, Asset.thumbnail_path, Asset.thumbnail_small,
+            Asset.thumbnail_medium, Asset.thumbnail_large, Asset.exif_data,
+            Asset.last_used_at, Asset.marked_unused,
+        )
+    )
 
     if category:
         query = query.where(Asset.category == category)
@@ -430,7 +441,17 @@ async def get_asset(
     from datetime import datetime as _dt, timezone as _tz
 
     result = await db.execute(
-        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
+        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id).options(
+            load_only(
+                Asset.id, Asset.user_id, Asset.filename, Asset.original_filename,
+                Asset.file_path, Asset.file_type, Asset.file_size, Asset.width,
+                Asset.height, Asset.source, Asset.ai_prompt, Asset.category,
+                Asset.country, Asset.tags, Asset.usage_count, Asset.created_at,
+                Asset.duration_seconds, Asset.thumbnail_path, Asset.thumbnail_small,
+                Asset.thumbnail_medium, Asset.thumbnail_large, Asset.exif_data,
+                Asset.last_used_at, Asset.marked_unused,
+            )
+        )
     )
     asset = result.scalar_one_or_none()
     if not asset:
