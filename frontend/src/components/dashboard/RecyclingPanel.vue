@@ -123,7 +123,7 @@ onMounted(() => {
           v-if="stats && stats.total_recyclable > 0"
           class="text-xs font-medium px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
         >
-          {{ stats.total_recyclable }} verfuegbar
+          {{ stats.total_recyclable }} verfügbar
         </span>
       </div>
     </div>
@@ -159,7 +159,7 @@ onMounted(() => {
           {{ filterEvergreen ? 'Keine Evergreen-Posts zum Recyceln' : 'Keine Posts zum Recyceln' }}
         </p>
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Posts aelter als 90 Tage erscheinen hier als Recycling-Vorschlaege.
+          Posts älter als 90 Tage erscheinen hier als Recycling-Vorschläge.
         </p>
       </div>
 

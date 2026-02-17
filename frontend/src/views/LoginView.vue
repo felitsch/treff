@@ -54,7 +54,7 @@ const countries = [
     key: 'ireland',
     label: 'Irland',
     emoji: '\uD83C\uDDEE\uD83C\uDDEA',
-    slogan: 'Die gruene Insel wartet auf dich',
+    slogan: 'Die grüne Insel wartet auf dich',
     gradient: 'linear-gradient(135deg, rgba(22,155,98,0.85) 0%, rgba(255,140,0,0.9) 100%)',
     accentColor: '#169B62',
   },
@@ -89,7 +89,7 @@ function validateFields() {
     fieldErrors.value.email = 'E-Mail-Adresse ist erforderlich'
     valid = false
   } else if (!emailRegex.test(email.value.trim())) {
-    fieldErrors.value.email = 'Bitte gib eine gueltige E-Mail-Adresse ein'
+    fieldErrors.value.email = 'Bitte gib eine gültige E-Mail-Adresse ein'
     valid = false
   }
 
@@ -115,7 +115,7 @@ const handleLogin = async () => {
     await auth.login(email.value, password.value)
     router.push('/home')
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Ungueltige Anmeldedaten'
+    error.value = err.response?.data?.detail || 'Ungültige Anmeldedaten'
   } finally {
     loading.value = false
   }
@@ -223,10 +223,10 @@ const handleLogin = async () => {
         <!-- Heading -->
         <div class="mb-8">
           <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-            Willkommen zurueck
+            Willkommen zurück
           </h1>
           <p class="mt-2 text-gray-500 dark:text-gray-400">
-            Melde dich an, um Content fuer TREFF zu erstellen
+            Melde dich an, um Content für TREFF zu erstellen
           </p>
         </div>
 

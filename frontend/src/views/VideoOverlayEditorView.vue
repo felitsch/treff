@@ -328,7 +328,7 @@ async function renderVideo() {
 // Delete overlay
 async function deleteOverlay() {
   if (!overlayId.value) return
-  if (!confirm('Overlay wirklich loeschen?')) return
+  if (!confirm('Overlay wirklich löschen?')) return
 
   try {
     await api.delete(`/api/video-overlays/${overlayId.value}`)
@@ -337,9 +337,9 @@ async function deleteOverlay() {
     selectedLayerIndex.value = -1
     renderStatus.value = 'pending'
     renderedPath.value = null
-    toast('Overlay geloescht.', 'success')
+    toast('Overlay gelöscht.', 'success')
   } catch (e) {
-    toast('Fehler beim Loeschen.', 'error')
+    toast('Fehler beim Löschen.', 'error')
   }
 }
 
@@ -499,13 +499,13 @@ onUnmounted(() => {
     <template v-else>
       <!-- Step 1: Select Video Asset -->
       <div v-if="!selectedAsset" data-tour="vo-video-select" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Video auswaehlen</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Video auswählen</h2>
 
         <EmptyState
           v-if="videoAssets.length === 0"
           svgIcon="film"
           title="Keine Videos vorhanden"
-          description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Overlays und Text-Layer hinzuzufuegen."
+          description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Overlays und Text-Layer hinzuzufügen."
           actionLabel="Zu Assets"
           actionTo="/library/assets"
         />
@@ -558,7 +558,7 @@ onUnmounted(() => {
 
           <!-- Add Layer Buttons -->
           <div data-tour="vo-layer-add" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Layer hinzufuegen</h3>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Layer hinzufügen</h3>
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-for="preset in layerPresets"
@@ -578,7 +578,7 @@ onUnmounted(() => {
               Layers ({{ layers.length }})
             </h3>
             <div v-if="layers.length === 0" class="text-center py-4 text-gray-400 text-xs">
-              Noch keine Layers. Fuege oben welche hinzu.
+              Noch keine Layers. Füge oben welche hinzu.
             </div>
             <div v-else class="space-y-1.5">
               <div
@@ -609,7 +609,7 @@ onUnmounted(() => {
                   <button @click.stop="moveLayerUp(idx)" :disabled="idx === 0" class="text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Nach oben" aria-label="Ebene nach oben verschieben">↑</button>
                   <button @click.stop="moveLayerDown(idx)" :disabled="idx === layers.length - 1" class="text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Nach unten" aria-label="Ebene nach unten verschieben">↓</button>
                   <button @click.stop="duplicateLayer(idx)" class="text-gray-400 hover:text-blue-500" title="Duplizieren" aria-label="Ebene duplizieren">⧉</button>
-                  <button @click.stop="removeLayer(idx)" class="text-gray-400 hover:text-red-500" title="Loeschen" aria-label="Ebene loeschen">✕</button>
+                  <button @click.stop="removeLayer(idx)" class="text-gray-400 hover:text-red-500" title="Löschen" aria-label="Ebene löschen">✕</button>
                 </div>
               </div>
             </div>
@@ -779,7 +779,7 @@ onUnmounted(() => {
             </h3>
 
             <div v-if="!selectedLayer" class="text-center py-8 text-gray-400 text-xs">
-              Waehle einen Layer aus der Liste aus.
+              Wähle einen Layer aus der Liste aus.
             </div>
 
             <div v-else class="space-y-3">
@@ -815,7 +815,7 @@ onUnmounted(() => {
                     class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Hoehe (%)</label>
+                  <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Höhe (%)</label>
                   <input type="number" v-model.number="selectedLayer.height" min="2" max="100" step="1"
                     class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
                 </div>
@@ -824,7 +824,7 @@ onUnmounted(() => {
               <!-- Font -->
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Schriftgroesse</label>
+                  <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Schriftgröße</label>
                   <input type="number" v-model.number="selectedLayer.fontSize" min="8" max="120" step="1"
                     class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
                 </div>

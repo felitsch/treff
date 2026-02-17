@@ -233,7 +233,7 @@ async function generateHashtags() {
 async function copyToClipboard() {
   const text = hashtagString.value
   if (!text) {
-    toast.warning('Keine Hashtags ausgewaehlt.')
+    toast.warning('Keine Hashtags ausgewählt.')
     return
   }
   try {
@@ -268,11 +268,11 @@ async function loadHashtagSets() {
 async function saveAsSet() {
   const name = newSetName.value.trim()
   if (!name) {
-    toast.warning('Bitte gib einen Namen fuer das Set ein.')
+    toast.warning('Bitte gib einen Namen für das Set ein.')
     return
   }
   if (selectedHashtags.value.length === 0) {
-    toast.warning('Waehle mindestens einen Hashtag aus.')
+    toast.warning('Wähle mindestens einen Hashtag aus.')
     return
   }
   savingSet.value = true
@@ -313,12 +313,12 @@ async function deleteSet(set) {
   try {
     await api.delete(`/api/hashtag-sets/${set.id}`)
     hashtagSets.value = hashtagSets.value.filter(s => s.id !== set.id)
-    toast.success(`Set "${set.name}" geloescht`)
+    toast.success(`Set "${set.name}" gelöscht`)
   } catch (err) {
     if (err.response?.status === 404) {
       toast.error('Set nicht gefunden oder keine Berechtigung.')
     } else {
-      toast.error('Loeschen fehlgeschlagen.')
+      toast.error('Löschen fehlgeschlagen.')
     }
   }
 }
@@ -414,7 +414,7 @@ onMounted(() => {
           title="KI-Hashtags generieren"
         >
           <span :class="{ 'animate-spin': generating }" class="text-sm">&#x2728;</span>
-          <span>{{ generating ? 'Generiere...' : 'KI-Vorschlaege' }}</span>
+          <span>{{ generating ? 'Generiere...' : 'KI-Vorschläge' }}</span>
         </button>
         <!-- Copy button -->
         <button
@@ -457,7 +457,7 @@ onMounted(() => {
             : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 line-through opacity-60'
         ]"
         :disabled="disabled"
-        :title="hashtag.selected ? 'Klicken zum Abwaehlen' : 'Klicken zum Auswaehlen'"
+        :title="hashtag.selected ? 'Klicken zum Abwählen' : 'Klicken zum Auswählen'"
         :data-testid="'hashtag-chip-' + hashtag.tag.replace('#', '')"
       >
         <span>{{ hashtag.tag }}</span>
@@ -473,14 +473,14 @@ onMounted(() => {
 
     <!-- Empty state -->
     <div v-else class="text-center py-4 text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-      Klicke "KI-Vorschlaege" um Hashtags zu generieren oder gib eigene ein.
+      Klicke "KI-Vorschläge" um Hashtags zu generieren oder gib eigene ein.
     </div>
 
     <!-- Quick actions -->
     <div v-if="suggestedHashtags.length > 0" class="flex items-center gap-2 text-xs">
-      <button @click="selectAll" class="text-blue-600 dark:text-blue-400 hover:underline" :disabled="disabled">Alle auswaehlen</button>
+      <button @click="selectAll" class="text-blue-600 dark:text-blue-400 hover:underline" :disabled="disabled">Alle auswählen</button>
       <span class="text-gray-300">|</span>
-      <button @click="deselectAll" class="text-gray-500 hover:underline" :disabled="disabled">Alle abwaehlen</button>
+      <button @click="deselectAll" class="text-gray-500 hover:underline" :disabled="disabled">Alle abwählen</button>
     </div>
 
     <!-- Manual input -->
@@ -500,7 +500,7 @@ onMounted(() => {
         class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 text-sm transition-colors"
         data-testid="add-hashtag-btn"
       >
-        + Hinzufuegen
+        + Hinzufügen
       </button>
     </div>
 
@@ -524,7 +524,7 @@ onMounted(() => {
           v-model="newSetName"
           @keydown.enter.prevent="saveAsSet"
           type="text"
-          placeholder="Name fuer das Set..."
+          placeholder="Name für das Set..."
           class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-green-400"
           :disabled="savingSet"
           data-testid="set-name-input"
@@ -576,7 +576,7 @@ onMounted(() => {
               v-if="!set.is_default"
               @click="deleteSet(set)"
               class="text-xs px-1.5 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-              title="Set loeschen"
+              title="Set löschen"
               :disabled="disabled"
             >
               <AppIcon name="trash" class="w-3.5 h-3.5" />

@@ -40,7 +40,7 @@ const demoPostInstagram = ref({
   status: 'scheduled',
   slide_data: JSON.stringify([
     { headline: 'USA Highschool', subheadline: 'Dein Abenteuer wartet', body_text: 'Erlebe den American Dream hautnah' },
-    { headline: 'Slide 2', subheadline: 'Neue Freunde', body_text: 'Finde Freunde fuer ein ganzes Leben' },
+    { headline: 'Slide 2', subheadline: 'Neue Freunde', body_text: 'Finde Freunde für ein ganzes Leben' },
   ]),
 })
 
@@ -69,7 +69,7 @@ const demoPostAustralia = ref({
 const demoPostNZ = ref({
   id: 4,
   title: 'Neuseeland Abenteuer',
-  caption_tiktok: 'Neuseeland hat mein Leben veraendert!',
+  caption_tiktok: 'Neuseeland hat mein Leben verändert!',
   hashtags_tiktok: '#neuseeland #nz #exchange',
   platform: 'tiktok',
   country: 'neuseeland',
@@ -80,7 +80,7 @@ const demoPostNZ = ref({
 const demoPostIreland = ref({
   id: 5,
   title: 'Irland entdecken',
-  caption_instagram: 'Gruene Huegel, warme Menschen und eine unvergessliche Zeit in Irland.',
+  caption_instagram: 'Grüne Hügel, warme Menschen und eine unvergessliche Zeit in Irland.',
   hashtags_instagram: '#irland #ireland #exchange #treff',
   platform: 'instagram_feed',
   country: 'irland',
@@ -213,7 +213,7 @@ const scrollToSection = (id) => {
     <section id="section-colors" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Farben</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        TREFF Brand-Farben mit vollstaendiger Shade-Palette (50–950). Nutzung: <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">bg-primary-500</code>, <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">text-secondary-600</code>
+        TREFF Brand-Farben mit vollständiger Shade-Palette (50–950). Nutzung: <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">bg-primary-500</code>, <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">text-secondary-600</code>
       </p>
 
       <!-- Primary -->
@@ -276,7 +276,7 @@ const scrollToSection = (id) => {
     <section id="section-country-themes" class="mb-12" data-testid="country-themes-section">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Country Themes</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Laenderspezifische Farbpaletten mit dynamischem Theme-Switching. Jedes Land hat eigene Primaer-, Sekundaer- und Akzentfarben,
+        Länderspezifische Farbpaletten mit dynamischem Theme-Switching. Jedes Land hat eigene Primär-, Sekundär- und Akzentfarben,
         Gradient-Utilities und CSS Custom Properties.
       </p>
 
@@ -431,7 +431,7 @@ const scrollToSection = (id) => {
       </TCountryThemeProvider>
 
       <!-- All Countries Overview (Compact Grid) -->
-      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mt-8 mb-4">Alle Laender-Paletten</h3>
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mt-8 mb-4">Alle Länder-Paletten</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="country-palettes-grid">
         <div
           v-for="key in allCountryKeys"
@@ -463,7 +463,7 @@ const scrollToSection = (id) => {
     <section id="section-typography" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Typografie</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Inter als primaere Schrift. Jede Groesse hat eine definierte Line-Height fuer konsistente vertikale Rhythmik.
+        Inter als primäre Schrift. Jede Größe hat eine definierte Line-Height für konsistente vertikale Rhythmik.
       </p>
 
       <div class="space-y-4">
@@ -519,13 +519,13 @@ const scrollToSection = (id) => {
         </div>
         <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col items-center gap-4">
           <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Danger</h4>
-          <button class="btn-danger">Loeschen</button>
+          <button class="btn-danger">Löschen</button>
           <code class="text-[10px] font-mono text-gray-400">.btn-danger</code>
         </div>
       </div>
 
       <!-- Button sizes -->
-      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Groessen</h3>
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Größen</h3>
       <div class="flex flex-wrap items-center gap-4 mb-6">
         <div class="flex flex-col items-center gap-2">
           <button class="btn-primary btn-sm">Klein</button>
@@ -536,7 +536,7 @@ const scrollToSection = (id) => {
           <code class="text-[10px] font-mono text-gray-400">(default)</code>
         </div>
         <div class="flex flex-col items-center gap-2">
-          <button class="btn-primary btn-lg">Gross</button>
+          <button class="btn-primary btn-lg">Groß</button>
           <code class="text-[10px] font-mono text-gray-400">btn-lg</code>
         </div>
         <div class="flex flex-col items-center gap-2">
@@ -559,7 +559,7 @@ const scrollToSection = (id) => {
     <section id="section-cards" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Cards</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        BaseCard-Komponente mit verschiedenen Props und Slots fuer konsistente Kartendarstellung.
+        BaseCard-Komponente mit verschiedenen Props und Slots für konsistente Kartendarstellung.
       </p>
 
       <!-- BaseCard demos -->
@@ -584,7 +584,7 @@ const scrollToSection = (id) => {
         <!-- Flat -->
         <div>
           <BaseCard padding="md" flat title="Flat Card">
-            <p class="text-sm text-gray-500 dark:text-gray-400">Flacher Stil, ideal fuer verschachtelte Bereiche.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Flacher Stil, ideal für verschachtelte Bereiche.</p>
           </BaseCard>
           <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard flat&gt;</code>
         </div>
@@ -615,7 +615,7 @@ const scrollToSection = (id) => {
 
         <!-- Large padding -->
         <div>
-          <BaseCard padding="lg" :header-divider="false" title="Grosse Polsterung">
+          <BaseCard padding="lg" :header-divider="false" title="Große Polsterung">
             <p class="text-sm text-gray-500 dark:text-gray-400">padding="lg" ohne Header-Divider.</p>
           </BaseCard>
           <code class="text-[10px] font-mono text-gray-400 mt-2 block">&lt;BaseCard padding="lg" :header-divider="false"&gt;</code>
@@ -642,7 +642,7 @@ const scrollToSection = (id) => {
         <div>
           <div class="card-flat mb-2">
             <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Flat Card</h4>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Randlos, fuer verschachtelte Bereiche.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Randlos, für verschachtelte Bereiche.</p>
           </div>
           <code class="text-[10px] font-mono text-gray-400">.card-flat</code>
         </div>
@@ -670,8 +670,8 @@ const scrollToSection = (id) => {
         <!-- Error state -->
         <div>
           <label class="input-label">Fehler-Zustand</label>
-          <input type="text" class="input-field input-error" value="ungueltig@" />
-          <p class="input-error-text">Bitte eine gueltige E-Mail-Adresse eingeben.</p>
+          <input type="text" class="input-field input-error" value="ungültig@" />
+          <p class="input-error-text">Bitte eine gültige E-Mail-Adresse eingeben.</p>
           <div class="mt-2">
             <code class="text-[10px] font-mono text-gray-400">.input-field.input-error + .input-error-text</code>
           </div>
@@ -681,7 +681,7 @@ const scrollToSection = (id) => {
         <div>
           <label class="input-label">Select</label>
           <select class="input-field">
-            <option value="">Land auswaehlen...</option>
+            <option value="">Land auswählen...</option>
             <option>USA</option>
             <option>Kanada</option>
             <option>Australien</option>
@@ -700,7 +700,7 @@ const scrollToSection = (id) => {
     <section id="section-badges" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Badges</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Sechs Badge-Varianten fuer Status, Kategorien und Labels.
+        Sechs Badge-Varianten für Status, Kategorien und Labels.
       </p>
 
       <div class="flex flex-wrap gap-3">
@@ -752,7 +752,7 @@ const scrollToSection = (id) => {
     <section id="section-spacing" class="mb-12">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Spacing</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        4px-Grundraster. Erweitert mit halben und grossen Werten fuer flexible Layouts.
+        4px-Grundraster. Erweitert mit halben und großen Werten für flexible Layouts.
       </p>
 
       <div class="space-y-2">
@@ -790,34 +790,34 @@ const scrollToSection = (id) => {
         <div>
           <h4 class="font-semibold mb-2">Farben</h4>
           <ul class="space-y-1 list-disc list-inside">
-            <li>Primary Blue fuer Aktionen und Links</li>
-            <li>Secondary Yellow sparsam fuer Highlights</li>
-            <li>Grautone fuer Text und Hintergruende</li>
+            <li>Primary Blue für Aktionen und Links</li>
+            <li>Secondary Yellow sparsam für Highlights</li>
+            <li>Grautöne für Text und Hintergründe</li>
             <li>Semantische Farben: green=Erfolg, amber=Warnung, red=Fehler</li>
           </ul>
         </div>
         <div>
           <h4 class="font-semibold mb-2">Typografie</h4>
           <ul class="space-y-1 list-disc list-inside">
-            <li>Inter fuer UI, JetBrains Mono fuer Code</li>
-            <li>Max 3 Groessen pro View verwenden</li>
-            <li>font-bold fuer Titel, font-medium fuer Labels</li>
+            <li>Inter für UI, JetBrains Mono für Code</li>
+            <li>Max 3 Größen pro View verwenden</li>
+            <li>font-bold für Titel, font-medium für Labels</li>
           </ul>
         </div>
         <div>
           <h4 class="font-semibold mb-2">Spacing</h4>
           <ul class="space-y-1 list-disc list-inside">
             <li>4px-Grundraster einhalten</li>
-            <li>p-4 fuer Card-Inhalte, gap-6 zwischen Sektionen</li>
+            <li>p-4 für Card-Inhalte, gap-6 zwischen Sektionen</li>
             <li>mb-6 zwischen Seitenabschnitten</li>
           </ul>
         </div>
         <div>
           <h4 class="font-semibold mb-2">Komponenten</h4>
           <ul class="space-y-1 list-disc list-inside">
-            <li>btn-primary fuer Hauptaktionen, btn-ghost fuer sekundaere</li>
-            <li>card fuer Inhaltsbereiche, card-hover fuer klickbare</li>
-            <li>Einheitliche rounded-lg fuer Cards, rounded-md fuer Inputs</li>
+            <li>btn-primary für Hauptaktionen, btn-ghost für sekundäre</li>
+            <li>card für Inhaltsbereiche, card-hover für klickbare</li>
+            <li>Einheitliche rounded-lg für Cards, rounded-md für Inputs</li>
           </ul>
         </div>
       </div>
@@ -832,7 +832,7 @@ const scrollToSection = (id) => {
 
       <!-- Size selector -->
       <div class="flex items-center gap-2 mb-6">
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Groesse:</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Größe:</span>
         <button
           v-for="s in ['sm', 'md', 'lg']"
           :key="s"

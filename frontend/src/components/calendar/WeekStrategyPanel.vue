@@ -98,7 +98,7 @@ const countryLabels = {
 const countrySummary = computed(() => {
   const counts = summary.value.country_counts || {}
   const entries = Object.entries(counts)
-  if (entries.length === 0) return 'Keine Laender'
+  if (entries.length === 0) return 'Keine Länder'
   return entries.map(([c, n]) => `${countryLabels[c] || c} (${n})`).join(', ')
 })
 
@@ -151,7 +151,7 @@ const platformLabels = {
             <button
               @click="emit('toggle')"
               class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
-              title="Panel schliessen"
+              title="Panel schließen"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -222,7 +222,7 @@ const platformLabels = {
 
           <!-- Countries -->
           <div class="text-xs text-gray-600 dark:text-gray-400">
-            <span class="font-medium">Laender:</span> {{ countrySummary }}
+            <span class="font-medium">Länder:</span> {{ countrySummary }}
           </div>
         </div>
 
@@ -316,13 +316,13 @@ const platformLabels = {
         <div v-if="warnings.length === 0 && recommendations.length === 0" class="p-4 text-center">
           <AppIcon name="trophy" class="w-7 h-7 text-green-500" />
           <p class="text-sm font-medium text-green-600 dark:text-green-400 mt-1">Perfekt!</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Alle Strategie-Ziele fuer diese Woche erreicht.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Alle Strategie-Ziele für diese Woche erreicht.</p>
         </div>
       </div>
 
       <!-- No data state -->
       <div v-else class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-        Keine Daten verfuegbar
+        Keine Daten verfügbar
       </div>
     </div>
   </aside>

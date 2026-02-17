@@ -31,7 +31,7 @@
       @click="$emit('dismiss')"
       class="shrink-0 text-lg leading-none opacity-50 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-1 rounded"
       :class="textClass"
-      aria-label="Fehler schliessen"
+      aria-label="Fehler schließen"
     >
       &times;
     </button>

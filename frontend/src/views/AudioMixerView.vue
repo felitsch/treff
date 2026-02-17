@@ -100,7 +100,7 @@ const categoryIcons = {
 }
 
 const moodLabels = {
-  happy: 'Froehlich',
+  happy: 'Fröhlich',
   sad: 'Melancholisch',
   energetic: 'Energetisch',
   calm: 'Ruhig',
@@ -303,7 +303,7 @@ onMounted(async () => {
             <AppIcon name="musical-note" class="w-6 h-6" /> Musik- und Audio-Layer
           </h1>
           <p class="text-gray-500 dark:text-gray-400 mt-1">
-            Hintergrundmusik und Audio-Effekte zu Videos hinzufuegen. Lautstaerke-Kontrolle fuer Original-Audio vs. Musik.
+            Hintergrundmusik und Audio-Effekte zu Videos hinzufügen. Lautstärke-Kontrolle für Original-Audio vs. Musik.
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -332,7 +332,7 @@ onMounted(async () => {
           <div data-tour="am-video-select" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
-              Video waehlen
+              Video wählen
             </h2>
 
             <div v-if="loadingAssets" class="text-center py-8 text-gray-400">
@@ -344,7 +344,7 @@ onMounted(async () => {
               v-else-if="videoAssets.length === 0"
               svgIcon="film"
               title="Keine Videos vorhanden"
-              description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Musik und Audio hinzuzufuegen."
+              description="Lade zuerst ein Video in der Asset-Bibliothek hoch, um Musik und Audio hinzuzufügen."
               actionLabel="Zu Assets"
               actionTo="/library/assets"
               :compact="true"
@@ -462,7 +462,7 @@ onMounted(async () => {
                 v-else-if="filteredTracks.length === 0"
                 svgIcon="musical-note"
                 title="Keine Tracks gefunden"
-                description="Versuche eine andere Kategorie oder warte, bis Musik-Tracks verfuegbar sind."
+                description="Versuche eine andere Kategorie oder warte, bis Musik-Tracks verfügbar sind."
                 :compact="true"
               />
 
@@ -577,7 +577,7 @@ onMounted(async () => {
                 </template>
                 <template v-else>
                   <div class="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                    {{ selectedVideo ? 'Waveform wird geladen...' : 'Waehle ein Video' }}
+                    {{ selectedVideo ? 'Waveform wird geladen...' : 'Wähle ein Video' }}
                   </div>
                 </template>
               </div>
@@ -611,7 +611,7 @@ onMounted(async () => {
                 </template>
                 <template v-else>
                   <div class="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                    {{ selectedAudio ? 'Waveform wird geladen...' : 'Waehle einen Track' }}
+                    {{ selectedAudio ? 'Waveform wird geladen...' : 'Wähle einen Track' }}
                   </div>
                 </template>
               </div>
@@ -622,7 +622,7 @@ onMounted(async () => {
           <div data-tour="am-mixer" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
               <span class="bg-treff-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">4</span>
-              Lautstaerke-Mixer
+              Lautstärke-Mixer
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -822,7 +822,7 @@ onMounted(async () => {
                 <span class="text-sm text-gray-700 dark:text-gray-300">Als neues Video speichern</span>
               </label>
               <span v-if="!saveAsNew" class="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded">
-                Achtung: Original wird ueberschrieben!
+                Achtung: Original wird überschrieben!
               </span>
             </div>
 
@@ -866,7 +866,7 @@ onMounted(async () => {
                 @click="resetMixer"
                 class="py-3 px-4 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all"
               >
-                Zuruecksetzen
+                Zurücksetzen
               </button>
             </div>
 
@@ -891,7 +891,7 @@ onMounted(async () => {
               </div>
               <div class="text-xs text-green-700 dark:text-green-400 space-y-1">
                 <p>Datei: {{ mixResult.original_filename || mixResult.filename }}</p>
-                <p>Groesse: {{ formatFileSize(mixResult.file_size) }}</p>
+                <p>Größe: {{ formatFileSize(mixResult.file_size) }}</p>
                 <p v-if="mixResult.duration_seconds">Dauer: {{ formatDuration(mixResult.duration_seconds) }}</p>
               </div>
               <button
@@ -913,7 +913,7 @@ onMounted(async () => {
 
           <!-- Quick Tips -->
           <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Tipps fuer Social-Media Audio</h3>
+            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Tipps für Social-Media Audio</h3>
             <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-1.5">
               <li class="flex items-start gap-1.5">
                 <span class="mt-0.5">&#8226;</span>
@@ -921,7 +921,7 @@ onMounted(async () => {
               </li>
               <li class="flex items-start gap-1.5">
                 <span class="mt-0.5">&#8226;</span>
-                <span><strong>Balance:</strong> Original-Audio 70-80%, Musik 20-40% - so hoert man Sprache klar.</span>
+                <span><strong>Balance:</strong> Original-Audio 70-80%, Musik 20-40% - so hört man Sprache klar.</span>
               </li>
               <li class="flex items-start gap-1.5">
                 <span class="mt-0.5">&#8226;</span>
@@ -929,7 +929,7 @@ onMounted(async () => {
               </li>
               <li class="flex items-start gap-1.5">
                 <span class="mt-0.5">&#8226;</span>
-                <span><strong>Stimmung:</strong> Upbeat-Musik fuer Laender-Highlights, Emotional fuer Abschiedsszenen.</span>
+                <span><strong>Stimmung:</strong> Upbeat-Musik für Länder-Highlights, Emotional für Abschiedsszenen.</span>
               </li>
             </ul>
           </div>

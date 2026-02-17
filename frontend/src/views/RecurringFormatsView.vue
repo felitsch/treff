@@ -49,8 +49,8 @@ const form = ref({
 
 const DAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 const FREQUENCIES = [
-  { value: 'daily', label: 'Taeglich' },
-  { value: 'weekly', label: 'Woechentlich' },
+  { value: 'daily', label: 'Täglich' },
+  { value: 'weekly', label: 'Wöchentlich' },
   { value: 'biweekly', label: 'Alle 2 Wochen' },
   { value: 'monthly', label: 'Monatlich' },
 ]
@@ -60,12 +60,12 @@ const TONES = [
   { value: 'emotional', label: 'Emotional' },
   { value: 'motivierend', label: 'Motivierend' },
   { value: 'informativ', label: 'Informativ' },
-  { value: 'serioess', label: 'Serioess' },
+  { value: 'serioess', label: 'Seriös' },
 ]
 const CATEGORIES = [
   { value: 'tipps_tricks', label: 'Tipps & Tricks' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
-  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight' },
   { value: 'faq', label: 'FAQ / Fun Facts' },
   { value: 'fristen_cta', label: 'Fristen & CTA' },
   { value: 'hinter_den_kulissen', label: 'Hinter den Kulissen' },
@@ -189,13 +189,13 @@ async function toggleActive(fmt) {
     showToast(fmt.is_active ? 'Format deaktiviert' : 'Format aktiviert')
   } catch (err) {
     // Error toast shown by API interceptor
-    showToast('Status konnte nicht geaendert werden.', 'error')
+    showToast('Status konnte nicht geändert werden.', 'error')
   }
 }
 
 // Delete
 async function deleteFormat(id) {
-  if (!confirm('Dieses Format wirklich loeschen?')) return
+  if (!confirm('Dieses Format wirklich löschen?')) return
   try {
     const res = await fetch(`/api/recurring-formats/${id}`, {
       method: 'DELETE',
@@ -206,10 +206,10 @@ async function deleteFormat(id) {
       throw new Error(data.detail || `HTTP ${res.status}`)
     }
     await fetchFormats()
-    showToast('Format geloescht!')
+    showToast('Format gelöscht!')
   } catch (err) {
     // Error toast shown by API interceptor
-    showToast(err.message || 'Format konnte nicht geloescht werden.', 'error')
+    showToast(err.message || 'Format konnte nicht gelöscht werden.', 'error')
   }
 }
 
@@ -306,7 +306,7 @@ onMounted(fetchFormats)
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Wiederkehrende Formate <HelpTooltip :text="tooltipTexts.storyArcs.recurringFormats" /></h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Running Gags und regelmaessige Content-Formate verwalten.
+          Running Gags und regelmäßige Content-Formate verwalten.
           <span class="font-medium">{{ activeCount }}/{{ totalCount }} aktiv</span>
         </p>
       </div>
@@ -364,7 +364,7 @@ onMounted(fetchFormats)
 
         <!-- Frequency -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Haeufigkeit</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Häufigkeit</label>
           <select v-model="form.frequency"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
             <option v-for="f in FREQUENCIES" :key="f.value" :value="f.value">{{ f.label }}</option>
@@ -389,7 +389,7 @@ onMounted(fetchFormats)
 
         <!-- Tone -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tonalitaet</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tonalität</label>
           <select v-model="form.tone"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
             <option v-for="t in TONES" :key="t.value" :value="t.value">{{ t.label }}</option>
@@ -425,7 +425,7 @@ onMounted(fetchFormats)
     <div class="flex gap-3 mb-4 flex-wrap">
       <select v-model="filterFrequency"
         class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-        <option value="">Alle Haeufigkeiten</option>
+        <option value="">Alle Häufigkeiten</option>
         <option v-for="f in FREQUENCIES" :key="f.value" :value="f.value">{{ f.label }}</option>
       </select>
       <select v-model="filterActive"
@@ -530,7 +530,7 @@ onMounted(fetchFormats)
             v-if="!fmt.is_default"
             @click="deleteFormat(fmt.id)"
             class="text-xs px-2.5 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
-          >Loeschen</button>
+          >Löschen</button>
         </div>
       </BaseCard>
     </div>
@@ -540,7 +540,7 @@ onMounted(fetchFormats)
       v-if="!loading && filteredFormats.length === 0"
       svgIcon="arrow-path"
       title="Keine wiederkehrenden Formate"
-      description="Erstelle dein erstes wiederkehrendes Format wie 'Motivation Monday' oder 'Freitags-Fail'. Formate sorgen fuer konsistenten Content und hoeheres Engagement."
+      description="Erstelle dein erstes wiederkehrendes Format wie 'Motivation Monday' oder 'Freitags-Fail'. Formate sorgen für konsistenten Content und höheres Engagement."
       actionLabel="Format erstellen"
       @action="showCreateForm = true"
     />
@@ -617,10 +617,10 @@ onMounted(fetchFormats)
       <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Wie funktionieren wiederkehrende Formate?</h3>
       <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1.5">
         <li>Aktive Formate erscheinen als Platzhalter im <strong>Kalender</strong> am bevorzugten Wochentag.</li>
-        <li>Der <strong>Wochenplaner</strong> schlaegt automatisch Inhalte fuer aktive Formate vor.</li>
-        <li>Nutze <strong>KI-Text</strong> um Textvorschlaege fuer jedes Format zu generieren.</li>
-        <li>Standard-Formate koennen nicht geloescht, aber deaktiviert werden.</li>
-        <li>Erstelle eigene Formate fuer deine individuelle Content-Strategie!</li>
+        <li>Der <strong>Wochenplaner</strong> schlägt automatisch Inhalte für aktive Formate vor.</li>
+        <li>Nutze <strong>KI-Text</strong> um Textvorschläge für jedes Format zu generieren.</li>
+        <li>Standard-Formate können nicht gelöscht, aber deaktiviert werden.</li>
+        <li>Erstelle eigene Formate für deine individuelle Content-Strategie!</li>
       </ul>
     </div>
 

@@ -72,7 +72,7 @@ const mainAreas = [
 
 // Workflow steps for step 3
 const workflowSteps = [
-  { icon: 'light-bulb', label: 'Idee', desc: 'Dashboard-Vorschlaege, Student Inbox oder eigene Ideen' },
+  { icon: 'light-bulb', label: 'Idee', desc: 'Dashboard-Vorschläge, Student Inbox oder eigene Ideen' },
   { icon: 'clipboard-list', label: 'Planen', desc: 'Wochenplaner oder Kalender (Monat/Woche/Tag)' },
   { icon: 'pencil-square', label: 'Erstellen', desc: 'Create Hub: Quick, Smart, Video oder Campaign' },
   { icon: 'calendar', label: 'Schedulen', desc: 'Datum und Uhrzeit im Kalender festlegen' },
@@ -86,7 +86,7 @@ const connections = [
     fromIcon: 'user',
     to: 'Story-Arcs',
     toIcon: 'book-open',
-    desc: 'Schueler-Profile fuettern Story-Arcs und Smart Create mit echten Geschichten',
+    desc: 'Schüler-Profile füttern Story-Arcs und Smart Create mit echten Geschichten',
     color: 'text-blue-500',
   },
   {
@@ -102,7 +102,7 @@ const connections = [
     fromIcon: 'arrow-path',
     to: 'Wochenplaner',
     toIcon: 'clipboard-list',
-    desc: 'Wiederkehrende Formate werden vom Wochenplaner beruecksichtigt',
+    desc: 'Wiederkehrende Formate werden vom Wochenplaner berücksichtigt',
     color: 'text-amber-500',
   },
   {
@@ -110,7 +110,7 @@ const connections = [
     fromIcon: 'rectangle-stack',
     to: 'Create Hub',
     toIcon: 'pencil-square',
-    desc: 'Assets und Templates aus der Bibliothek fliessen in alle 4 Create-Modi ein',
+    desc: 'Assets und Templates aus der Bibliothek fließen in alle 4 Create-Modi ein',
     color: 'text-green-500',
   },
   {
@@ -149,7 +149,7 @@ const connections = [
               @click="skipAll"
               class="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
-              Ueberspringen
+              Überspringen
             </button>
           </div>
 
@@ -166,7 +166,7 @@ const connections = [
                 </h2>
                 <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto leading-relaxed">
                   Dieses Tool hilft dir, professionelle Instagram- und TikTok-Posts
-                  fuer TREFF Sprachreisen in Minuten statt Stunden zu erstellen.
+                  für TREFF Sprachreisen in Minuten statt Stunden zu erstellen.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-400 dark:text-gray-500">
                   <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full">
@@ -277,10 +277,10 @@ const connections = [
               <div v-else-if="currentStep === 3" key="step3" class="py-6">
                 <div class="text-center mb-6">
                   <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    Wie alles zusammenhaengt
+                    Wie alles zusammenhängt
                   </h2>
                   <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Die Seiten arbeiten zusammen - hier der Ueberblick
+                    Die Seiten arbeiten zusammen - hier der Überblick
                   </p>
                 </div>
                 <div class="space-y-3 max-w-lg mx-auto">
@@ -354,7 +354,7 @@ const connections = [
                         Ersten Post erstellen
                       </h3>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Gehe zum Create Hub und waehle einen der 4 Modi: Quick, Smart, Video oder Campaign.
+                        Gehe zum Create Hub und wähle einen der 4 Modi: Quick, Smart, Video oder Campaign.
                       </p>
                     </div>
                   </div>
@@ -403,7 +403,7 @@ const connections = [
                 </h2>
                 <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed mb-6">
                   Auf jeder Seite findest du eine interaktive Tour, die dir die
-                  wichtigsten Funktionen Schritt fuer Schritt erklaert.
+                  wichtigsten Funktionen Schritt für Schritt erklärt.
                 </p>
                 <div class="max-w-sm mx-auto bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
                   <div class="flex items-center justify-center gap-3 mb-3">
@@ -416,7 +416,7 @@ const connections = [
                   </div>
                   <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                     Klicke jederzeit auf den Hilfe-Button in der Seitenleiste oder starte die
-                    Tour erneut ueber die Einstellungen.
+                    Tour erneut über die Einstellungen.
                   </p>
                 </div>
                 <div class="mt-8">
@@ -424,7 +424,7 @@ const connections = [
                     Bereit loszulegen? <AppIcon name="rocket" class="w-4 h-4 inline-block" />
                   </p>
                   <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    Nach dem Schliessen startet die Dashboard-Tour automatisch.
+                    Nach dem Schließen startet die Dashboard-Tour automatisch.
                   </p>
                 </div>
               </div>
@@ -457,7 +457,7 @@ const connections = [
                 @click="prevStep"
                 class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
-                Zurueck
+                Zurück
               </button>
               <button
                 @click="nextStep"

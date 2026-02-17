@@ -83,7 +83,7 @@ const syncableFieldLabels = {
   title: 'Titel',
   category: 'Kategorie',
   country: 'Land',
-  tone: 'Tonalitaet',
+  tone: 'Tonalität',
   scheduled_date: 'Datum',
   scheduled_time: 'Uhrzeit',
   cta_text: 'Call-to-Action',
@@ -110,7 +110,7 @@ async function syncToSiblings() {
       source_post_id: Number(postId.value),
       fields: fieldsToSync,
     })
-    toast.success(`Aenderungen auf ${siblingPosts.value.length} Schwester-Post(s) uebertragen!`, 3000)
+    toast.success(`Änderungen auf ${siblingPosts.value.length} Schwester-Post(s) übertragen!`, 3000)
     showSyncDialog.value = false
   } catch (e) {
     toast.error('Sync fehlgeschlagen: ' + (e.response?.data?.detail || e.message), 4000)
@@ -222,7 +222,7 @@ function onCliffhangerGenerated(data) {
 
 // Categories for display
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt' },
+  { id: 'laender_spotlight', label: 'Länder-Spotlight', icon: 'globe-alt' },
   { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right' },
   { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
   { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
@@ -528,7 +528,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           @click="router.push('/library/history')"
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          &#8592; Zurueck
+          &#8592; Zurück
         </button>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           Post bearbeiten
@@ -549,7 +549,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <button
           @click="showRepurposePanel = true"
           class="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 border border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-          title="Fuer andere Plattform anpassen"
+          title="Für andere Plattform anpassen"
           data-testid="repurpose-btn"
         >
           <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Anpassen
@@ -669,7 +669,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </router-link>
           </div>
           <p class="mt-1.5 text-[10px] text-blue-500 dark:text-blue-400">
-            Aenderungen an diesem Post koennen auf die Schwester-Posts synchronisiert werden.
+            Änderungen an diesem Post können auf die Schwester-Posts synchronisiert werden.
           </p>
         </div>
 
@@ -678,10 +678,10 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-4">
               <AppIcon name="arrow-path" class="w-6 h-6 inline-block" />
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Aenderungen synchronisieren</h3>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Änderungen synchronisieren</h3>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Waehle aus, welche Felder auf die <strong>{{ siblingPosts.length }} Schwester-Post(s)</strong> uebertragen werden sollen:
+              Wähle aus, welche Felder auf die <strong>{{ siblingPosts.length }} Schwester-Post(s)</strong> übertragen werden sollen:
             </p>
             <div class="flex flex-wrap gap-1.5 mb-4">
               <span
@@ -797,7 +797,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <textarea
               v-model="episodeCliffhangerText"
               rows="2"
-              placeholder="z.B. Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet..."
+              placeholder="z.B. Aber was Jonathan am nächsten Tag erlebt, hätte niemand erwartet..."
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               data-testid="cliffhanger-text-input"
             ></textarea>
@@ -806,7 +806,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <!-- Next Episode Hint (Teaser) -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (naechste Episode)</label>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (nächste Episode)</label>
               <button
                 @click="suggestEpisodeText('next_episode_hint')"
                 :disabled="suggestingEpisodeField === 'next_episode_hint'"
@@ -820,7 +820,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <textarea
               v-model="episodeNextHint"
               rows="2"
-              placeholder="z.B. Naechste Episode: Jonathan entdeckt eine voellig neue Seite von Amerika!"
+              placeholder="z.B. Nächste Episode: Jonathan entdeckt eine völlig neue Seite von Amerika!"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
               data-testid="nexthint-text-input"
             ></textarea>
@@ -929,7 +929,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
             <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(slides[currentPreviewSlide].headline?.length || 0) > 40" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-if="(slides[currentPreviewSlide].headline?.length || 0) > 40" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
               <span v-else-if="(slides[currentPreviewSlide].headline?.length || 0) > 30" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
               <span v-else class="text-xs text-gray-400"></span>
               <span class="text-xs" :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].headline?.length || 0 }}/40</span>
@@ -943,7 +943,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             />
             <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 60" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 60" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
               <span v-else-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 45" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
               <span v-else class="text-xs text-gray-400"></span>
               <span class="text-xs" :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].subheadline?.length || 0 }}/60</span>
@@ -958,7 +958,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(slides[currentPreviewSlide].body_text?.length || 0) > 200" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+              <span v-if="(slides[currentPreviewSlide].body_text?.length || 0) > 200" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
               <span v-else-if="(slides[currentPreviewSlide].body_text?.length || 0) > 150" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
               <span v-else class="text-xs text-gray-400"></span>
               <span class="text-xs" :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].body_text?.length || 0 }}/200</span>
@@ -997,7 +997,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :value="slides[currentPreviewSlide].background_value || '#1A1A2E'"
                 @input="slides[currentPreviewSlide].background_value = $event.target.value; slides[currentPreviewSlide].background_type = 'color'"
                 class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
-                title="Eigene Farbe waehlen"
+                title="Eigene Farbe wählen"
                 data-testid="color-picker-input"
               />
               <span class="text-xs text-gray-400 font-mono">{{ slides[currentPreviewSlide].background_value || '#1A1A2E' }}</span>
@@ -1016,9 +1016,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </div>
         </div>
 
-        <!-- Student-Verknuepfung -->
+        <!-- Student-Verknüpfung -->
         <div v-if="studentStore.students.length > 0" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="academic-cap" class="w-5 h-5 inline-block" /> Student verknuepfen</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="academic-cap" class="w-5 h-5 inline-block" /> Student verknüpfen</label>
           <select
             v-model="selectedStudentId"
             class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
@@ -1049,7 +1049,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="(captionInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (captionInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(captionInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Instagram-Limit ueberschritten (max 2.200)</span>
+              <span v-if="(captionInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Instagram-Limit überschritten (max 2.200)</span>
               <span v-else-if="(captionInstagram?.length || 0) > 1800" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Instagram-Limit</span>
               <span v-else class="text-xs text-gray-400"></span>
               <span class="text-xs" :class="(captionInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : (captionInstagram?.length || 0) > 1800 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ captionInstagram?.length || 0 }}/2.200</span>
@@ -1062,7 +1062,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :class="(hashtagsInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400'"
             ></textarea>
             <div class="flex items-center justify-between mt-0.5">
-              <span v-if="(hashtagsInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit ueberschritten</span>
+              <span v-if="(hashtagsInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Hashtag-Limit überschritten</span>
               <span v-else class="text-xs text-gray-400"></span>
               <span class="text-xs" :class="(hashtagsInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-gray-400'">{{ hashtagsInstagram?.length || 0 }} Zeichen</span>
             </div>
@@ -1133,7 +1133,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <span class="text-sm text-gray-500 dark:text-gray-400">Slide {{ currentPreviewSlide + 1 }} von {{ slides.length }}</span>
           <button @click="nextPreviewSlide" :disabled="currentPreviewSlide === slides.length - 1"
             class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
-            Naechste &#8594;
+            Nächste &#8594;
           </button>
         </div>
 
@@ -1292,9 +1292,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <Teleport to="body">
       <div v-if="showLeaveDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="unsaved-changes-dialog">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Aenderungen</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Änderungen</h3>
           <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
-            Du hast ungespeicherte Aenderungen. Wenn du die Seite verlaesst, gehen diese verloren.
+            Du hast ungespeicherte Änderungen. Wenn du die Seite verlässt, gehen diese verloren.
           </p>
           <div class="flex gap-3 justify-end">
             <button

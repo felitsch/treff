@@ -123,7 +123,7 @@ function addClip(asset) {
     transition: 'cut',
     transitionDuration: 0.5,
   })
-  toast.success(`Clip "${asset.original_filename || asset.filename}" hinzugefuegt`)
+  toast.success(`Clip "${asset.original_filename || asset.filename}" hinzugefügt`)
 }
 
 // Remove a clip from timeline
@@ -295,7 +295,7 @@ onMounted(() => {
           Video-Zusammenschnitt
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Mehrere Clips zu einem Reel oder TikTok zusammenfuegen
+          Mehrere Clips zu einem Reel oder TikTok zusammenfügen
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -320,7 +320,7 @@ onMounted(() => {
           class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           data-testid="reset-composer-btn"
         >
-          Zuruecksetzen
+          Zurücksetzen
         </button>
       </div>
     </div>
@@ -453,7 +453,7 @@ onMounted(() => {
             v-if="clips.length === 0"
             svgIcon="film"
             title="Keine Clips in der Timeline"
-            description="Klicke auf Videos in der Bibliothek links, um sie zur Timeline hinzuzufuegen und zu einem Video zusammenzuschneiden."
+            description="Klicke auf Videos in der Bibliothek links, um sie zur Timeline hinzuzufügen und zu einem Video zusammenzuschneiden."
             :compact="true"
           />
 
@@ -493,7 +493,7 @@ onMounted(() => {
                       max="3"
                       step="0.1"
                       class="w-14 text-[10px] px-1.5 py-0.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-center focus:ring-1 focus:ring-blue-500"
-                      title="Uebergangs-Dauer (Sekunden)"
+                      title="Übergangs-Dauer (Sekunden)"
                     />
                     <span v-if="clip.transition !== 'cut'" class="text-[10px] text-gray-400">s</span>
                   </div>
@@ -626,7 +626,7 @@ onMounted(() => {
               <span class="ml-1 text-blue-800 dark:text-blue-200">{{ previewData.output_label }}</span>
             </div>
             <div>
-              <span class="text-blue-600 dark:text-blue-400 font-medium">Aufloesung:</span>
+              <span class="text-blue-600 dark:text-blue-400 font-medium">Auflösung:</span>
               <span class="ml-1 text-blue-800 dark:text-blue-200">{{ previewData.output_width }}x{{ previewData.output_height }}</span>
             </div>
           </div>
@@ -684,7 +684,7 @@ onMounted(() => {
               <span class="ml-1 text-green-800 dark:text-green-200">{{ formatTime(composeResult.duration_seconds) }}</span>
             </div>
             <div>
-              <span class="text-green-600 dark:text-green-400 font-medium">Groesse:</span>
+              <span class="text-green-600 dark:text-green-400 font-medium">Größe:</span>
               <span class="ml-1 text-green-800 dark:text-green-200">{{ formatFileSize(composeResult.file_size) }}</span>
             </div>
             <div>
@@ -774,7 +774,7 @@ onMounted(() => {
               class="max-h-[70vh] max-w-full"
               data-testid="preview-video"
             >
-              Video nicht verfuegbar.
+              Video nicht verfügbar.
             </video>
           </div>
           <div class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">

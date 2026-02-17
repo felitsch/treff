@@ -20,7 +20,7 @@ async function loadDrafts() {
     drafts.value = res.data?.drafts || []
   } catch (err) {
     // Error toast shown by API interceptor
-    toast.error('Entwuerfe konnten nicht geladen werden.', 4000)
+    toast.error('Entwürfe konnten nicht geladen werden.', 4000)
   } finally {
     loading.value = false
   }
@@ -32,9 +32,9 @@ async function deleteDraft(id) {
     await api.delete(`/api/posts/drafts/${id}`)
     drafts.value = drafts.value.filter(d => d.id !== id)
     confirmDeleteId.value = null
-    toast.success('Entwurf geloescht.', 3000)
+    toast.success('Entwurf gelöscht.', 3000)
   } catch (err) {
-    toast.error('Loeschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 4000)
+    toast.error('Löschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message), 4000)
   } finally {
     deletingId.value = null
   }
@@ -59,7 +59,7 @@ function formatDate(dateStr) {
 
 function categoryLabel(cat) {
   const map = {
-    laender_spotlight: 'Laender-Spotlight',
+    laender_spotlight: 'Länder-Spotlight',
     erfahrungsberichte: 'Erfahrungsberichte',
     infografiken: 'Infografiken',
     fristen_cta: 'Fristen & CTA',
@@ -92,9 +92,9 @@ onMounted(() => {
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gespeicherte Entwuerfe</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gespeicherte Entwürfe</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Automatisch gespeicherte Entwuerfe aus dem Post-Creator
+          Automatisch gespeicherte Entwürfe aus dem Post-Creator
         </p>
       </div>
       <button
@@ -117,10 +117,10 @@ onMounted(() => {
     <!-- Empty State -->
     <div v-else-if="!loading && !hasDrafts" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
       <div class="text-5xl mb-4">&#x1F4DD;</div>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keine Entwuerfe vorhanden</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keine Entwürfe vorhanden</h3>
       <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-md mx-auto">
-        Wenn du im Post-Creator arbeitest, werden deine Aenderungen automatisch als Entwurf gespeichert.
-        Du kannst jederzeit dort weitermachen, wo du aufgehoert hast.
+        Wenn du im Post-Creator arbeitest, werden deine Änderungen automatisch als Entwurf gespeichert.
+        Du kannst jederzeit dort weitermachen, wo du aufgehört hast.
       </p>
       <button
         @click="router.push('/create/advanced')"
@@ -162,7 +162,7 @@ onMounted(() => {
             <button
               @click="router.push(`/create/post/${draft.id}/edit`)"
               class="px-3 py-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
-              title="Fuer andere Plattform anpassen"
+              title="Für andere Plattform anpassen"
               data-testid="repurpose-draft-btn"
             >
               <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Anpassen
@@ -178,7 +178,7 @@ onMounted(() => {
                 v-if="confirmDeleteId !== draft.id"
                 @click="confirmDeleteId = draft.id"
                 class="px-2.5 py-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title="Loeschen"
+                title="Löschen"
               >
                 &#x1F5D1;
               </button>

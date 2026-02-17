@@ -119,18 +119,18 @@ const previewSrc = computed(() => {
     .replace(/\{\{cta_text\}\}/g, 'Jetzt bewerben')
     .replace(/\{\{quote_text\}\}/g, 'Das war die beste Zeit meines Lebens! Ich habe so viel gelernt und tolle Freundschaften geschlossen.')
     .replace(/\{\{quote_author\}\}/g, 'Lisa M., 17')
-    .replace(/\{\{student_name\}\}/g, 'Max Mueller')
+    .replace(/\{\{student_name\}\}/g, 'Max Müller')
     .replace(/\{\{student_name_initial\}\}/g, 'M')
     .replace(/\{\{arc_title\}\}/g, 'Mein Abenteuer in den USA')
     .replace(/\{\{episode_number\}\}/g, '2')
     .replace(/\{\{episode_title\}\}/g, 'Der erste Schultag')
     .replace(/\{\{total_episodes\}\}/g, '4')
     .replace(/\{\{previously_text\}\}/g, 'In der letzten Episode: Max kam in seiner Gastfamilie an und entdeckte sein neues Zuhause...')
-    .replace(/\{\{cliffhanger_text\}\}/g, 'Wie wird Max seinen ersten Schultag ueberstehen?')
+    .replace(/\{\{cliffhanger_text\}\}/g, 'Wie wird Max seinen ersten Schultag überstehen?')
     .replace(/\{\{next_episode_hint\}\}/g, 'Morgen: Der erste Football-Abend!')
-    .replace(/\{\{bullet_points\}\}/g, '<li>Kultureller Austausch erleben</li><li>Englisch fliessend sprechen</li><li>Freundschaften fuers Leben</li><li>Selbststaendigkeit entwickeln</li>')
+    .replace(/\{\{bullet_points\}\}/g, '<li>Kultureller Austausch erleben</li><li>Englisch fließend sprechen</li><li>Freundschaften fürs Leben</li><li>Selbstständigkeit entwickeln</li>')
     .replace(/\{\{title\}\}/g, t.name)
-    .replace(/\{\{content\}\}/g, 'Vorschau-Inhalt fuer das Template')
+    .replace(/\{\{content\}\}/g, 'Vorschau-Inhalt für das Template')
 
   // Dimensions
   const dims = {
@@ -227,19 +227,19 @@ const themeTags = computed(() => {
   const cat = props.template.category
   const tags = []
   // Map categories to suitable themes
-  if (cat === 'laender_spotlight') tags.push('Laenderinfo', 'Inspiration')
+  if (cat === 'laender_spotlight') tags.push('Länderinfo', 'Inspiration')
   if (cat === 'erfahrungsberichte') tags.push('Testimonial', 'Social Proof')
   if (cat === 'infografiken') tags.push('Informativ', 'Statistiken')
   if (cat === 'fristen_cta') tags.push('Deadline', 'Bewerbung')
   if (cat === 'tipps_tricks') tags.push('Ratgeber', 'Vorbereitung')
-  if (cat === 'faq') tags.push('Haeufige Fragen', 'Service')
+  if (cat === 'faq') tags.push('Häufige Fragen', 'Service')
   if (cat === 'foto_posts') tags.push('Visuell', 'Storytelling')
   if (cat === 'reel_tiktok_thumbnails') tags.push('Video', 'Thumbnail')
   if (cat === 'story_posts') tags.push('Interaktiv', 'Engagement')
   if (cat === 'story_teaser') tags.push('Teaser', 'Serie')
   if (cat === 'story_series') tags.push('Serie', 'Mehrteilig')
-  // Add "Ganzjaehrig" for most templates
-  tags.push('Ganzjaehrig')
+  // Add "Ganzjährig" for most templates
+  tags.push('Ganzjährig')
   return tags
 })
 
@@ -339,7 +339,7 @@ watch(() => props.show, (isOpen) => {
               v-if="hasNext"
               @click="navigateNext"
               class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-700/90 shadow-lg hover:bg-white dark:hover:bg-gray-600 transition-colors"
-              aria-label="Naechstes Template"
+              aria-label="Nächstes Template"
               data-testid="next-btn"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -376,7 +376,7 @@ watch(() => props.show, (isOpen) => {
             <button
               @click="emit('close')"
               class="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Schliessen (ESC)"
+              aria-label="Schließen (ESC)"
               data-testid="close-btn"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -434,40 +434,40 @@ watch(() => props.show, (isOpen) => {
               </h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 <template v-if="template.category === 'laender_spotlight'">
-                  Visuelles Laender-Spotlight-Template fuer die Praesentation von Highschool-Aufenthaltszielen. Ideal fuer Carousel-Posts mit Highlights, Fakten und Call-to-Action.
+                  Visuelles Länder-Spotlight-Template für die Präsentation von Highschool-Aufenthaltszielen. Ideal für Carousel-Posts mit Highlights, Fakten und Call-to-Action.
                 </template>
                 <template v-else-if="template.category === 'erfahrungsberichte'">
-                  Template fuer Erfahrungsberichte und Schueler-Testimonials. Authentische Geschichten von Teilnehmern bauen Vertrauen bei Eltern und Schuelern auf.
+                  Template für Erfahrungsberichte und Schüler-Testimonials. Authentische Geschichten von Teilnehmern bauen Vertrauen bei Eltern und Schülern auf.
                 </template>
                 <template v-else-if="template.category === 'infografiken'">
-                  Informatives Infografik-Template mit Bullet-Points und Statistiken. Perfekt fuer Fakten, Vergleiche und Programmdetails.
+                  Informatives Infografik-Template mit Bullet-Points und Statistiken. Perfekt für Fakten, Vergleiche und Programmdetails.
                 </template>
                 <template v-else-if="template.category === 'fristen_cta'">
-                  Aufmerksamkeitsstarkes Template fuer Fristen und Call-to-Actions. Ideal fuer Bewerbungsdeadlines und zeitlich begrenzte Angebote.
+                  Aufmerksamkeitsstarkes Template für Fristen und Call-to-Actions. Ideal für Bewerbungsdeadlines und zeitlich begrenzte Angebote.
                 </template>
                 <template v-else-if="template.category === 'tipps_tricks'">
-                  Carousel-Template fuer Tipps und Tricks rund um den Highschool-Aufenthalt. Bietet echten Mehrwert und foerdert Engagement.
+                  Carousel-Template für Tipps und Tricks rund um den Highschool-Aufenthalt. Bietet echten Mehrwert und fördert Engagement.
                 </template>
                 <template v-else-if="template.category === 'faq'">
-                  FAQ-Template fuer haeufig gestellte Fragen. Beantwortet Eltern- und Schuelerfragen visuell ansprechend.
+                  FAQ-Template für häufig gestellte Fragen. Beantwortet Eltern- und Schülerfragen visuell ansprechend.
                 </template>
                 <template v-else-if="template.category === 'foto_posts'">
-                  Foto-Post-Template mit Overlay-Elementen. Perfekt fuer Bilder aus dem Ausland mit TREFF-Branding.
+                  Foto-Post-Template mit Overlay-Elementen. Perfekt für Bilder aus dem Ausland mit TREFF-Branding.
                 </template>
                 <template v-else-if="template.category === 'reel_tiktok_thumbnails'">
-                  Thumbnail-Template fuer Reels und TikTok-Videos. Auffaellige Vorschaubilder fuer mehr Klicks.
+                  Thumbnail-Template für Reels und TikTok-Videos. Auffällige Vorschaubilder für mehr Klicks.
                 </template>
                 <template v-else-if="template.category === 'story_posts'">
-                  Instagram-Story-Template mit interaktiven Elementen. Perfekt fuer Umfragen, Countdowns und Q&A.
+                  Instagram-Story-Template mit interaktiven Elementen. Perfekt für Umfragen, Countdowns und Q&A.
                 </template>
                 <template v-else-if="template.category === 'story_teaser'">
-                  Teaser-Template fuer den Feed, das auf Story-Serien verweist. Generiert Traffic von Feed zu Stories.
+                  Teaser-Template für den Feed, das auf Story-Serien verweist. Generiert Traffic von Feed zu Stories.
                 </template>
                 <template v-else-if="template.category === 'story_series'">
-                  Mehrteiliges Story-Serien-Template mit Episoden-Navigation. Perfekt fuer laengere Erfahrungsberichte ueber mehrere Tage.
+                  Mehrteiliges Story-Serien-Template mit Episoden-Navigation. Perfekt für längere Erfahrungsberichte über mehrere Tage.
                 </template>
                 <template v-else>
-                  Vielseitiges Template fuer Social-Media-Posts von TREFF Sprachreisen.
+                  Vielseitiges Template für Social-Media-Posts von TREFF Sprachreisen.
                 </template>
               </p>
             </div>
@@ -546,7 +546,7 @@ watch(() => props.show, (isOpen) => {
 
             <!-- Keyboard hint -->
             <p class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
-              ESC schliessen &middot; Pfeiltasten blaettern
+              ESC schließen &middot; Pfeiltasten blättern
             </p>
           </div>
         </div>

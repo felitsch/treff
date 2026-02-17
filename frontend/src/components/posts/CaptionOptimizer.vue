@@ -47,12 +47,12 @@ const showVariants = ref(false)
 
 // Optimization options
 const optimizationOptions = [
-  { id: 'shorten', label: 'Kuerzen', icon: 'scissors', desc: 'Auf das Wesentliche kuerzen' },
-  { id: 'add_emojis', label: 'Emojis +', icon: 'face-smile', desc: 'Passende Emojis einfuegen' },
+  { id: 'shorten', label: 'Kürzen', icon: 'scissors', desc: 'Auf das Wesentliche kürzen' },
+  { id: 'add_emojis', label: 'Emojis +', icon: 'face-smile', desc: 'Passende Emojis einfügen' },
   { id: 'remove_emojis', label: 'Emojis -', icon: 'x-circle', desc: 'Alle Emojis entfernen' },
   { id: 'change_tone_casual', label: 'Lockerer', icon: 'face-smile', desc: 'Jugendlicher, lockerer Ton' },
-  { id: 'change_tone_serious', label: 'Serioeser', icon: 'academic-cap', desc: 'Professioneller, serioeser Ton' },
-  { id: 'add_cta', label: '+ CTA', icon: 'megaphone', desc: 'Call-to-Action hinzufuegen' },
+  { id: 'change_tone_serious', label: 'Seriöser', icon: 'academic-cap', desc: 'Professioneller, seriöser Ton' },
+  { id: 'add_cta', label: '+ CTA', icon: 'megaphone', desc: 'Call-to-Action hinzufügen' },
   { id: 'add_hook', label: '+ Hook', icon: 'bolt', desc: 'Aufmerksamkeitsstarken Einstieg' },
 ]
 
@@ -94,7 +94,7 @@ async function optimize() {
     return
   }
   if (selectedOptions.value.length === 0) {
-    toast.error('Bitte mindestens eine Optimierungs-Option waehlen.')
+    toast.error('Bitte mindestens eine Optimierungs-Option wählen.')
     return
   }
 
@@ -132,7 +132,7 @@ async function optimize() {
 // Select a variant
 function selectVariant(variant) {
   emit('apply-variant', variant.text)
-  toast.success(`Variante "${variant.label}" uebernommen!`)
+  toast.success(`Variante "${variant.label}" übernommen!`)
 }
 
 // Revert to original
@@ -182,7 +182,7 @@ function getHighlightedDiff(variantText) {
     <div class="p-4 space-y-4">
       <!-- Optimization Options -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Optimierungen waehlen:</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Optimierungen wählen:</label>
         <div class="flex flex-wrap gap-1.5">
           <button
             v-for="opt in optimizationOptions"
@@ -228,7 +228,7 @@ function getHighlightedDiff(variantText) {
                 class="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline transition-colors"
                 data-testid="revert-btn"
               >
-                Zurueck zum Original
+                Zurück zum Original
               </button>
             </div>
           </div>
@@ -273,7 +273,7 @@ function getHighlightedDiff(variantText) {
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                Uebernehmen
+                Übernehmen
               </span>
             </div>
           </button>

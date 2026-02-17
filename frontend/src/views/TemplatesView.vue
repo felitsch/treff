@@ -57,9 +57,9 @@ const showPlaceholderDropdown = ref(false)
 const htmlTextareaRef = ref(null)
 
 const AVAILABLE_PLACEHOLDERS = [
-  { name: 'headline', label: 'Ueberschrift', icon: 'document-text' },
-  { name: 'subheadline', label: 'Unterueberschrift', icon: 'clipboard-list' },
-  { name: 'body_text', label: 'Fliesstext', icon: 'document-text' },
+  { name: 'headline', label: 'Überschrift', icon: 'document-text' },
+  { name: 'subheadline', label: 'Unterüberschrift', icon: 'clipboard-list' },
+  { name: 'body_text', label: 'Fließtext', icon: 'document-text' },
   { name: 'cta_text', label: 'CTA-Text', icon: 'rocket' },
   { name: 'name', label: 'Name', icon: 'user' },
   { name: 'land', label: 'Land', icon: 'globe' },
@@ -172,8 +172,8 @@ const editorPreviewHtml = computed(() => {
   html = html.replace(/\{\{quote_author\}\}/g, escapeHtml('Max M., Austauschschueler'))
   html = html.replace(/\{\{bullet_points\}\}/g, escapeHtml('Punkt 1, Punkt 2, Punkt 3'))
   html = html.replace(/\{\{previously_text\}\}/g, escapeHtml('Bisher bei Jonathan: Nach der Ankunft in Seattle hat er seine Gastfamilie kennengelernt...'))
-  html = html.replace(/\{\{cliffhanger_text\}\}/g, escapeHtml('Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet...'))
-  html = html.replace(/\{\{next_episode_hint\}\}/g, escapeHtml('Naechste Episode: Jonathan entdeckt eine neue Seite von Amerika!'))
+  html = html.replace(/\{\{cliffhanger_text\}\}/g, escapeHtml('Aber was Jonathan am nächsten Tag erlebt, hätte niemand erwartet...'))
+  html = html.replace(/\{\{next_episode_hint\}\}/g, escapeHtml('Nächste Episode: Jonathan entdeckt eine neue Seite von Amerika!'))
   html = html.replace(/\{\{episode_number\}\}/g, escapeHtml('3'))
   html = html.replace(/\{\{episode_title\}\}/g, escapeHtml('Der erste Schneetag'))
   html = html.replace(/\{\{total_episodes\}\}/g, escapeHtml('8'))
@@ -431,7 +431,7 @@ function getPreviewScale(platformFormat) {
 
 // Category definitions with German labels and colors
 const categories = {
-  laender_spotlight: { label: 'Laender-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  laender_spotlight: { label: 'Länder-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
   erfahrungsberichte: { label: 'Erfahrungsberichte', icon: 'chat-bubble', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
   infografiken: { label: 'Infografiken', icon: 'chart-bar', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
   fristen_cta: { label: 'Fristen & CTA', icon: 'clock', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
@@ -758,7 +758,7 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Waehle ein Template fuer deinen naechsten Post. Alle Templates sind fuer TREFF Sprachreisen optimiert.
+          Wähle ein Template für deinen nächsten Post. Alle Templates sind für TREFF Sprachreisen optimiert.
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -862,7 +862,7 @@ onMounted(() => {
             @click="clearFilters"
             class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1"
           >
-            <span>&#10005;</span> Filter zuruecksetzen
+            <span>&#10005;</span> Filter zurücksetzen
           </button>
 
           <!-- Result count -->
@@ -877,7 +877,7 @@ onMounted(() => {
         v-if="filteredTemplates.length === 0 && templates.length === 0"
         svgIcon="squares-2x2"
         title="Keine Templates vorhanden"
-        description="Templates sind die Basis fuer deine Posts. Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
+        description="Templates sind die Basis für deine Posts. Erstelle oder importiere Vorlagen für schnellere Post-Erstellung."
         actionLabel="Post erstellen"
         actionTo="/create/quick"
       />
@@ -885,8 +885,8 @@ onMounted(() => {
         v-else-if="filteredTemplates.length === 0"
         svgIcon="magnifying-glass"
         title="Keine Templates gefunden"
-        description="Keine Templates passen zu deinen aktuellen Filtern. Versuche andere Filter oder setze sie zurueck."
-        actionLabel="Filter zuruecksetzen"
+        description="Keine Templates passen zu deinen aktuellen Filtern. Versuche andere Filter oder setze sie zurück."
+        actionLabel="Filter zurücksetzen"
         @action="clearFilters"
       />
 
@@ -947,8 +947,8 @@ onMounted(() => {
                 v-if="!template.is_default"
                 @click.stop="openDeleteModal(template)"
                 class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md hover:bg-red-500 hover:text-white text-gray-600 dark:text-gray-300 transition-all"
-                title="Template loeschen"
-                aria-label="Template loeschen"
+                title="Template löschen"
+                aria-label="Template löschen"
                 data-testid="template-delete-btn"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1087,10 +1087,10 @@ onMounted(() => {
       <div class="flex-shrink-0"><AppIcon name="film" class="w-8 h-8 inline-block text-indigo-600" /></div>
       <div class="flex-1">
         <h3 class="text-sm font-semibold text-indigo-900 dark:text-indigo-200 mb-1">
-          Video-Templates fuer Reels &amp; TikTok
+          Video-Templates für Reels &amp; TikTok
         </h3>
         <p class="text-sm text-indigo-700 dark:text-indigo-300 leading-relaxed">
-          Neben den Post-Templates gibt es spezielle Video-Templates fuer Intros, Outros, Lower Thirds und Overlays.
+          Neben den Post-Templates gibt es spezielle Video-Templates für Intros, Outros, Lower Thirds und Overlays.
           Diese findest du auf einer separaten Seite.
         </p>
         <router-link
@@ -1123,7 +1123,7 @@ onMounted(() => {
             <button
               @click="closeCreateModal"
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
-              aria-label="Dialog schliessen"
+              aria-label="Dialog schließen"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1185,7 +1185,7 @@ onMounted(() => {
                 ]"
                 data-testid="create-template-category"
               >
-                <option value="" disabled>Kategorie waehlen...</option>
+                <option value="" disabled>Kategorie wählen...</option>
                 <option v-for="(info, key) in categories" :key="key" :value="key">
                   {{ info.label }}
                 </option>
@@ -1281,7 +1281,7 @@ onMounted(() => {
             <p v-if="createSubmitted && createFieldErrors.html_content" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-html-error">
               {{ createFieldErrors.html_content }}
             </p>
-            <p v-else class="text-xs text-gray-400 dark:text-gray-500 mt-1">Verwende {{feldname}} als Platzhalter fuer dynamische Inhalte.</p>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500 mt-1">Verwende {{feldname}} als Platzhalter für dynamische Inhalte.</p>
           </div>
 
           <!-- CSS Content -->
@@ -1319,13 +1319,13 @@ onMounted(() => {
             />
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JSON-Array der Platzhalter-Namen, die im HTML verwendet werden.</p>
             <details class="mt-2">
-              <summary class="text-xs text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">Verfuegbare Standard-Variablen anzeigen</summary>
+              <summary class="text-xs text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">Verfügbare Standard-Variablen anzeigen</summary>
               <div class="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs text-gray-600 dark:text-gray-400 grid grid-cols-2 gap-1.5">
-                <span><strong>headline</strong> — Ueberschrift</span>
-                <span><strong>subheadline</strong> — Unterueberschrift</span>
-                <span><strong>body_text</strong> — Fliesstext</span>
+                <span><strong>headline</strong> — Überschrift</span>
+                <span><strong>subheadline</strong> — Unterüberschrift</span>
+                <span><strong>body_text</strong> — Fließtext</span>
                 <span><strong>cta_text</strong> — CTA-Button</span>
-                <span><strong>name</strong> — Person / Schueler</span>
+                <span><strong>name</strong> — Person / Schüler</span>
                 <span><strong>land</strong> — Zielland</span>
                 <span><strong>stadt</strong> — Stadt / Region</span>
                 <span><strong>datum</strong> — Datum / Frist</span>
@@ -1391,7 +1391,7 @@ onMounted(() => {
           <button
             @click="closeEditor"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            aria-label="Editor schliessen"
+            aria-label="Editor schließen"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1517,10 +1517,10 @@ onMounted(() => {
 
               <!-- Heading Font -->
               <div>
-                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Ueberschrift-Font</label>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Überschrift-Font</label>
                 <select
                   v-model="editorCustom.headingFont"
-                  aria-label="Ueberschrift-Font"
+                  aria-label="Überschrift-Font"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-heading-font"
                   :style="{ fontFamily: editorCustom.headingFont }"
@@ -1533,10 +1533,10 @@ onMounted(() => {
 
               <!-- Body Font -->
               <div>
-                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fliesstext-Font</label>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fließtext-Font</label>
                 <select
                   v-model="editorCustom.bodyFont"
-                  aria-label="Fliesstext-Font"
+                  aria-label="Fließtext-Font"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-body-font"
                   :style="{ fontFamily: editorCustom.bodyFont }"
@@ -1559,37 +1559,37 @@ onMounted(() => {
 
               <!-- Headline -->
               <div>
-                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Ueberschrift</label>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Überschrift</label>
                 <input
                   v-model="editorCustom.headlineText"
                   type="text"
-                  aria-label="Ueberschrift"
+                  aria-label="Überschrift"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-headline-text"
-                  placeholder="Ueberschrift eingeben..."
+                  placeholder="Überschrift eingeben..."
                 />
               </div>
 
               <!-- Subheadline -->
               <div>
-                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Unterueberschrift</label>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Unterüberschrift</label>
                 <input
                   v-model="editorCustom.subheadlineText"
                   type="text"
-                  aria-label="Unterueberschrift"
+                  aria-label="Unterüberschrift"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-subheadline-text"
-                  placeholder="Unterueberschrift eingeben..."
+                  placeholder="Unterüberschrift eingeben..."
                 />
               </div>
 
               <!-- Body Text -->
               <div>
-                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fliesstext</label>
+                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Fließtext</label>
                 <textarea
                   v-model="editorCustom.bodyText"
                   rows="3"
-                  aria-label="Fliesstext"
+                  aria-label="Fließtext"
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue"
                   data-testid="editor-body-text"
                   placeholder="Text eingeben..."
@@ -1613,7 +1613,7 @@ onMounted(() => {
             <!-- Info hint -->
             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
               <p class="text-xs text-blue-700 dark:text-blue-300">
-                Alle Aenderungen werden sofort in der Live-Vorschau angezeigt.
+                Alle Änderungen werden sofort in der Live-Vorschau angezeigt.
                 Die Vorschau aktualisiert sich in Echtzeit.
               </p>
             </div>
@@ -1654,14 +1654,14 @@ onMounted(() => {
         <!-- Modal Footer -->
         <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <p class="text-xs text-gray-400 dark:text-gray-500">
-            {{ editorIsEditMode ? 'Aenderungen werden erst nach dem Speichern uebernommen' : 'Vorschau aktualisiert sich automatisch bei jeder Aenderung' }}
+            {{ editorIsEditMode ? 'Änderungen werden erst nach dem Speichern übernommen' : 'Vorschau aktualisiert sich automatisch bei jeder Änderung' }}
           </p>
           <div class="flex items-center gap-3">
             <button
               @click="closeEditor"
               class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
-              {{ editorIsEditMode ? 'Abbrechen' : 'Schliessen' }}
+              {{ editorIsEditMode ? 'Abbrechen' : 'Schließen' }}
             </button>
             <!-- "Als Kopie speichern" button — available for system templates (not editable) -->
             <button
@@ -1716,18 +1716,18 @@ onMounted(() => {
 
           <!-- Title -->
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-            Template loeschen?
+            Template löschen?
           </h3>
 
           <!-- Description -->
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Moechtest du das Template wirklich loeschen?
+            Möchtest du das Template wirklich löschen?
           </p>
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-testid="delete-template-name">
             "{{ deletingTemplate.name }}"
           </p>
           <p class="text-xs text-gray-400 dark:text-gray-500 mb-5">
-            Diese Aktion kann nicht rueckgaengig gemacht werden.
+            Diese Aktion kann nicht rückgängig gemacht werden.
           </p>
 
           <!-- Error Message -->

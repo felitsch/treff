@@ -301,7 +301,7 @@ onMounted(() => {
           <button
             @click="emit('close')"
             class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Dialog schliessen"
+            aria-label="Dialog schließen"
             data-testid="crop-modal-close"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -314,7 +314,7 @@ onMounted(() => {
         <div class="flex-1 overflow-auto p-6 space-y-4">
           <!-- Aspect Ratio Selection -->
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Seitenverhaeltnis:</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Seitenverhältnis:</span>
             <div class="flex gap-1" data-testid="ratio-buttons">
               <button
                 v-for="opt in ratioOptions"

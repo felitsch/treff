@@ -10,7 +10,6 @@ import WelcomeFlow from '@/components/common/WelcomeFlow.vue'
 import RecyclingPanel from '@/components/dashboard/RecyclingPanel.vue'
 import SeriesStatusWidget from '@/components/dashboard/SeriesStatusWidget.vue'
 import ContentSuggestions from '@/components/dashboard/ContentSuggestions.vue'
-import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
@@ -30,9 +29,6 @@ const { execute: apiExecute, loading, error } = useApi()
 const tourRef = ref(null)
 const showWelcomeFlow = ref(false)
 const welcomeCheckDone = ref(false)
-
-// Workflow hint: missing API keys
-const apiKeysMissing = ref(false)
 
 // Dashboard data
 const stats = ref({
@@ -137,7 +133,7 @@ function statusLabel(status) {
 // Category display names
 function categoryLabel(cat) {
   const labels = {
-    laender_spotlight: 'Laender-Spotlight',
+    laender_spotlight: 'Länder-Spotlight',
     erfahrungsberichte: 'Erfahrungsbericht',
     infografiken: 'Infografik',
     fristen_cta: 'Fristen/CTA',
@@ -264,10 +260,6 @@ async function checkWelcomeStatus() {
     if (!settings.welcome_completed || settings.welcome_completed === 'false') {
       showWelcomeFlow.value = true
     }
-    // Check if API keys are configured (for workflow hint)
-    if (!settings.gemini_api_key && !settings.openai_api_key) {
-      apiKeysMissing.value = true
-    }
   } catch {
     // Non-critical: silently ignore (toast from interceptor if needed)
   } finally {
@@ -320,7 +312,7 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ greeting }}!</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
-          {{ todayFormatted }} &mdash; Hier ist dein Content-Ueberblick.
+          {{ todayFormatted }} &mdash; Hier ist dein Content-Überblick.
         </p>
       </div>
       <button
@@ -331,16 +323,6 @@ onMounted(() => {
         <AppIcon name="help" class="w-4 h-4 inline" /> Tour starten
       </button>
     </div>
-
-    <!-- Workflow Hint: Missing API Keys -->
-    <WorkflowHint
-      hint-id="dashboard-api-keys"
-      message="Keine API-Keys konfiguriert. Hinterlege deinen Gemini- oder OpenAI-Key, um KI-Funktionen zu nutzen."
-      link-text="Einstellungen"
-      link-to="/settings"
-      icon="key"
-      :show="apiKeysMissing"
-    />
 
     <!-- ═══ SKELETON LOADING STATE ═══ -->
     <div v-if="loading" class="space-y-6">
@@ -430,7 +412,7 @@ onMounted(() => {
           <AppIcon name="document-text" class="w-7 h-7 group-hover:scale-110 transition-transform" />
           <div class="text-left">
             <span class="block text-sm font-bold">Aus Template</span>
-            <span class="block text-xs text-gray-500 dark:text-gray-400">Vorlage waehlen</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400">Vorlage wählen</span>
           </div>
         </button>
         <button
@@ -495,8 +477,8 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                Entwuerfe
-                <HelpTooltip :text="tooltipTexts.dashboard.draftPosts || 'Posts im Entwurf-Status, die noch bearbeitet oder geplant werden koennen.'" size="sm" />
+                Entwürfe
+                <HelpTooltip :text="tooltipTexts.dashboard.draftPosts || 'Posts im Entwurf-Status, die noch bearbeitet oder geplant werden können.'" size="sm" />
               </p>
               <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1 tabular-nums">
                 {{ animatedStats.draft_posts }}
@@ -556,7 +538,7 @@ onMounted(() => {
         <BaseCard padding="none" data-tour="dashboard-calendar">
           <template #header>
             <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AppIcon name="calendar" class="w-5 h-5" /> Naechste 7 Tage
+              <AppIcon name="calendar" class="w-5 h-5" /> Nächste 7 Tage
               <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
             </h2>
           </template>
@@ -616,7 +598,7 @@ onMounted(() => {
               </div>
             </div>
             <div v-if="calendarEntries.length === 0" class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 rounded-lg py-2.5 px-3">
-              Keine geplanten Posts in den naechsten 7 Tagen.
+              Keine geplanten Posts in den nächsten 7 Tagen.
               <button
                 @click="router.push('/calendar/week-planner')"
                 class="text-[#4C8BC2] hover:underline font-medium ml-1"
@@ -631,7 +613,7 @@ onMounted(() => {
         <BaseCard padding="none" data-tour="dashboard-suggestions-widget">
           <template #header>
             <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AppIcon name="sparkles" class="w-5 h-5" /> KI-Vorschlaege
+              <AppIcon name="sparkles" class="w-5 h-5" /> KI-Vorschläge
             </h2>
           </template>
           <template #headerAction>
@@ -647,9 +629,9 @@ onMounted(() => {
             <EmptyState
               v-if="suggestions.length === 0"
               svgIcon="sparkles"
-              title="Keine Vorschlaege"
-              description="Generiere KI-Ideen fuer deinen naechsten Post."
-              actionLabel="Vorschlaege generieren"
+              title="Keine Vorschläge"
+              description="Generiere KI-Ideen für deinen nächsten Post."
+              actionLabel="Vorschläge generieren"
               @action="generateSuggestions"
               :compact="true"
             />
@@ -694,10 +676,10 @@ onMounted(() => {
               v-if="recentPosts.length === 0"
               svgIcon="document-text"
               title="Noch keine Posts erstellt"
-              description="Erstelle deinen ersten Social-Media-Post fuer TREFF und starte mit deinem Content-Plan!"
+              description="Erstelle deinen ersten Social-Media-Post für TREFF und starte mit deinem Content-Plan!"
               actionLabel="Ersten Post erstellen"
               actionTo="/create/quick"
-              secondaryLabel="Einstellungen pruefen"
+              secondaryLabel="Einstellungen prüfen"
               secondaryTo="/settings"
               :compact="true"
             />
@@ -765,7 +747,7 @@ onMounted(() => {
       <!-- ─── Activity Heatmap (mini, optional on Dashboard) ─── -->
       <BaseCard padding="lg" :header-divider="false" data-testid="dashboard-heatmap">
         <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Aktivitaets-Heatmap</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Aktivitäts-Heatmap</h2>
         </template>
         <template #headerAction>
           <router-link to="/analytics" class="text-xs text-[#3B7AB1] hover:text-[#2d6a9e] dark:text-sky-400 font-medium">

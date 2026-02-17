@@ -239,14 +239,14 @@ const showOverwriteDialog = ref(false) // Controls the overwrite confirmation di
 
 // Step 1: Category selection (static data - no need for store)
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt', desc: 'Informative Posts ueber Ziellaender' },
+  { id: 'laender_spotlight', label: 'Länder-Spotlight', icon: 'globe-alt', desc: 'Informative Posts über Zielländer' },
   { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right', desc: 'Alumni-Erfahrungen & Testimonials' },
   { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar', desc: 'Vergleiche, Statistiken, Fakten' },
   { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock', desc: 'Bewerbungsfristen & Calls-to-Action' },
-  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb', desc: 'Praktische Tipps fuers Auslandsjahr' },
-  { id: 'faq', label: 'FAQ', icon: 'question-mark-circle', desc: 'Haeufig gestellte Fragen' },
+  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb', desc: 'Praktische Tipps fürs Auslandsjahr' },
+  { id: 'faq', label: 'FAQ', icon: 'question-mark-circle', desc: 'Häufig gestellte Fragen' },
   { id: 'foto_posts', label: 'Foto-Posts', icon: 'camera', desc: 'Fotos mit Branding-Overlay' },
-  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: 'film', desc: 'Thumbnails fuer Videos' },
+  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: 'film', desc: 'Thumbnails für Videos' },
   { id: 'story_posts', label: 'Story-Posts', icon: 'device-phone-mobile', desc: 'Instagram Story Content' },
   { id: 'story_teaser', label: 'Story-Teaser', icon: 'arrow-right', desc: 'Feed-Post als Wegweiser zu Story-Serien' },
   { id: 'story_series', label: 'Story-Serien', icon: 'book-open', desc: 'Mehrteilige Story-Serien mit Episoden' },
@@ -271,13 +271,13 @@ const countries = [
 // Step 4: Tone options (static data)
 const toneOptions = [
   { id: 'jugendlich', label: 'Jugendlich', icon: 'fire', desc: 'Locker, Gen-Z-freundlich', example: '"Hey, dein Abenteuer wartet!"' },
-  { id: 'serioess', label: 'Serioes', icon: 'building-library', desc: 'Fuer Eltern & Entscheider', example: '"Vertrauen Sie auf 40 Jahre Erfahrung."' },
+  { id: 'serioess', label: 'Seriös', icon: 'building-library', desc: 'Für Eltern & Entscheider', example: '"Vertrauen Sie auf 40 Jahre Erfahrung."' },
   { id: 'witzig', label: 'Witzig', icon: 'face-smile', desc: 'Humor & Wortspiele', example: '"Dein Koffer ist schwerer als deine Mathe-Note?"' },
-  { id: 'emotional', label: 'Emotional', icon: 'heart', desc: 'Beruehrend & persoenlich', example: '"Der Moment, wenn du ankommst und weisst: Hier gehoere ich hin."' },
+  { id: 'emotional', label: 'Emotional', icon: 'heart', desc: 'Berührend & persönlich', example: '"Der Moment, wenn du ankommst und weißt: Hier gehöre ich hin."' },
   { id: 'motivierend', label: 'Motivierend', icon: 'rocket-launch', desc: 'Empowernd & aktivierend', example: '"Trau dich! Dein Auslandsjahr wartet auf DICH!"' },
   { id: 'informativ', label: 'Informativ', icon: 'chart-bar', desc: 'Fakten & Details', example: '"Highschool USA vs. Kanada: Kosten im Vergleich."' },
   { id: 'behind-the-scenes', label: 'Behind the Scenes', icon: 'eye', desc: 'Authentisch & transparent', example: '"Was passiert bei TREFF, bevor ihr in den Flieger steigt?"' },
-  { id: 'storytelling', label: 'Storytelling', icon: 'book-open', desc: 'Erzaehlerisch & narrativ', example: '"Es war 6 Uhr morgens am Frankfurter Flughafen..."' },
+  { id: 'storytelling', label: 'Storytelling', icon: 'book-open', desc: 'Erzählerisch & narrativ', example: '"Es war 6 Uhr morgens am Frankfurter Flughafen..."' },
   { id: 'provokant', label: 'Provokant', icon: 'bolt', desc: 'Mutig & scroll-stoppend', example: '"Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abi."' },
   { id: 'wholesome', label: 'Wholesome', icon: 'heart', desc: 'Herzlich & warmherzig', example: '"Wenn deine Gastmutter dir deinen Lieblingskuchen backt..."' },
 ]
@@ -438,7 +438,7 @@ function selectStudent(studentId) {
         : student.personality_preset
       if (preset && preset.tone) {
         tone.value = preset.tone
-        toast.info(`Persoenlichkeits-Preset von ${student.name} uebernommen: ${toneIcons[preset.tone] || ''} ${preset.tone}`)
+        toast.info(`Persönlichkeits-Preset von ${student.name} übernommen: ${toneIcons[preset.tone] || ''} ${preset.tone}`)
       }
     } catch { /* ignore parse errors */ }
   }
@@ -473,9 +473,9 @@ const canProceed = computed(() => {
 })
 
 const stepValidationMessages = {
-  1: 'Bitte waehle eine Kategorie aus, bevor du fortfaehrst.',
-  2: 'Bitte waehle ein Template aus, bevor du fortfaehrst.',
-  3: 'Bitte waehle eine Plattform aus, bevor du fortfaehrst.',
+  1: 'Bitte wähle eine Kategorie aus, bevor du fortfährst.',
+  2: 'Bitte wähle ein Template aus, bevor du fortfährst.',
+  3: 'Bitte wähle eine Plattform aus, bevor du fortfährst.',
   5: 'Bitte generiere zuerst den Inhalt, bevor du fortfaehrst.',
   6: 'Es sind keine Slides vorhanden. Bitte generiere zuerst Inhalte.',
   7: 'Es sind keine Slides vorhanden. Bitte generiere zuerst Inhalte.',
@@ -691,7 +691,7 @@ async function generateHumorContent() {
     if (userEditedDuringGeneration) {
       pendingGenerationData.value = transformedData
       showOverwriteDialog.value = true
-      toast.info('Humor-Generierung abgeschlossen. Deine manuellen Aenderungen werden beibehalten.')
+      toast.info('Humor-Generierung abgeschlossen. Deine manuellen Änderungen werden beibehalten.')
     } else {
       applyGeneratedContent(transformedData)
     }
@@ -750,7 +750,7 @@ async function generateText() {
       // Store the pending data and show confirmation dialog
       pendingGenerationData.value = response.data
       showOverwriteDialog.value = true
-      toast.info('KI-Generierung abgeschlossen. Deine manuellen Aenderungen werden beibehalten, bis du die neuen Inhalte uebernimmst.')
+      toast.info('KI-Generierung abgeschlossen. Deine manuellen Änderungen werden beibehalten, bis du die neuen Inhalte übernimmst.')
     } else {
       // No manual edits during generation - apply normally
       applyGeneratedContent(response.data)
@@ -791,7 +791,7 @@ function applyGeneratedContent(data) {
 // Apply a variant from AITextGenerator component
 function onApplyVariant({ variant }) {
   applyGeneratedContent(variant)
-  toast.success('Variante uebernommen!')
+  toast.success('Variante übernommen!')
 }
 
 // Apply selected template's styling to all slides (colors/fonts)
@@ -824,7 +824,7 @@ function acceptPendingGeneration() {
     applyGeneratedContent(pendingGenerationData.value)
     pendingGenerationData.value = null
     showOverwriteDialog.value = false
-    toast.success('KI-generierte Inhalte uebernommen.')
+    toast.success('KI-generierte Inhalte übernommen.')
   }
 }
 
@@ -832,7 +832,7 @@ function acceptPendingGeneration() {
 function dismissPendingGeneration() {
   pendingGenerationData.value = null
   showOverwriteDialog.value = false
-  toast.info('Manuelle Aenderungen beibehalten.')
+  toast.info('Manuelle Änderungen beibehalten.')
 }
 
 async function regenerateField(field, slideIndex = 0) {
@@ -921,7 +921,7 @@ async function regenerateField(field, slideIndex = 0) {
 
     if (currentFieldValue !== valueBeforeRegeneration) {
       // User edited this field during regeneration - don't overwrite
-      toast.info('Feld wurde waehrend der Regenerierung bearbeitet. Manuelle Aenderungen beibehalten.')
+      toast.info('Feld wurde während der Regenerierung bearbeitet. Manuelle Änderungen beibehalten.')
       return
     }
 
@@ -1129,7 +1129,7 @@ async function generateAiImage() {
     let friendlyMessage = ''
     if (status === 400) {
       // Validation errors from backend are already user-friendly (German)
-      friendlyMessage = detail || 'Ungueltige Eingabe. Bitte ueberprüfe deinen Prompt.'
+      friendlyMessage = detail || 'Ungültige Eingabe. Bitte überprüfe deinen Prompt.'
     } else if (status === 401 || status === 403) {
       friendlyMessage = 'Sitzung abgelaufen. Bitte melde dich erneut an.'
     } else if (status === 429) {
@@ -1369,7 +1369,7 @@ async function saveDraft() {
       if (selectedArcId.value) await _saveOrUpdateEpisode(savedPost.value.id)
       const count = response.data.count
       const adaptedNote = response.data.adapted ? ' (KI-adaptiert)' : ''
-      toast.success(`Entwurf fuer ${count} Plattformen gespeichert!${adaptedNote}`, 4000)
+      toast.success(`Entwurf für ${count} Plattformen gespeichert!${adaptedNote}`, 4000)
     } else {
       // Create new draft (single platform)
       const response = await api.post('/api/posts', postData)
@@ -1746,8 +1746,8 @@ async function exportAllPlatforms() {
     exportComplete.value = true
     networkError.value = false
     lastSaveFunction.value = null
-    successMsg.value = `${selectedPlatforms.value.length} verknuepfte Posts fuer alle Plattformen gespeichert und exportiert!`
-    toast.success(`${selectedPlatforms.value.length} verknuepfte Posts erfolgreich erstellt! (Multi-Plattform)`, 5000)
+    successMsg.value = `${selectedPlatforms.value.length} verknüpfte Posts für alle Plattformen gespeichert und exportiert!`
+    toast.success(`${selectedPlatforms.value.length} verknüpfte Posts erfolgreich erstellt! (Multi-Plattform)`, 5000)
   } catch (e) {
     if (isNetworkError(e)) {
       error.value = 'Netzwerkfehler beim Speichern. Bitte pruefe deine Internetverbindung.'
@@ -1833,9 +1833,9 @@ function getTemplateGradient(template) {
 // ── Template Placeholder System ──────────────────────────────────────
 // Standard placeholder variables with display names and descriptions
 const STANDARD_PLACEHOLDERS = {
-  headline: { label: 'Ueberschrift', desc: 'Hauptueberschrift des Posts', icon: 'document-text' },
-  subheadline: { label: 'Unterueberschrift', desc: 'Zweite Zeile / Untertitel', icon: 'clipboard-document-list' },
-  body_text: { label: 'Fliesstext', desc: 'Haupttext / Beschreibung', icon: 'document' },
+  headline: { label: 'Überschrift', desc: 'Hauptüberschrift des Posts', icon: 'document-text' },
+  subheadline: { label: 'Unterüberschrift', desc: 'Zweite Zeile / Untertitel', icon: 'clipboard-document-list' },
+  body_text: { label: 'Fließtext', desc: 'Haupttext / Beschreibung', icon: 'document' },
   name: { label: 'Name', desc: 'Person oder Schueler-Name', icon: 'user' },
   land: { label: 'Land', desc: 'Zielland (z.B. USA, Kanada)', icon: 'globe-alt' },
   stadt: { label: 'Stadt', desc: 'Stadt oder Region', icon: 'building-office-2' },
@@ -2194,11 +2194,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <!-- Auto-save status indicator -->
         <div v-if="autoSaveStatusText" class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500" data-testid="autosave-status">
           <span v-if="autoSaving" class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-          <span v-else-if="autoSaveUnsaved" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Aenderungen"></span>
+          <span v-else-if="autoSaveUnsaved" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Änderungen"></span>
           <span v-else class="inline-block w-2 h-2 rounded-full bg-green-400"></span>
           {{ autoSaveStatusText }}
         </div>
-        <span v-if="autoSaveUnsaved && !autoSaveStatusText" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Aenderungen"></span>
+        <span v-if="autoSaveUnsaved && !autoSaveStatusText" class="inline-block w-2 h-2 rounded-full bg-amber-400" title="Ungespeicherte Änderungen"></span>
       </div>
       <div class="flex items-center gap-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">Schritt {{ currentStep }} von {{ totalSteps }}</span>
@@ -2214,7 +2214,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           @click="resetWorkflow"
           class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          Zuruecksetzen
+          Zurücksetzen
         </button>
       </div>
     </div>
@@ -2230,7 +2230,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     />
     <WorkflowHint
       hint-id="create-post-no-templates"
-      message="Keine Templates gefunden? Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
+      message="Keine Templates gefunden? Erstelle oder importiere Vorlagen für schnellere Post-Erstellung."
       link-text="Templates verwalten"
       link-to="/library/templates"
       icon="document"
@@ -2340,7 +2340,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 1: Category Selection -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 1" data-tour="cp-step1-content">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 1: Waehle eine Post-Kategorie <HelpTooltip :text="tooltipTexts.createPost.stepCategory" /></h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 1: Wähle eine Post-Kategorie <HelpTooltip :text="tooltipTexts.createPost.stepCategory" /></h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="cp-category-grid">
         <button
           v-for="cat in categories"
@@ -2387,12 +2387,12 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 2: Template Selection -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 2">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 2: Waehle ein Template <HelpTooltip :text="tooltipTexts.createPost.stepTemplate" /></h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 2: Wähle ein Template <HelpTooltip :text="tooltipTexts.createPost.stepTemplate" /></h2>
       <div v-if="loadingTemplates" class="flex items-center justify-center py-12">
         <div class="animate-spin h-8 w-8 border-4 border-[#3B7AB1] border-t-transparent rounded-full"></div>
       </div>
       <div v-else-if="templates.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
-        Keine Templates fuer diese Kategorie verfuegbar.
+        Keine Templates für diese Kategorie verfügbar.
       </div>
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <button
@@ -2485,8 +2485,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <!-- STEP 3: Platform Selection (Multi-Select) -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div v-if="currentStep === 3">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 3: Waehle die Zielplattform(en) <HelpTooltip :text="tooltipTexts.createPost.stepPlatform" /></h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Du kannst mehrere Plattformen waehlen — beim Export werden separate Dateien fuer jede Plattform erstellt.</p>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">Schritt 3: Wähle die Zielplattform(en) <HelpTooltip :text="tooltipTexts.createPost.stepPlatform" /></h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Du kannst mehrere Plattformen wählen — beim Export werden separate Dateien für jede Plattform erstellt.</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <button
           v-for="p in platforms"
@@ -2507,7 +2507,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       </div>
       <div v-if="selectedPlatforms.length > 1" class="mt-4 space-y-3">
         <div class="text-sm text-[#3B7AB1] font-medium">
-          {{ selectedPlatforms.length }} Plattformen ausgewaehlt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
+          {{ selectedPlatforms.length }} Plattformen ausgewählt — Vorschau zeigt: {{ selectedPlatformObj?.label }}
         </div>
         <!-- Auto-Adapt Toggle -->
         <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
@@ -2576,15 +2576,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <textarea
             v-model="keyPoints"
             rows="3"
-            placeholder="z.B. Gastfamilien, Schulsystem, Freizeitaktivitaeten..."
+            placeholder="z.B. Gastfamilien, Schulsystem, Freizeitaktivitäten..."
             class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
           ></textarea>
         </div>
 
         <!-- Student / Personality Preset (optional) -->
         <div v-if="studentStore.students.length > 0" class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="user" class="w-5 h-5 inline-block" /> Studenten-Persoenlichkeit (optional) <HelpTooltip :text="tooltipTexts.createPost.studentSelector" size="sm" /></label>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Waehle einen Studenten, um dessen Persoenlichkeits-Preset fuer die KI-Textgenerierung zu verwenden.</p>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="user" class="w-5 h-5 inline-block" /> Studenten-Persönlichkeit (optional) <HelpTooltip :text="tooltipTexts.createPost.studentSelector" size="sm" /></label>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Wähle einen Studenten, um dessen Persönlichkeits-Preset für die KI-Textgenerierung zu verwenden.</p>
           <div class="flex flex-wrap gap-2">
             <button v-for="student in studentStore.students" :key="student.id" type="button" @click="selectStudent(student.id)" class="px-3 py-2 rounded-lg border-2 transition-all text-sm text-left" :class="selectedStudentId === student.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-500/30' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'">
               <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ student.name }}</div>
@@ -2598,7 +2598,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <!-- Story-Arc / Episode (optional) -->
         <div v-if="storyArcStore.storyArcs.length > 0" class="mb-6" data-testid="story-arc-section">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="book-open" class="w-5 h-5 inline-block" /> Story-Arc (optional) <HelpTooltip :text="tooltipTexts.createPost.storyArcSelector" size="sm" /></label>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Ist dieser Post Teil einer Story-Serie? Waehle einen Arc, um Episoden-Felder anzuzeigen.</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Ist dieser Post Teil einer Story-Serie? Wähle einen Arc, um Episoden-Felder anzuzeigen.</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="arc in storyArcStore.storyArcs"
@@ -2679,7 +2679,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <textarea
                 v-model="episodeCliffhangerText"
                 rows="2"
-                placeholder="z.B. Aber was Jonathan am naechsten Tag erlebt, haette niemand erwartet..."
+                placeholder="z.B. Aber was Jonathan am nächsten Tag erlebt, hätte niemand erwartet..."
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
                 data-testid="cliffhanger-text-input"
               ></textarea>
@@ -2688,7 +2688,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <!-- Next Episode Hint (Teaser) -->
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (naechste Episode)</label>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Teaser (nächste Episode)</label>
                 <button
                   @click="suggestEpisodeText('next_episode_hint')"
                   :disabled="suggestingEpisodeField === 'next_episode_hint'"
@@ -2702,7 +2702,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <textarea
                 v-model="episodeNextHint"
                 rows="2"
-                placeholder="z.B. Naechste Episode: Jonathan entdeckt eine voellig neue Seite von Amerika!"
+                placeholder="z.B. Nächste Episode: Jonathan entdeckt eine völlig neue Seite von Amerika!"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
                 data-testid="nexthint-text-input"
               ></textarea>
@@ -2724,7 +2724,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Tone -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Tonalitaet <HelpTooltip :text="tooltipTexts.createPost.stepTone" size="sm" /></label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">Tonalität <HelpTooltip :text="tooltipTexts.createPost.stepTone" size="sm" /></label>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             <button
               v-for="t in toneOptions"
@@ -2765,11 +2765,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors"
               data-testid="clear-humor-format-btn"
             >
-              Format abwaehlen
+              Format abwählen
             </button>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            Waehle ein Humor-Format fuer virale Meme-Inhalte auf Instagram und TikTok.
+            Wähle ein Humor-Format für virale Meme-Inhalte auf Instagram und TikTok.
           </p>
 
           <!-- Loading spinner -->
@@ -2853,7 +2853,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
               <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
               <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
-              <div class="flex items-center gap-1"><strong>Tonalitaet:</strong> <AppIcon v-if="selectedToneObj?.icon" :name="selectedToneObj.icon" class="w-4 h-4 inline-block" /> {{ selectedToneObj?.label || tone }}</div>
+              <div class="flex items-center gap-1"><strong>Tonalität:</strong> <AppIcon v-if="selectedToneObj?.icon" :name="selectedToneObj.icon" class="w-4 h-4 inline-block" /> {{ selectedToneObj?.label || tone }}</div>
               <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)" class="flex items-center gap-1"><strong class="flex items-center gap-1"><AppIcon name="user" class="w-4 h-4 inline-block" /> Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
               <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
                 <strong>Humor-Format:</strong> <AppIcon :name="selectedHumorFormat.icon" class="w-4 h-4 inline-block" /> {{ selectedHumorFormat.name }}
@@ -2886,12 +2886,12 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <div v-if="pendingGenerationData && (currentStep === 6 || currentStep === 7)" class="mb-4 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl flex items-center gap-3" data-testid="pending-generation-banner">
       <span class="text-2xl">&#x26A0;&#xFE0F;</span>
       <div class="flex-1">
-        <p class="text-amber-800 dark:text-amber-200 font-medium text-sm">Neue KI-Inhalte verfuegbar</p>
-        <p class="text-amber-600 dark:text-amber-400 text-xs">Die KI hat neue Inhalte generiert. Moechtest du sie uebernehmen?</p>
+        <p class="text-amber-800 dark:text-amber-200 font-medium text-sm">Neue KI-Inhalte verfügbar</p>
+        <p class="text-amber-600 dark:text-amber-400 text-xs">Die KI hat neue Inhalte generiert. Möchtest du sie übernehmen?</p>
       </div>
       <div class="flex gap-2">
         <button @click="dismissPendingGeneration" class="px-3 py-1.5 text-xs border border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-800/50 transition-colors" data-testid="banner-keep-edits-btn">Verwerfen</button>
-        <button @click="acceptPendingGeneration" class="px-3 py-1.5 text-xs bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors" data-testid="banner-accept-ai-btn">Uebernehmen</button>
+        <button @click="acceptPendingGeneration" class="px-3 py-1.5 text-xs bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors" data-testid="banner-accept-ai-btn">Übernehmen</button>
       </div>
     </div>
 
@@ -3014,7 +3014,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <span class="text-sm text-gray-500 dark:text-gray-400">Slide {{ currentPreviewSlide + 1 }} von {{ slides.length }}</span>
             <button @click="nextPreviewSlide" :disabled="currentPreviewSlide === slides.length - 1"
               class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
-              Naechste &#8594;
+              Nächste &#8594;
             </button>
           </div>
         </div>
@@ -3171,7 +3171,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               />
               <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(slides[currentPreviewSlide].headline?.length || 0) > 40" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+                <span v-if="(slides[currentPreviewSlide].headline?.length || 0) > 40" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
                 <span v-else-if="(slides[currentPreviewSlide].headline?.length || 0) > 30" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
                 <span v-else class="text-xs text-gray-400"></span>
                 <span class="text-xs" :class="(slides[currentPreviewSlide].headline?.length || 0) > 40 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].headline?.length || 0) > 30 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].headline?.length || 0 }}/40</span>
@@ -3196,7 +3196,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               />
               <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 60" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+                <span v-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 60" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
                 <span v-else-if="(slides[currentPreviewSlide].subheadline?.length || 0) > 45" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
                 <span v-else class="text-xs text-gray-400"></span>
                 <span class="text-xs" :class="(slides[currentPreviewSlide].subheadline?.length || 0) > 60 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].subheadline?.length || 0) > 45 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].subheadline?.length || 0 }}/60</span>
@@ -3222,7 +3222,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(slides[currentPreviewSlide].body_text?.length || 0) > 200" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+                <span v-if="(slides[currentPreviewSlide].body_text?.length || 0) > 200" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
                 <span v-else-if="(slides[currentPreviewSlide].body_text?.length || 0) > 150" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
                 <span v-else class="text-xs text-gray-400"></span>
                 <span class="text-xs" :class="(slides[currentPreviewSlide].body_text?.length || 0) > 200 ? 'text-red-500 dark:text-red-400 font-semibold' : (slides[currentPreviewSlide].body_text?.length || 0) > 150 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ slides[currentPreviewSlide].body_text?.length || 0 }}/200</span>
@@ -3305,7 +3305,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   :value="slides[currentPreviewSlide].background_value || '#1A1A2E'"
                   @input="slides[currentPreviewSlide].background_value = $event.target.value; slides[currentPreviewSlide].background_type = 'color'"
                   class="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
-                  title="Eigene Farbe waehlen"
+                  title="Eigene Farbe wählen"
                   data-testid="color-picker-input"
                 />
                 <span class="text-xs text-gray-400 font-mono">{{ slides[currentPreviewSlide].background_value || '#1A1A2E' }}</span>
@@ -3359,7 +3359,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :class="(captionInstagram?.length || 0) > 2200 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (captionInstagram?.length || 0) > 1800 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
               ></textarea>
               <div class="flex items-center justify-between mt-0.5">
-                <span v-if="(captionInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Instagram-Limit ueberschritten (max 2.200)</span>
+                <span v-if="(captionInstagram?.length || 0) > 2200" class="text-xs text-red-500 dark:text-red-400">Instagram-Limit überschritten (max 2.200)</span>
                 <span v-else-if="(captionInstagram?.length || 0) > 1800" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Instagram-Limit</span>
                 <span v-else class="text-xs text-gray-400"></span>
                 <span class="text-xs" :class="(captionInstagram?.length || 0) > 2200 ? 'text-red-500 dark:text-red-400 font-semibold' : (captionInstagram?.length || 0) > 1800 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ captionInstagram?.length || 0 }}/2.200</span>
@@ -3464,14 +3464,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Teaser naechste Episode</label>
+                <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Teaser nächste Episode</label>
                 <button
                   @click="suggestEpisodeText('next_episode_hint')"
                   :disabled="!!suggestingEpisodeField"
                   class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50 flex items-center gap-0.5"
                 ><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI</button>
               </div>
-              <textarea v-model="episodeNextHint" rows="2" placeholder="Naechste Episode..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
+              <textarea v-model="episodeNextHint" rows="2" placeholder="Nächste Episode..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
             </div>
           </div>
 
@@ -3710,7 +3710,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <div>
               <h4 class="font-bold text-amber-800 dark:text-amber-300 text-sm mb-1">Vergiss nicht die interaktiven Elemente!</h4>
               <p class="text-xs text-amber-700 dark:text-amber-400 leading-relaxed mb-2">
-                Du hast {{ interactiveElements.length }} interaktive{{ interactiveElements.length > 1 ? ' Elemente' : 's Element' }} erstellt. Diese muessen beim echten Posten in Instagram manuell hinzugefuegt werden:
+                Du hast {{ interactiveElements.length }} interaktive{{ interactiveElements.length > 1 ? ' Elemente' : 's Element' }} erstellt. Diese müssen beim echten Posten in Instagram manuell hinzugefügt werden:
               </p>
               <ul class="space-y-1">
                 <li v-for="(el, idx) in interactiveElements" :key="idx" class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
@@ -3725,7 +3725,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Export Quality Selector -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Export-Qualitaet</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Export-Qualität</label>
           <div class="flex gap-3">
             <button
               @click="exportQuality = '1080'"
@@ -3738,7 +3738,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               ]"
             >
               <div class="font-bold">Standard (1080px)</div>
-              <div class="text-xs mt-0.5 opacity-70">Empfohlen fuer Social Media</div>
+              <div class="text-xs mt-0.5 opacity-70">Empfohlen für Social Media</div>
             </button>
             <button
               @click="exportQuality = '2160'"
@@ -3750,8 +3750,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
               ]"
             >
-              <div class="font-bold">Hohe Qualitaet (2160px)</div>
-              <div class="text-xs mt-0.5 opacity-70">Fuer Druck und hohe Aufloesung</div>
+              <div class="font-bold">Hohe Qualität (2160px)</div>
+              <div class="text-xs mt-0.5 opacity-70">Für Druck und hohe Auflösung</div>
             </button>
           </div>
         </div>
@@ -3848,7 +3848,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         @click="prevStep"
         class="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
       >
-        &#8592; Zurueck
+        &#8592; Zurück
       </button>
       <div v-else></div>
 
@@ -3980,9 +3980,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
     <Teleport to="body">
       <div v-if="showLeaveDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" data-testid="unsaved-changes-dialog">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Aenderungen</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ungespeicherte Änderungen</h3>
           <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
-            Du hast ungespeicherte Aenderungen. Wenn du die Seite verlaesst, gehen diese verloren.
+            Du hast ungespeicherte Änderungen. Wenn du die Seite verlässt, gehen diese verloren.
           </p>
           <div class="flex gap-3 justify-end">
             <button
@@ -4010,11 +4010,11 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all">
           <div class="text-center mb-4">
             <div class="text-4xl mb-2">&#x26A0;&#xFE0F;</div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Neue KI-Inhalte verfuegbar</h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Neue KI-Inhalte verfügbar</h3>
           </div>
           <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
-            Du hast Inhalte manuell bearbeitet, waehrend die KI neue Texte generiert hat.
-            Moechtest du deine manuellen Aenderungen durch die neuen KI-Inhalte ersetzen?
+            Du hast Inhalte manuell bearbeitet, während die KI neue Texte generiert hat.
+            Möchtest du deine manuellen Änderungen durch die neuen KI-Inhalte ersetzen?
           </p>
           <div class="flex gap-3">
             <button
@@ -4022,14 +4022,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
               data-testid="keep-manual-edits-btn"
             >
-              Meine Aenderungen behalten
+              Meine Änderungen behalten
             </button>
             <button
               @click="acceptPendingGeneration"
               class="flex-1 px-4 py-2 bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white rounded-lg transition-colors font-medium"
               data-testid="accept-ai-content-btn"
             >
-              KI-Inhalte uebernehmen
+              KI-Inhalte übernehmen
             </button>
           </div>
         </div>

@@ -8,7 +8,7 @@
  * 3. Video Create — brand videos for all platforms (5 min)
  * 4. Campaign Create — multi-post series planning (10-15 min)
  *
- * Below the cards: "Letzte Entwuerfe" showing the 3 most recent drafts.
+ * Below the cards: "Letzte Entwürfe" showing the 3 most recent drafts.
  * Country-Accent theming when a default country is set in settings.
  *
  * @see frontend/src/router/index.js — /create route
@@ -35,7 +35,7 @@ const createOptions = [
   {
     title: 'Quick Create',
     subtitle: '2 Klicks zum Entwurf',
-    description: 'Schnell einen einzelnen Post erstellen mit dem Schritt-fuer-Schritt Editor. Ideal fuer schnelle Inhalte zwischendurch.',
+    description: 'Schnell einen einzelnen Post erstellen mit dem Schritt-für-Schritt Editor. Ideal für schnelle Inhalte zwischendurch.',
     duration: '1-2 Min',
     path: '/create/quick',
     color: 'blue',
@@ -52,7 +52,7 @@ const createOptions = [
   {
     title: 'Smart Create',
     subtitle: 'Foto hochladen, AI macht den Rest',
-    description: 'KI-gestuetzter Post-Generator: Lade ein Bild hoch, AI analysiert es und schlaegt Caption, Hashtags und Template vor.',
+    description: 'KI-gestützter Post-Generator: Lade ein Bild hoch, AI analysiert es und schlägt Caption, Hashtags und Template vor.',
     duration: '3-5 Min',
     path: '/create/smart',
     color: 'purple',
@@ -68,7 +68,7 @@ const createOptions = [
   },
   {
     title: 'Video Create',
-    subtitle: 'Video fuer alle Plattformen branden',
+    subtitle: 'Video für alle Plattformen branden',
     description: 'Unified Video-Pipeline: Upload, Intro/Outro-Branding, Lower Third, Musik und Multi-Format-Export in einem Schritt.',
     duration: '5 Min',
     path: '/create/video',
@@ -216,7 +216,7 @@ onMounted(() => {
         </span>
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
-        Waehle eine Erstellungsmethode fuer deinen naechsten Post.
+        Wähle eine Erstellungsmethode für deinen nächsten Post.
       </p>
     </div>
 
@@ -287,10 +287,10 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- ─── Letzte Entwuerfe section ──────────────────────────── -->
+    <!-- ─── Letzte Entwürfe section ──────────────────────────── -->
     <div class="mt-10" data-testid="recent-drafts-section">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Letzte Entwuerfe</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Letzte Entwürfe</h2>
         <router-link
           to="/create/drafts"
           class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
@@ -325,7 +325,7 @@ onMounted(() => {
             </svg>
           </div>
         </div>
-        <p class="text-sm font-medium text-gray-900 dark:text-white">Noch keine Entwuerfe</p>
+        <p class="text-sm font-medium text-gray-900 dark:text-white">Noch keine Entwürfe</p>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Erstelle deinen ersten Post mit einer der Methoden oben.</p>
       </div>
 

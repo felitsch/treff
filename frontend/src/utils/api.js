@@ -41,7 +41,7 @@ function extractValidationErrors(data) {
   if (Array.isArray(detail)) {
     const fieldErrors = detail.map((err) => {
       const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : 'Feld'
-      const msg = err.msg || 'Ungueltiger Wert'
+      const msg = err.msg || 'Ungültiger Wert'
       return `${field}: ${msg}`
     })
     if (fieldErrors.length <= 3) {
@@ -50,7 +50,7 @@ function extractValidationErrors(data) {
     return `${fieldErrors.slice(0, 3).join('\n')}\n(+${fieldErrors.length - 3} weitere Fehler)`
   }
   if (typeof detail === 'string') return detail
-  return 'Validierungsfehler. Bitte pruefe deine Eingaben.'
+  return 'Validierungsfehler. Bitte prüfe deine Eingaben.'
 }
 
 /**
@@ -75,7 +75,7 @@ const messageTranslations = {
   'Template not found': 'Vorlage wurde nicht gefunden.',
   'Asset not found': 'Asset wurde nicht gefunden.',
   'Not authenticated': 'Nicht authentifiziert. Bitte melde dich erneut an.',
-  'Invalid credentials': 'Ungueltige Anmeldedaten.',
+  'Invalid credentials': 'Ungültige Anmeldedaten.',
   'Email already registered': 'Diese E-Mail-Adresse ist bereits registriert.',
   'Not Found': 'Die angeforderte Ressource wurde nicht gefunden.',
 }
@@ -135,7 +135,7 @@ api.interceptors.response.use(
         error.validationErrors = Array.isArray(detail)
           ? detail.reduce((acc, err) => {
               const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : '_general'
-              acc[field] = err.msg || 'Ungueltiger Wert'
+              acc[field] = err.msg || 'Ungültiger Wert'
               return acc
             }, {})
           : {}
@@ -156,14 +156,14 @@ api.interceptors.response.use(
       } else if (status === 404) {
         message = 'Die angeforderte Ressource wurde nicht gefunden.'
       } else if (status === 500) {
-        message = 'Ein Serverfehler ist aufgetreten. Bitte versuche es spaeter erneut.'
+        message = 'Ein Serverfehler ist aufgetreten. Bitte versuche es später erneut.'
       } else if (status === 403) {
-        message = 'Zugriff verweigert. Du hast keine Berechtigung fuer diese Aktion.'
+        message = 'Zugriff verweigert. Du hast keine Berechtigung für diese Aktion.'
       } else if (status) {
         message = `Fehler bei der Anfrage (${status}). Bitte versuche es erneut.`
       } else {
         // Network error (no response at all)
-        message = 'Netzwerkfehler. Bitte pruefe deine Internetverbindung.'
+        message = 'Netzwerkfehler. Bitte prüfe deine Internetverbindung.'
       }
       toast.error(message)
     }

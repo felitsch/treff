@@ -72,7 +72,7 @@ const postStatusColors = {
 const postStatusLabels = {
   draft: 'Entwurf',
   scheduled: 'Geplant',
-  posted: 'Veroeffentlicht',
+  posted: 'Veröffentlicht',
   exported: 'Exportiert',
 }
 
@@ -103,7 +103,7 @@ const toneLabels = {
   emotional: 'Emotional',
   motivierend: 'Motivierend',
   jugendlich: 'Jugendlich',
-  serioess: 'Serioess',
+  serioess: 'Seriös',
   storytelling: 'Storytelling',
   'behind-the-scenes': 'Behind-the-Scenes',
   provokant: 'Provokant',
@@ -145,13 +145,13 @@ async function handleFileUpload(event) {
 
   // Validate file type
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    toast.error('Bitte waehle ein Bild (JPEG, PNG oder WebP).')
+    toast.error('Bitte wähle ein Bild (JPEG, PNG oder WebP).')
     return
   }
 
   // Validate file size (max 20MB)
   if (file.size > 20 * 1024 * 1024) {
-    toast.error('Das Bild darf maximal 20 MB gross sein.')
+    toast.error('Das Bild darf maximal 20 MB groß sein.')
     return
   }
 
@@ -220,7 +220,7 @@ onMounted(() => {
         @click="router.push('/students')"
       >
         <span class="text-lg">&larr;</span>
-        <span class="text-sm">Zurueck zur Uebersicht</span>
+        <span class="text-sm">Zurück zur Übersicht</span>
       </button>
 
       <!-- Profile Header Card -->
@@ -244,7 +244,7 @@ onMounted(() => {
               @click="triggerFileUpload"
             >
               <span v-if="uploadingImage" class="text-white text-sm">Laden...</span>
-              <span v-else class="text-white text-sm font-medium">Bild aendern</span>
+              <span v-else class="text-white text-sm font-medium">Bild ändern</span>
             </button>
             <input
               ref="fileInput"
@@ -341,7 +341,7 @@ onMounted(() => {
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p class="text-2xl font-bold text-green-600">{{ stats.posted_count }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Veroeffentlicht</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Veröffentlicht</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p class="text-2xl font-bold text-blue-600">{{ stats.scheduled_count }}</p>
@@ -349,7 +349,7 @@ onMounted(() => {
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p class="text-2xl font-bold text-gray-500">{{ stats.draft_count }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Entwuerfe</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Entwürfe</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p class="text-2xl font-bold text-amber-600">{{ stats.story_arcs_count }}</p>
@@ -369,7 +369,7 @@ onMounted(() => {
 
         <div v-if="storyArcs.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500">
           <p class="text-3xl mb-2">&#x1F4D6;</p>
-          <p>Noch keine Story-Serien fuer diesen Studenten.</p>
+          <p>Noch keine Story-Serien für diesen Studenten.</p>
         </div>
 
         <div v-else class="space-y-3">
@@ -424,12 +424,12 @@ onMounted(() => {
       <!-- Posts Section -->
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Zugehoerige Posts ({{ posts.length }})
+          Zugehörige Posts ({{ posts.length }})
         </h2>
 
         <div v-if="posts.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500">
           <p class="text-3xl mb-2">&#x1F4DD;</p>
-          <p>Noch keine Posts fuer diesen Studenten.</p>
+          <p>Noch keine Posts für diesen Studenten.</p>
         </div>
 
         <div v-else class="space-y-2">

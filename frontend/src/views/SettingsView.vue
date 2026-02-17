@@ -72,7 +72,7 @@ const editingHashtagSetId = ref(null)
 const editingHashtagSet = ref({ name: '', hashtags: '', category: '', country: '' })
 
 const countryOptions = [
-  { value: '', label: 'Alle Laender' },
+  { value: '', label: 'Alle Länder' },
   { value: 'usa', label: 'USA' },
   { value: 'canada', label: 'Kanada' },
   { value: 'australia', label: 'Australien' },
@@ -83,7 +83,7 @@ const countryOptions = [
 const categoryOptions = [
   { value: '', label: 'Alle Kategorien' },
   { value: 'allgemein', label: 'Allgemein' },
-  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
   { value: 'fristen_cta', label: 'Fristen/CTA' },
   { value: 'tipps_tricks', label: 'Tipps & Tricks' },
@@ -406,7 +406,7 @@ onMounted(() => {
               class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed"
               data-testid="account-email"
             />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">E-Mail kann nicht geaendert werden.</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">E-Mail kann nicht geändert werden.</p>
           </div>
 
           <!-- Display Name (editable) -->
@@ -434,25 +434,25 @@ onMounted(() => {
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <AppIcon name="paint-brush" class="w-5 h-5 inline-block" /> Marken-Einstellungen
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Passe die Farben fuer dein Branding an</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Passe die Farben für dein Branding an</p>
           </div>
         </template>
         <div class="p-5 space-y-4">
           <!-- Primary Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Primaerfarbe <HelpTooltip :text="tooltipTexts.settings.primaryColor" size="sm" /></label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Primärfarbe <HelpTooltip :text="tooltipTexts.settings.primaryColor" size="sm" /></label>
             <div class="flex items-center gap-3">
               <input
                 type="color"
                 v-model="brandPrimaryColor"
-                aria-label="Primaerfarbe Farbwahl"
+                aria-label="Primärfarbe Farbwahl"
                 class="w-12 h-10 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer p-0.5"
                 data-testid="brand-primary-color"
               />
               <input
                 type="text"
                 v-model="brandPrimaryColor"
-                aria-label="Primaerfarbe Hex-Wert"
+                aria-label="Primärfarbe Hex-Wert"
                 class="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm"
                 placeholder="#3B7AB1"
               />
@@ -461,19 +461,19 @@ onMounted(() => {
 
           <!-- Secondary Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Sekundaerfarbe <HelpTooltip :text="tooltipTexts.settings.secondaryColor" size="sm" /></label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Sekundärfarbe <HelpTooltip :text="tooltipTexts.settings.secondaryColor" size="sm" /></label>
             <div class="flex items-center gap-3">
               <input
                 type="color"
                 v-model="brandSecondaryColor"
-                aria-label="Sekundaerfarbe Farbwahl"
+                aria-label="Sekundärfarbe Farbwahl"
                 class="w-12 h-10 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer p-0.5"
                 data-testid="brand-secondary-color"
               />
               <input
                 type="text"
                 v-model="brandSecondaryColor"
-                aria-label="Sekundaerfarbe Hex-Wert"
+                aria-label="Sekundärfarbe Hex-Wert"
                 class="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm"
                 placeholder="#FDD000"
               />
@@ -508,12 +508,12 @@ onMounted(() => {
               <div
                 class="w-16 h-10 rounded-lg border border-gray-200 dark:border-gray-600"
                 :style="{ backgroundColor: brandPrimaryColor }"
-                title="Primaerfarbe"
+                title="Primärfarbe"
               ></div>
               <div
                 class="w-16 h-10 rounded-lg border border-gray-200 dark:border-gray-600"
                 :style="{ backgroundColor: brandSecondaryColor }"
-                title="Sekundaerfarbe"
+                title="Sekundärfarbe"
               ></div>
               <div
                 class="w-16 h-10 rounded-lg border border-gray-200 dark:border-gray-600"
@@ -532,52 +532,52 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AppIcon name="key" class="w-5 h-5 inline-block" /> API-Schluessel
+              <AppIcon name="key" class="w-5 h-5 inline-block" /> API-Schlüssel
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Konfiguriere externe Dienste fuer KI-Generierung und Bilder</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Konfiguriere externe Dienste für KI-Generierung und Bilder</p>
           </div>
         </template>
         <div class="p-5 space-y-4">
           <!-- Gemini API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Google Gemini API-Schluessel <HelpTooltip :text="tooltipTexts.settings.geminiApiKey" size="sm" /></label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Google Gemini API-Schlüssel <HelpTooltip :text="tooltipTexts.settings.geminiApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="geminiApiKey"
               placeholder="AIza..."
-              aria-label="Google Gemini API-Schluessel"
+              aria-label="Google Gemini API-Schlüssel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="gemini-api-key"
             />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fuer KI-Textgenerierung und Bildgenerierung</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Für KI-Textgenerierung und Bildgenerierung</p>
           </div>
 
           <!-- OpenAI API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">OpenAI API-Schluessel (Optional) <HelpTooltip :text="tooltipTexts.settings.openaiApiKey" size="sm" /></label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">OpenAI API-Schlüssel (Optional) <HelpTooltip :text="tooltipTexts.settings.openaiApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="openaiApiKey"
               placeholder="sk-..."
-              aria-label="OpenAI API-Schluessel"
+              aria-label="OpenAI API-Schlüssel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="openai-api-key"
             />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fallback fuer Textgenerierung</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fallback für Textgenerierung</p>
           </div>
 
           <!-- Unsplash API Key -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Unsplash API-Schluessel (Optional) <HelpTooltip :text="tooltipTexts.settings.unsplashApiKey" size="sm" /></label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">Unsplash API-Schlüssel (Optional) <HelpTooltip :text="tooltipTexts.settings.unsplashApiKey" size="sm" /></label>
             <input
               type="password"
               v-model="unsplashApiKey"
               placeholder="Client-ID..."
-              aria-label="Unsplash API-Schluessel"
+              aria-label="Unsplash API-Schlüssel"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-treff-blue focus:border-transparent"
               data-testid="unsplash-api-key"
             />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fuer Stock-Fotos in Posts</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Für Stock-Fotos in Posts</p>
           </div>
         </div>
       </BaseCard>
@@ -609,7 +609,7 @@ onMounted(() => {
               <option value="3">3 Posts</option>
               <option value="4">4 Posts</option>
               <option value="5">5 Posts</option>
-              <option value="7">7 Posts (taeglich)</option>
+              <option value="7">7 Posts (täglich)</option>
             </select>
           </div>
 
@@ -713,7 +713,7 @@ onMounted(() => {
 
           <!-- Country mix -->
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laender-Verteilung</h3>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Länder-Verteilung</h3>
             <div class="space-y-3">
               <div v-for="(label, key) in { usa: 'USA', canada: 'Kanada', australia: 'Australien', newzealand: 'Neuseeland', ireland: 'Irland' }" :key="'tmix-cntry-' + key" class="flex items-center gap-3">
                 <span class="text-sm text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">{{ label }}</span>
@@ -742,7 +742,7 @@ onMounted(() => {
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <span>#</span> Hashtag-Manager
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verwalte deine Hashtag-Sets fuer verschiedene Laender und Kategorien</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verwalte deine Hashtag-Sets für verschiedene Länder und Kategorien</p>
           </div>
         </template>
         <template #headerAction>
@@ -796,7 +796,7 @@ onMounted(() => {
                 <select v-model="newHashtagSet.category" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" data-testid="new-hashtag-category">
                   <option value="">Keine Kategorie</option>
                   <option value="allgemein">Allgemein</option>
-                  <option value="laender_spotlight">Laender-Spotlight</option>
+                  <option value="laender_spotlight">Länder-Spotlight</option>
                   <option value="erfahrungsberichte">Erfahrungsberichte</option>
                   <option value="fristen_cta">Fristen/CTA</option>
                   <option value="tipps_tricks">Tipps & Tricks</option>
@@ -872,7 +872,7 @@ onMounted(() => {
                     <button
                       @click="deleteHashtagSet(hs.id)"
                       class="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                      title="Loeschen"
+                      title="Löschen"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
@@ -915,7 +915,7 @@ onMounted(() => {
                   <select v-model="editingHashtagSet.category" class="flex-1 px-2 py-1.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-sm text-gray-900 dark:text-white">
                     <option value="">Keine Kategorie</option>
                     <option value="allgemein">Allgemein</option>
-                    <option value="laender_spotlight">Laender-Spotlight</option>
+                    <option value="laender_spotlight">Länder-Spotlight</option>
                     <option value="erfahrungsberichte">Erfahrungsberichte</option>
                   </select>
                 </div>
@@ -933,13 +933,13 @@ onMounted(() => {
 
           <p class="text-xs text-gray-400 dark:text-gray-500">
             {{ filteredHashtagSets.length }} von {{ hashtagSets.length }} Sets angezeigt.
-            Standard-Sets koennen nicht bearbeitet oder geloescht werden.
+            Standard-Sets können nicht bearbeitet oder gelöscht werden.
           </p>
         </div>
       </BaseCard>
 
       <!-- Tour-Einstellungen Section -->
-      <BaseCard padding="lg" title="Tour-Einstellungen" subtitle="Jede Seite hat eine eigene gefuehrte Tour, die beim ersten Besuch automatisch startet. Hier kannst du einzelne Tours zuruecksetzen oder alle erneut aktivieren." :header-divider="false">
+      <BaseCard padding="lg" title="Tour-Einstellungen" subtitle="Jede Seite hat eine eigene geführte Tour, die beim ersten Besuch automatisch startet. Hier kannst du einzelne Tours zurücksetzen oder alle erneut aktivieren." :header-divider="false">
         <div class="space-y-3">
           <!-- Tour reset buttons per page -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -961,7 +961,7 @@ onMounted(() => {
                   class="text-xs text-treff-blue hover:text-blue-700 font-medium"
                   :disabled="resettingTour === tourKey"
                 >
-                  {{ resettingTour === tourKey ? '...' : 'Zuruecksetzen' }}
+                  {{ resettingTour === tourKey ? '...' : 'Zurücksetzen' }}
                 </button>
               </div>
             </div>
@@ -973,10 +973,10 @@ onMounted(() => {
               @click="resetAllTours()"
               class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
             >
-              Alle Tours zuruecksetzen
+              Alle Tours zurücksetzen
             </button>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              Beim naechsten Besuch jeder Seite wird die Tour erneut automatisch gestartet.
+              Beim nächsten Besuch jeder Seite wird die Tour erneut automatisch gestartet.
             </p>
           </div>
         </div>
@@ -993,7 +993,7 @@ onMounted(() => {
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Plattform-spezifische Best Practices, Hook-Formeln, Engagement-Strategien und Content-Kalender-Regeln.
-              Diese Strategie fliesst automatisch in den KI-Text-Generator und den Wochenplaner ein.
+              Diese Strategie fließt automatisch in den KI-Text-Generator und den Wochenplaner ein.
             </p>
           </div>
         </template>
@@ -1196,7 +1196,7 @@ onMounted(() => {
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
                 <span>#</span> Hashtag-Strategie
-                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Brand, Nische, Laender)</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Brand, Nische, Länder)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.hashtags }">&#9660;</span>
             </button>
@@ -1228,14 +1228,14 @@ onMounted(() => {
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
                 <span>&#128197;</span> Content-Kalender-Regeln
-                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Woechentliche Slots, Saisonale Prioritaeten)</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Wöchentliche Slots, Saisonale Prioritäten)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.calendar }">&#9660;</span>
             </button>
             <div v-if="socialStrategyExpanded.calendar" class="p-4 space-y-3 text-xs">
               <!-- Recurring content slots -->
               <div v-if="socialStrategy.content_calendar_rules?.recurring_content_slots?.length">
-                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Woechentliche Content-Slots:</span>
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Wöchentliche Content-Slots:</span>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div v-for="slot in socialStrategy.content_calendar_rules.recurring_content_slots" :key="slot.name" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5 flex items-start gap-2">
                     <span class="font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ slot.day }}:</span>
@@ -1248,7 +1248,7 @@ onMounted(() => {
               </div>
               <!-- Seasonal priorities -->
               <div v-if="socialStrategy.content_calendar_rules?.seasonal_priorities">
-                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Saisonale Prioritaeten:</span>
+                <span class="font-medium text-gray-700 dark:text-gray-300 block mb-2">Saisonale Prioritäten:</span>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div v-for="(season, key) in socialStrategy.content_calendar_rules.seasonal_priorities" :key="key" class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
                     <div class="flex items-center justify-between mb-1">
@@ -1266,7 +1266,7 @@ onMounted(() => {
                 <span class="font-medium text-gray-700 dark:text-gray-300 block mb-1">Mix-Regeln:</span>
                 <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-0.5">
                   <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_categories }} verschiedene Kategorien/Woche</li>
-                  <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_countries }} verschiedene Laender/Woche</li>
+                  <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_countries }} verschiedene Länder/Woche</li>
                   <li>Mind. {{ socialStrategy.content_calendar_rules.weekly_mix.minimum_platforms }} verschiedene Plattformen/Woche</li>
                   <li v-if="socialStrategy.content_calendar_rules.weekly_mix.no_same_country_consecutive_days">Nicht dasselbe Land an aufeinanderfolgenden Tagen</li>
                   <li v-if="socialStrategy.content_calendar_rules.weekly_mix.no_same_category_consecutive_days">Nicht dieselbe Kategorie an aufeinanderfolgenden Tagen</li>

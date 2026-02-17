@@ -50,7 +50,7 @@ const categoryColors = {
 }
 
 const categoryLabels = {
-  laender_spotlight: 'Laender-Spotlight',
+  laender_spotlight: 'Länder-Spotlight',
   erfahrungsberichte: 'Erfahrungsberichte',
   infografiken: 'Infografiken',
   fristen_cta: 'Fristen & CTA',
@@ -98,7 +98,7 @@ const platformOptions = [
 
 // Available theme/category options for focus
 const themeOptions = [
-  { value: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight', icon: 'globe-alt' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right' },
   { value: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
   { value: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
@@ -162,7 +162,7 @@ async function generatePlan() {
     season.value = data.season || ''
     weekStart.value = data.week_start
     planGenerated.value = true
-    toast.success(`Wochenplan mit ${data.total_suggestions} Vorschlaegen generiert!`)
+    toast.success(`Wochenplan mit ${data.total_suggestions} Vorschlägen generiert!`)
   } catch (err) {
     // Error toast shown by API interceptor
     toast.error('Wochenplan konnte nicht generiert werden.')
@@ -295,7 +295,7 @@ async function adoptPlan() {
   }
 
   if (items.length === 0) {
-    toast.error('Keine Vorschlaege zum Uebernehmen vorhanden.')
+    toast.error('Keine Vorschläge zum Übernehmen vorhanden.')
     return
   }
 
@@ -311,7 +311,7 @@ async function adoptPlan() {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    toast.success(data.message || `${data.count} Posts in den Kalender uebernommen!`)
+    toast.success(data.message || `${data.count} Posts in den Kalender übernommen!`)
 
     // Navigate to calendar after adoption
     setTimeout(() => {
@@ -319,7 +319,7 @@ async function adoptPlan() {
     }, 1500)
   } catch (err) {
     // Error toast shown by API interceptor
-    toast.error('Plan konnte nicht uebernommen werden.')
+    toast.error('Plan konnte nicht übernommen werden.')
   } finally {
     adopting.value = false
   }
@@ -359,7 +359,7 @@ onMounted(() => {
           <AppIcon name="calendar" class="w-6 h-6 inline-block" /> Wochen-Content-Planer
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">
-          KI-gestuetzter Wochenplaner mit Serien-Awareness, wiederkehrenden Formaten und ausgewogenem Content-Mix
+          KI-gestützter Wochenplaner mit Serien-Awareness, wiederkehrenden Formaten und ausgewogenem Content-Mix
         </p>
       </div>
       <button
@@ -395,7 +395,7 @@ onMounted(() => {
               @click="nextWeek"
               class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
               :disabled="loading"
-              title="Naechste Woche"
+              title="Nächste Woche"
             >
               →
             </button>
@@ -520,7 +520,7 @@ onMounted(() => {
           <span v-if="season" class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ season }})</span>
         </h2>
         <div class="flex items-center gap-3">
-          <span class="text-sm text-gray-500 dark:text-gray-400">{{ totalSuggestions }} Vorschlaege</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ totalSuggestions }} Vorschläge</span>
           <button
             data-tour="wp-adopt"
             @click="adoptPlan"
@@ -529,7 +529,7 @@ onMounted(() => {
           >
             <AppIcon v-if="adopting" name="clock" class="w-5 h-5 inline-block animate-spin" />
             <AppIcon v-else name="check-circle" class="w-5 h-5 inline-block" />
-            {{ adopting ? 'Uebernehme...' : 'Plan uebernehmen' }}
+            {{ adopting ? 'Übernehme...' : 'Plan übernehmen' }}
           </button>
         </div>
       </div>
@@ -701,7 +701,7 @@ onMounted(() => {
       v-if="!planGenerated && !loading"
       svgIcon="clipboard-document-list"
       title="Wochenplan erstellen"
-      description="Waehle oben eine Woche und die Anzahl der Posts aus. Die KI generiert einen ausgewogenen Content-Plan mit wiederkehrenden Formaten, Story-Serien und optimalen Posting-Zeiten."
+      description="Wähle oben eine Woche und die Anzahl der Posts aus. Die KI generiert einen ausgewogenen Content-Plan mit wiederkehrenden Formaten, Story-Serien und optimalen Posting-Zeiten."
       actionLabel="Jetzt Plan generieren"
       @action="generatePlan"
     />
@@ -710,7 +710,7 @@ onMounted(() => {
     <div v-if="loading" class="text-center py-16">
       <div class="animate-bounce mb-4"><AppIcon name="cpu-chip" class="w-10 h-10 inline-block text-treff-blue" /></div>
       <p class="text-gray-600 dark:text-gray-400 font-medium">KI generiert deinen Wochenplan...</p>
-      <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Beruecksichtigt Serien, Formate und Content-Mix</p>
+      <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Berücksichtigt Serien, Formate und Content-Mix</p>
     </div>
 
     <!-- Legend -->
@@ -734,7 +734,7 @@ onMounted(() => {
         </div>
       </div>
       <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
-        <AppIcon name="light-bulb" class="w-4 h-4 inline-block" /> Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan uebernehmen" erstellt alle Vorschlaege als geplante Posts im Kalender.
+        <AppIcon name="light-bulb" class="w-4 h-4 inline-block" /> Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan übernehmen" erstellt alle Vorschläge als geplante Posts im Kalender.
       </p>
     </BaseCard>
 

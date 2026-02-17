@@ -321,7 +321,7 @@ onUnmounted(() => {
             @click="skipTour"
             class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            Tour ueberspringen
+            Tour überspringen
           </button>
           <div class="flex items-center gap-2">
             <button
@@ -329,7 +329,7 @@ onUnmounted(() => {
               @click="prevStep"
               class="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              Zurueck
+              Zurück
             </button>
             <button
               @click="nextStep"

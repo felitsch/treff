@@ -132,7 +132,7 @@ const isEmpty = computed(function() {
           <button
             @click="closeHistoryPanel"
             class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
-            aria-label="Panel schliessen"
+            aria-label="Panel schließen"
             data-testid="notification-history-close"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

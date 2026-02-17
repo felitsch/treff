@@ -88,14 +88,14 @@ const showDropdown = ref(false)
     >
       <span class="text-lg">{{ recommendedPillar.icon }}</span>
       <span class="text-amber-800 dark:text-amber-300">
-        <strong>{{ recommendedPillar.name }}</strong> ist unterrepraesentiert
+        <strong>{{ recommendedPillar.name }}</strong> ist unterrepräsentiert
         ({{ getActualPercent(recommendedPillar.id) }}% statt {{ recommendedPillar.targetPercentage }}% Ziel).
       </span>
       <button
         @click="selectPillar(recommendedPillar.id)"
         class="ml-auto px-2 py-0.5 bg-amber-600 text-white rounded text-xs font-medium hover:bg-amber-700 transition whitespace-nowrap"
       >
-        Waehlen
+        Wählen
       </button>
     </div>
 
@@ -113,7 +113,7 @@ const showDropdown = ref(false)
         :data-testid="'pillar-card-' + pillar.id"
       >
         <!-- Underrepresented indicator -->
-        <div v-if="isUnderrepresented(pillar)" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[8px] font-bold text-white" title="Unterrepraesentiert">!</div>
+        <div v-if="isUnderrepresented(pillar)" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[8px] font-bold text-white" title="Unterrepräsentiert">!</div>
 
         <div class="flex items-start gap-2">
           <span class="text-xl flex-shrink-0">{{ pillar.icon }}</span>
@@ -175,7 +175,7 @@ const showDropdown = ref(false)
           <span class="text-xs text-gray-400">{{ getActualPercent(modelValue) ?? '—' }}%/{{ getPillarById(modelValue)?.targetPercentage }}%</span>
         </template>
         <template v-else>
-          <span class="text-gray-400 text-sm flex-1">Content Pillar waehlen...</span>
+          <span class="text-gray-400 text-sm flex-1">Content Pillar wählen...</span>
         </template>
         <svg class="w-4 h-4 text-gray-400 transition-transform" :class="showDropdown ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
       </button>
@@ -195,7 +195,7 @@ const showDropdown = ref(false)
             <div class="text-[10px] text-gray-400">{{ getActualPercent(pillar.id) ?? '—' }}%/{{ pillar.targetPercentage }}% Ziel</div>
           </div>
           <span v-if="modelValue === pillar.id" class="text-green-500 text-sm">&#10003;</span>
-          <span v-if="isUnderrepresented(pillar)" class="text-amber-400 text-xs" title="Unterrepraesentiert">&#9888;</span>
+          <span v-if="isUnderrepresented(pillar)" class="text-amber-400 text-xs" title="Unterrepräsentiert">&#9888;</span>
         </button>
       </div>
     </div>

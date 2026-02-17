@@ -182,7 +182,7 @@ onMounted(() => {
         <!-- Template Grid -->
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Template waehlen</label>
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Template wählen</label>
             <span v-if="loadingTemplates" class="text-xs text-gray-400">Lade...</span>
             <span v-else class="text-xs text-gray-400">{{ templates.length }} Templates</span>
           </div>

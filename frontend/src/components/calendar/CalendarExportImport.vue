@@ -33,7 +33,7 @@ const skipDuplicates = ref(true)
 
 // Month name helper
 const monthNames = [
-  'Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni',
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
 ]
 const monthLabel = computed(() => `${monthNames[props.month - 1]} ${props.year}`)
@@ -43,20 +43,20 @@ const formats = [
   {
     id: 'csv',
     label: 'CSV',
-    description: 'Tabellendaten fuer Excel, Google Sheets',
+    description: 'Tabellendaten für Excel, Google Sheets',
     icon: 'chart-bar',
     ext: '.csv',
   },
   {
     id: 'ical',
     label: 'iCal',
-    description: 'Kalender-Events fuer Apple/Google/Outlook',
+    description: 'Kalender-Events für Apple/Google/Outlook',
     icon: 'calendar',
     ext: '.ics',
   },
   {
     id: 'pdf',
-    label: 'PDF-Uebersicht',
+    label: 'PDF-Übersicht',
     description: 'Druckbarer visueller Wochenplan (HTML)',
     icon: 'printer',
     ext: '.html',
@@ -256,7 +256,7 @@ const validRowCount = computed(() => {
           <button
             @click="close"
             class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Schliessen"
+            aria-label="Schließen"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -306,7 +306,7 @@ const validRowCount = computed(() => {
           <!-- ====== EXPORT TAB ====== -->
           <div v-if="activeTab === 'export'">
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Waehle ein Format und exportiere den Content-Kalender fuer {{ monthLabel }}.
+              Wähle ein Format und exportiere den Content-Kalender für {{ monthLabel }}.
             </p>
 
             <!-- Format Selection -->
@@ -378,7 +378,7 @@ const validRowCount = computed(() => {
                 <div>
                   <div class="font-medium text-green-800 dark:text-green-200">Import abgeschlossen</div>
                   <div class="text-sm text-green-600 dark:text-green-400">
-                    {{ importResult.imported }} Posts importiert, {{ importResult.skipped }} uebersprungen
+                    {{ importResult.imported }} Posts importiert, {{ importResult.skipped }} übersprungen
                   </div>
                 </div>
               </div>
@@ -426,7 +426,7 @@ const validRowCount = computed(() => {
                     </svg>
                     <span class="font-medium">{{ importFile.name }}</span>
                   </div>
-                  <span v-else class="text-sm text-gray-500 dark:text-gray-400">CSV-Datei waehlen oder hierher ziehen</span>
+                  <span v-else class="text-sm text-gray-500 dark:text-gray-400">CSV-Datei wählen oder hierher ziehen</span>
                 </label>
               </div>
 
@@ -458,7 +458,7 @@ const validRowCount = computed(() => {
                   </div>
                   <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
                     <span class="font-medium text-green-700 dark:text-green-400">{{ importPreviewData.valid_rows }}</span>
-                    <span class="text-green-600 dark:text-green-500">gueltig</span>
+                    <span class="text-green-600 dark:text-green-500">gültig</span>
                   </div>
                   <div v-if="importPreviewData.error_rows > 0" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30">
                     <span class="font-medium text-red-700 dark:text-red-400">{{ importPreviewData.error_rows }}</span>
@@ -538,7 +538,7 @@ const validRowCount = computed(() => {
                     v-model="skipDuplicates"
                     class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500"
                   />
-                  Duplikate ueberspringen ({{ importPreviewData.duplicate_rows }} Zeilen)
+                  Duplikate überspringen ({{ importPreviewData.duplicate_rows }} Zeilen)
                 </label>
 
                 <!-- Import Button -->

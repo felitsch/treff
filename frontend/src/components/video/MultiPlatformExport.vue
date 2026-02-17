@@ -202,7 +202,7 @@ async function downloadExport(result) {
           @click="selectAllFormats"
           class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
         >
-          Alle auswaehlen
+          Alle auswählen
         </button>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -258,7 +258,7 @@ async function downloadExport(result) {
     <!-- Quality slider -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Qualitaet: {{ qualityLabel }} ({{ quality }}%)
+        Qualität: {{ qualityLabel }} ({{ quality }}%)
       </label>
       <input
         v-model="quality"

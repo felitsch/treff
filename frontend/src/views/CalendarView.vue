@@ -188,7 +188,7 @@ const lanesLoading = ref(false)
 
 // German month names
 const monthNames = [
-  'Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni',
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
 ]
 
@@ -214,7 +214,7 @@ const categoryColors = {
 
 // Category labels & icons
 const categoryMeta = {
-  laender_spotlight: { label: 'Laender', icon: 'globe' },
+  laender_spotlight: { label: 'Länder', icon: 'globe' },
   erfahrungsberichte: { label: 'Erfahrung', icon: 'chat-bubble' },
   infografiken: { label: 'Infografik', icon: 'chart-bar' },
   fristen_cta: { label: 'Fristen', icon: 'clock' },
@@ -233,7 +233,7 @@ const statusMeta = {
   in_review: { label: 'In Review', icon: 'eye', color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20', badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
   reminded: { label: 'Erinnert', icon: 'bell', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' },
   exported: { label: 'Exportiert', icon: 'export', color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', badge: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
-  posted: { label: 'Veroeffentlicht', icon: 'check-circle', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+  posted: { label: 'Veröffentlicht', icon: 'check-circle', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
   archived: { label: 'Archiviert', icon: 'archive', color: 'text-slate-400', bg: 'bg-slate-50 dark:bg-slate-900/20', badge: 'bg-slate-100 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400' },
 }
 
@@ -754,7 +754,7 @@ const episodeStatusLabels = {
   scheduled: 'Geplant',
   reminded: 'Erinnert',
   exported: 'Exportiert',
-  posted: 'Veroeffentlicht',
+  posted: 'Veröffentlicht',
 }
 
 function showEpisodeTooltip(event, arc, episode) {
@@ -1185,7 +1185,7 @@ async function changePostStatus(post, newStatus) {
     await api.put(`/api/posts/${post.id}/status`, { status: newStatus })
     // Update locally
     post.status = newStatus
-    toast.success(`Status geaendert: ${getStatusMeta(newStatus).label}`)
+    toast.success(`Status geändert: ${getStatusMeta(newStatus).label}`)
     // Refresh to keep everything in sync
     await fetchData()
   } catch (err) {
@@ -1199,10 +1199,10 @@ async function batchChangeStatus(newStatus) {
   try {
     const { data: result } = await api.put('/api/posts/batch-status', { post_ids: postIds, status: newStatus })
     if (result.updated_count > 0) {
-      toast.success(`${result.updated_count} Posts auf "${getStatusMeta(newStatus).label}" geaendert`)
+      toast.success(`${result.updated_count} Posts auf "${getStatusMeta(newStatus).label}" geändert`)
     }
     if (result.skipped_count > 0) {
-      toast.warning(`${result.skipped_count} Posts uebersprungen (Statuswechsel nicht erlaubt)`)
+      toast.warning(`${result.skipped_count} Posts übersprungen (Statuswechsel nicht erlaubt)`)
     }
     clearSelection()
     await fetchData()
@@ -1363,7 +1363,7 @@ async function confirmSchedule() {
 
   // Prevent scheduling on past dates
   if (isPastDate(scheduleTargetDate.value)) {
-    scheduleError.value = 'Vergangene Daten koennen nicht ausgewaehlt werden.'
+    scheduleError.value = 'Vergangene Daten können nicht ausgewählt werden.'
     return
   }
 
@@ -1731,11 +1731,11 @@ onUnmounted(() => {
           :class="showGaps
             ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600'
             : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
-          title="Posting-Luecken anzeigen/ausblenden"
-          aria-label="Posting-Luecken anzeigen/ausblenden"
+          title="Posting-Lücken anzeigen/ausblenden"
+          aria-label="Posting-Lücken anzeigen/ausblenden"
         >
           <span v-if="showGaps">&#9888;&#65039;</span><span v-else>&#128065;&#65039;</span>
-          Luecken
+          Lücken
           <HelpTooltip :text="tooltipTexts.calendar.gapDetection" size="sm" />
           <span v-if="showGaps && gapCount > 0" class="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ gapCount }}
@@ -1862,8 +1862,8 @@ onUnmounted(() => {
           <button
             @click="nextNav"
             class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors"
-            :title="viewMode === 'month' ? 'Naechster Monat' : viewMode === 'day' ? 'Naechster Tag' : 'Naechste Woche'"
-            :aria-label="viewMode === 'month' ? 'Naechster Monat' : viewMode === 'day' ? 'Naechster Tag' : 'Naechste Woche'"
+            :title="viewMode === 'month' ? 'Nächster Monat' : viewMode === 'day' ? 'Nächster Tag' : 'Nächste Woche'"
+            :aria-label="viewMode === 'month' ? 'Nächster Monat' : viewMode === 'day' ? 'Nächster Tag' : 'Nächste Woche'"
           >
             <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -1878,7 +1878,7 @@ onUnmounted(() => {
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <AppIcon name="fire" class="w-5 h-5 inline-block" />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Woechentliches Posting-Ziel</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Wöchentliches Posting-Ziel</h3>
         </div>
         <div class="flex items-center gap-2">
           <span
@@ -1919,7 +1919,7 @@ onUnmounted(() => {
     <!-- Workflow Hints -->
     <WorkflowHint
       hint-id="calendar-recurring-formats"
-      message="Keine wiederkehrenden Formate eingerichtet? Richte Formate ein, um deinen Kalender automatisch zu fuellen."
+      message="Keine wiederkehrenden Formate eingerichtet? Richte Formate ein, um deinen Kalender automatisch zu füllen."
       link-text="Formate einrichten"
       link-to="/calendar/recurring-formats"
       icon="arrow-path"
@@ -2165,9 +2165,9 @@ onUnmounted(() => {
               <span
                 v-if="isGapDate(dayObj.dateStr, dayObj.isCurrentMonth)"
                 class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"
-                title="Keine Posts geplant - Posting-Luecke"
+                title="Keine Posts geplant - Posting-Lücke"
               >
-                Luecke
+                Lücke
               </span>
               <!-- Recycling suggestion for gap days -->
               <span
@@ -3051,12 +3051,12 @@ onUnmounted(() => {
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span class="text-[10px] text-gray-500 dark:text-gray-400">Veroeffentlicht</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">Veröffentlicht</span>
             </div>
           </div>
         </div>
         <div v-if="viewMode === 'month'">
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Posting-Luecken</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Posting-Lücken</h3>
           <div class="flex items-center gap-2">
             <span class="inline-block w-5 h-5 rounded bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700"></span>
             <span class="text-xs text-gray-600 dark:text-gray-400">Tage ohne geplante Posts</span>
@@ -3136,7 +3136,7 @@ onUnmounted(() => {
             ]"
           />
           <p v-if="isPastDate(scheduleTargetDate)" class="mt-1 text-xs text-red-500 dark:text-red-400">
-            Vergangene Daten koennen nicht ausgewaehlt werden.
+            Vergangene Daten können nicht ausgewählt werden.
           </p>
         </div>
 
@@ -3256,7 +3256,7 @@ onUnmounted(() => {
               <span class="text-sm font-bold text-blue-700 dark:text-blue-300">{{ selectedPostIds.size }}</span>
             </div>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ selectedPostIds.size === 1 ? 'Post' : 'Posts' }} ausgewaehlt
+              {{ selectedPostIds.size === 1 ? 'Post' : 'Posts' }} ausgewählt
             </span>
           </div>
           <div class="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
@@ -3324,7 +3324,7 @@ onUnmounted(() => {
           {{ selectedPostIds.size }} Posts verschieben
         </h3>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Alle ausgewaehlten Posts auf ein neues Datum verschieben.
+          Alle ausgewählten Posts auf ein neues Datum verschieben.
         </p>
 
         <!-- Selected posts preview -->
@@ -3353,7 +3353,7 @@ onUnmounted(() => {
             :class="isPastDate(multiMoveTargetDate) ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'"
           />
           <p v-if="isPastDate(multiMoveTargetDate)" class="mt-1 text-xs text-red-500 dark:text-red-400">
-            Vergangene Daten koennen nicht ausgewaehlt werden.
+            Vergangene Daten können nicht ausgewählt werden.
           </p>
         </div>
 

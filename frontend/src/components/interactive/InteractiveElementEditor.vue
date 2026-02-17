@@ -83,13 +83,13 @@ async function generateElement() {
 function addManualElement() {
   const defaults = {
     poll: {
-      question_text: 'Wuerdest du ein Auslandsjahr machen?',
+      question_text: 'Würdest du ein Auslandsjahr machen?',
       options: ['Ja! 🙌', 'Nein'],
       correct_answer: null,
       emoji: null,
     },
     quiz: {
-      question_text: 'Wie viele Schueler gehen auf eine typische US-Highschool?',
+      question_text: 'Wie viele Schüler gehen auf eine typische US-Highschool?',
       options: ['500', '1.500', '3.000', '5.000'],
       correct_answer: 1,
       emoji: null,
@@ -101,7 +101,7 @@ function addManualElement() {
       emoji: '🔥',
     },
     question: {
-      question_text: 'Was ist deine groesste Frage zum Auslandsjahr?',
+      question_text: 'Was ist deine größte Frage zum Auslandsjahr?',
       options: null,
       correct_answer: null,
       emoji: null,
@@ -118,7 +118,7 @@ function addManualElement() {
     ...defaults[selectedType.value],
   }
   emit('add', newElement)
-  toast.success('Element hinzugefuegt! Bearbeite den Text nach Bedarf.')
+  toast.success('Element hinzugefügt! Bearbeite den Text nach Bedarf.')
 }
 
 function startEdit(element) {
@@ -167,7 +167,7 @@ function removeOption(idx) {
     </div>
 
     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-      Fuege Umfragen, Quizze, Slider oder Fragen-Sticker hinzu. Diese werden in der Vorschau simuliert — beim echten Posten musst du sie in Instagram hinzufuegen.
+      Füge Umfragen, Quizze, Slider oder Fragen-Sticker hinzu. Diese werden in der Vorschau simuliert — beim echten Posten musst du sie in Instagram hinzufügen.
     </p>
 
     <!-- Type selector -->
@@ -299,7 +299,7 @@ function removeOption(idx) {
           v-if="editingElement.options && editingElement.options.length < 4"
           @click="addOption"
           class="mt-1 text-[10px] text-purple-600 dark:text-purple-400 hover:underline"
-        >+ Option hinzufuegen</button>
+        >+ Option hinzufügen</button>
       </div>
 
       <!-- Emoji for slider -->
@@ -326,7 +326,7 @@ function removeOption(idx) {
       <div class="flex items-start gap-2">
         <AppIcon name="light-bulb" class="w-4 h-4 shrink-0" />
         <p class="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
-          <strong>Vergiss nicht:</strong> Interaktive Elemente (Umfragen, Quizze, Slider, Fragen) muessen beim echten Posten in Instagram manuell hinzugefuegt werden! Die Vorschau hier zeigt dir, wo und wie sie aussehen sollen.
+          <strong>Vergiss nicht:</strong> Interaktive Elemente (Umfragen, Quizze, Slider, Fragen) müssen beim echten Posten in Instagram manuell hinzugefügt werden! Die Vorschau hier zeigt dir, wo und wie sie aussehen sollen.
         </p>
       </div>
     </div>

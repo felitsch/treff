@@ -1,7 +1,7 @@
 /**
- * Saisonaler Content-Kalender fuer TREFF Sprachreisen
+ * Saisonaler Content-Kalender für TREFF Sprachreisen
  *
- * Vollstaendiger 12-Monats-Redaktionskalender mit:
+ * Vollständiger 12-Monats-Redaktionskalender mit:
  * - Monatlichen Themes und Focus Pillars
  * - Key Dates (Bewerbungsfristen, Abreisewellen, Feiertage)
  * - Departure Waves pro Land (USA, Kanada, Australien, Neuseeland, Irland)
@@ -47,7 +47,7 @@
  * @property {DeparturePeriod[]} departures - Departure periods
  *
  * @typedef {Object} DeparturePeriod
- * @property {string} season - Herbst|Fruehling|Sommer|Winter
+ * @property {string} season - Herbst|Frühling|Sommer|Winter
  * @property {number} month - Departure month (1-12)
  * @property {number} day - Approximate departure day
  * @property {string} label - Description
@@ -75,7 +75,7 @@ export const DEPARTURE_WAVES = [
         return_day: 15,
       },
       {
-        season: 'Fruehling',
+        season: 'Frühling',
         month: 1,
         day: 10,
         label: 'Januar-Abreise USA (Halbjahr)',
@@ -89,7 +89,7 @@ export const DEPARTURE_WAVES = [
     country: 'Kanada',
     country_code: 'CA',
     flag: '\u{1F1E8}\u{1F1E6}',
-    programs: ['Englisch', 'Franzoesisch (Quebec)'],
+    programs: ['Englisch', 'Französisch (Quebec)'],
     departures: [
       {
         season: 'Herbst',
@@ -101,7 +101,7 @@ export const DEPARTURE_WAVES = [
         return_day: 30,
       },
       {
-        season: 'Fruehling',
+        season: 'Frühling',
         month: 2,
         day: 1,
         label: 'Februar-Abreise Kanada (Semester 2)',
@@ -118,7 +118,7 @@ export const DEPARTURE_WAVES = [
     programs: ['Highschool'],
     departures: [
       {
-        season: 'Sommer (Suedhalbkugel)',
+        season: 'Sommer (Südhalbkugel)',
         month: 1,
         day: 20,
         label: 'Hauptabreise Australien (Januar)',
@@ -127,7 +127,7 @@ export const DEPARTURE_WAVES = [
         return_day: 10,
       },
       {
-        season: 'Winter (Suedhalbkugel)',
+        season: 'Winter (Südhalbkugel)',
         month: 7,
         day: 10,
         label: 'Juli-Abreise Australien (Term 3)',
@@ -144,7 +144,7 @@ export const DEPARTURE_WAVES = [
     programs: ['Highschool'],
     departures: [
       {
-        season: 'Sommer (Suedhalbkugel)',
+        season: 'Sommer (Südhalbkugel)',
         month: 1,
         day: 25,
         label: 'Hauptabreise Neuseeland (Januar)',
@@ -153,7 +153,7 @@ export const DEPARTURE_WAVES = [
         return_day: 15,
       },
       {
-        season: 'Winter (Suedhalbkugel)',
+        season: 'Winter (Südhalbkugel)',
         month: 7,
         day: 15,
         label: 'Juli-Abreise Neuseeland (Term 3)',
@@ -188,21 +188,21 @@ export const DEPARTURE_WAVES = [
 
 export const INTERNATIONAL_HOLIDAYS = [
   // USA
-  { month: 11, day: 28, label: 'Thanksgiving (USA)', icon: '\u{1F983}', color: 'orange', country: 'US', type: 'feiertag', description: 'Amerikanisches Erntedankfest - perfekt fuer Erfahrungsberichte von TREFF-Teilnehmern in den USA' },
-  { month: 7, day: 4, label: 'Independence Day (USA)', icon: '\u{1F386}', color: 'blue', country: 'US', type: 'feiertag', description: 'Amerikanischer Unabhaengigkeitstag - Schueler erleben die Feiern hautnah mit' },
-  { month: 10, day: 31, label: 'Halloween (USA/CA/IE)', icon: '\u{1F383}', color: 'orange', country: 'US', type: 'feiertag', description: 'Halloween in den USA, Kanada und Irland - ein Highlight fuer Austauschschueler' },
-  { month: 2, day: 14, label: 'Super Bowl Sunday (USA)', icon: '\u{1F3C8}', color: 'blue', country: 'US', type: 'feiertag', description: 'Das groesste Sportereignis der USA - Kulturerlebnis fuer Austauschschueler' },
+  { month: 11, day: 28, label: 'Thanksgiving (USA)', icon: '\u{1F983}', color: 'orange', country: 'US', type: 'feiertag', description: 'Amerikanisches Erntedankfest - perfekt für Erfahrungsberichte von TREFF-Teilnehmern in den USA' },
+  { month: 7, day: 4, label: 'Independence Day (USA)', icon: '\u{1F386}', color: 'blue', country: 'US', type: 'feiertag', description: 'Amerikanischer Unabhängigkeitstag - Schüler erleben die Feiern hautnah mit' },
+  { month: 10, day: 31, label: 'Halloween (USA/CA/IE)', icon: '\u{1F383}', color: 'orange', country: 'US', type: 'feiertag', description: 'Halloween in den USA, Kanada und Irland - ein Highlight für Austauschschüler' },
+  { month: 2, day: 14, label: 'Super Bowl Sunday (USA)', icon: '\u{1F3C8}', color: 'blue', country: 'US', type: 'feiertag', description: 'Das größte Sportereignis der USA - Kulturerlebnis für Austauschschüler' },
   { month: 5, day: 26, label: 'Memorial Day (USA)', icon: '\u{1F1FA}\u{1F1F8}', color: 'blue', country: 'US', type: 'feiertag', description: 'Amerikanischer Gedenktag - Start der Sommerferien, Ende des Schuljahres naht' },
   // Canada
-  { month: 7, day: 1, label: 'Canada Day', icon: '\u{1F1E8}\u{1F1E6}', color: 'red', country: 'CA', type: 'feiertag', description: 'Kanadischer Nationalfeiertag - Austauschschueler feiern mit' },
-  { month: 10, day: 14, label: 'Thanksgiving (Kanada)', icon: '\u{1F341}', color: 'orange', country: 'CA', type: 'feiertag', description: 'Kanadisches Erntedankfest im Oktober - frueher als in den USA' },
+  { month: 7, day: 1, label: 'Canada Day', icon: '\u{1F1E8}\u{1F1E6}', color: 'red', country: 'CA', type: 'feiertag', description: 'Kanadischer Nationalfeiertag - Austauschschüler feiern mit' },
+  { month: 10, day: 14, label: 'Thanksgiving (Kanada)', icon: '\u{1F341}', color: 'orange', country: 'CA', type: 'feiertag', description: 'Kanadisches Erntedankfest im Oktober - früher als in den USA' },
   // Australia
-  { month: 1, day: 26, label: 'Australia Day', icon: '\u{1F1E6}\u{1F1FA}', color: 'blue', country: 'AU', type: 'feiertag', description: 'Australischer Nationalfeiertag - perfekt fuer Laender-Spotlight Content' },
-  { month: 4, day: 25, label: 'ANZAC Day (AU/NZ)', icon: '\u{1F3D6}\u{FE0F}', color: 'green', country: 'AU', type: 'feiertag', description: 'Gedenktag in Australien und Neuseeland - kulturelles Erlebnis fuer Schueler' },
+  { month: 1, day: 26, label: 'Australia Day', icon: '\u{1F1E6}\u{1F1FA}', color: 'blue', country: 'AU', type: 'feiertag', description: 'Australischer Nationalfeiertag - perfekt für Länder-Spotlight Content' },
+  { month: 4, day: 25, label: 'ANZAC Day (AU/NZ)', icon: '\u{1F3D6}\u{FE0F}', color: 'green', country: 'AU', type: 'feiertag', description: 'Gedenktag in Australien und Neuseeland - kulturelles Erlebnis für Schüler' },
   // New Zealand
-  { month: 2, day: 6, label: 'Waitangi Day (NZ)', icon: '\u{1F1F3}\u{1F1FF}', color: 'green', country: 'NZ', type: 'feiertag', description: 'Neuseelands Nationalfeiertag - Gruendungstag mit Maori-Kultur' },
+  { month: 2, day: 6, label: 'Waitangi Day (NZ)', icon: '\u{1F1F3}\u{1F1FF}', color: 'green', country: 'NZ', type: 'feiertag', description: 'Neuseelands Nationalfeiertag - Gründungstag mit Maori-Kultur' },
   // Ireland
-  { month: 3, day: 17, label: 'St. Patrick\'s Day (Irland)', icon: '\u{2618}\u{FE0F}', color: 'green', country: 'IE', type: 'feiertag', description: 'Irlands groesster Feiertag - Austauschschueler mittendrin in Dublin oder Cork' },
+  { month: 3, day: 17, label: 'St. Patrick\'s Day (Irland)', icon: '\u{2618}\u{FE0F}', color: 'green', country: 'IE', type: 'feiertag', description: 'Irlands größter Feiertag - Austauschschüler mittendrin in Dublin oder Cork' },
 ]
 
 // ============================================================
@@ -211,19 +211,19 @@ export const INTERNATIONAL_HOLIDAYS = [
 
 export const GERMAN_HOLIDAYS = [
   // Schulferien (approximate, varies by Bundesland - BW focus for TREFF)
-  { month: 7, day: 25, label: 'Sommerferien-Start (BW)', icon: '\u{2600}\u{FE0F}', color: 'amber', country: 'DE', type: 'schulferien', description: 'Beginn der Sommerferien in Baden-Wuerttemberg - Hochsaison fuer Fernweh-Content' },
-  { month: 9, day: 9, label: 'Sommerferien-Ende (BW)', icon: '\u{1F4DA}', color: 'amber', country: 'DE', type: 'schulferien', description: 'Ende der Sommerferien - neue Schueler starten Planung fuers naechste Jahr' },
-  { month: 12, day: 23, label: 'Weihnachtsferien-Start', icon: '\u{1F384}', color: 'red', country: 'DE', type: 'schulferien', description: 'Weihnachtsferien - Familienzeit, aber auch Planungszeit fuers Auslandsjahr' },
-  { month: 1, day: 7, label: 'Weihnachtsferien-Ende', icon: '\u{2744}\u{FE0F}', color: 'blue', country: 'DE', type: 'schulferien', description: 'Ende der Weihnachtsferien - Neujahrsvorsaetze: Auslandsjahr planen!' },
-  { month: 4, day: 14, label: 'Osterferien-Start (BW)', icon: '\u{1F423}', color: 'pink', country: 'DE', type: 'schulferien', description: 'Osterferien - perfekte Zeit fuer Infoveranstaltungen und Beratungsgespraeche' },
-  { month: 4, day: 25, label: 'Osterferien-Ende (BW)', icon: '\u{1F33C}', color: 'green', country: 'DE', type: 'schulferien', description: 'Ende der Osterferien - letzte Chance fuer manche Bewerbungsfristen' },
-  { month: 5, day: 27, label: 'Pfingstferien-Start (BW)', icon: '\u{1F33B}', color: 'green', country: 'DE', type: 'schulferien', description: 'Pfingstferien - Vorbereitungszeit fuer Herbst-Abreisende' },
-  { month: 10, day: 28, label: 'Herbstferien-Start (BW)', icon: '\u{1F342}', color: 'orange', country: 'DE', type: 'schulferien', description: 'Herbstferien - Schueler im Ausland berichten, Daheimgebliebene traumen' },
+  { month: 7, day: 25, label: 'Sommerferien-Start (BW)', icon: '\u{2600}\u{FE0F}', color: 'amber', country: 'DE', type: 'schulferien', description: 'Beginn der Sommerferien in Baden-Württemberg - Hochsaison für Fernweh-Content' },
+  { month: 9, day: 9, label: 'Sommerferien-Ende (BW)', icon: '\u{1F4DA}', color: 'amber', country: 'DE', type: 'schulferien', description: 'Ende der Sommerferien - neue Schüler starten Planung fürs nächste Jahr' },
+  { month: 12, day: 23, label: 'Weihnachtsferien-Start', icon: '\u{1F384}', color: 'red', country: 'DE', type: 'schulferien', description: 'Weihnachtsferien - Familienzeit, aber auch Planungszeit fürs Auslandsjahr' },
+  { month: 1, day: 7, label: 'Weihnachtsferien-Ende', icon: '\u{2744}\u{FE0F}', color: 'blue', country: 'DE', type: 'schulferien', description: 'Ende der Weihnachtsferien - Neujahrsvorsätze: Auslandsjahr planen!' },
+  { month: 4, day: 14, label: 'Osterferien-Start (BW)', icon: '\u{1F423}', color: 'pink', country: 'DE', type: 'schulferien', description: 'Osterferien - perfekte Zeit für Infoveranstaltungen und Beratungsgespräche' },
+  { month: 4, day: 25, label: 'Osterferien-Ende (BW)', icon: '\u{1F33C}', color: 'green', country: 'DE', type: 'schulferien', description: 'Ende der Osterferien - letzte Chance für manche Bewerbungsfristen' },
+  { month: 5, day: 27, label: 'Pfingstferien-Start (BW)', icon: '\u{1F33B}', color: 'green', country: 'DE', type: 'schulferien', description: 'Pfingstferien - Vorbereitungszeit für Herbst-Abreisende' },
+  { month: 10, day: 28, label: 'Herbstferien-Start (BW)', icon: '\u{1F342}', color: 'orange', country: 'DE', type: 'schulferien', description: 'Herbstferien - Schüler im Ausland berichten, Daheimgebliebene träumen' },
   // Feiertage
-  { month: 1, day: 1, label: 'Neujahr', icon: '\u{1F389}', color: 'amber', country: 'DE', type: 'feiertag', description: 'Neujahr - Vorsaetze, neues Jahr, neue Abenteuer. Perfekt fuer Motivations-Content' },
-  { month: 12, day: 25, label: 'Weihnachten', icon: '\u{1F384}', color: 'red', country: 'DE', type: 'feiertag', description: 'Weihnachten - Schueler im Ausland feiern mit Gastfamilien, emotionaler Content' },
-  { month: 12, day: 31, label: 'Silvester', icon: '\u{1F386}', color: 'amber', country: 'DE', type: 'feiertag', description: 'Silvester - Jahresrueckblick, Highlights unserer Teilnehmer' },
-  { month: 10, day: 3, label: 'Tag der Deutschen Einheit', icon: '\u{1F1E9}\u{1F1EA}', color: 'indigo', country: 'DE', type: 'feiertag', description: 'Tag der Deutschen Einheit - Thema: Weltoffenheit und Voelkerverstaendigung' },
+  { month: 1, day: 1, label: 'Neujahr', icon: '\u{1F389}', color: 'amber', country: 'DE', type: 'feiertag', description: 'Neujahr - Vorsätze, neues Jahr, neue Abenteuer. Perfekt für Motivations-Content' },
+  { month: 12, day: 25, label: 'Weihnachten', icon: '\u{1F384}', color: 'red', country: 'DE', type: 'feiertag', description: 'Weihnachten - Schüler im Ausland feiern mit Gastfamilien, emotionaler Content' },
+  { month: 12, day: 31, label: 'Silvester', icon: '\u{1F386}', color: 'amber', country: 'DE', type: 'feiertag', description: 'Silvester - Jahresrückblick, Highlights unserer Teilnehmer' },
+  { month: 10, day: 3, label: 'Tag der Deutschen Einheit', icon: '\u{1F1E9}\u{1F1EA}', color: 'indigo', country: 'DE', type: 'feiertag', description: 'Tag der Deutschen Einheit - Thema: Weltoffenheit und Völkerverständigung' },
 ]
 
 // ============================================================
@@ -237,7 +237,7 @@ export const MONTHLY_CALENDAR = [
     theme: 'Neustart & Aufbruch',
     focus_pillars: ['erfahrungsberichte', 'laender_spotlight', 'fristen_cta'],
     posting_intensity: 'high',
-    intensity_reason: 'Neujahrsmotivation + Abreise Australien/NZ + Fruehjahrsbewerbungen starten',
+    intensity_reason: 'Neujahrsmotivation + Abreise Australien/NZ + Frühjahrsbewerbungen starten',
     key_dates: [
       {
         day: 1,
@@ -250,7 +250,7 @@ export const MONTHLY_CALENDAR = [
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Carousel',
-          example_headline: 'Neues Jahr, neues Land? 5 Gruende warum 2027 DEIN Jahr wird',
+          example_headline: 'Neues Jahr, neues Land? 5 Gründe warum 2027 DEIN Jahr wird',
         },
       },
       {
@@ -259,7 +259,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abflug USA (Halbjahr)',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Januar-Abreise fuer USA Halbjahresprogramm',
+        description: 'Januar-Abreise für USA Halbjahresprogramm',
         country: 'US',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -273,7 +273,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abflug Australien/Neuseeland',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Abreisezeitraum fuer Australien & Neuseeland (Ende Januar)',
+        description: 'Abreisezeitraum für Australien & Neuseeland (Ende Januar)',
         country: 'AU',
         content_recommendation: {
           pillar: 'laender_spotlight',
@@ -292,7 +292,7 @@ export const MONTHLY_CALENDAR = [
         content_recommendation: {
           pillar: 'laender_spotlight',
           post_type: 'Carousel',
-          example_headline: '10 Dinge die du ueber Australien wissen musst \u{1F1E6}\u{1F1FA}',
+          example_headline: '10 Dinge die du über Australien wissen musst \u{1F1E6}\u{1F1FA}',
         },
       },
     ],
@@ -301,10 +301,10 @@ export const MONTHLY_CALENDAR = [
   // ─── FEBRUAR ───────────────────────────────────────
   {
     month: 2,
-    theme: 'Bewerbungsphase & Laender-Vergleiche',
+    theme: 'Bewerbungsphase & Länder-Vergleiche',
     focus_pillars: ['tipps_tricks', 'laender_spotlight', 'fristen_cta'],
     posting_intensity: 'high',
-    intensity_reason: 'Hauptbewerbungsphase + Kanada-Abreise + Schulstart Suedhalbkugel',
+    intensity_reason: 'Hauptbewerbungsphase + Kanada-Abreise + Schulstart Südhalbkugel',
     key_dates: [
       {
         day: 1,
@@ -312,7 +312,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abreise Kanada (Semester 2)',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Februar-Abreise fuer Kanada Semester 2',
+        description: 'Februar-Abreise für Kanada Semester 2',
         country: 'CA',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -340,7 +340,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Waitangi Day (Neuseeland)',
         icon: '\u{1F1F3}\u{1F1FF}',
         color: 'green',
-        description: 'Neuseelands Nationalfeiertag — Gruendungstag mit Maori-Kultur',
+        description: 'Neuseelands Nationalfeiertag — Gründungstag mit Maori-Kultur',
         country: 'NZ',
         content_recommendation: {
           pillar: 'laender_spotlight',
@@ -365,15 +365,15 @@ export const MONTHLY_CALENDAR = [
       {
         day: 28,
         type: 'bewerbungsfrist',
-        label: 'Fruehbewerbung empfohlen',
+        label: 'Frühbewerbung empfohlen',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Fruehbewerbungen fuer alle Laender empfohlen — beste Chancen sichern',
+        description: 'Frühbewerbungen für alle Länder empfohlen — beste Chancen sichern',
         country: 'ALL',
         content_recommendation: {
           pillar: 'fristen_cta',
           post_type: 'Story',
-          example_headline: 'Fruehbucher-Vorteil! Jetzt bewerben fuer die besten Plaetze',
+          example_headline: 'Frühbucher-Vorteil! Jetzt bewerben für die besten Plätze',
         },
       },
     ],
@@ -390,10 +390,10 @@ export const MONTHLY_CALENDAR = [
       {
         day: 1,
         type: 'messe',
-        label: 'JuBi Messe Fruehling',
+        label: 'JuBi Messe Frühling',
         icon: '\u{1F3AA}',
         color: 'teal',
-        description: 'Jugendbildungsmesse (JuBi) - Fruehlingsstermine fuer Highschool-Interessenten',
+        description: 'Jugendbildungsmesse (JuBi) - Frühlingstermine für Highschool-Interessenten',
         country: 'DE',
         content_recommendation: {
           pillar: 'behind_the_scenes',
@@ -407,7 +407,7 @@ export const MONTHLY_CALENDAR = [
         label: 'St. Patrick\'s Day (Irland)',
         icon: '\u{2618}\u{FE0F}',
         color: 'green',
-        description: 'Irlands groesster Feiertag — Austauschschueler feiern mittendrin',
+        description: 'Irlands größter Feiertag — Austauschschüler feiern mittendrin',
         country: 'IE',
         content_recommendation: {
           pillar: 'laender_spotlight',
@@ -421,12 +421,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Bewerbungsfrist USA Classic',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Bewerbungsschluss fuer USA Classic Programm (Herbstabreise)',
+        description: 'Bewerbungsschluss für USA Classic Programm (Herbstabreise)',
         country: 'US',
         content_recommendation: {
           pillar: 'fristen_cta',
           post_type: 'Single Image',
-          example_headline: 'LETZTE CHANCE: USA Classic Bewerbung nur noch bis 31. Maerz! \u{23F0}',
+          example_headline: 'LETZTE CHANCE: USA Classic Bewerbung nur noch bis 31. März! \u{23F0}',
         },
       },
     ],
@@ -446,7 +446,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Osterferien-Start (BW)',
         icon: '\u{1F423}',
         color: 'pink',
-        description: 'Osterferien — perfekte Zeit fuer Infoveranstaltungen und Beratung',
+        description: 'Osterferien — perfekte Zeit für Infoveranstaltungen und Beratung',
         country: 'DE',
         content_recommendation: {
           pillar: 'tipps_tricks',
@@ -460,12 +460,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Bewerbungsfrist USA Select',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Bewerbungsschluss fuer USA Select Programm (Herbstabreise)',
+        description: 'Bewerbungsschluss für USA Select Programm (Herbstabreise)',
         country: 'US',
         content_recommendation: {
           pillar: 'fristen_cta',
           post_type: 'Story',
-          example_headline: 'USA Select: Bewerbung laeuft ab! Sichere dir deinen Platz \u{1F1FA}\u{1F1F8}',
+          example_headline: 'USA Select: Bewerbung läuft ab! Sichere dir deinen Platz \u{1F1FA}\u{1F1F8}',
         },
       },
       {
@@ -479,7 +479,7 @@ export const MONTHLY_CALENDAR = [
         content_recommendation: {
           pillar: 'laender_spotlight',
           post_type: 'Carousel',
-          example_headline: 'Was ist ANZAC Day? So erleben unsere Schueler diesen besonderen Tag',
+          example_headline: 'Was ist ANZAC Day? So erleben unsere Schüler diesen besonderen Tag',
         },
       },
       {
@@ -488,7 +488,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Bewerbungsfrist Kanada',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Bewerbungsschluss fuer Kanada-Programme (Herbstabreise)',
+        description: 'Bewerbungsschluss für Kanada-Programme (Herbstabreise)',
         country: 'CA',
         content_recommendation: {
           pillar: 'fristen_cta',
@@ -513,7 +513,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Bewerbungsfrist Irland',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Bewerbungsschluss fuer Irland-Programme (Herbstabreise)',
+        description: 'Bewerbungsschluss für Irland-Programme (Herbstabreise)',
         country: 'IE',
         content_recommendation: {
           pillar: 'fristen_cta',
@@ -541,7 +541,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Pfingstferien-Start (BW)',
         icon: '\u{1F33B}',
         color: 'green',
-        description: 'Pfingstferien — Vorbereitungszeit fuer Herbst-Abreisende',
+        description: 'Pfingstferien — Vorbereitungszeit für Herbst-Abreisende',
         country: 'DE',
         content_recommendation: {
           pillar: 'tipps_tricks',
@@ -555,7 +555,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Bewerbungsfrist Australien/Neuseeland',
         icon: '\u{1F4CB}',
         color: 'red',
-        description: 'Bewerbungsschluss fuer Australien & Neuseeland (Januar-Abreise)',
+        description: 'Bewerbungsschluss für Australien & Neuseeland (Januar-Abreise)',
         country: 'AU',
         content_recommendation: {
           pillar: 'fristen_cta',
@@ -569,51 +569,51 @@ export const MONTHLY_CALENDAR = [
   // ─── JUNI ─────────────────────────────────────────
   {
     month: 6,
-    theme: 'Rueckkehrer-Saison & Sommervorbereitung',
+    theme: 'Rückkehrer-Saison & Sommervorbereitung',
     focus_pillars: ['erfahrungsberichte', 'tipps_tricks', 'behind_the_scenes'],
     posting_intensity: 'high',
-    intensity_reason: 'Rueckkehrer-Storys + Vorbereitung August-Abreise + Schuljahresende',
+    intensity_reason: 'Rückkehrer-Storys + Vorbereitung August-Abreise + Schuljahresende',
     key_dates: [
       {
         day: 1,
         type: 'rueckkehr',
-        label: 'Rueckkehr Irland',
+        label: 'Rückkehr Irland',
         icon: '\u{1F3E0}',
         color: 'purple',
-        description: 'Rueckkehrzeitraum fuer Irland-Austauschschueler',
+        description: 'Rückkehrzeitraum für Irland-Austauschschüler',
         country: 'IE',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Reel',
-          example_headline: 'Willkommen zurueck! So war mein Jahr in Irland \u{1F1EE}\u{1F1EA}',
+          example_headline: 'Willkommen zurück! So war mein Jahr in Irland \u{1F1EE}\u{1F1EA}',
         },
       },
       {
         day: 15,
         type: 'rueckkehr',
-        label: 'Rueckkehr USA/Kanada',
+        label: 'Rückkehr USA/Kanada',
         icon: '\u{1F3E0}',
         color: 'purple',
-        description: 'Rueckkehrzeitraum fuer USA und Kanada Austauschschueler',
+        description: 'Rückkehrzeitraum für USA und Kanada Austauschschüler',
         country: 'US',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Story-Serie',
-          example_headline: 'Nach 10 Monaten zurueck: Was hat sich veraendert?',
+          example_headline: 'Nach 10 Monaten zurück: Was hat sich verändert?',
         },
       },
       {
         day: 20,
         type: 'content_highlight',
-        label: 'Rueckkehrer-Interviews starten',
+        label: 'Rückkehrer-Interviews starten',
         icon: '\u{1F3A4}',
         color: 'teal',
-        description: 'Beste Zeit fuer Rueckkehrer-Interviews und Erfahrungsberichte',
+        description: 'Beste Zeit für Rückkehrer-Interviews und Erfahrungsberichte',
         country: 'ALL',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Carousel',
-          example_headline: '10 Dinge die sich nach meinem Auslandsjahr veraendert haben',
+          example_headline: '10 Dinge die sich nach meinem Auslandsjahr verändert haben',
         },
       },
     ],
@@ -633,12 +633,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Canada Day',
         icon: '\u{1F1E8}\u{1F1E6}',
         color: 'red',
-        description: 'Kanadischer Nationalfeiertag — perfekt fuer Kanada-Spotlight',
+        description: 'Kanadischer Nationalfeiertag — perfekt für Kanada-Spotlight',
         country: 'CA',
         content_recommendation: {
           pillar: 'laender_spotlight',
           post_type: 'Reel',
-          example_headline: 'Happy Canada Day! 7 Gruende warum Kanada das perfekte Ziel ist \u{1F1E8}\u{1F1E6}',
+          example_headline: 'Happy Canada Day! 7 Gründe warum Kanada das perfekte Ziel ist \u{1F1E8}\u{1F1E6}',
         },
       },
       {
@@ -647,12 +647,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Independence Day (USA)',
         icon: '\u{1F386}',
         color: 'blue',
-        description: 'Amerikanischer Unabhaengigkeitstag — Schueler erleben es hautnah',
+        description: 'Amerikanischer Unabhängigkeitstag — Schüler erleben es hautnah',
         country: 'US',
         content_recommendation: {
           pillar: 'laender_spotlight',
           post_type: 'Reel',
-          example_headline: '4th of July in den USA: So haben unsere Schueler gefeiert \u{1F386}',
+          example_headline: '4th of July in den USA: So haben unsere Schüler gefeiert \u{1F386}',
         },
       },
       {
@@ -661,7 +661,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abflug Australien (Term 3)',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Juli-Abreise fuer Australien Term 3',
+        description: 'Juli-Abreise für Australien Term 3',
         country: 'AU',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -675,7 +675,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abflug Neuseeland (Term 3)',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Juli-Abreise fuer Neuseeland Term 3',
+        description: 'Juli-Abreise für Neuseeland Term 3',
         country: 'NZ',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -689,7 +689,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Sommerferien-Start (BW)',
         icon: '\u{2600}\u{FE0F}',
         color: 'amber',
-        description: 'Beginn der Sommerferien — Hochsaison fuer Fernweh-Content',
+        description: 'Beginn der Sommerferien — Hochsaison für Fernweh-Content',
         country: 'DE',
         content_recommendation: {
           pillar: 'laender_spotlight',
@@ -714,7 +714,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Vorbereitungsseminar TREFF',
         icon: '\u{1F393}',
         color: 'teal',
-        description: 'TREFF Vorbereitungsseminar fuer alle Herbst-Abreisenden',
+        description: 'TREFF Vorbereitungsseminar für alle Herbst-Abreisenden',
         country: 'ALL',
         content_recommendation: {
           pillar: 'behind_the_scenes',
@@ -728,7 +728,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Abflug USA/Kanada/Irland',
         icon: '\u{2708}\u{FE0F}',
         color: 'blue',
-        description: 'Hauptabreisezeitraum fuer USA, Kanada und Irland (Mitte August)',
+        description: 'Hauptabreisezeitraum für USA, Kanada und Irland (Mitte August)',
         country: 'US',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -742,12 +742,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Erste-Woche-Content',
         icon: '\u{1F4F1}',
         color: 'teal',
-        description: 'Schueler berichten von ihrer ersten Woche im Ausland',
+        description: 'Schüler berichten von ihrer ersten Woche im Ausland',
         country: 'ALL',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Story-Serie',
-          example_headline: 'Woche 1 im Ausland: Jetlag, Gastfamilie und erste Eindruecke',
+          example_headline: 'Woche 1 im Ausland: Jetlag, Gastfamilie und erste Eindrücke',
         },
       },
     ],
@@ -772,7 +772,7 @@ export const MONTHLY_CALENDAR = [
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Carousel',
-          example_headline: 'Erster Schultag im Ausland: Aufregung, Nervositaet und neue Freunde!',
+          example_headline: 'Erster Schultag im Ausland: Aufregung, Nervosität und neue Freunde!',
         },
       },
       {
@@ -781,12 +781,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Sommerferien-Ende (BW)',
         icon: '\u{1F4DA}',
         color: 'amber',
-        description: 'Ende der Sommerferien — neue Schueler starten Planung fuers Auslandsjahr',
+        description: 'Ende der Sommerferien — neue Schüler starten Planung fürs Auslandsjahr',
         country: 'DE',
         content_recommendation: {
           pillar: 'faq',
           post_type: 'Carousel',
-          example_headline: 'Du traemst vom Auslandsjahr? Hier sind Antworten auf deine Top-5-Fragen',
+          example_headline: 'Du träumst vom Auslandsjahr? Hier sind Antworten auf deine Top-5-Fragen',
         },
       },
       {
@@ -795,7 +795,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Einleben-Phase Content',
         icon: '\u{1F3E0}',
         color: 'teal',
-        description: 'Schueler haben sich eingelebt — erste tiefere Erfahrungsberichte',
+        description: 'Schüler haben sich eingelebt — erste tiefere Erfahrungsberichte',
         country: 'ALL',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -820,12 +820,12 @@ export const MONTHLY_CALENDAR = [
         label: 'Tag der Deutschen Einheit',
         icon: '\u{1F1E9}\u{1F1EA}',
         color: 'indigo',
-        description: 'Thema: Weltoffenheit und Voelkerverstaendigung durch Austausch',
+        description: 'Thema: Weltoffenheit und Völkerverständigung durch Austausch',
         country: 'DE',
         content_recommendation: {
           pillar: 'infografiken',
           post_type: 'Carousel',
-          example_headline: 'Grenzen ueberwinden: Warum ein Auslandsjahr Voelkerverstaendigung schafft',
+          example_headline: 'Grenzen überwinden: Warum ein Auslandsjahr Völkerverständigung schafft',
         },
       },
       {
@@ -834,7 +834,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Thanksgiving (Kanada)',
         icon: '\u{1F341}',
         color: 'orange',
-        description: 'Kanadisches Erntedankfest — frueher als in den USA',
+        description: 'Kanadisches Erntedankfest — früher als in den USA',
         country: 'CA',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -848,7 +848,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Stipendien-Bewerbungsfrist',
         icon: '\u{1F393}',
         color: 'amber',
-        description: 'Bewerbungsschluss fuer TREFF-Stipendien und Teilstipendien',
+        description: 'Bewerbungsschluss für TREFF-Stipendien und Teilstipendien',
         country: 'ALL',
         content_recommendation: {
           pillar: 'fristen_cta',
@@ -862,7 +862,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Herbstferien-Start (BW)',
         icon: '\u{1F342}',
         color: 'orange',
-        description: 'Herbstferien — Schueler im Ausland berichten, Daheimgebliebene traumen',
+        description: 'Herbstferien — Schüler im Ausland berichten, Daheimgebliebene träumen',
         country: 'DE',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -876,7 +876,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Halloween (USA/CA/IE)',
         icon: '\u{1F383}',
         color: 'orange',
-        description: 'Halloween — ein absolutes Highlight fuer Austauschschueler',
+        description: 'Halloween — ein absolutes Highlight für Austauschschüler',
         country: 'US',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
@@ -901,7 +901,7 @@ export const MONTHLY_CALENDAR = [
         label: 'JuBi Messe Herbst',
         icon: '\u{1F3AA}',
         color: 'teal',
-        description: 'Jugendbildungsmesse (JuBi) — Herbsttermine fuer Highschool-Interessenten',
+        description: 'Jugendbildungsmesse (JuBi) — Herbsttermine für Highschool-Interessenten',
         country: 'DE',
         content_recommendation: {
           pillar: 'behind_the_scenes',
@@ -915,7 +915,7 @@ export const MONTHLY_CALENDAR = [
         label: 'Infoveranstaltung online',
         icon: '\u{1F4BB}',
         color: 'teal',
-        description: 'Online-Infoveranstaltung fuer Eltern und Schueler',
+        description: 'Online-Infoveranstaltung für Eltern und Schüler',
         country: 'DE',
         content_recommendation: {
           pillar: 'fristen_cta',
@@ -943,23 +943,23 @@ export const MONTHLY_CALENDAR = [
   // ─── DEZEMBER ─────────────────────────────────────
   {
     month: 12,
-    theme: 'Weihnachten weltweit & Jahresrueckblick',
+    theme: 'Weihnachten weltweit & Jahresrückblick',
     focus_pillars: ['erfahrungsberichte', 'laender_spotlight', 'infografiken'],
     posting_intensity: 'medium',
-    intensity_reason: 'Weihnachten international + Rueckkehr AU/NZ + Jahresrueckblick',
+    intensity_reason: 'Weihnachten international + Rückkehr AU/NZ + Jahresrückblick',
     key_dates: [
       {
         day: 10,
         type: 'rueckkehr',
-        label: 'Rueckkehr Australien/Neuseeland',
+        label: 'Rückkehr Australien/Neuseeland',
         icon: '\u{1F3E0}',
         color: 'purple',
-        description: 'Rueckkehrzeitraum fuer Australien & Neuseeland Austauschschueler',
+        description: 'Rückkehrzeitraum für Australien & Neuseeland Austauschschüler',
         country: 'AU',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Reel',
-          example_headline: 'Von Sommer in den Winter: Unsere Australien-Rueckkehrer sind da! \u{1F1E6}\u{1F1FA}',
+          example_headline: 'Von Sommer in den Winter: Unsere Australien-Rückkehrer sind da! \u{1F1E6}\u{1F1FA}',
         },
       },
       {
@@ -973,7 +973,7 @@ export const MONTHLY_CALENDAR = [
         content_recommendation: {
           pillar: 'tipps_tricks',
           post_type: 'Carousel',
-          example_headline: 'Auslandsjahr unter dem Weihnachtsbaum? So ueberzeugst du deine Eltern \u{1F384}',
+          example_headline: 'Auslandsjahr unter dem Weihnachtsbaum? So überzeugst du deine Eltern \u{1F384}',
         },
       },
       {
@@ -982,26 +982,26 @@ export const MONTHLY_CALENDAR = [
         label: 'Weihnachten',
         icon: '\u{1F384}',
         color: 'red',
-        description: 'Weihnachten — Schueler im Ausland feiern mit Gastfamilien',
+        description: 'Weihnachten — Schüler im Ausland feiern mit Gastfamilien',
         country: 'ALL',
         content_recommendation: {
           pillar: 'erfahrungsberichte',
           post_type: 'Story-Serie',
-          example_headline: 'Weihnachten in 5 Laendern: So feiern unsere Schueler weltweit \u{1F30D}\u{1F384}',
+          example_headline: 'Weihnachten in 5 Ländern: So feiern unsere Schüler weltweit \u{1F30D}\u{1F384}',
         },
       },
       {
         day: 31,
         type: 'content_highlight',
-        label: 'Jahresrueckblick',
+        label: 'Jahresrückblick',
         icon: '\u{1F386}',
         color: 'amber',
-        description: 'Silvester & Jahresrueckblick — die Highlights des TREFF-Jahres',
+        description: 'Silvester & Jahresrückblick — die Highlights des TREFF-Jahres',
         country: 'ALL',
         content_recommendation: {
           pillar: 'infografiken',
           post_type: 'Carousel',
-          example_headline: 'TREFF 2026 in Zahlen: X Schueler, 5 Laender, unzaehlige Abenteuer \u{1F389}',
+          example_headline: 'TREFF 2026 in Zahlen: X Schüler, 5 Länder, unzählige Abenteuer \u{1F389}',
         },
       },
     ],

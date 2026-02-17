@@ -71,7 +71,7 @@ const TARGET_FORMATS = [
     icon: 'camera',
     format: '1:1',
     description: 'Quadratischer Feed-Post (1080x1080)',
-    captionHint: 'Ausfuehrlich, storytelling-orientiert, 150-500 Zeichen',
+    captionHint: 'Ausführlich, storytelling-orientiert, 150-500 Zeichen',
     hashtagHint: '10-25 Hashtags',
     maxCaption: 2200,
   },
@@ -101,7 +101,7 @@ const TARGET_FORMATS = [
     icon: 'star',
     format: '1:1',
     description: 'Swipeable Carousel-Slides (1080x1080)',
-    captionHint: 'Slide-by-slide Erklaerung, educational, 200-500 Zeichen',
+    captionHint: 'Slide-by-slide Erklärung, educational, 200-500 Zeichen',
     hashtagHint: '10-25 Hashtags',
     maxCaption: 2200,
   },
@@ -256,9 +256,9 @@ async function adaptWithAI() {
       // Store the derivative post ID so we can update it rather than create a new one
       savedResult.value = { post_id: derivative.post_id, alreadyCreated: true }
 
-      toast.success('AI-Anpassung generiert! Du kannst die Vorschlaege jetzt bearbeiten.')
+      toast.success('AI-Anpassung generiert! Du kannst die Vorschläge jetzt bearbeiten.')
     } else {
-      toast.warning('Keine Anpassung moeglich (Quellformat identisch oder ungueltig)')
+      toast.warning('Keine Anpassung möglich (Quellformat identisch oder ungültig)')
     }
   } catch (err) {
     errorMessage.value = err.response?.data?.detail || 'AI-Anpassung fehlgeschlagen'
@@ -385,14 +385,14 @@ watch(() => props.postId, (newId) => {
           Content Repurposing
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          Passe einen bestehenden Post fuer eine andere Plattform an
+          Passe einen bestehenden Post für eine andere Plattform an
         </p>
       </div>
       <button
         v-if="emit"
         @click="emit('close')"
         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-        aria-label="Schliessen"
+        aria-label="Schließen"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -578,7 +578,7 @@ watch(() => props.postId, (newId) => {
                 rows="4"
                 class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
                 :class="captionOverLimit ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
-                :placeholder="`Caption fuer ${selectedTarget?.label}...`"
+                :placeholder="`Caption für ${selectedTarget?.label}...`"
                 data-testid="adapted-caption-input"
               />
               <p class="text-[10px] text-gray-400 mt-0.5">{{ selectedTarget?.captionHint }}</p>
@@ -591,7 +591,7 @@ watch(() => props.postId, (newId) => {
                 v-model="adaptedHashtags"
                 type="text"
                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                :placeholder="`Hashtags fuer ${selectedTarget?.label}...`"
+                :placeholder="`Hashtags für ${selectedTarget?.label}...`"
                 data-testid="adapted-hashtags-input"
               />
               <p class="text-[10px] text-gray-400 mt-0.5">{{ selectedTarget?.hashtagHint }}</p>
@@ -661,7 +661,7 @@ watch(() => props.postId, (newId) => {
       class="text-center py-12 text-gray-500 dark:text-gray-400"
     >
       <AppIcon name="arrow-path" class="w-10 h-10 mx-auto mb-3" />
-      <p class="text-sm">Waehle einen Post aus, um ihn fuer eine andere Plattform anzupassen.</p>
+      <p class="text-sm">Wähle einen Post aus, um ihn für eine andere Plattform anzupassen.</p>
     </div>
   </div>
 </template>

@@ -67,7 +67,7 @@ const tempos = [
 
 const pillars = [
   { value: '', label: 'Alle Content-Pillars' },
-  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
   { value: 'tipps_tricks', label: 'Tipps & Tricks' },
   { value: 'fristen_cta', label: 'Fristen & CTA' },
@@ -103,7 +103,7 @@ const platformIcons = {
 }
 
 const pillarLabels = {
-  laender_spotlight: 'Laender',
+  laender_spotlight: 'Länder',
   erfahrungsberichte: 'Erfahrungen',
   tipps_tricks: 'Tipps',
   fristen_cta: 'Fristen',
@@ -269,7 +269,7 @@ onMounted(() => {
           @click="resetFilters"
           class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
         >
-          Filter zuruecksetzen
+          Filter zurücksetzen
         </button>
       </div>
     </div>
@@ -299,7 +299,7 @@ onMounted(() => {
         </svg>
         <p class="text-sm text-gray-400 dark:text-gray-500">Keine passenden Tracks gefunden</p>
         <button @click="resetFilters" class="text-xs text-blue-600 hover:underline mt-1">
-          Filter zuruecksetzen
+          Filter zurücksetzen
         </button>
       </div>
 

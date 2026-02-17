@@ -1,6 +1,6 @@
 <script setup>
 /**
- * VideoScriptView - Video-Script-Generator fuer Reels und TikTok
+ * VideoScriptView - Video-Script-Generator für Reels und TikTok
  *
  * Step-Flow: Thema -> Plattform/Dauer -> Hook-Formel -> Script generieren -> Bearbeiten -> Speichern
  */
@@ -85,7 +85,7 @@ function onAudioSelect(suggestion) {
   if (editingSceneIndex.value >= 0) {
     // Apply to scene being edited
     editForm.value.music_note = musicNote
-    toast.success(`Audio '${suggestion.title}' zur Szene hinzugefuegt`)
+    toast.success(`Audio '${suggestion.title}' zur Szene hinzugefügt`)
   } else if (generatedScript.value && generatedScript.value.scenes.length > 0) {
     // Apply to all scenes as default
     generatedScript.value.scenes.forEach(scene => {
@@ -110,7 +110,7 @@ const countries = [
 
 const categories = [
   { value: '', label: 'Keine Kategorie' },
-  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
   { value: 'tipps_tricks', label: 'Tipps & Tricks' },
   { value: 'fristen_cta', label: 'Fristen & CTA' },
@@ -143,7 +143,7 @@ const platforms = [
 const durations = [
   { value: 15, label: '15 Sekunden', desc: 'Schnell & knackig' },
   { value: 30, label: '30 Sekunden', desc: 'Standard Reel' },
-  { value: 60, label: '60 Sekunden', desc: 'Ausfuehrlich' },
+  { value: 60, label: '60 Sekunden', desc: 'Ausführlich' },
   { value: 90, label: '90 Sekunden', desc: 'TikTok Storytelling' },
 ]
 
@@ -157,7 +157,7 @@ const sceneTypeLabels = {
   content_2: 'Hauptinhalt 2',
   content_3: 'Hauptinhalt 3',
   proof: 'Beweis/Beispiel',
-  transition: 'Uebergang',
+  transition: 'Übergang',
   cta: 'Call-to-Action',
 }
 
@@ -316,9 +316,9 @@ async function deleteScript(id) {
       generatedScript.value = null
       currentStep.value = 1
     }
-    toast.success('Script geloescht')
+    toast.success('Script gelöscht')
   } catch (e) {
-    toast.error('Loeschen fehlgeschlagen')
+    toast.error('Löschen fehlgeschlagen')
   }
 }
 
@@ -366,7 +366,7 @@ function formatDuration(seconds) {
         Video-Script-Generator
       </h1>
       <p class="text-gray-600 dark:text-gray-400 mt-1">
-        Erstelle Szene-fuer-Szene Skripte fuer Instagram Reels und TikTok
+        Erstelle Szene-für-Szene Skripte für Instagram Reels und TikTok
       </p>
     </div>
 
@@ -432,7 +432,7 @@ function formatDuration(seconds) {
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tonalitaet</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tonalität</label>
             <select v-model="tone" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option v-for="t in tones" :key="t.value" :value="t.value">{{ t.label }}</option>
             </select>
@@ -509,7 +509,7 @@ function formatDuration(seconds) {
 
       <div class="mt-6 flex justify-between">
         <button @click="prevStep" class="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-          Zurueck
+          Zurück
         </button>
         <button @click="nextStep" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           Weiter
@@ -520,10 +520,10 @@ function formatDuration(seconds) {
     <!-- Step 3: Hook Formula -->
     <div v-if="currentStep === 3" class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Schritt 3: Hook-Formel waehlen
+        Schritt 3: Hook-Formel wählen
       </h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        Die Hook bestimmt die ersten Sekunden deines Videos. Hoehere Effektivitaet = bessere Performance.
+        Die Hook bestimmt die ersten Sekunden deines Videos. Höhere Effektivität = bessere Performance.
       </p>
 
       <div class="space-y-3 mb-4">
@@ -540,7 +540,7 @@ function formatDuration(seconds) {
           <div class="flex items-center justify-between">
             <div>
               <span class="font-medium text-gray-900 dark:text-white">Automatisch (gewichtet)</span>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">KI waehlt die beste Hook basierend auf Effektivitaet</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">KI wählt die beste Hook basierend auf Effektivität</p>
             </div>
             <span class="text-sm text-blue-600 dark:text-blue-400 font-bold">AUTO</span>
           </div>
@@ -587,7 +587,7 @@ function formatDuration(seconds) {
 
       <div class="mt-6 flex justify-between">
         <button @click="prevStep" class="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-          Zurueck
+          Zurück
         </button>
         <button
           @click="generateScript"
@@ -895,10 +895,10 @@ function formatDuration(seconds) {
             </div>
             <div class="flex items-center gap-2 ml-4">
               <button @click="loadScript(script)" class="px-3 py-1 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded hover:bg-blue-200 transition-colors">
-                Oeffnen
+                Öffnen
               </button>
               <button @click="deleteScript(script.id)" class="px-3 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors">
-                Loeschen
+                Löschen
               </button>
             </div>
           </div>
@@ -907,7 +907,7 @@ function formatDuration(seconds) {
 
       <div class="mt-4">
         <button @click="prevStep" class="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-          Zurueck
+          Zurück
         </button>
       </div>
     </div>

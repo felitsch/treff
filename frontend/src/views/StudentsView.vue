@@ -215,7 +215,7 @@ async function executeDelete() {
   if (!studentToDelete.value) return
   const success = await store.deleteStudent(studentToDelete.value.id)
   if (success) {
-    toast.success('Student erfolgreich geloescht.')
+    toast.success('Student erfolgreich gelöscht.')
   }
   showDeleteConfirm.value = false
   studentToDelete.value = null
@@ -332,7 +332,7 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Students Hub</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Schueler-Profile, Story-Arcs & Content-Pipeline auf einen Blick
+          Schüler-Profile, Story-Arcs & Content-Pipeline auf einen Blick
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -350,7 +350,7 @@ onMounted(() => {
           data-testid="add-student-btn"
         >
           <span>+</span>
-          <span>Student hinzufuegen</span>
+          <span>Student hinzufügen</span>
         </button>
       </div>
     </div>
@@ -359,7 +359,7 @@ onMounted(() => {
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" data-testid="hub-stats">
       <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ hubStats.total }}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Schueler gesamt</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Schüler gesamt</div>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ hubStats.active }}</div>
@@ -379,7 +379,7 @@ onMounted(() => {
     <div data-tour="students-story-arc-hint">
       <WorkflowHint
         hint-id="students-story-arcs"
-        message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
+        message="Tipp: Erstelle einen Story-Arc für deine Schüler, um mehrteilige Serien zu planen."
         link-text="Story-Arcs"
         link-to="/calendar/story-arcs"
         icon="book-open"
@@ -403,7 +403,7 @@ onMounted(() => {
         @change="loadStudents"
         data-testid="filter-country"
       >
-        <option value="">Alle Laender</option>
+        <option value="">Alle Länder</option>
         <option v-for="c in countries" :key="c.value" :value="c.value">
           {{ countryFlags[c.value] }} {{ c.label }}
         </option>
@@ -439,9 +439,9 @@ onMounted(() => {
     <EmptyState
       v-else-if="filteredStudents.length === 0"
       svgIcon="academic-cap"
-      title="Noch keine Schueler angelegt"
-      description="Lege deinen ersten Austausch-Schueler an, um personalisierte Content-Serien und Story-Arcs zu erstellen."
-      actionLabel="Schueler anlegen"
+      title="Noch keine Schüler angelegt"
+      description="Lege deinen ersten Austausch-Schüler an, um personalisierte Content-Serien und Story-Arcs zu erstellen."
+      actionLabel="Schüler anlegen"
       @action="showForm = true"
     />
 
@@ -606,7 +606,7 @@ onMounted(() => {
               v-model="formData.name"
               type="text"
               required
-              placeholder="z.B. Jonathan Mueller"
+              placeholder="z.B. Jonathan Müller"
               class="input-field w-full"
               data-testid="form-name"
             />
@@ -742,10 +742,10 @@ onMounted(() => {
       @click.self="cancelDelete"
     >
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Student loeschen?</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Student löschen?</h3>
         <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          Moechtest du <strong>{{ studentToDelete?.name }}</strong> wirklich loeschen?
-          Diese Aktion kann nicht rueckgaengig gemacht werden.
+          Möchtest du <strong>{{ studentToDelete?.name }}</strong> wirklich löschen?
+          Diese Aktion kann nicht rückgängig gemacht werden.
         </p>
         <div class="flex gap-3">
           <button
@@ -758,7 +758,7 @@ onMounted(() => {
             class="btn-danger flex-1"
             @click="executeDelete"
           >
-            Loeschen
+            Löschen
           </button>
         </div>
       </div>

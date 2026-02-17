@@ -104,7 +104,7 @@ function closeDropdown() {
       <input
         :value="modelValue"
         @input="$emit('update:modelValue', $event.target.value)"
-        placeholder="CTA eingeben oder aus Bibliothek waehlen..."
+        placeholder="CTA eingeben oder aus Bibliothek wählen..."
         class="flex-1 px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent"
         :class="(modelValue?.length || 0) > 25 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-gray-900 dark:text-white' : (modelValue?.length || 0) > 20 ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white'"
         data-testid="cta-input"
@@ -113,7 +113,7 @@ function closeDropdown() {
         @click="toggleDropdown"
         class="px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
         :class="showDropdown ? 'bg-[#3B7AB1] text-white border-[#3B7AB1]' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-        title="CTA-Bibliothek oeffnen"
+        title="CTA-Bibliothek öffnen"
         data-testid="cta-picker-toggle"
       >
         <span>&#x1F4DA;</span>
@@ -122,7 +122,7 @@ function closeDropdown() {
 
     <!-- Character Count -->
     <div class="flex items-center justify-between mt-0.5">
-      <span v-if="(modelValue?.length || 0) > 25" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich ueberlaufen</span>
+      <span v-if="(modelValue?.length || 0) > 25" class="text-xs text-red-500 dark:text-red-400">Text kann den Template-Bereich überlaufen</span>
       <span v-else-if="(modelValue?.length || 0) > 20" class="text-xs text-amber-500 dark:text-amber-400">Nahe am Zeichenlimit</span>
       <span v-else class="text-xs text-gray-400"></span>
       <span class="text-xs" :class="(modelValue?.length || 0) > 25 ? 'text-red-500 dark:text-red-400 font-semibold' : (modelValue?.length || 0) > 20 ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400'">{{ modelValue?.length || 0 }}/25</span>
@@ -194,7 +194,7 @@ function closeDropdown() {
         <button
           @click="closeDropdown"
           class="w-full text-center text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 py-1"
-        >Schliessen</button>
+        >Schließen</button>
       </div>
     </div>
 

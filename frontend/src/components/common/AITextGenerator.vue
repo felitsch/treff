@@ -195,7 +195,7 @@ function applyVariant() {
   const variant = currentVariant.value
   if (variant) {
     emit('apply-variant', { variant, index: selectedVariantIndex.value })
-    toast.success('Variante uebernommen!')
+    toast.success('Variante übernommen!')
   }
 }
 
@@ -231,7 +231,7 @@ onUnmounted(cleanup)
       </h3>
       <p class="text-gray-500 dark:text-gray-400">
         {{ humorFormat
-          ? `"${humorFormat.name}" - Humor-Format mit KI-gestuetzten Textvorschlaegen.`
+          ? `"${humorFormat.name}" - Humor-Format mit KI-gestützten Textvorschlägen.`
           : 'Texte, Captions und Hashtags werden basierend auf deiner Auswahl generiert.' }}
       </p>
     </div>
@@ -251,7 +251,7 @@ onUnmounted(cleanup)
       >
         <span class="flex items-center gap-1.5">
           <AppIcon name="sparkles" class="w-4 h-4" />
-          Hook-Formel waehlen
+          Hook-Formel wählen
           <span v-if="selectedHook" class="px-1.5 py-0.5 rounded-full bg-[#3B7AB1]/10 text-[#3B7AB1] text-[10px]">{{ selectedHook.name }}</span>
         </span>
         <span>{{ showHookPanel ? '▲' : '▼' }}</span>
@@ -389,7 +389,7 @@ onUnmounted(cleanup)
                 ? 'bg-[#3B7AB1] text-white'
                 : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'"
             >{{ idx + 1 }}</span>
-            <span v-if="selectedVariantIndex === idx" class="text-xs font-semibold text-[#3B7AB1]">Ausgewaehlt</span>
+            <span v-if="selectedVariantIndex === idx" class="text-xs font-semibold text-[#3B7AB1]">Ausgewählt</span>
             <span v-if="variant.source" class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">
               {{ variant.source === 'gemini' ? 'KI' : 'Vorlage' }}
             </span>
@@ -409,7 +409,7 @@ onUnmounted(cleanup)
         class="w-full px-4 py-2.5 bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
         data-testid="apply-variant-btn"
       >
-        <AppIcon name="check-circle" class="w-4 h-4" /> Variante {{ selectedVariantIndex + 1 }} uebernehmen
+        <AppIcon name="check-circle" class="w-4 h-4" /> Variante {{ selectedVariantIndex + 1 }} übernehmen
       </button>
     </div>
 

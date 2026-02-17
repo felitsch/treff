@@ -25,64 +25,64 @@ const currentStep = ref(0)
 const steps = [
   {
     icon: 'film',
-    title: 'Die Video-Tool-Suite im Ueberblick',
+    title: 'Die Video-Tool-Suite im Überblick',
     description:
-      'TREFF Sprachreisen bietet dir 6 spezialisierte Video-Tools, die perfekt zusammenarbeiten. Der typische Workflow: Thumbnails erstellen, Overlays hinzufuegen, Clips zusammenschneiden, Branding-Templates anwenden, fuer Plattformen exportieren und Audio-Spuren mixen. Lass uns jeden Schritt kennenlernen!',
+      'TREFF Sprachreisen bietet dir 6 spezialisierte Video-Tools, die perfekt zusammenarbeiten. Der typische Workflow: Thumbnails erstellen, Overlays hinzufügen, Clips zusammenschneiden, Branding-Templates anwenden, für Plattformen exportieren und Audio-Spuren mixen. Lass uns jeden Schritt kennenlernen!',
     page: null,
   },
   {
     icon: 'film',
     title: '1. Thumbnail-Generator',
     description:
-      'Erstelle klickstarke Vorschaubilder fuer deine Videos und Reels. Waehle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Woerter) und exportiere in verschiedenen Groessen (YouTube 1280x720, Instagram 1080x1080, Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
+      'Erstelle klickstarke Vorschaubilder für deine Videos und Reels. Wähle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Wörter) und exportiere in verschiedenen Größen (YouTube 1280x720, Instagram 1080x1080, Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
     page: '/video/thumbnails',
-    navLabel: 'Thumbnails oeffnen',
+    navLabel: 'Thumbnails öffnen',
   },
   {
     icon: 'video-camera',
     title: '2. Video-Overlay-Editor',
     description:
-      'Fuege Text, Logos, Sticker und Animationen ueber deine Videos. Ideal fuer TREFF-Branding, Untertitel und Call-to-Actions. Jeder Overlay-Layer kann einzeln positioniert, skaliert und zeitlich eingestellt werden. Mehrere Layer uebereinander sind moeglich — so entsteht professionelles Video-Branding.',
+      'Füge Text, Logos, Sticker und Animationen über deine Videos. Ideal für TREFF-Branding, Untertitel und Call-to-Actions. Jeder Overlay-Layer kann einzeln positioniert, skaliert und zeitlich eingestellt werden. Mehrere Layer übereinander sind möglich — so entsteht professionelles Video-Branding.',
     page: '/video/overlays',
-    navLabel: 'Overlay-Editor oeffnen',
+    navLabel: 'Overlay-Editor öffnen',
   },
   {
     icon: 'scissors',
     title: '3. Video-Composer (Schnitt)',
     description:
-      'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kuerze sie auf die optimale Laenge und fuege Uebergaenge (Crossfade, Cut) hinzu. Waehle das Ausgabeformat: 9:16 fuer Reels/TikTok, 1:1 fuer Instagram Feed, 16:9 fuer YouTube. Ideal sind 15-60 Sekunden fuer Social Media.',
+      'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kürze sie auf die optimale Länge und füge Übergänge (Crossfade, Cut) hinzu. Wähle das Ausgabeformat: 9:16 für Reels/TikTok, 1:1 für Instagram Feed, 16:9 für YouTube. Ideal sind 15-60 Sekunden für Social Media.',
     page: '/video/composer',
-    navLabel: 'Composer oeffnen',
+    navLabel: 'Composer öffnen',
   },
   {
     icon: 'tag',
     title: '4. Video-Branding-Templates',
     description:
-      'Verwalte wiederverwendbare Vorlagen fuer Intros, Outros, Bauchbinden und Texteinblendungen — alles im TREFF-Design (Blau #4C8BC2, Gelb #FDD000). Einmal erstellt, kannst du Templates immer wieder auf verschiedene Videos anwenden. Konsistentes Branding ueber alle Videos staerkt die Markenwahrnehmung.',
+      'Verwalte wiederverwendbare Vorlagen für Intros, Outros, Bauchbinden und Texteinblendungen — alles im TREFF-Design (Blau #4C8BC2, Gelb #FDD000). Einmal erstellt, kannst du Templates immer wieder auf verschiedene Videos anwenden. Konsistentes Branding über alle Videos stärkt die Markenwahrnehmung.',
     page: '/video/templates',
-    navLabel: 'Templates oeffnen',
+    navLabel: 'Templates öffnen',
   },
   {
     icon: 'export',
     title: '5. Video-Export',
     description:
-      'Optimiere deine Videos fuer verschiedene Plattformen mit dem richtigen Seitenverhaeltnis, Fokuspunkt und Qualitaetseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 fuer Reels UND 1:1 fuer den Feed. Alle Varianten als ZIP herunterladen.',
+      'Optimiere deine Videos für verschiedene Plattformen mit dem richtigen Seitenverhältnis, Fokuspunkt und Qualitätseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 für Reels UND 1:1 für den Feed. Alle Varianten als ZIP herunterladen.',
     page: '/video/export',
-    navLabel: 'Export oeffnen',
+    navLabel: 'Export öffnen',
   },
   {
     icon: 'musical-note',
     title: '6. Audio-Mixer',
     description:
-      'Fuege Hintergrundmusik, Soundeffekte und Voiceover zu deinen Videos hinzu. Regle die Lautstaerke jeder Spur einzeln (Musik 20-30%, Voiceover 100%, Original-Audio 50%) und fuege Fade-In/Fade-Out hinzu. Professioneller Sound macht den Unterschied zwischen amateurhaft und hochwertig!',
+      'Füge Hintergrundmusik, Soundeffekte und Voiceover zu deinen Videos hinzu. Regle die Lautstärke jeder Spur einzeln (Musik 20-30%, Voiceover 100%, Original-Audio 50%) und füge Fade-In/Fade-Out hinzu. Professioneller Sound macht den Unterschied zwischen amateurhaft und hochwertig!',
     page: '/video/audio-mixer',
-    navLabel: 'Audio-Mixer oeffnen',
+    navLabel: 'Audio-Mixer öffnen',
   },
   {
     icon: 'arrow-path',
     title: 'Der komplette Workflow',
     description:
-      'So arbeiten die Tools zusammen: (1) Erstelle ein Thumbnail fuer dein Video. (2) Fuege Overlays wie Logos und Untertitel hinzu. (3) Schneide Clips im Composer zusammen. (4) Wende Branding-Templates an (Intro, Outro). (5) Exportiere fuer Instagram, TikTok oder YouTube. (6) Mixe Hintergrundmusik dazu. Jede Seite hat auch eine eigene Mini-Tour — klicke den ?-Button oben rechts!',
+      'So arbeiten die Tools zusammen: (1) Erstelle ein Thumbnail für dein Video. (2) Füge Overlays wie Logos und Untertitel hinzu. (3) Schneide Clips im Composer zusammen. (4) Wende Branding-Templates an (Intro, Outro). (5) Exportiere für Instagram, TikTok oder YouTube. (6) Mixe Hintergrundmusik dazu. Jede Seite hat auch eine eigene Mini-Tour — klicke den ?-Button oben rechts!',
     page: null,
   },
 ]
@@ -232,7 +232,7 @@ onMounted(async () => {
             @click="skipTour"
             class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            Tour ueberspringen
+            Tour überspringen
           </button>
           <div class="flex items-center gap-2">
             <button
@@ -240,7 +240,7 @@ onMounted(async () => {
               @click="prevStep"
               class="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              Zurueck
+              Zurück
             </button>
             <button
               @click="nextStep"

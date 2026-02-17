@@ -101,7 +101,7 @@ function isPresetActive(days) {
 }
 
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe' },
+  { id: 'laender_spotlight', label: 'Länder-Spotlight', icon: 'globe' },
   { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble' },
   { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
   { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
@@ -124,7 +124,7 @@ const statuses = [
   { id: 'scheduled', label: 'Geplant' },
   { id: 'reminded', label: 'Erinnert' },
   { id: 'exported', label: 'Exportiert' },
-  { id: 'posted', label: 'Veroeffentlicht' },
+  { id: 'posted', label: 'Veröffentlicht' },
 ]
 
 const countries = [
@@ -768,7 +768,7 @@ onUnmounted(() => {
             : 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
           <AppIcon name="check-circle" class="w-4 h-4 inline-block" />
-          <span>{{ selectionMode ? 'Abbrechen' : 'Auswaehlen' }}</span>
+          <span>{{ selectionMode ? 'Abbrechen' : 'Auswählen' }}</span>
         </button>
         <button
           @click="createPost"
@@ -792,12 +792,12 @@ onUnmounted(() => {
             :checked="allOnPageSelected"
             @change="toggleSelectAll"
             class="w-4 h-4 rounded border-gray-300 text-[#3B7AB1] focus:ring-[#3B7AB1]"
-            aria-label="Alle auf dieser Seite auswaehlen"
+            aria-label="Alle auf dieser Seite auswählen"
           />
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Alle auswaehlen</span>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Alle auswählen</span>
         </label>
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          {{ selectedCount }} {{ selectedCount === 1 ? 'Post' : 'Posts' }} ausgewaehlt
+          {{ selectedCount }} {{ selectedCount === 1 ? 'Post' : 'Posts' }} ausgewählt
         </span>
       </div>
       <button
@@ -874,7 +874,7 @@ onUnmounted(() => {
           aria-label="Land filtern"
           class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1]"
         >
-          <option value="">Alle Laender</option>
+          <option value="">Alle Länder</option>
           <option v-for="c in countries" :key="c.id" :value="c.id">
             {{ c.flag }} {{ c.label }}
           </option>
@@ -895,7 +895,7 @@ onUnmounted(() => {
           <button
             @click="toggleSortDirection"
             class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#3B7AB1] hover:text-[#3B7AB1] transition-colors text-sm"
-            :title="sortDirection === 'desc' ? 'Absteigend (neueste zuerst)' : 'Aufsteigend (aelteste zuerst)'"
+            :title="sortDirection === 'desc' ? 'Absteigend (neueste zuerst)' : 'Aufsteigend (älteste zuerst)'"
             :aria-label="sortDirection === 'desc' ? 'Absteigend sortieren' : 'Aufsteigend sortieren'"
           >
             {{ sortDirection === 'desc' ? '↓' : '↑' }}
@@ -908,7 +908,7 @@ onUnmounted(() => {
           @click="clearFilters(); fetchPosts()"
           class="text-sm text-[#3B7AB1] hover:text-[#2E6A9E] transition-colors"
         >
-          Filter zuruecksetzen ({{ activeFilters }})
+          Filter zurücksetzen ({{ activeFilters }})
         </button>
       </div>
 
@@ -993,7 +993,7 @@ onUnmounted(() => {
       v-else-if="totalPosts === 0 && (!searchQuery || !searchQuery.trim()) && !filterCategory && !filterPlatform && !filterStatus && !filterCountry"
       svgIcon="document-text"
       title="Noch keine Posts erstellt"
-      description="Erstelle deinen ersten Social-Media-Post fuer TREFF! Waehle ein Template, schreibe Texte mit KI-Unterstuetzung und plane den Post im Kalender."
+      description="Erstelle deinen ersten Social-Media-Post für TREFF! Wähle ein Template, schreibe Texte mit KI-Unterstützung und plane den Post im Kalender."
       actionLabel="Ersten Post erstellen"
       actionTo="/create/quick"
       secondaryLabel="Zum Wochenplaner"
@@ -1005,8 +1005,8 @@ onUnmounted(() => {
       v-else-if="totalPosts === 0"
       svgIcon="magnifying-glass"
       title="Keine Posts gefunden"
-      description="Keine Posts passen zu deinen aktuellen Filtern. Setze die Filter zurueck, um alle Posts anzuzeigen."
-      actionLabel="Filter zuruecksetzen"
+      description="Keine Posts passen zu deinen aktuellen Filtern. Setze die Filter zurück, um alle Posts anzuzeigen."
+      actionLabel="Filter zurücksetzen"
       @action="clearFilters(); fetchPosts()"
     />
 
@@ -1041,7 +1041,7 @@ onUnmounted(() => {
               :checked="isPostSelected(post.id)"
               @change="togglePostSelection(post.id)"
               class="w-5 h-5 rounded border-gray-300 text-[#3B7AB1] focus:ring-[#3B7AB1] cursor-pointer"
-              :aria-label="'Post auswaehlen: ' + (post.title || 'Unbenannter Post')"
+              :aria-label="'Post auswählen: ' + (post.title || 'Unbenannter Post')"
             />
           </div>
 
@@ -1131,8 +1131,8 @@ onUnmounted(() => {
               v-if="post.status === 'scheduled' || post.status === 'reminded' || post.status === 'exported'"
               @click="markAsPosted(post)"
               class="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
-              title="Als veroeffentlicht markieren"
-              aria-label="Als veroeffentlicht markieren"
+              title="Als veröffentlicht markieren"
+              aria-label="Als veröffentlicht markieren"
             >
               <AppIcon name="check-circle" class="w-4 h-4 inline-block" />
             </button>
@@ -1148,8 +1148,8 @@ onUnmounted(() => {
             <button
               @click="router.push(`/create/post/${post.id}/edit?repurpose=true`)"
               class="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-              title="Fuer andere Plattform anpassen"
-              aria-label="Fuer andere Plattform anpassen"
+              title="Für andere Plattform anpassen"
+              aria-label="Für andere Plattform anpassen"
               data-testid="repurpose-history-btn"
             >
               <AppIcon name="arrow-path" class="w-4 h-4 inline-block" />
@@ -1165,8 +1165,8 @@ onUnmounted(() => {
             <button
               @click="confirmDeletePost(post)"
               class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title="Loeschen"
-              aria-label="Loeschen"
+              title="Löschen"
+              aria-label="Löschen"
             >
               <AppIcon name="trash" class="w-4 h-4 inline-block" />
             </button>
@@ -1183,7 +1183,7 @@ onUnmounted(() => {
     >
       <AppIcon name="arrow-path" class="w-6 h-6 inline-block flex-shrink-0 text-amber-600" />
       <p class="text-xs text-amber-700 dark:text-amber-400">
-        <strong>Content-Recycling Tipp:</strong> Dupliziere erfolgreiche Posts und passe sie leicht an — so sparst du Zeit und nutzt bewaehrte Inhalte erneut!
+        <strong>Content-Recycling Tipp:</strong> Dupliziere erfolgreiche Posts und passe sie leicht an — so sparst du Zeit und nutzt bewährte Inhalte erneut!
       </p>
     </div>
 
@@ -1195,7 +1195,7 @@ onUnmounted(() => {
         class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         aria-label="Vorherige Seite"
       >
-        &larr; Zurueck
+        &larr; Zurück
       </button>
 
       <div class="flex items-center gap-1">
@@ -1220,7 +1220,7 @@ onUnmounted(() => {
         @click="nextPage"
         :disabled="currentPage >= totalPages"
         class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        aria-label="Naechste Seite"
+        aria-label="Nächste Seite"
       >
         Weiter &rarr;
       </button>
@@ -1237,9 +1237,9 @@ onUnmounted(() => {
             <div class="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
               <AppIcon name="exclamation-triangle" class="w-7 h-7 inline-block text-red-500" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Post loeschen?</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Post löschen?</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 break-words">
-              Moechtest du den Post <strong class="text-gray-700 dark:text-gray-300 break-all">"{{ postToDelete?.title || 'Unbenannter Post' }}"</strong> wirklich loeschen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchtest du den Post <strong class="text-gray-700 dark:text-gray-300 break-all">"{{ postToDelete?.title || 'Unbenannter Post' }}"</strong> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div class="flex gap-3 justify-center">
               <button
@@ -1254,7 +1254,7 @@ onUnmounted(() => {
                 :disabled="deleting"
                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
               >
-                {{ deleting ? 'Wird geloescht...' : 'Loeschen' }}
+                {{ deleting ? 'Wird gelöscht...' : 'Löschen' }}
               </button>
             </div>
           </div>

@@ -55,7 +55,7 @@ const statusConfig = {
   analyzed: { label: 'Analysiert', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: 'search' },
   processing: { label: 'Verarbeitung...', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: 'clock' },
   processed: { label: 'Verarbeitet', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: 'check-circle' },
-  deferred: { label: 'Zurueckgestellt', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', icon: 'pause' },
+  deferred: { label: 'Zurückgestellt', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', icon: 'pause' },
   failed: { label: 'Fehler', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: 'x-circle' },
 }
 
@@ -143,13 +143,13 @@ async function deferItem(item) {
   // Mark as deferred by updating status (we simulate via process with override)
   try {
     await api.put(`/api/pipeline/inbox/${item.id}`, { status: 'deferred' })
-    toast.info('Video zurueckgestellt.')
+    toast.info('Video zurückgestellt.')
     emit('item-deferred', item)
     await loadInbox()
   } catch {
     // Fallback: just remove from list visually
     items.value = items.value.filter(i => i.id !== item.id)
-    toast.info('Video zurueckgestellt.')
+    toast.info('Video zurückgestellt.')
   }
 }
 
@@ -235,7 +235,7 @@ onMounted(loadInbox)
         </div>
         <!-- Batch actions -->
         <div v-if="selectedItems.size > 0" class="flex items-center gap-2">
-          <span class="text-xs text-gray-500">{{ selectedItems.size }} ausgewaehlt</span>
+          <span class="text-xs text-gray-500">{{ selectedItems.size }} ausgewählt</span>
           <button class="btn-primary btn-sm" @click="batchProcess" data-testid="batch-process">
             Alle verarbeiten
           </button>
@@ -290,7 +290,7 @@ onMounted(loadInbox)
       <AppIcon name="inbox" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
       <p class="text-sm text-gray-500 dark:text-gray-400">Keine neuen Videos in der Inbox</p>
       <p v-if="!compact" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        Lade Schueler-Content ueber die Pipeline hoch, um ihn hier zu verarbeiten.
+        Lade Schüler-Content über die Pipeline hoch, um ihn hier zu verarbeiten.
       </p>
     </div>
 
@@ -304,7 +304,7 @@ onMounted(loadInbox)
           @change="toggleSelectAll"
           class="rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
         />
-        <span class="text-xs text-gray-500 dark:text-gray-400">Alle auswaehlen</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Alle auswählen</span>
       </div>
 
       <div :class="compact ? 'space-y-2' : 'space-y-3'">
@@ -402,9 +402,9 @@ onMounted(loadInbox)
               v-if="item.status !== 'processed' && !compact"
               class="text-[10px] font-medium px-2 py-1 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               @click.stop="deferItem(item)"
-              title="Spaeter"
+              title="Später"
             >
-              Spaeter
+              Später
             </button>
           </div>
 

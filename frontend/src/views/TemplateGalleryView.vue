@@ -41,7 +41,7 @@ const showFavoritesOnly = ref(false)
 
 // ─── Category definitions ─────────────────────────────────────────
 const categories = {
-  laender_spotlight: { label: 'Laender-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  laender_spotlight: { label: 'Länder-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
   erfahrungsberichte: { label: 'Erfahrungsberichte', icon: 'chat-bubble', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
   infografiken: { label: 'Infografiken', icon: 'chart-bar', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
   fristen_cta: { label: 'Fristen & CTA', icon: 'clock', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
@@ -346,7 +346,7 @@ onMounted(async () => {
               class="text-xs text-treff-blue hover:underline font-medium"
               data-testid="clear-filters-btn"
             >
-              Alle zuruecksetzen
+              Alle zurücksetzen
             </button>
           </div>
 
@@ -483,7 +483,7 @@ onMounted(async () => {
           :description="searchQuery || activeFilterCount > 0
             ? 'Versuche andere Suchbegriffe oder entferne Filter.'
             : 'Es wurden noch keine Templates erstellt.'"
-          :action-label="activeFilterCount > 0 ? 'Filter zuruecksetzen' : 'Template erstellen'"
+          :action-label="activeFilterCount > 0 ? 'Filter zurücksetzen' : 'Template erstellen'"
           :action-to="activeFilterCount > 0 ? undefined : '/library/templates'"
           @action="activeFilterCount > 0 ? clearFilters() : null"
           data-testid="empty-state"

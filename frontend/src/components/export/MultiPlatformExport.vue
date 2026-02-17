@@ -494,7 +494,7 @@ function getCheckboxColorClass(color) {
                     class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium"
                     data-testid="select-all-formats"
                   >
-                    Alle auswaehlen
+                    Alle auswählen
                   </button>
                   <span class="text-gray-300 dark:text-gray-600">|</span>
                   <button

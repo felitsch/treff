@@ -134,13 +134,13 @@ async function createTemplate() {
 }
 
 async function deleteTemplate(id, name) {
-  if (!confirm(`Template "${name}" wirklich loeschen?`)) return
+  if (!confirm(`Template "${name}" wirklich löschen?`)) return
   try {
     await api.delete(`/api/video-templates/${id}`)
     templates.value = templates.value.filter(t => t.id !== id)
-    toast.success(`Template "${name}" geloescht`)
+    toast.success(`Template "${name}" gelöscht`)
   } catch (err) {
-    toast.error('Loeschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message))
+    toast.error('Löschen fehlgeschlagen: ' + (err.response?.data?.detail || err.message))
   }
 }
 
@@ -254,7 +254,7 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Video-Branding Templates</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Intro- und Outro-Sequenzen mit TREFF-Branding fuer einheitliche Reels & TikToks
+          Intro- und Outro-Sequenzen mit TREFF-Branding für einheitliche Reels & TikToks
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -321,11 +321,11 @@ onMounted(() => {
         </div>
         <div class="flex items-center gap-3">
           <div>
-            <label class="block text-sm font-medium mb-1">Primaerfarbe</label>
+            <label class="block text-sm font-medium mb-1">Primärfarbe</label>
             <input v-model="createForm.primary_color" type="color" class="w-10 h-10 border rounded cursor-pointer" />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Sekundaerfarbe</label>
+            <label class="block text-sm font-medium mb-1">Sekundärfarbe</label>
             <input v-model="createForm.secondary_color" type="color" class="w-10 h-10 border rounded cursor-pointer" />
           </div>
         </div>
@@ -364,7 +364,7 @@ onMounted(() => {
           </div>
 
           <select v-model="countryFilter" class="border rounded-lg px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-700">
-            <option value="">Alle Laender</option>
+            <option value="">Alle Länder</option>
             <option v-for="(meta, key) in countries" :key="key" :value="key">
               {{ meta.flag }} {{ meta.label }}
             </option>
@@ -453,7 +453,7 @@ onMounted(() => {
                 @click.stop="deleteTemplate(tmpl.id, tmpl.name)"
                 class="text-red-400 hover:text-red-600 transition-colors"
               >
-                Loeschen
+                Löschen
               </button>
             </div>
           </div>
@@ -464,7 +464,7 @@ onMounted(() => {
           svgIcon="magnifying-glass"
           title="Keine Video-Templates gefunden"
           description="Passe die Filter an oder erstelle ein neues Video-Branding-Template."
-          actionLabel="Filter zuruecksetzen"
+          actionLabel="Filter zurücksetzen"
           @action="selectedCategory = ''"
           :compact="true"
         />
@@ -477,13 +477,13 @@ onMounted(() => {
 
           <!-- Video Asset Selector -->
           <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Video auswaehlen *</label>
+            <label class="block text-sm font-medium mb-1">Video auswählen *</label>
             <select
               v-model="selectedVideoAsset"
               class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:border-gray-600 text-sm"
               @change="fetchPreview"
             >
-              <option :value="null">-- Video waehlen --</option>
+              <option :value="null">-- Video wählen --</option>
               <option v-for="asset in videoAssets" :key="asset.id" :value="asset.id">
                 {{ asset.original_filename || asset.filename }}
                 {{ asset.duration_seconds ? `(${formatDuration(asset.duration_seconds)})` : '' }}
@@ -539,7 +539,7 @@ onMounted(() => {
                 <p v-if="selectedVideoAsset" class="text-sm font-medium truncate">
                   {{ videoAssets.find(a => a.id === selectedVideoAsset)?.original_filename || 'Video' }}
                 </p>
-                <p v-else class="text-xs text-gray-400">Waehle ein Video oben</p>
+                <p v-else class="text-xs text-gray-400">Wähle ein Video oben</p>
               </div>
             </div>
 
@@ -561,7 +561,7 @@ onMounted(() => {
           <!-- Estimated Duration -->
           <div v-if="canApply" class="text-sm text-gray-600 dark:text-gray-400 mb-4 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <div class="flex justify-between">
-              <span>Geschaetzte Dauer:</span>
+              <span>Geschätzte Dauer:</span>
               <span class="font-medium">{{ formatDuration(estimatedDuration) }}</span>
             </div>
             <div class="flex justify-between mt-1">
@@ -620,11 +620,11 @@ onMounted(() => {
             <span class="font-medium">{{ formatDuration(resultData.duration_seconds) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Groesse:</span>
+            <span class="text-gray-500">Größe:</span>
             <span class="font-medium">{{ formatFileSize(resultData.file_size) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Aufloesung:</span>
+            <span class="text-gray-500">Auflösung:</span>
             <span class="font-medium">{{ resultData.width }}x{{ resultData.height }}</span>
           </div>
           <div class="flex justify-between">
@@ -653,7 +653,7 @@ onMounted(() => {
             @click="showResultModal = false"
             class="flex-1 py-2 text-center border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
           >
-            Schliessen
+            Schließen
           </button>
         </div>
       </div>

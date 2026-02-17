@@ -56,13 +56,13 @@ const musicConfig = ref({
 
 // ─── Section management ─────────────────────────────────────
 const sections = [
-  { key: 'upload', label: '1. Video waehlen', icon: 'film', description: 'Video hochladen oder aus der Bibliothek waehlen' },
-  { key: 'branding', label: '2. Branding', icon: 'tag', description: 'Intro/Outro-Templates fuer Laender-Branding' },
+  { key: 'upload', label: '1. Video wählen', icon: 'film', description: 'Video hochladen oder aus der Bibliothek wählen' },
+  { key: 'branding', label: '2. Branding', icon: 'tag', description: 'Intro/Outro-Templates für Länder-Branding' },
   { key: 'lowerthird', label: '3. Lower Third', icon: 'chat-bubble', description: 'Name & Titel als Texteinblendung' },
-  { key: 'music', label: '4. Musik', icon: 'musical-note', description: 'Hintergrundmusik auswaehlen und mischen' },
+  { key: 'music', label: '4. Musik', icon: 'musical-note', description: 'Hintergrundmusik auswählen und mischen' },
   { key: 'thumbnail', label: '5. Thumbnail', icon: 'photo', description: 'AI-Thumbnail aus Video-Frames mit Text-Overlay und A/B-Varianten' },
   { key: 'preview', label: '6. Vorschau', icon: 'eye', description: 'Finales Video mit allen Overlays' },
-  { key: 'export', label: '7. Export', icon: 'export', description: 'Multi-Format-Export fuer alle Plattformen' },
+  { key: 'export', label: '7. Export', icon: 'export', description: 'Multi-Format-Export für alle Plattformen' },
   { key: 'multiply', label: '8. Multiplizieren', icon: 'rocket', description: '1 Video → 5 Formate als Draft-Posts' },
 ]
 
@@ -205,7 +205,7 @@ function onAudioSuggestionSelect(suggestion) {
   // When an audio suggestion is selected, update the music config hint
   musicConfig.value.enabled = true
   musicConfig.value.trackName = `${suggestion.title} (${suggestion.artist || 'Empfehlung'})`
-  toast.success(`Audio-Empfehlung '${suggestion.title}' uebernommen`)
+  toast.success(`Audio-Empfehlung '${suggestion.title}' übernommen`)
 }
 
 // ─── Export handling ────────────────────────────────────────
@@ -396,7 +396,7 @@ onMounted(() => {
           <!-- 6. Preview -->
           <div v-if="section.key === 'preview'" class="space-y-4">
             <div v-if="!selectedAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-              Bitte waehle zuerst ein Video aus (Schritt 1).
+              Bitte wähle zuerst ein Video aus (Schritt 1).
             </div>
             <template v-else>
               <!-- Video preview -->
@@ -486,7 +486,7 @@ onMounted(() => {
           <!-- 6. Export -->
           <div v-if="section.key === 'export'">
             <div v-if="!selectedAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-              Bitte waehle zuerst ein Video aus (Schritt 1).
+              Bitte wähle zuerst ein Video aus (Schritt 1).
             </div>
             <MultiPlatformExport
               v-else
@@ -502,7 +502,7 @@ onMounted(() => {
           <!-- 7. Content Multiplier -->
           <div v-if="section.key === 'multiply'">
             <div v-if="!selectedAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-              Bitte waehle zuerst ein Video aus (Schritt 1).
+              Bitte wähle zuerst ein Video aus (Schritt 1).
             </div>
             <ContentMultiplierPanel
               v-else

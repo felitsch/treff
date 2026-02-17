@@ -277,7 +277,7 @@ async function deleteExport(exp) {
   try {
     await api.delete(`/api/video-export/${exp.id}`)
     exportHistory.value = exportHistory.value.filter(e => e.id !== exp.id)
-    toast.success('Export geloescht')
+    toast.success('Export gelöscht')
   } catch (err) {
     // Error toast shown by API interceptor
   }
@@ -310,7 +310,7 @@ onMounted(() => {
           Video-Export
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Videos fuer Instagram Reels, TikTok und Feed in optimalen Formaten exportieren
+          Videos für Instagram Reels, TikTok und Feed in optimalen Formaten exportieren
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -349,7 +349,7 @@ onMounted(() => {
         <div data-tour="ve-library" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AppIcon name="folder" class="w-4 h-4" /> Video auswaehlen
+              <AppIcon name="folder" class="w-4 h-4" /> Video auswählen
               <span class="ml-auto text-xs font-normal text-gray-500 dark:text-gray-400" data-testid="video-count">
                 {{ videoAssets.length }} Videos
               </span>
@@ -410,10 +410,10 @@ onMounted(() => {
         <div v-if="!selectedAsset && !analyzing" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
           <AppIcon name="export" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Waehle ein Video zum Exportieren
+            Wähle ein Video zum Exportieren
           </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            Klicke auf ein Video in der Bibliothek links, um es fuer den Export vorzubereiten.
+            Klicke auf ein Video in der Bibliothek links, um es für den Export vorzubereiten.
           </p>
         </div>
 
@@ -444,7 +444,7 @@ onMounted(() => {
                   <span class="font-medium text-gray-800 dark:text-gray-200 truncate block" data-testid="source-filename">{{ analysisData.filename }}</span>
                 </div>
                 <div>
-                  <span class="text-gray-500 dark:text-gray-400 block">Aufloesung</span>
+                  <span class="text-gray-500 dark:text-gray-400 block">Auflösung</span>
                   <span class="font-medium text-gray-800 dark:text-gray-200" data-testid="source-resolution">{{ analysisData.source_width }}x{{ analysisData.source_height }}</span>
                 </div>
                 <div>
@@ -452,7 +452,7 @@ onMounted(() => {
                   <span class="font-medium text-gray-800 dark:text-gray-200">{{ formatTime(analysisData.source_duration) }}</span>
                 </div>
                 <div>
-                  <span class="text-gray-500 dark:text-gray-400 block">Groesse</span>
+                  <span class="text-gray-500 dark:text-gray-400 block">Größe</span>
                   <span class="font-medium text-gray-800 dark:text-gray-200">{{ formatFileSize(analysisData.file_size) }}</span>
                 </div>
               </div>
@@ -462,7 +462,7 @@ onMounted(() => {
           <!-- Aspect Ratio Selection -->
           <div data-tour="ve-aspect-ratio" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="aspect-ratio-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <AppIcon name="adjustments" class="w-4 h-4" /> Seitenverhaeltnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
+              <AppIcon name="adjustments" class="w-4 h-4" /> Seitenverhältnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
             </h3>
             <div class="grid grid-cols-3 gap-3 mb-4">
               <button
@@ -562,7 +562,7 @@ onMounted(() => {
                   @click="focusX = 50; focusY = 50"
                   class="text-[10px] text-blue-600 hover:underline"
                 >
-                  Auf Mitte zuruecksetzen
+                  Auf Mitte zurücksetzen
                 </button>
               </div>
             </div>
@@ -596,8 +596,8 @@ onMounted(() => {
             <div v-if="platformCompat && !platformCompat.duration_ok" class="mt-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2.5 text-xs text-red-700 dark:text-red-400 flex items-center gap-2" data-testid="duration-warning">
               <AppIcon name="exclamation-triangle" class="w-4 h-4 inline text-red-500 shrink-0" />
               <span>
-                Video ist {{ platformCompat.duration_over_by }}s zu lang fuer {{ currentPlatform.label }}.
-                Es wird auf {{ platformCompat.max_duration }}s gekuerzt.
+                Video ist {{ platformCompat.duration_over_by }}s zu lang für {{ currentPlatform.label }}.
+                Es wird auf {{ platformCompat.max_duration }}s gekürzt.
               </span>
             </div>
           </div>
@@ -605,7 +605,7 @@ onMounted(() => {
           <!-- Quality Slider -->
           <div data-tour="ve-quality" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="quality-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <AppIcon name="adjustments-vertical" class="w-4 h-4" /> Kompression: Qualitaet vs. Dateigroesse <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
+              <AppIcon name="adjustments-vertical" class="w-4 h-4" /> Kompression: Qualität vs. Dateigröße <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
             </h3>
             <div class="flex items-center gap-4">
               <span class="text-xs text-gray-400 shrink-0">Klein</span>
@@ -614,7 +614,7 @@ onMounted(() => {
                 v-model.number="quality"
                 class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 data-testid="quality-slider"
-                aria-label="Kompressionsqualitaet"
+                aria-label="Kompressionsqualität"
                 :aria-valuenow="quality"
                 aria-valuemin="1"
                 aria-valuemax="100"
@@ -623,10 +623,10 @@ onMounted(() => {
             </div>
             <div class="flex items-center justify-between mt-2">
               <span class="text-xs text-gray-500 dark:text-gray-400">
-                Qualitaet: <span :class="qualityColor" class="font-medium">{{ quality }}% ({{ qualityLabel }})</span>
+                Qualität: <span :class="qualityColor" class="font-medium">{{ quality }}% ({{ qualityLabel }})</span>
               </span>
               <span class="text-[10px] text-gray-400">
-                {{ quality >= 80 ? 'Groessere Datei, beste Qualitaet' : quality >= 50 ? 'Ausgewogen' : 'Kleine Datei, geringere Qualitaet' }}
+                {{ quality >= 80 ? 'Größere Datei, beste Qualität' : quality >= 50 ? 'Ausgewogen' : 'Kleine Datei, geringere Qualität' }}
               </span>
             </div>
           </div>
@@ -634,10 +634,10 @@ onMounted(() => {
           <!-- Batch Mode: Format Selection -->
           <div v-if="batchMode" data-tour="ve-batch" class="bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-200 dark:border-purple-800 p-4" data-testid="batch-section">
             <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
-              <AppIcon name="archive" class="w-4 h-4" /> Batch-Export: Formate waehlen
+              <AppIcon name="archive" class="w-4 h-4" /> Batch-Export: Formate wählen
             </h3>
             <p class="text-xs text-purple-600 dark:text-purple-400 mb-3">
-              Waehle mehrere Formate aus, um das Video in allen gewuenschten Formaten gleichzeitig zu exportieren.
+              Wähle mehrere Formate aus, um das Video in allen gewünschten Formaten gleichzeitig zu exportieren.
             </p>
             <div class="space-y-2">
               <label
@@ -720,7 +720,7 @@ onMounted(() => {
             <div class="flex-1">
               <p class="text-sm text-red-700 dark:text-red-400 font-medium">{{ exportError }}</p>
             </div>
-            <button @click="exportError = null" class="text-red-500 hover:text-red-700 text-sm" aria-label="Fehlermeldung schliessen">✕</button>
+            <button @click="exportError = null" class="text-red-500 hover:text-red-700 text-sm" aria-label="Fehlermeldung schließen">✕</button>
           </div>
 
           <!-- Export Progress -->
@@ -755,11 +755,11 @@ onMounted(() => {
                 <span class="ml-1 text-green-800 dark:text-green-200">{{ formatTime(exportResult.output_duration) }}</span>
               </div>
               <div>
-                <span class="text-green-600 dark:text-green-400 font-medium">Aufloesung:</span>
+                <span class="text-green-600 dark:text-green-400 font-medium">Auflösung:</span>
                 <span class="ml-1 text-green-800 dark:text-green-200">{{ exportResult.output_width }}x{{ exportResult.output_height }}</span>
               </div>
               <div>
-                <span class="text-green-600 dark:text-green-400 font-medium">Groesse:</span>
+                <span class="text-green-600 dark:text-green-400 font-medium">Größe:</span>
                 <span class="ml-1 text-green-800 dark:text-green-200">{{ formatFileSize(exportResult.output_file_size) }}</span>
               </div>
             </div>
@@ -833,7 +833,7 @@ onMounted(() => {
                   <button
                     @click="deleteExport(exp)"
                     class="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    title="Loeschen"
+                    title="Löschen"
                   >
                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

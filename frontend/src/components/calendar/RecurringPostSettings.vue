@@ -42,7 +42,7 @@ const weekdays = [
 ]
 
 const frequencyOptions = [
-  { value: 'weekly', label: 'Woechentlich', desc: 'Jede Woche am gleichen Tag' },
+  { value: 'weekly', label: 'Wöchentlich', desc: 'Jede Woche am gleichen Tag' },
   { value: 'biweekly', label: 'Alle 2 Wochen', desc: 'Jeden zweiten Woche' },
   { value: 'monthly', label: 'Monatlich', desc: 'Einmal pro Monat am gleichen Tag' },
 ]
@@ -151,7 +151,7 @@ async function deleteRule() {
   loading.value = true
   try {
     const { data: result } = await api.delete(`/api/recurring-posts/${existingRule.value.id}?delete_future=true`)
-    toast.success(`Wiederkehr-Regel geloescht (${result.deleted_future_instances} zukuenftige Posts entfernt)`)
+    toast.success(`Wiederkehr-Regel gelöscht (${result.deleted_future_instances} zukünftige Posts entfernt)`)
     existingRule.value = null
     emit('deleted')
     close()
@@ -192,7 +192,7 @@ function close() {
           <button
             @click="close"
             class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Schliessen"
+            aria-label="Schließen"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -354,7 +354,7 @@ function close() {
             :disabled="loading"
             class="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
           >
-            Regel loeschen
+            Regel löschen
           </button>
           <div class="flex-1"></div>
           <button

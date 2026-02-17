@@ -61,9 +61,9 @@ function suggestionTypeIcon(type) {
 function suggestionTypeLabel(type) {
   const labels = {
     seasonal: 'Saisonal',
-    country_rotation: 'Laender-Rotation',
+    country_rotation: 'Länder-Rotation',
     category_balance: 'Kategorie-Balance',
-    gap_fill: 'Luecke fuellen',
+    gap_fill: 'Lücke füllen',
     weekly_plan: 'Wochenplan',
     story_teaser: 'Story-Teaser',
     holiday: 'Feiertag/Event',
@@ -86,7 +86,7 @@ function suggestionTypeBadge(type) {
 
 function categoryLabel(cat) {
   const labels = {
-    laender_spotlight: 'Laender-Spotlight',
+    laender_spotlight: 'Länder-Spotlight',
     erfahrungsberichte: 'Erfahrungsbericht',
     infografiken: 'Infografik',
     fristen_cta: 'Fristen/CTA',
@@ -205,7 +205,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
   <BaseCard padding="none" data-tour="dashboard-suggestions" data-testid="content-suggestions">
     <template #header>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <AppIcon name="light-bulb" class="w-5 h-5" /> Content-Vorschlaege
+        <AppIcon name="light-bulb" class="w-5 h-5" /> Content-Vorschläge
         <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />
       </h2>
     </template>
@@ -225,7 +225,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
         >
           <AppIcon v-if="generatingSuggestions" name="clock" class="w-4 h-4 animate-spin" />
           <AppIcon v-else name="sparkles" class="w-4 h-4" />
-          {{ generatingSuggestions ? 'Generiere...' : 'Neue Vorschlaege' }}
+          {{ generatingSuggestions ? 'Generiere...' : 'Neue Vorschläge' }}
         </button>
       </div>
     </template>
@@ -234,9 +234,9 @@ defineExpose({ updateSuggestions, generateSuggestions })
       <EmptyState
         v-if="suggestions.length === 0"
         svgIcon="sparkles"
-        title="Keine Vorschlaege vorhanden"
-        description="Klicke auf 'Neue Vorschlaege' um KI-gestuetzte Content-Vorschlaege fuer deine naechsten Posts zu erhalten."
-        actionLabel="Vorschlaege generieren"
+        title="Keine Vorschläge vorhanden"
+        description="Klicke auf 'Neue Vorschläge' um KI-gestützte Content-Vorschläge für deine nächsten Posts zu erhalten."
+        actionLabel="Vorschläge generieren"
         :compact="true"
         @action="generateSuggestions"
       />

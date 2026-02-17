@@ -215,7 +215,7 @@ onMounted(() => {
         class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
         @change="fetchArcs"
       >
-        <option value="">Alle Laender</option>
+        <option value="">Alle Länder</option>
         <option v-for="c in countries" :key="c.value" :value="c.value">
           {{ c.flag }} {{ c.label }}
         </option>
@@ -242,10 +242,10 @@ onMounted(() => {
       v-else-if="filteredArcs.length === 0"
       svgIcon="book-open"
       title="Noch keine Story-Arcs erstellt"
-      description="Erstelle deine erste Story-Serie mit dem Wizard. Lege vorher Schueler-Profile an, um personalisierte Serien zu erstellen."
+      description="Erstelle deine erste Story-Serie mit dem Wizard. Lege vorher Schüler-Profile an, um personalisierte Serien zu erstellen."
       actionLabel="Story-Serie erstellen"
       @action="openWizard"
-      secondaryLabel="Schueler anlegen"
+      secondaryLabel="Schüler anlegen"
       secondaryTo="/students"
     />
 
@@ -335,10 +335,10 @@ onMounted(() => {
     <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3" data-tour="arcs-students-hint">
       <AppIcon name="academic-cap" class="w-7 h-7 mt-0.5" />
       <div>
-        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Schueler-Profile als Protagonisten</p>
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Schüler-Profile als Protagonisten</p>
         <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
-          Jede Story-Serie wird mit einem Schueler-Profil verknuepft. Die KI nutzt Name, Land, Schule und Persoenlichkeit fuer authentische Texte.
-          <router-link to="/students" class="underline font-medium hover:text-blue-800 dark:hover:text-blue-100">Schueler verwalten &rarr;</router-link>
+          Jede Story-Serie wird mit einem Schüler-Profil verknüpft. Die KI nutzt Name, Land, Schule und Persönlichkeit für authentische Texte.
+          <router-link to="/students" class="underline font-medium hover:text-blue-800 dark:hover:text-blue-100">Schüler verwalten &rarr;</router-link>
         </p>
       </div>
     </div>

@@ -523,7 +523,7 @@ loadAssets()
           @click="reset"
           class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          Zuruecksetzen
+          Zurücksetzen
         </button>
       </div>
     </div>
@@ -557,7 +557,7 @@ loadAssets()
             <span class="text-xs text-gray-400">{{ hookText.length }} / 120 Zeichen</span>
             <!-- Font size selector -->
             <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-500 dark:text-gray-400">Schriftgroesse:</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Schriftgröße:</span>
               <div class="flex gap-1">
                 <button
                   v-for="opt in fontSizeOptions"
@@ -578,7 +578,7 @@ loadAssets()
         <!-- Background Selection -->
         <div data-tour="tg-background" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Hintergrund</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Waehle eine Farbe oder lade ein Bild hoch.</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Wähle eine Farbe oder lade ein Bild hoch.</p>
 
           <!-- Color presets -->
           <div class="mb-4">
@@ -702,7 +702,7 @@ loadAssets()
           <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-600 dark:text-gray-400">
             <span class="text-lg">&#9432;</span>
             <div>
-              <strong>Format:</strong> PNG &middot; <strong>Aufloesung:</strong> {{ exportWidth }} &times; {{ exportHeight }} px &middot; <strong>Seitenverhaeltnis:</strong> {{ exportFormat }}
+              <strong>Format:</strong> PNG &middot; <strong>Auflösung:</strong> {{ exportWidth }} &times; {{ exportHeight }} px &middot; <strong>Seitenverhältnis:</strong> {{ exportFormat }}
             </div>
           </div>
 

@@ -57,7 +57,7 @@ const savedPostId = ref(null)
 const postTypeOptions = [
   { value: 'instagram_feed', label: 'Feed Post', icon: 'camera', description: 'Standard Instagram Post' },
   { value: 'instagram_story', label: 'Story', icon: 'device-mobile', description: 'Instagram Story (9:16)' },
-  { value: 'tiktok', label: 'Reel/TikTok', icon: 'musical-note', description: 'Kurzvideo fuer Reels/TikTok' },
+  { value: 'tiktok', label: 'Reel/TikTok', icon: 'musical-note', description: 'Kurzvideo für Reels/TikTok' },
   { value: 'carousel', label: 'Carousel', icon: 'stack', description: 'Mehrere Slides als Carousel' },
 ]
 
@@ -68,7 +68,7 @@ const platformOptions = [
 
 const toneOptions = [
   { value: 'jugendlich', label: 'Jugendlich' },
-  { value: 'serioes', label: 'Serioes' },
+  { value: 'serioes', label: 'Seriös' },
   { value: 'witzig', label: 'Witzig' },
   { value: 'emotional', label: 'Emotional' },
   { value: 'motivierend', label: 'Motivierend' },
@@ -112,11 +112,11 @@ function onFileSelect(e) {
 
 function handleFile(file) {
   if (!ALLOWED_TYPES.includes(file.type)) {
-    toast.error('Ungueltiger Dateityp. Erlaubt: JPEG, PNG, WebP, MP4, MOV, WebM')
+    toast.error('Ungültiger Dateityp. Erlaubt: JPEG, PNG, WebP, MP4, MOV, WebM')
     return
   }
   if (file.size > 100 * 1024 * 1024) {
-    toast.error('Datei zu gross. Maximal 100 MB.')
+    toast.error('Datei zu groß. Maximal 100 MB.')
     return
   }
 
@@ -280,7 +280,7 @@ function startOver() {
         <button
           @click="router.push('/create')"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          aria-label="Zurueck zum Create Hub"
+          aria-label="Zurück zum Create Hub"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -292,7 +292,7 @@ function startOver() {
         </span>
       </div>
       <p class="text-sm text-gray-600 dark:text-gray-400 ml-8">
-        Lade ein Foto oder Video hoch — die KI analysiert den Inhalt und schlaegt alles Weitere vor.
+        Lade ein Foto oder Video hoch — die KI analysiert den Inhalt und schlägt alles Weitere vor.
       </p>
     </div>
 
@@ -334,7 +334,7 @@ function startOver() {
               Foto oder Video hierher ziehen
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              oder klicke, um eine Datei auszuwaehlen
+              oder klicke, um eine Datei auszuwählen
             </p>
           </div>
 
@@ -372,7 +372,7 @@ function startOver() {
               AI analysiert dein {{ isVideo ? 'Video' : 'Bild' }}...
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              Inhalt wird erkannt, Vorschlaege werden generiert
+              Inhalt wird erkannt, Vorschläge werden generiert
             </p>
           </div>
 
@@ -465,7 +465,7 @@ function startOver() {
               v-model="suggestions.caption"
               rows="4"
               class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 resize-none"
-              placeholder="Caption fuer deinen Post..."
+              placeholder="Caption für deinen Post..."
               data-testid="suggestion-caption"
             />
           </div>
@@ -494,7 +494,7 @@ function startOver() {
                 v-model="suggestions.hashtagInput"
                 type="text"
                 class="flex-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Hashtag hinzufuegen..."
+                placeholder="Hashtag hinzufügen..."
                 @keydown="onHashtagKeydown"
                 data-testid="hashtag-input"
               />
@@ -533,7 +533,7 @@ function startOver() {
 
             <!-- Tone -->
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Tonalitaet</label>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Tonalität</label>
               <select
                 v-model="suggestions.tone"
                 class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-purple-500"
@@ -671,7 +671,7 @@ function startOver() {
                 {{ uploadedFile?.name }}
               </p>
               <p>
-                <span class="font-medium">Groesse:</span>
+                <span class="font-medium">Größe:</span>
                 {{ uploadedFile ? (uploadedFile.size / 1024 / 1024).toFixed(1) + ' MB' : '' }}
               </p>
               <p>

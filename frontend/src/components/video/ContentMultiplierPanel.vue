@@ -49,7 +49,7 @@ const DERIVATIVES = [
     format: '9:16',
     resolution: '1080 x 1920',
     estimatedDuration: '3-5 Slides',
-    description: '3-5 vertikale Story-Slides mit Text-Overlays. Ideal fuer Storytelling und Interaktion.',
+    description: '3-5 vertikale Story-Slides mit Text-Overlays. Ideal für Storytelling und Interaktion.',
     captionStyle: 'Sticker-Aufforderung (Umfrage, Frage, Slider)',
     hashtagCount: '3-5',
     backendFormat: 'instagram_story',
@@ -63,8 +63,8 @@ const DERIVATIVES = [
     format: '1:1',
     resolution: '1080 x 1080',
     estimatedDuration: 'Standbild',
-    description: 'Bestes Frame mit Text-Overlay als Feed-Post. Quadratisches Format fuer den Instagram-Feed.',
-    captionStyle: 'Ausfuehrlich, storytelling-orientiert, mit Absaetzen und Emojis',
+    description: 'Bestes Frame mit Text-Overlay als Feed-Post. Quadratisches Format für den Instagram-Feed.',
+    captionStyle: 'Ausführlich, storytelling-orientiert, mit Absätzen und Emojis',
     hashtagCount: '15-25',
     backendFormat: 'instagram_feed',
   },
@@ -92,7 +92,7 @@ const DERIVATIVES = [
     resolution: '1080 x 1080',
     estimatedDuration: '5-10 Slides',
     description: 'Keyframes als swipeable Carousel-Slides. Educational Content im Slide-by-Slide Format.',
-    captionStyle: 'Slide-by-slide Erklaerung, nummeriert, educational',
+    captionStyle: 'Slide-by-slide Erklärung, nummeriert, educational',
     hashtagCount: '15-25',
     backendFormat: 'carousel',
   },
@@ -127,15 +127,15 @@ function initializeSuggestions() {
 function generateCaptionSuggestion(derivative, videoName) {
   switch (derivative.key) {
     case 'reel_cut':
-      return `Ein Auslandsjahr veraendert alles. Schau dir an, was ${videoName} erlebt hat! 🌍✈️ #auslandsjahr`
+      return `Ein Auslandsjahr verändert alles. Schau dir an, was ${videoName} erlebt hat! 🌍✈️ #auslandsjahr`
     case 'story_sequence':
-      return `Swipe fuer die ganze Geschichte! 👉 ${videoName}`
+      return `Swipe für die ganze Geschichte! 👉 ${videoName}`
     case 'feed_post':
       return `Erinnerungen, die ein Leben lang bleiben. 💙 ${videoName} — mit TREFF Sprachreisen.`
     case 'tiktok_version':
       return `POV: Du verbringst ein Jahr im Ausland und es ist besser als jeder Film 🎬🌏 #auslandsjahr #highschool #treff`
     case 'carousel':
-      return `5 Dinge, die du ueber ein Auslandsjahr wissen solltest 📚 Swipe durch! #auslandsjahr #treffsprachreisen`
+      return `5 Dinge, die du über ein Auslandsjahr wissen solltest 📚 Swipe durch! #auslandsjahr #treffsprachreisen`
     default:
       return ''
   }
@@ -345,13 +345,13 @@ function progressLabel(status) {
 
     <!-- No video selected -->
     <div v-else class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-      Bitte waehle zuerst ein Video aus, um Content zu multiplizieren.
+      Bitte wähle zuerst ein Video aus, um Content zu multiplizieren.
     </div>
 
     <!-- Derivative cards -->
     <div v-if="videoAsset">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Derivate auswaehlen</h3>
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Derivate auswählen</h3>
         <div class="flex gap-2">
           <button @click="selectAll" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Alle</button>
           <span class="text-gray-300">|</span>
@@ -422,7 +422,7 @@ function progressLabel(status) {
                 v-model="captions[d.key]"
                 rows="2"
                 class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
-                :placeholder="`Caption fuer ${d.name}...`"
+                :placeholder="`Caption für ${d.name}...`"
               />
             </div>
 
@@ -435,7 +435,7 @@ function progressLabel(status) {
                 v-model="hashtags[d.key]"
                 type="text"
                 class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                :placeholder="`Hashtags fuer ${d.name}...`"
+                :placeholder="`Hashtags für ${d.name}...`"
               />
             </div>
 
@@ -515,7 +515,7 @@ function progressLabel(status) {
         </div>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400">
-        Alle Derivate sind als Draft-Posts im Kalender sichtbar und koennen dort bearbeitet werden.
+        Alle Derivate sind als Draft-Posts im Kalender sichtbar und können dort bearbeitet werden.
       </p>
     </div>
   </div>

@@ -40,8 +40,8 @@ const editDescription = ref('')
 // Step 4: Tone & Style
 const selectedTone = ref('jugendlich')
 const toneOptions = [
-  { value: 'jugendlich', label: 'Jugendlich', icon: 'fire', description: 'Begeisternd, energetisch, motivierend - perfekt fuer die Zielgruppe' },
-  { value: 'serioess', label: 'Serioees', icon: 'clipboard-list', description: 'Professionell, vertrauenswuerdig - ideal wenn Eltern mitlesen' },
+  { value: 'jugendlich', label: 'Jugendlich', icon: 'fire', description: 'Begeisternd, energetisch, motivierend - perfekt für die Zielgruppe' },
+  { value: 'serioess', label: 'Seriös', icon: 'clipboard-list', description: 'Professionell, vertrauenswürdig - ideal wenn Eltern mitlesen' },
 ]
 
 // Step 5: Schedule
@@ -49,10 +49,10 @@ const scheduleFrequency = ref('weekly')
 const scheduleStartDate = ref('')
 const createCalendarPlaceholders = ref(true)
 const frequencyOptions = [
-  { value: 'daily', label: 'Taeglich', icon: 'fire', description: '1 Episode pro Tag - intensiv' },
-  { value: 'twice_weekly', label: '2x pro Woche', icon: 'calendar', description: 'Montag & Donnerstag - gut fuer Engagement' },
-  { value: 'weekly', label: 'Woechentlich', icon: 'clipboard-list', description: '1x pro Woche - nachhaltig und konsistent' },
-  { value: 'biweekly', label: 'Alle 2 Wochen', icon: 'clock', description: 'Gemaechtlich - fuer langfristige Serien' },
+  { value: 'daily', label: 'Täglich', icon: 'fire', description: '1 Episode pro Tag - intensiv' },
+  { value: 'twice_weekly', label: '2x pro Woche', icon: 'calendar', description: 'Montag & Donnerstag - gut für Engagement' },
+  { value: 'weekly', label: 'Wöchentlich', icon: 'clipboard-list', description: '1x pro Woche - nachhaltig und konsistent' },
+  { value: 'biweekly', label: 'Alle 2 Wochen', icon: 'clock', description: 'Gemächlich - für langfristige Serien' },
 ]
 
 // Step 6: Cover Image
@@ -151,7 +151,7 @@ async function suggestTitles() {
     titleSuggestions.value = response.data.suggestions || []
   } catch (err) {
     // Error toast shown by API interceptor
-    toast.error('Titelvorschlaege konnten nicht geladen werden')
+    toast.error('Titelvorschläge konnten nicht geladen werden')
   } finally {
     loadingTitleSuggestions.value = false
   }
@@ -183,7 +183,7 @@ async function suggestChapters() {
     }))
   } catch (err) {
     // Error toast shown by API interceptor
-    toast.error('Kapitelvorschlaege konnten nicht geladen werden')
+    toast.error('Kapitelvorschläge konnten nicht geladen werden')
   } finally {
     loadingEpisodes.value = false
   }
@@ -430,10 +430,10 @@ onMounted(() => {
       <!-- ==================== STEP 1: Student Selection ==================== -->
       <div v-if="currentStep === 1">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-          Student auswaehlen
+          Student auswählen
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Waehle einen Studenten fuer die Serie oder ueberspringe diesen Schritt.
+          Wähle einen Studenten für die Serie oder überspringe diesen Schritt.
         </p>
 
         <!-- Loading -->
@@ -498,7 +498,7 @@ onMounted(() => {
               v-model="newStudentCountry"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
             >
-              <option value="">Land waehlen...</option>
+              <option value="">Land wählen...</option>
               <option v-for="c in countries" :key="c.value" :value="c.value">
                 {{ c.flag }} {{ c.label }}
               </option>
@@ -523,7 +523,7 @@ onMounted(() => {
 
         <!-- Skip hint -->
         <p class="mt-4 text-xs text-gray-400">
-          Du kannst diesen Schritt ueberspringen, wenn die Serie nicht an einen bestimmten Studenten gebunden ist.
+          Du kannst diesen Schritt überspringen, wenn die Serie nicht an einen bestimmten Studenten gebunden ist.
         </p>
       </div>
 
@@ -533,7 +533,7 @@ onMounted(() => {
           Titel & Beschreibung
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Gib deiner Story-Serie einen einpragsamen Titel.
+          Gib deiner Story-Serie einen einprägsamen Titel.
         </p>
 
         <!-- AI Suggestions -->
@@ -545,7 +545,7 @@ onMounted(() => {
           >
             <span v-if="loadingTitleSuggestions">...</span>
             <AppIcon v-else name="sparkles" class="w-4 h-4" />
-            {{ loadingTitleSuggestions ? 'Generiere Vorschlaege...' : 'KI-Titelvorschlaege' }}
+            {{ loadingTitleSuggestions ? 'Generiere Vorschläge...' : 'KI-Titelvorschläge' }}
           </button>
 
           <div v-if="titleSuggestions.length > 0" class="mt-3 space-y-2">
@@ -583,7 +583,7 @@ onMounted(() => {
             <input
               v-model="arcSubtitle"
               type="text"
-              placeholder="z.B. Ein Auslandsjahr voller Ueberraschungen"
+              placeholder="z.B. Ein Auslandsjahr voller Überraschungen"
               maxlength="150"
               class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-treff-blue"
             />
@@ -607,7 +607,7 @@ onMounted(() => {
           Kapitelplanung
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Plane die Episoden deiner Serie. KI schlaegt typische Kapitel vor.
+          Plane die Episoden deiner Serie. KI schlägt typische Kapitel vor.
         </p>
 
         <!-- Controls -->
@@ -626,13 +626,13 @@ onMounted(() => {
           >
             <span v-if="loadingEpisodes">...</span>
             <AppIcon v-else name="sparkles" class="w-4 h-4" />
-            {{ loadingEpisodes ? 'Generiere...' : 'KI-Vorschlaege' }}
+            {{ loadingEpisodes ? 'Generiere...' : 'KI-Vorschläge' }}
           </button>
           <button
             @click="addEpisode"
             class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
           >
-            + Hinzufuegen
+            + Hinzufügen
           </button>
         </div>
 
@@ -690,7 +690,7 @@ onMounted(() => {
           <!-- Empty state -->
           <div v-if="episodes.length === 0" class="text-center py-8 text-gray-400">
             <AppIcon name="book-open" class="w-8 h-8 mx-auto mb-2" />
-            <p>Klicke auf "KI-Vorschlaege" um Kapitel zu generieren</p>
+            <p>Klicke auf "KI-Vorschläge" um Kapitel zu generieren</p>
           </div>
         </div>
       </div>
@@ -701,7 +701,7 @@ onMounted(() => {
           Ton & Stil
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Lege den Erzaehlstil deiner Serie fest.
+          Lege den Erzählstil deiner Serie fest.
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -724,8 +724,8 @@ onMounted(() => {
 
         <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <p class="text-sm text-blue-700 dark:text-blue-300">
-            <strong>Tipp:</strong> Der Ton wird in der KI-Textgenerierung fuer alle Episoden verwendet.
-            "Jugendlich" spricht Schueler direkt an, "Serioees" ist ideal fuer informative Serien, die auch Eltern lesen.
+            <strong>Tipp:</strong> Der Ton wird in der KI-Textgenerierung für alle Episoden verwendet.
+            "Jugendlich" spricht Schüler direkt an, "Seriös" ist ideal für informative Serien, die auch Eltern lesen.
           </p>
         </div>
       </div>
@@ -791,7 +791,7 @@ onMounted(() => {
           </div>
           <div>
             <div class="font-medium text-sm text-gray-900 dark:text-white">Kalender-Platzhalter erstellen</div>
-            <div class="text-xs text-gray-500">Erstellt Draft-Posts im Kalender fuer jede Episode</div>
+            <div class="text-xs text-gray-500">Erstellt Draft-Posts im Kalender für jede Episode</div>
           </div>
         </label>
 
@@ -814,7 +814,7 @@ onMounted(() => {
           Cover-Bild
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Waehle ein Cover-Bild aus deiner Bibliothek oder generiere eines mit KI.
+          Wähle ein Cover-Bild aus deiner Bibliothek oder generiere eines mit KI.
         </p>
 
         <!-- AI Generation -->
@@ -824,7 +824,7 @@ onMounted(() => {
             <input
               v-model="coverImagePrompt"
               type="text"
-              :placeholder="`z.B. Highschool-Gebaeude in ${countries.find(c => c.value === selectedCountry)?.label || 'USA'} mit Sonnenlicht`"
+              :placeholder="`z.B. Highschool-Gebäude in ${countries.find(c => c.value === selectedCountry)?.label || 'USA'} mit Sonnenlicht`"
               class="flex-1 px-3 py-2 border border-purple-300 dark:border-purple-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
             />
             <button
@@ -869,7 +869,7 @@ onMounted(() => {
         </div>
 
         <p class="mt-4 text-xs text-gray-400">
-          Das Cover-Bild ist optional. Du kannst es spaeter noch aendern.
+          Das Cover-Bild ist optional. Du kannst es später noch ändern.
         </p>
       </div>
     </div>
@@ -881,7 +881,7 @@ onMounted(() => {
         @click="prevStep"
         class="px-5 py-2.5 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm"
       >
-        Zurueck
+        Zurück
       </button>
       <div v-else></div>
 

@@ -84,7 +84,7 @@ async function addRelation(targetPostId, relationType = 'cross_reference', note 
       relation_type: relationType,
       note,
     })
-    toast.success('Verknuepfung erstellt!', 2000)
+    toast.success('Verknüpfung erstellt!', 2000)
     await loadRelations()
     // Remove from suggestions
     suggestions.value = suggestions.value.filter(s => s.post.id !== targetPostId)
@@ -92,7 +92,7 @@ async function addRelation(targetPostId, relationType = 'cross_reference', note 
     searchResults.value = searchResults.value.filter(p => p.id !== targetPostId)
   } catch (err) {
     if (err.response?.status === 409) {
-      toast.error('Verknuepfung existiert bereits', 3000)
+      toast.error('Verknüpfung existiert bereits', 3000)
     } else {
       toast.error('Fehler: ' + (err.response?.data?.detail || err.message), 3000)
     }
@@ -103,7 +103,7 @@ async function removeRelation(relationId) {
   if (!props.postId) return
   try {
     await api.delete(`/api/posts/${props.postId}/relations/${relationId}`)
-    toast.success('Verknuepfung entfernt', 2000)
+    toast.success('Verknüpfung entfernt', 2000)
     await loadRelations()
   } catch (err) {
     toast.error('Fehler: ' + (err.response?.data?.detail || err.message), 3000)
@@ -160,7 +160,7 @@ const selectedType = ref('cross_reference')
       <div class="flex items-center gap-2">
         <AppIcon name="link" class="w-5 h-5" />
         <span class="text-sm font-bold text-gray-700 dark:text-gray-300">
-          Verknuepfte Posts
+          Verknüpfte Posts
         </span>
         <span v-if="relations.length > 0" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#3B7AB1] text-white">
           {{ relations.length }}
@@ -178,7 +178,7 @@ const selectedType = ref('cross_reference')
 
       <!-- Existing relations -->
       <div v-if="relations.length > 0" class="space-y-2">
-        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Aktuelle Verknuepfungen:</label>
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Aktuelle Verknüpfungen:</label>
         <div
           v-for="rel in relations"
           :key="rel.id"
@@ -220,7 +220,7 @@ const selectedType = ref('cross_reference')
           <button
             @click="removeRelation(rel.id)"
             class="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
-            title="Verknuepfung entfernen"
+            title="Verknüpfung entfernen"
             data-testid="remove-relation-btn"
           >
             &times;
@@ -231,7 +231,7 @@ const selectedType = ref('cross_reference')
       <!-- Suggestions section -->
       <div v-if="suggestions.length > 0">
         <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-          <span>&#10024;</span> Vorgeschlagene Verknuepfungen:
+          <span>&#10024;</span> Vorgeschlagene Verknüpfungen:
         </label>
         <div class="space-y-1.5 mt-1.5">
           <div
@@ -263,7 +263,7 @@ const selectedType = ref('cross_reference')
               class="opacity-0 group-hover:opacity-100 px-2 py-1 text-[10px] font-bold text-white bg-[#3B7AB1] rounded hover:bg-[#2E6A9E] transition-all"
               data-testid="add-suggestion-btn"
             >
-              + Verknuepfen
+              + Verknüpfen
             </button>
           </div>
         </div>
@@ -277,7 +277,7 @@ const selectedType = ref('cross_reference')
           data-testid="search-posts-toggle"
         >
           <span>&#128269;</span>
-          {{ showSearchMode ? 'Suche schliessen' : 'Post suchen & verknuepfen' }}
+          {{ showSearchMode ? 'Suche schließen' : 'Post suchen & verknüpfen' }}
         </button>
 
         <div v-if="showSearchMode" class="mt-2 space-y-2">
@@ -324,7 +324,7 @@ const selectedType = ref('cross_reference')
                   | {{ result.status }}
                 </span>
               </div>
-              <span class="text-[10px] text-[#3B7AB1] font-bold">+ Verknuepfen</span>
+              <span class="text-[10px] text-[#3B7AB1] font-bold">+ Verknüpfen</span>
             </div>
           </div>
 
@@ -347,9 +347,9 @@ const selectedType = ref('cross_reference')
               Tipp: Erstelle einen Feed-Teaser-Post!
             </p>
             <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">
-              Dieser Post gehoert zu einer Story-Serie. Ein Feed-Post als Teaser
+              Dieser Post gehört zu einer Story-Serie. Ein Feed-Post als Teaser
               ("Kennst du schon die Geschichte? Schau in unsere Stories!") kann die
-              Reichweite deutlich erhoehen.
+              Reichweite deutlich erhöhen.
             </p>
           </div>
         </div>
@@ -357,7 +357,7 @@ const selectedType = ref('cross_reference')
 
       <!-- Empty state -->
       <p v-if="!loading && relations.length === 0 && suggestions.length === 0 && !showSearchMode" class="text-xs text-gray-400 text-center py-2">
-        Keine Verknuepfungen vorhanden. Suche nach Posts oder nutze die Vorschlaege.
+        Keine Verknüpfungen vorhanden. Suche nach Posts oder nutze die Vorschläge.
       </p>
     </div>
   </div>

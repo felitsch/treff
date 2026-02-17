@@ -4,12 +4,12 @@
  *
  * Features:
  * - Drag & Drop von Dateien
- * - Klick zum Waehlen (File Input Fallback)
+ * - Klick zum Wählen (File Input Fallback)
  * - Paste aus Clipboard (Strg+V)
  * - URL-Import
  * - Upload-Progress mit animierter Progress-Bar
  * - Thumbnail-Grid nach Upload mit Remove-Button pro Bild
- * - Drag-Reordering fuer Carousel-Posts (vuedraggable)
+ * - Drag-Reordering für Carousel-Posts (vuedraggable)
  * - Client-seitige Validierung: Max 10 Bilder, Max 10MB pro Bild, nur JPG/PNG/WebP
  * - Bild-Crop/Resize Dialog vor Upload (1:1, 4:5, 9:16)
  */
@@ -115,14 +115,14 @@ function validateFile(file) {
     errors.push(`Nur ${allowed} Dateien erlaubt.`)
   }
   if (file.size > props.maxFileSize) {
-    errors.push(`Datei zu gross (${formatFileSize(file.size)}). Max. ${formatFileSize(props.maxFileSize)}.`)
+    errors.push(`Datei zu groß (${formatFileSize(file.size)}). Max. ${formatFileSize(props.maxFileSize)}.`)
   }
   return errors
 }
 
 function validateCount(newCount) {
   if (images.value.length + newCount > props.maxImages) {
-    toast.warning(`Maximal ${props.maxImages} Bilder erlaubt. Noch ${remainingSlots.value} Platz verfuegbar.`)
+    toast.warning(`Maximal ${props.maxImages} Bilder erlaubt. Noch ${remainingSlots.value} Platz verfügbar.`)
     return false
   }
   return true
@@ -227,7 +227,7 @@ function handleFiles(files) {
   const imageFiles = files.filter(f => props.acceptedTypes.includes(f.type))
 
   if (imageFiles.length === 0) {
-    toast.error('Keine gueltige Bilddatei gefunden. Erlaubt: JPG, PNG, WebP.')
+    toast.error('Keine gültige Bilddatei gefunden. Erlaubt: JPG, PNG, WebP.')
     return
   }
 
@@ -761,7 +761,7 @@ defineExpose({ images, canAddMore })
 
         <!-- Paste hint -->
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Tipp: Strg+V zum Einfuegen aus der Zwischenablage
+          Tipp: Strg+V zum Einfügen aus der Zwischenablage
         </p>
       </div>
 
@@ -816,7 +816,7 @@ defineExpose({ images, canAddMore })
       <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.962-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
-      Maximum von {{ maxImages }} Bildern erreicht. Entferne ein Bild, um weitere hinzuzufuegen.
+      Maximum von {{ maxImages }} Bildern erreicht. Entferne ein Bild, um weitere hinzuzufügen.
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
@@ -845,7 +845,7 @@ defineExpose({ images, canAddMore })
             <button
               @click="cancelCrop"
               class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Dialog schliessen"
+              aria-label="Dialog schließen"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

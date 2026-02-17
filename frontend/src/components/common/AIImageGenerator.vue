@@ -232,7 +232,7 @@ async function generate() {
     const detail = e.response?.data?.detail || ''
     let friendlyMessage = ''
     if (status === 400) {
-      friendlyMessage = detail || 'Ungueltige Eingabe. Bitte ueberprüfe deinen Prompt.'
+      friendlyMessage = detail || 'Ungültige Eingabe. Bitte überprüfe deinen Prompt.'
     } else if (status === 401 || status === 403) {
       friendlyMessage = 'Sitzung abgelaufen. Bitte melde dich erneut an.'
     } else if (status === 429) {
@@ -242,7 +242,7 @@ async function generate() {
       const looksUserFriendly = knownGermanPhrases.some(phrase => detail.includes(phrase))
       friendlyMessage = (detail && looksUserFriendly) ? detail : 'Ein Serverfehler ist aufgetreten. Bitte versuche es erneut.'
     } else if (e.code === 'ERR_NETWORK' || e.message?.includes('Network Error')) {
-      friendlyMessage = 'Netzwerkfehler. Bitte pruefe deine Internetverbindung.'
+      friendlyMessage = 'Netzwerkfehler. Bitte prüfe deine Internetverbindung.'
     } else if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
       friendlyMessage = 'Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.'
     } else {
@@ -261,7 +261,7 @@ function useImage() {
       asset: props.result.asset,
       result: props.result,
     })
-    toast.success('Bild als Hintergrund uebernommen!')
+    toast.success('Bild als Hintergrund übernommen!')
   }
 }
 
@@ -332,7 +332,7 @@ onUnmounted(() => {
     <!-- ═══════ Prompt Suggestions ═══════ -->
     <div class="mb-4">
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-        Vorschlaege{{ country ? ` (${country.charAt(0).toUpperCase() + country.slice(1)})` : '' }}:
+        Vorschläge{{ country ? ` (${country.charAt(0).toUpperCase() + country.slice(1)})` : '' }}:
       </p>
       <div class="flex flex-wrap gap-1.5">
         <button
@@ -377,7 +377,7 @@ onUnmounted(() => {
         </button>
       </div>
       <p v-if="aspectRatio && aspectRatio !== platformDefaultAspectRatio" class="text-xs text-amber-600 dark:text-amber-400 mt-1.5">
-        Manuell ueberschrieben (Plattform-Standard: {{ platformDefaultAspectRatio }})
+        Manuell überschrieben (Plattform-Standard: {{ platformDefaultAspectRatio }})
       </p>
     </div>
 
@@ -398,7 +398,7 @@ onUnmounted(() => {
     <!-- ═══════ Progress Indicator ═══════ -->
     <div v-if="generating" class="mt-3" data-testid="generation-progress">
       <div class="flex items-center justify-between mb-1">
-        <span class="text-xs text-purple-600 dark:text-purple-400 font-medium">Generierung laeuft...</span>
+        <span class="text-xs text-purple-600 dark:text-purple-400 font-medium">Generierung läuft...</span>
         <span class="text-xs text-gray-500">{{ Math.round(progressPercent) }}%</span>
       </div>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">

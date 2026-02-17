@@ -73,8 +73,8 @@ function handleNavigate() {
       <button
         @click="handleDismiss"
         class="flex-shrink-0 text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-300 transition-colors p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-800/50"
-        title="Hinweis schliessen"
-        aria-label="Hinweis schliessen"
+        title="Hinweis schließen"
+        aria-label="Hinweis schließen"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

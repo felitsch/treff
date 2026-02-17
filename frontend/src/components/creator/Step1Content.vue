@@ -54,7 +54,7 @@ const {
 
 // ── Static data ─────────────────────────────────────────────────────
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe' },
+  { id: 'laender_spotlight', label: 'Länder-Spotlight', icon: 'globe' },
   { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble' },
   { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
   { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
@@ -85,7 +85,7 @@ const countries = [
 
 const toneOptions = [
   { id: 'jugendlich', label: 'Jugendlich', icon: 'fire' },
-  { id: 'serioess', label: 'Serioes', icon: 'academic-cap' },
+  { id: 'serioess', label: 'Seriös', icon: 'academic-cap' },
   { id: 'witzig', label: 'Witzig', icon: 'face-smile' },
   { id: 'emotional', label: 'Emotional', icon: 'heart' },
   { id: 'motivierend', label: 'Motivierend', icon: 'rocket' },
@@ -99,7 +99,7 @@ let generationRequestCounter = 0
 async function generateContent() {
   if (generatingText.value) return
   if (!topic.value?.trim() && !selectedCategory.value) {
-    error.value = 'Bitte gib ein Thema ein oder waehle eine Kategorie.'
+    error.value = 'Bitte gib ein Thema ein oder wähle eine Kategorie.'
     return
   }
 
@@ -254,7 +254,7 @@ async function generateAiImage() {
     <!-- Topic & Key Points -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Thema / Ueberschrift</label>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Thema / Überschrift</label>
         <textarea
           v-model="topic"
           rows="3"
@@ -295,7 +295,7 @@ async function generateAiImage() {
         </div>
       </div>
       <div>
-        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tonalitaet</label>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tonalität</label>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="t in toneOptions"

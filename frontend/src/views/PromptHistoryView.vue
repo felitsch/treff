@@ -112,7 +112,7 @@ async function toggleFavorite(item) {
 async function deleteEntry(id) {
   try {
     await api.delete(`/api/ai/history/${id}`)
-    toast.success('Eintrag geloescht')
+    toast.success('Eintrag gelöscht')
     deleteConfirmId.value = null
     fetchHistory()
     fetchStats()
@@ -139,7 +139,7 @@ function reusePrompt(item) {
     options: item.options,
   }))
 
-  toast.success('Prompt wird in den Generator uebernommen')
+  toast.success('Prompt wird in den Generator übernommen')
   router.push(target)
 }
 
@@ -216,7 +216,7 @@ onMounted(() => {
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatCost(stats.total_estimated_cost) }}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">Geschaetzte Kosten</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">Geschätzte Kosten</div>
       </div>
     </div>
 
@@ -282,9 +282,9 @@ onMounted(() => {
       svgIcon="sparkles"
       title="Keine KI-Aufrufe gefunden"
       :description="activeType || favoritesOnly || searchQuery
-        ? 'Versuche andere Filter oder loesche die Suche.'
+        ? 'Versuche andere Filter oder lösche die Suche.'
         : 'Sobald du KI-Funktionen nutzt (Text, Bild, Hashtags), erscheinen deine Aufrufe hier.'"
-      :actionLabel="activeType || favoritesOnly || searchQuery ? 'Filter zuruecksetzen' : 'Post erstellen'"
+      :actionLabel="activeType || favoritesOnly || searchQuery ? 'Filter zurücksetzen' : 'Post erstellen'"
       :actionTo="activeType || favoritesOnly || searchQuery ? '' : '/create/quick'"
       @action="activeType = ''; favoritesOnly = false; searchQuery = ''"
     />
@@ -360,7 +360,7 @@ onMounted(() => {
               v-if="deleteConfirmId !== item.id"
               @click="deleteConfirmId = item.id"
               class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="Loeschen"
+              title="Löschen"
               :data-testid="`delete-btn-${item.id}`"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -375,7 +375,7 @@ onMounted(() => {
                 class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                 :data-testid="`confirm-delete-${item.id}`"
               >
-                Loeschen
+                Löschen
               </button>
               <button
                 @click="deleteConfirmId = null"
@@ -428,10 +428,10 @@ onMounted(() => {
         :disabled="page <= 1"
         class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        Zurueck
+        Zurück
       </button>
       <span class="text-sm text-gray-500 dark:text-gray-400">
-        Seite {{ page }} von {{ totalPages }} ({{ total }} Eintraege)
+        Seite {{ page }} von {{ totalPages }} ({{ total }} Einträge)
       </span>
       <button
         @click="page = Math.min(totalPages, page + 1); fetchHistory()"

@@ -4,7 +4,7 @@
  *
  * Tools:
  * - Hintergrund entfernen (Freisteller)
- * - Style Transfer (Foto in Illustration, Aquarell, Minimalistisch, Comic, Oelgemaelde)
+ * - Style Transfer (Foto in Illustration, Aquarell, Minimalistisch, Comic, Ölgemälde)
  * - Format anpassen (Outpainting: 1:1 -> 4:5, 9:16, etc.)
  *
  * Shows Before/After comparison slider. Saves as new version (original preserved).
@@ -69,7 +69,7 @@ const stylePresets = [
   { id: 'watercolor', label: 'Aquarell', icon: 'swatch', desc: 'Weiche Farben, Pinselstriche' },
   { id: 'minimalist', label: 'Minimalistisch', icon: 'squares-2x2', desc: 'Klare Linien, wenig Farben' },
   { id: 'comic', label: 'Comic', icon: 'sparkles', desc: 'Outlines, Halftone, Pop-Art' },
-  { id: 'oil_painting', label: 'Oelgemaelde', icon: 'swatch', desc: 'Klassisch, Textur, tiefe Farben' },
+  { id: 'oil_painting', label: 'Ölgemälde', icon: 'swatch', desc: 'Klassisch, Textur, tiefe Farben' },
 ]
 
 // Aspect ratio presets for outpainting
@@ -205,7 +205,7 @@ function onSliderTouch(e) {
             <button
               @click="closeModal"
               class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Schliessen"
+              aria-label="Schließen"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -217,7 +217,7 @@ function onSliderTouch(e) {
           <div class="flex-1 overflow-y-auto p-6 space-y-5">
             <!-- Tool Selection -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Werkzeug waehlen</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Werkzeug wählen</label>
               <div class="grid grid-cols-3 gap-2">
                 <button
                   v-for="tool in tools"
@@ -240,7 +240,7 @@ function onSliderTouch(e) {
 
             <!-- Style Transfer Options -->
             <div v-if="selectedTool === 'style_transfer'">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stil waehlen</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stil wählen</label>
               <div class="grid grid-cols-5 gap-2">
                 <button
                   v-for="sp in stylePresets"
@@ -262,7 +262,7 @@ function onSliderTouch(e) {
 
             <!-- Outpainting Options -->
             <div v-if="selectedTool === 'outpainting'">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zielformat waehlen</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zielformat wählen</label>
               <div class="grid grid-cols-4 gap-2">
                 <button
                   v-for="rp in ratioPresets"
