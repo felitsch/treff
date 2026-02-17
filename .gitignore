@@ -42,6 +42,7 @@ npm-debug.log*
 
 # Screenshots (verification artifacts)
 *.png
+!docs/screenshots/*.png
 
 # Playwright
 .playwright/

@@ -9,6 +9,18 @@
 
 ---
 
+## Screenshots
+
+| Dashboard | Post-Creator | Kalender |
+|:---------:|:------------:|:--------:|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Post-Creator](docs/screenshots/post-creator.png) | ![Kalender](docs/screenshots/calendar.png) |
+
+| Templates | Analytics |
+|:---------:|:---------:|
+| ![Templates](docs/screenshots/templates.png) | ![Analytics](docs/screenshots/analytics.png) |
+
+---
+
 ## Ueberblick
 
 Der **TREFF Post-Generator** ist ein internes Web-Tool, mit dem die Social-Media-Mitarbeiterin von TREFF Sprachreisen konsistente, hochwertige Instagram- und TikTok-Posts erstellen kann. Das Tool kombiniert KI-Textgenerierung, KI-Bildgenerierung, anpassbare HTML/CSS-Templates, einen Content-Kalender und ein Analytics-Dashboard.
@@ -542,6 +554,12 @@ python migrate.py current
 # Rollback
 python migrate.py downgrade
 ```
+
+---
+
+## Feature Flags
+
+Das Projekt verwendet aktuell **kein Feature-Flag-System**. Alle Features sind standardmaessig aktiv. KI-Features (Textgenerierung, Bildgenerierung) werden automatisch deaktiviert, wenn der zugehoerige API-Key (`GEMINI_API_KEY` / `OPENAI_API_KEY`) nicht konfiguriert ist.
 
 ---
 
