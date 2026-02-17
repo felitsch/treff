@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/composables/useApi'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import WelcomeFlow from '@/components/common/WelcomeFlow.vue'
@@ -19,6 +20,7 @@ import StudentInboxWidget from '@/components/dashboard/StudentInboxWidget.vue'
 import PerformancePulseWidget from '@/components/dashboard/PerformancePulseWidget.vue'
 import ActiveCampaignsWidget from '@/components/dashboard/ActiveCampaignsWidget.vue'
 import PillarDistributionWidget from '@/components/dashboard/PillarDistributionWidget.vue'
+import PipelineDashboardWidget from '@/components/pipeline/PipelineDashboardWidget.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -164,17 +166,17 @@ function categoryColor(cat) {
   return colors[cat] || 'bg-gray-500'
 }
 
-// Platform icons
+// Platform icon names (for AppIcon component)
 function platformIcon(platform) {
   switch (platform) {
     case 'instagram_feed':
-      return '📸'
+      return 'camera'
     case 'instagram_story':
-      return '📱'
+      return 'device-mobile'
     case 'tiktok':
-      return '🎵'
+      return 'musical-note'
     default:
-      return '📝'
+      return 'document-text'
   }
 }
 
@@ -326,7 +328,7 @@ onMounted(() => {
         class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         title="Seiten-Tour starten"
       >
-        &#10067; Tour starten
+        <AppIcon name="help" class="w-4 h-4 inline" /> Tour starten
       </button>
     </div>
 
@@ -336,7 +338,7 @@ onMounted(() => {
       message="Keine API-Keys konfiguriert. Hinterlege deinen Gemini- oder OpenAI-Key, um KI-Funktionen zu nutzen."
       link-text="Einstellungen"
       link-to="/settings"
-      icon="🔑"
+      icon="key"
       :show="apiKeysMissing"
     />
 
@@ -415,7 +417,7 @@ onMounted(() => {
           @click="router.push('/create/quick')"
           class="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4C8BC2] to-[#3B7AB1] text-white font-semibold rounded-xl hover:from-[#3B7AB1] hover:to-[#2D6A9F] transition-all shadow-sm hover:shadow-md group"
         >
-          <span class="text-2xl group-hover:scale-110 transition-transform">✏️</span>
+          <AppIcon name="pencil-square" class="w-7 h-7 group-hover:scale-110 transition-transform" />
           <div class="text-left">
             <span class="block text-sm font-bold">Neuer Post</span>
             <span class="block text-xs opacity-80">Quick Post erstellen</span>
@@ -425,7 +427,7 @@ onMounted(() => {
           @click="router.push('/library/templates')"
           class="flex items-center gap-3 px-5 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#4C8BC2] dark:hover:border-[#4C8BC2] hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all shadow-sm hover:shadow-md group"
         >
-          <span class="text-2xl group-hover:scale-110 transition-transform">📄</span>
+          <AppIcon name="document-text" class="w-7 h-7 group-hover:scale-110 transition-transform" />
           <div class="text-left">
             <span class="block text-sm font-bold">Aus Template</span>
             <span class="block text-xs text-gray-500 dark:text-gray-400">Vorlage waehlen</span>
@@ -436,7 +438,7 @@ onMounted(() => {
           :disabled="generatingSuggestions"
           class="flex items-center gap-3 px-5 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#FDD000] dark:hover:border-[#FDD000] hover:bg-yellow-50/50 dark:hover:bg-yellow-900/10 transition-all shadow-sm hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span class="text-2xl group-hover:scale-110 transition-transform" :class="{ 'animate-spin': generatingSuggestions }">{{ generatingSuggestions ? '⏳' : '✨' }}</span>
+          <AppIcon :name="generatingSuggestions ? 'clock' : 'sparkles'" class="w-7 h-7 group-hover:scale-110 transition-transform" :class="{ 'animate-spin': generatingSuggestions }" />
           <div class="text-left">
             <span class="block text-sm font-bold">KI-Vorschlag</span>
             <span class="block text-xs text-gray-500 dark:text-gray-400">{{ generatingSuggestions ? 'Generiere...' : 'Content-Idee generieren' }}</span>
@@ -459,7 +461,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📝</span>
+              <AppIcon name="document-text" class="w-7 h-7 text-blue-500" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
@@ -480,7 +482,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📅</span>
+              <AppIcon name="calendar" class="w-7 h-7 text-yellow-500" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
@@ -501,7 +503,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📋</span>
+              <AppIcon name="clipboard-list" class="w-7 h-7 text-gray-500" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
@@ -544,11 +546,17 @@ onMounted(() => {
         <!-- Widget 4b: Content Pillar Distribution -->
         <PillarDistributionWidget />
 
+        <!-- Widget 4c: Pipeline Status -->
+        <PipelineDashboardWidget
+          :loading="widgetsLoading"
+          @refresh="fetchWidgetData"
+        />
+
         <!-- Widget 5: Mini Calendar (existing, moved into grid) -->
         <BaseCard padding="none" data-tour="dashboard-calendar">
           <template #header>
             <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📅</span> Naechste 7 Tage
+              <AppIcon name="calendar" class="w-5 h-5" /> Naechste 7 Tage
               <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
             </h2>
           </template>
@@ -623,7 +631,7 @@ onMounted(() => {
         <BaseCard padding="none" data-tour="dashboard-suggestions-widget">
           <template #header>
             <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>✨</span> KI-Vorschlaege
+              <AppIcon name="sparkles" class="w-5 h-5" /> KI-Vorschlaege
             </h2>
           </template>
           <template #headerAction>
@@ -667,7 +675,7 @@ onMounted(() => {
         <BaseCard padding="none" class="md:col-span-2" data-tour="dashboard-recent-posts">
           <template #header>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📋</span> Letzte Posts
+              <AppIcon name="clipboard-list" class="w-5 h-5" /> Letzte Posts
               <HelpTooltip :text="tooltipTexts.dashboard.recentPosts" size="sm" />
             </h2>
           </template>
@@ -716,7 +724,7 @@ onMounted(() => {
                     class="w-full h-full flex flex-col items-center justify-center gap-1.5"
                     :class="categoryColor(post.category)"
                   >
-                    <span class="text-3xl opacity-90">{{ platformIcon(post.platform) }}</span>
+                    <AppIcon :name="platformIcon(post.platform)" class="w-8 h-8 text-white opacity-90" />
                     <span class="text-xs text-white/80 font-medium px-2 text-center leading-tight">{{ categoryLabel(post.category) }}</span>
                   </div>
 
@@ -735,8 +743,8 @@ onMounted(() => {
                   </span>
 
                   <!-- Platform icon (top left) -->
-                  <span class="absolute top-1.5 left-1.5 text-sm bg-white/80 dark:bg-gray-900/80 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
-                    {{ platformIcon(post.platform) }}
+                  <span class="absolute top-1.5 left-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
+                    <AppIcon :name="platformIcon(post.platform)" class="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
                   </span>
 
                   <!-- Slide count badge (bottom right) -->
