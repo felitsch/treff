@@ -33,6 +33,7 @@ const emit = defineEmits(['complete'])
 
 const { loadTourProgress, markTourSeen, hasSeenTour, loadedFromBackend, tourStartRequest, clearTourStartRequest } = useTour()
 
+const tooltipEl = ref(null)
 const currentStep = ref(0)
 const tooltipStyle = ref({})
 const arrowStyle = ref({})
@@ -155,6 +156,19 @@ function positionTooltip() {
         borderRight: '8px solid transparent',
       }
     }
+
+    // After initial positioning, measure actual height and re-clamp
+    nextTick(() => {
+      if (!tooltipEl.value) return
+      const ttRect = tooltipEl.value.getBoundingClientRect()
+      if (ttRect.bottom > vh - 16) {
+        const corrected = Math.max(16, vh - ttRect.height - 16)
+        tooltipStyle.value = { ...tooltipStyle.value, top: corrected + 'px', bottom: 'auto' }
+      }
+      if (ttRect.top < 16) {
+        tooltipStyle.value = { ...tooltipStyle.value, top: '16px', bottom: 'auto' }
+      }
+    })
   }, 100)
 }
 
@@ -260,7 +274,8 @@ onUnmounted(() => {
 
       <!-- Tooltip card -->
       <div
-        class="fixed z-[10000] bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 transition-all duration-300"
+        ref="tooltipEl"
+        class="fixed z-[10000] bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 transition-all duration-300 max-h-[calc(100vh-32px)] overflow-y-auto"
         :style="tooltipStyle"
       >
         <!-- Arrow -->
