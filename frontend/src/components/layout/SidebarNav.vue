@@ -42,11 +42,9 @@ const navGroups = [
     label: 'Bibliothek',
     key: 'library',
     items: [
-      { name: 'Templates', path: '/library/templates', icon: '📄' },
-      { name: 'Galerie', path: '/library/template-gallery', icon: '🎨' },
-      { name: 'Editor', path: '/library/template-editor', icon: '✏️' },
       { name: 'Assets', path: '/library/assets', icon: '🖼️' },
-      { name: 'History', path: '/library/history', icon: '📋' },
+      { name: 'Templates', path: '/library/templates', icon: '📄' },
+      { name: 'Posts', path: '/library/history', icon: '📋' },
     ],
   },
   {
@@ -158,6 +156,25 @@ const isActive = (path) => route.path.startsWith(path)
     <div class="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-700 px-4">
       <span v-if="!collapsed" class="text-xl font-bold text-treff-blue">TREFF</span>
       <span v-else class="text-xl font-bold text-treff-blue">T</span>
+    </div>
+
+    <!-- Prominent Create button -->
+    <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+      <router-link
+        to="/create"
+        :class="[
+          'flex items-center justify-center gap-2 rounded-xl font-semibold transition-all',
+          'bg-treff-blue text-white hover:bg-treff-blue/90 shadow-sm hover:shadow-md',
+          collapsed ? 'w-10 h-10 mx-auto text-lg' : 'w-full py-2.5 px-4 text-sm',
+        ]"
+        aria-label="Neuen Content erstellen"
+        data-testid="sidebar-create-button"
+      >
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span v-if="!collapsed">Erstellen</span>
+      </router-link>
     </div>
 
     <!-- Navigation -->
