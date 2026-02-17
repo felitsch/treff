@@ -409,6 +409,15 @@ const routes = [
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Design-System', path: '/design-system' }],
         },
       },
+      {
+        path: 'ui-showcase',
+        name: 'UIShowcase',
+        component: () => import('@/views/UIShowcaseView.vue'),
+        meta: {
+          requiresAuth: true,
+          breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'UI Showcase', path: '/ui-showcase' }],
+        },
+      },
 
       // ═══════════════════════════════════════════════════════
       // VIDEO TOOLS (sub-section of create, but top-level for direct access)
