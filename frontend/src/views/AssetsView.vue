@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, inject, watch } from 'vue'
 import api from '@/utils/api'
 import { useApi } from '@/composables/useApi'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
@@ -24,6 +24,8 @@ const uploadProgress = ref(0)
 const uploadError = ref(null)
 const isDragOver = ref(false)
 const searchQuery = ref('')
+const librarySearch = inject('librarySearch', ref(''))
+const libraryAssetCount = inject('libraryAssetCount', ref(null))
 const selectedFilter = ref('all')
 const selectedCategory = ref('all')
 const selectedCountry = ref('all')
@@ -211,6 +213,7 @@ async function fetchAssets() {
   const result = await apiExecute(() => api.get('/api/assets'))
   if (result) {
     assets.value = result
+    libraryAssetCount.value = result.length
   } else {
     error.value = 'Fehler beim Laden der Assets'
   }
@@ -436,7 +439,17 @@ async function importStockPhoto(photo) {
   }
 }
 
-onMounted(fetchAssets)
+// Sync library-level search
+watch(librarySearch, (val) => {
+  if (val !== searchQuery.value) {
+    searchQuery.value = val
+  }
+})
+
+onMounted(() => {
+  if (librarySearch.value) searchQuery.value = librarySearch.value
+  fetchAssets()
+})
 </script>
 
 <template>

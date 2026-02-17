@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import api from '@/utils/api'
@@ -24,6 +24,10 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 const totalPosts = ref(0)
 const postsPerPage = ref(10)
+
+// Inject library-level search (from LibraryView parent)
+const librarySearch = inject('librarySearch', ref(''))
+const libraryPostCount = inject('libraryPostCount', ref(null))
 
 // Filters
 const searchQuery = ref('')
@@ -291,6 +295,8 @@ async function fetchPosts(resetPage = true) {
       totalPages.value = 1
       currentPage.value = 1
     }
+    // Update parent library count
+    libraryPostCount.value = totalPosts.value
   }
 }
 
@@ -712,7 +718,19 @@ function createPost() {
   router.push('/create/quick')
 }
 
+// Sync library-level search to local searchQuery
+watch(librarySearch, (val) => {
+  if (val !== searchQuery.value) {
+    searchQuery.value = val
+    debouncedSearch()
+  }
+})
+
 onMounted(() => {
+  // Sync any existing library search on mount
+  if (librarySearch.value) {
+    searchQuery.value = librarySearch.value
+  }
   fetchPosts()
   studentStore.fetchStudents()
 })

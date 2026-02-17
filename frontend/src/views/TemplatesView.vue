@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick, inject } from 'vue'
 import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -8,6 +8,10 @@ import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonGrid from '@/components/common/SkeletonGrid.vue'
 
 const tourRef = ref(null)
+
+// Inject library-level search
+const librarySearch = inject('librarySearch', ref(''))
+const libraryTemplateCount = inject('libraryTemplateCount', ref(null))
 
 const loading = ref(true)
 const error = ref(null)
@@ -482,6 +486,15 @@ const filteredTemplates = computed(() => {
   } else if (selectedOwnership.value === 'custom') {
     result = result.filter(t => !t.is_default)
   }
+  // Library-level search filter
+  const query = librarySearch.value?.toLowerCase?.() || ''
+  if (query) {
+    result = result.filter(t =>
+      (t.name || '').toLowerCase().includes(query) ||
+      (t.category || '').toLowerCase().includes(query) ||
+      (t.description || '').toLowerCase().includes(query)
+    )
+  }
   return result
 })
 
@@ -588,6 +601,7 @@ async function fetchTemplates() {
   try {
     const res = await api.get('/api/templates')
     templates.value = res.data
+    libraryTemplateCount.value = res.data.length
   } catch (err) {
     console.error('Failed to load templates:', err)
     error.value = 'Templates konnten nicht geladen werden.'

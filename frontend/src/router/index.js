@@ -73,13 +73,14 @@ const routes = [
       {
         path: 'create/smart',
         name: 'CreateSmart',
-        component: () => import('@/views/PostCreatorView.vue'),
+        component: () => import('@/views/create/SmartCreateView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Smart Create',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
-            { label: 'Smart Post', path: '/create/smart' },
+            { label: 'Smart Create', path: '/create/smart' },
           ],
         },
       },
