@@ -34,6 +34,7 @@ export function usePostCreator() {
   const {
     selectedCategory,
     selectedPillar,
+    selectedBuyerJourneyStage,
     selectedTemplate,
     selectedPlatform,
     selectedPlatforms,
@@ -172,6 +173,7 @@ export function usePostCreator() {
     // Forwarded store state
     selectedCategory,
     selectedPillar,
+    selectedBuyerJourneyStage,
     selectedTemplate,
     selectedPlatform,
     selectedPlatforms,

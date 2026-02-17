@@ -22,7 +22,6 @@
  * The old `useCreatePostStore` is kept temporarily for backward-compat and
  * delegates to this store internally.
  *
- * @see stores/campaign.js       — Multi-post campaign planning state
  * @see stores/contentPipeline.js — Student inbox & content processing queue
  */
 import { defineStore } from 'pinia'
@@ -43,6 +42,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   // ═══════════════════════════════════════════════════════════════════
   const selectedCategory = ref('')
   const selectedPillar = ref('')  // Content pillar ID (auto-set from category, or manually overridden)
+  const selectedBuyerJourneyStage = ref('')  // awareness, consideration, decision
   const templates = ref([])
   const selectedTemplate = ref(null)
   const loadingTemplates = ref(false)
@@ -131,6 +131,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     currentStep.value = 1
     selectedCategory.value = ''
     selectedPillar.value = ''
+    selectedBuyerJourneyStage.value = ''
     selectedTemplate.value = null
     templatePlaceholderValues.value = {}
     selectedPlatform.value = 'instagram_feed'
@@ -202,6 +203,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     // Step 1
     selectedCategory,
     selectedPillar,
+    selectedBuyerJourneyStage,
     // Step 2
     templates,
     selectedTemplate,
