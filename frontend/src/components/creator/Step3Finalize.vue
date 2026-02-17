@@ -16,6 +16,7 @@ import { usePostCreator } from '@/composables/usePostCreator'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
 import SmartScheduler from '@/components/creator/SmartScheduler.vue'
+import MultiPlatformExport from '@/components/export/MultiPlatformExport.vue'
 
 const router = useRouter()
 
@@ -49,6 +50,22 @@ const {
 
 // Smart scheduling state
 const scheduleSelection = ref({ date: '', time: '' })
+
+// Multi-platform export modal
+const showMultiExport = ref(false)
+
+// Build a post-like object for the multi-platform export component
+const postForExport = computed(() => ({
+  id: savedPost.value?.id || 0,
+  title: slides.value[0]?.headline || topic.value || 'Post',
+  platform: selectedPlatform.value || 'instagram_feed',
+  slide_data: JSON.stringify(slides.value),
+}))
+
+function onMultiExportComplete(results) {
+  showMultiExport.value = false
+  exportComplete.value = true
+}
 
 const platforms = [
   { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '1:1' },
@@ -314,6 +331,13 @@ function startNewPost() {
         <button v-else @click="downloadAsImage(0)" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg">
           <AppIcon name="download" class="w-4 h-4 inline-block" /> PNG herunterladen
         </button>
+        <button
+          @click="showMultiExport = true"
+          class="px-6 py-3 bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white font-bold rounded-lg flex items-center gap-2"
+          data-testid="multi-platform-export-btn"
+        >
+          <AppIcon name="export" class="w-4 h-4 inline-block" /> Alle Plattformen
+        </button>
         <button @click="router.push('/home')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-lg">Startseite</button>
         <button @click="startNewPost" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg">Neuen Post</button>
       </div>
@@ -426,7 +450,7 @@ function startNewPost() {
         {{ error }}
       </div>
 
-      <!-- Export button -->
+      <!-- Export buttons -->
       <div class="flex gap-3">
         <button
           @click="saveAndExport"
@@ -448,6 +472,31 @@ function startNewPost() {
           <AppIcon name="archive" class="w-4 h-4 inline-block" /> ZIP ({{ slides.length }} Slides)
         </button>
       </div>
+
+      <!-- Multi-Platform Export hint -->
+      <div class="text-center">
+        <button
+          @click="showMultiExport = true"
+          class="inline-flex items-center gap-2 text-sm text-[#3B7AB1] hover:text-[#2E6A9E] font-medium transition-colors"
+          data-testid="open-multi-export-btn"
+        >
+          <AppIcon name="export" class="w-4 h-4" />
+          Oder: Alle Plattform-Formate auf einmal exportieren
+        </button>
+      </div>
     </template>
+
+    <!-- Multi-Platform Export Modal -->
+    <MultiPlatformExport
+      :visible="showMultiExport"
+      :post="postForExport"
+      :slides="slides"
+      :caption-instagram="captionInstagram"
+      :caption-tiktok="captionTiktok"
+      :hashtags-instagram="hashtagsInstagram"
+      :hashtags-tiktok="hashtagsTiktok"
+      @close="showMultiExport = false"
+      @export-complete="onMultiExportComplete"
+    />
   </div>
 </template>

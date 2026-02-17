@@ -15,6 +15,7 @@ import RepurposePanel from '@/components/pipeline/RepurposePanel.vue'
 import VideoRepurposeWizard from '@/components/video/VideoRepurposeWizard.vue'
 import { useStudentStore } from '@/stores/students'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import MultiPlatformExport from '@/components/export/MultiPlatformExport.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,6 +43,14 @@ function onRepurposeSaved(result) {
 
 // Video repurpose wizard modal
 const showVideoRepurpose = ref(false)
+
+// Multi-platform export modal
+const showMultiPlatformExport = ref(false)
+
+function onMultiExportComplete(results) {
+  showMultiPlatformExport.value = false
+  toast.success(`${results.length} Plattform-Export(s) abgeschlossen!`, 3000)
+}
 
 /** Whether source post is a video/reel type */
 const isVideoPost = computed(() => {
@@ -527,6 +536,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </h1>
       </div>
       <div v-if="post" class="flex gap-2">
+        <!-- Multi-Platform Export button -->
+        <button
+          @click="showMultiPlatformExport = true"
+          class="px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 border border-[#3B7AB1] dark:border-[#3B7AB1]/60 text-[#3B7AB1] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+          title="Alle Plattform-Formate exportieren"
+          data-testid="multi-platform-export-btn"
+        >
+          <AppIcon name="export" class="w-4 h-4 inline-block" /> Alle Formate
+        </button>
         <!-- Repurpose button -->
         <button
           @click="showRepurposePanel = true"
@@ -1256,6 +1274,19 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </div>
       </div>
     </Teleport>
+
+    <!-- Multi-Platform Export Modal -->
+    <MultiPlatformExport
+      :visible="showMultiPlatformExport"
+      :post="post"
+      :slides="slides"
+      :caption-instagram="captionInstagram"
+      :caption-tiktok="captionTiktok"
+      :hashtags-instagram="hashtagsInstagram"
+      :hashtags-tiktok="hashtagsTiktok"
+      @close="showMultiPlatformExport = false"
+      @export-complete="onMultiExportComplete"
+    />
 
     <!-- Unsaved Changes Warning Dialog -->
     <Teleport to="body">

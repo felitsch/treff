@@ -19,6 +19,7 @@ import MusicSelector from '@/components/video/MusicSelector.vue'
 import MultiPlatformExport from '@/components/video/MultiPlatformExport.vue'
 import ContentMultiplierPanel from '@/components/video/ContentMultiplierPanel.vue'
 import ThumbnailAISuggestions from '@/components/video/ThumbnailAISuggestions.vue'
+import AudioSuggestionPanel from '@/components/video/AudioSuggestionPanel.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
@@ -197,6 +198,16 @@ function formatDuration(seconds) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+// ─── Audio suggestions ──────────────────────────────────────
+const showAudioRecommendations = ref(false)
+
+function onAudioSuggestionSelect(suggestion) {
+  // When an audio suggestion is selected, update the music config hint
+  musicConfig.value.enabled = true
+  musicConfig.value.trackName = `${suggestion.title} (${suggestion.artist || 'Empfehlung'})`
+  toast.success(`Audio-Empfehlung '${suggestion.title}' uebernommen`)
+}
+
 // ─── Export handling ────────────────────────────────────────
 function onExportComplete(results) {
   toast.success('Video-Export abgeschlossen!')
@@ -349,10 +360,32 @@ onMounted(() => {
           />
 
           <!-- 4. Music -->
-          <MusicSelector
-            v-if="section.key === 'music'"
-            v-model="musicConfig"
-          />
+          <div v-if="section.key === 'music'" class="space-y-4">
+            <MusicSelector v-model="musicConfig" />
+
+            <!-- Audio Suggestions toggle -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <button
+                @click="showAudioRecommendations = !showAudioRecommendations"
+                class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                {{ showAudioRecommendations ? 'Trending-Audio ausblenden' : 'Trending-Audio-Empfehlungen anzeigen' }}
+                <svg :class="['w-4 h-4 transition-transform', showAudioRecommendations ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div v-if="showAudioRecommendations" class="mt-3">
+                <AudioSuggestionPanel
+                  :compact="true"
+                  @select="onAudioSuggestionSelect"
+                />
+              </div>
+            </div>
+          </div>
 
           <!-- 5. Thumbnail AI -->
           <ThumbnailAISuggestions

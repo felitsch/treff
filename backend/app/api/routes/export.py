@@ -185,6 +185,125 @@ async def get_export_history(
     return [export_to_dict(e) for e in exports]
 
 
+@router.post("/multi-platform")
+async def multi_platform_export(
+    request: dict,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate multi-platform export records for a single post.
+
+    Takes one post and creates export records for multiple platform-specific
+    formats (1:1 Instagram Feed, 9:16 Story/Reel/TikTok, 4:5 Portrait).
+    The actual rendering happens client-side; this records the exports
+    and updates post status.
+
+    Body: {
+        "post_id": int,
+        "formats": [
+            {"platform": "instagram_feed", "width": 1080, "height": 1080, "label": "Instagram Feed (1:1)"},
+            {"platform": "instagram_story", "width": 1080, "height": 1920, "label": "Instagram Story (9:16)"},
+            ...
+        ],
+        "add_to_queue": false  // optionally add to scheduling queue
+    }
+    """
+    post_id = request.get("post_id")
+    formats = request.get("formats", [])
+    add_to_queue = request.get("add_to_queue", False)
+
+    if not post_id:
+        raise HTTPException(status_code=400, detail="post_id is required")
+    if not formats or not isinstance(formats, list):
+        raise HTTPException(status_code=400, detail="formats is required and must be a non-empty list")
+    if len(formats) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 formats per export")
+
+    # Verify post belongs to user
+    result = await db.execute(
+        select(Post).where(Post.id == post_id, Post.user_id == user_id)
+    )
+    post = result.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Determine slide count
+    slide_count = 1
+    if post.slide_data:
+        try:
+            import json
+            slides = json.loads(post.slide_data)
+            if isinstance(slides, list):
+                slide_count = len(slides)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    now = datetime.now(timezone.utc)
+    export_records = []
+
+    for fmt in formats:
+        platform = fmt.get("platform", "instagram_feed")
+        width = fmt.get("width", 1080)
+        height = fmt.get("height", 1080)
+        resolution = f"{width}x{height}"
+        label = fmt.get("label", platform)
+
+        file_fmt = "zip" if slide_count > 1 else "png"
+        suffix = "_carousel.zip" if slide_count > 1 else ".png"
+
+        export = ExportHistory(
+            post_id=post_id,
+            platform=platform,
+            format=file_fmt,
+            file_path=f"exports/post_{post_id}_{platform}_{width}x{height}{suffix}",
+            resolution=resolution,
+            slide_count=slide_count,
+            exported_at=now,
+        )
+        db.add(export)
+
+    # Update post status
+    post.exported_at = now
+    if post.status == "draft":
+        post.status = "exported"
+
+    await db.flush()
+
+    # Collect export records after flush
+    for fmt in formats:
+        platform = fmt.get("platform", "instagram_feed")
+        width = fmt.get("width", 1080)
+        height = fmt.get("height", 1080)
+        exp_result = await db.execute(
+            select(ExportHistory)
+            .where(
+                ExportHistory.post_id == post_id,
+                ExportHistory.platform == platform,
+                ExportHistory.resolution == f"{width}x{height}",
+            )
+            .order_by(ExportHistory.id.desc())
+            .limit(1)
+        )
+        exp = exp_result.scalar_one_or_none()
+        if exp:
+            export_records.append({
+                **export_to_dict(exp),
+                "width": width,
+                "height": height,
+                "label": fmt.get("label", platform),
+            })
+
+    await db.commit()
+
+    return {
+        "exports": export_records,
+        "count": len(export_records),
+        "post_id": post_id,
+        "add_to_queue": add_to_queue,
+        "status": "ok",
+    }
+
+
 @router.post("/batch")
 async def batch_export(
     request: dict,
