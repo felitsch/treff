@@ -114,9 +114,10 @@ const routes = [
       {
         path: 'create/campaign',
         name: 'CreateCampaign',
-        component: () => import('@/views/WeekPlannerView.vue'),
+        component: () => import('@/views/create/CampaignCreateView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Kampagne erstellen',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
