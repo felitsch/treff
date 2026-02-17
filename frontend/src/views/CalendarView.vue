@@ -15,6 +15,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import { toSeasonalMarkers, getMonthConfig } from '@/config/seasonalCalendar'
+import WeekStrategyPanel from '@/components/calendar/WeekStrategyPanel.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -31,6 +32,32 @@ const sidebarCollapsed = ref(window.innerWidth < 768)
 
 // Content-Mix right sidebar
 const mixPanelCollapsed = ref(window.innerWidth < 1024)
+
+// Week Strategy Panel
+const strategyPanelCollapsed = ref(true)
+
+// Compute current ISO week for strategy panel
+const currentISOWeek = computed(() => {
+  // Get a date in the middle of the current displayed month
+  const d = new Date(currentYear.value, currentMonth.value - 1, 15)
+  // Adjust to current week (use today's date if in displayed month, otherwise 1st)
+  const today = new Date()
+  const useDate = (today.getFullYear() === currentYear.value && today.getMonth() + 1 === currentMonth.value)
+    ? today
+    : new Date(currentYear.value, currentMonth.value - 1, 1)
+  // ISO week calculation
+  const target = new Date(useDate.valueOf())
+  const dayNr = (useDate.getDay() + 6) % 7
+  target.setDate(target.getDate() - dayNr + 3)
+  const firstThursday = target.valueOf()
+  target.setMonth(0, 1)
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7)
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000)
+  const isoYear = useDate.getFullYear()
+  return `${isoYear}-W${String(weekNum).padStart(2, '0')}`
+})
 
 // Drag-and-drop state
 const draggedPost = ref(null)
@@ -1603,6 +1630,20 @@ onUnmounted(() => {
           <HelpTooltip :text="tooltipTexts.calendar.contentMix" size="sm" />
         </button>
 
+        <!-- Week Strategy toggle -->
+        <button
+          @click="strategyPanelCollapsed = !strategyPanelCollapsed"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5"
+          :class="!strategyPanelCollapsed
+            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600'
+            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          title="Wochen-Strategie-Assistent anzeigen/ausblenden"
+          aria-label="Wochen-Strategie-Assistent anzeigen/ausblenden"
+        >
+          <span>🎯</span>
+          Strategie
+        </button>
+
         <!-- Export & Import Calendar button -->
         <button
           @click="showExportImport = true"
@@ -2656,6 +2697,14 @@ onUnmounted(() => {
       <ContentMixPanel
         :collapsed="mixPanelCollapsed"
         @toggle="mixPanelCollapsed = !mixPanelCollapsed"
+      />
+
+      <!-- Week Strategy Assistant right sidebar -->
+      <WeekStrategyPanel
+        :collapsed="strategyPanelCollapsed"
+        :week="currentISOWeek"
+        @toggle="strategyPanelCollapsed = !strategyPanelCollapsed"
+        @refresh-calendar="fetchCalendar"
       />
     </div><!-- end flex gap-4 main layout -->
 
