@@ -33,7 +33,7 @@ from app.core.seed_video_templates import seed_video_templates
 from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
 from app.schemas.responses import ERROR_CODES
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks, reports
 
 logger = logging.getLogger(__name__)
 
@@ -545,7 +545,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"],
 )
+
+# Rate-limiting middleware (applied after CORS so preflight OPTIONS are not limited)
+from app.core.rate_limiter import RateLimitMiddleware  # noqa: E402
+app.add_middleware(RateLimitMiddleware)
 
 # ─── Custom Exception Handlers ──────────────────────────────────────────────
 # All error responses follow the standard format:
@@ -760,6 +765,7 @@ app.include_router(video_scripts.router, prefix="/api/video-scripts", tags=["Vid
 app.include_router(prompt_history.router, prefix="/api/ai", tags=["AI Prompt History"])
 app.include_router(smart_scheduling.router, prefix="/api/ai", tags=["Smart Scheduling"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Background Tasks"])
+app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 
 
 if __name__ == "__main__":

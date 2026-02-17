@@ -20,6 +20,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
+import ReportGenerator from '@/components/analytics/ReportGenerator.vue'
 
 // Register Chart.js components
 ChartJS.register(
@@ -339,7 +340,7 @@ async function fetchFrequency() {
     const res = await api.get(`/api/analytics/frequency?period=${frequencyPeriod.value}`)
     frequencyData.value = res.data.data || []
   } catch (err) {
-    console.error('Failed to load frequency data:', err)
+    // Error toast shown by API interceptor
     frequencyData.value = []
   } finally {
     frequencyLoading.value = false
@@ -371,7 +372,7 @@ async function fetchAnalytics() {
     goals.value = goalsRes.data
     frequencyData.value = frequencyRes.data.data || []
   } catch (err) {
-    console.error('Failed to load analytics:', err)
+    // Error toast shown by API interceptor
     error.value = 'Fehler beim Laden der Analytics-Daten.'
   } finally {
     loading.value = false
@@ -465,7 +466,7 @@ async function fetchPerformanceTrend() {
     const res = await api.get(`/api/analytics/performance-trend?period=${performanceTrendPeriod.value}`)
     performanceTrendData.value = res.data.data || []
   } catch (err) {
-    console.error('Failed to load performance trend:', err)
+    // Error toast shown by API interceptor
     performanceTrendData.value = []
   } finally {
     performanceTrendLoading.value = false
@@ -826,6 +827,17 @@ onMounted(() => {
       <!-- Top Posts Ranking -->
       <BaseCard padding="lg" :header-divider="false" data-testid="top-posts-section">
         <TopPostsRanking />
+      </BaseCard>
+
+      <!-- Report Generator -->
+      <BaseCard padding="lg" :header-divider="false" data-testid="report-generator-section" data-tour="analytics-reports">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Report-Generierung</h2>
+        </template>
+        <template #headerAction>
+          <span class="text-xs text-gray-500 dark:text-gray-400">PDF / CSV</span>
+        </template>
+        <ReportGenerator />
       </BaseCard>
     </div>
 
