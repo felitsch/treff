@@ -9,6 +9,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import { STUDENT_CONTENT_TYPES, CONTENT_LIFECYCLE } from '@/config/studentContentGuide'
 
 const router = useRouter()
 const toast = useToast()

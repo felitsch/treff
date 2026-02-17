@@ -9,6 +9,7 @@ import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import { STUDENT_CONTENT_TYPES, FREQUENCY_CONFIG, CONTENT_LIFECYCLE, getContentTypesForPhase } from '@/config/studentContentGuide'
 
 const router = useRouter()
 const store = useStudentStore()
