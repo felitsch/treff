@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import AudioSuggestionPanel from '@/components/video/AudioSuggestionPanel.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -44,6 +45,40 @@ const isLoadingHistory = ref(false)
 // Editing
 const editingSceneIndex = ref(-1)
 const editForm = ref({})
+
+// Audio sidebar
+const showAudioSidebar = ref(false)
+
+/** Computed platform filter for AudioSuggestionPanel */
+const audioPlatformFilter = computed(() => {
+  const map = { reels: 'instagram', tiktok: 'tiktok', story: 'instagram' }
+  return map[platform.value] || null
+})
+
+/** Computed content pillar filter for AudioSuggestionPanel */
+const audioContentPillarFilter = computed(() => category.value || null)
+
+/** Handle audio suggestion selection - apply to current editing scene or show info */
+function onAudioSelect(suggestion) {
+  const moodLabel = suggestion.mood
+  const musicNote = `${moodLabel}: '${suggestion.title}'${suggestion.artist ? ` (${suggestion.artist})` : ''}`
+
+  if (editingSceneIndex.value >= 0) {
+    // Apply to scene being edited
+    editForm.value.music_note = musicNote
+    toast.success(`Audio '${suggestion.title}' zur Szene hinzugefuegt`)
+  } else if (generatedScript.value && generatedScript.value.scenes.length > 0) {
+    // Apply to all scenes as default
+    generatedScript.value.scenes.forEach(scene => {
+      if (!scene.music_note || scene.music_note.trim() === '') {
+        scene.music_note = musicNote
+      }
+    })
+    toast.success(`Audio '${suggestion.title}' als Musik-Empfehlung gesetzt`)
+  } else {
+    toast.info(`Audio-Empfehlung: ${suggestion.title} (${suggestion.mood})`)
+  }
+}
 
 const countries = [
   { value: '', label: 'Automatisch (gewichtet)' },
@@ -526,8 +561,10 @@ function formatDuration(seconds) {
       </div>
     </div>
 
-    <!-- Step 4: Generated Script -->
-    <div v-if="currentStep === 4 && generatedScript" class="space-y-6">
+    <!-- Step 4: Generated Script with Audio Sidebar -->
+    <div v-if="currentStep === 4 && generatedScript" class="flex flex-wrap lg:flex-nowrap gap-6">
+      <!-- Main script content -->
+      <div class="flex-1 min-w-0 space-y-6">
       <!-- Script Header -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
         <div class="flex items-center justify-between mb-4">
@@ -545,6 +582,21 @@ function formatDuration(seconds) {
             </div>
           </div>
           <div class="flex items-center gap-2">
+            <button
+              @click="showAudioSidebar = !showAudioSidebar"
+              :class="[
+                'px-3 py-1.5 text-sm border rounded-lg transition-colors flex items-center gap-1.5',
+                showAudioSidebar
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+              ]"
+              title="Audio-Empfehlungen anzeigen"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+              Audio
+            </button>
             <button @click="copyVoiceover" class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
               Voiceover kopieren
             </button>
@@ -662,7 +714,10 @@ function formatDuration(seconds) {
                 <p class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded">{{ scene.text_overlay }}</p>
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Musik</p>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <svg class="w-3 h-3 inline-block mr-0.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
+                  Musik
+                </p>
                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ scene.music_note }}</p>
               </div>
               <div>
@@ -684,6 +739,35 @@ function formatDuration(seconds) {
         <button @click="currentStep = 5" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
           Script-Verlauf anzeigen
         </button>
+      </div>
+      </div><!-- end main script content -->
+
+      <!-- Audio Suggestions Sidebar -->
+      <div
+        v-if="showAudioSidebar"
+        class="w-80 shrink-0 hidden lg:block"
+        data-testid="audio-sidebar"
+      >
+        <div class="sticky top-4">
+          <AudioSuggestionPanel
+            :platformFilter="audioPlatformFilter"
+            :contentPillarFilter="audioContentPillarFilter"
+            @select="onAudioSelect"
+          />
+        </div>
+      </div>
+
+      <!-- Mobile Audio Panel (shown below content on small screens) -->
+      <div
+        v-if="showAudioSidebar"
+        class="lg:hidden w-full"
+        data-testid="audio-sidebar-mobile"
+      >
+        <AudioSuggestionPanel
+          :platformFilter="audioPlatformFilter"
+          :contentPillarFilter="audioContentPillarFilter"
+          @select="onAudioSelect"
+        />
       </div>
     </div>
 
