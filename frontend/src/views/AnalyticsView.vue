@@ -18,6 +18,7 @@ import api from '@/utils/api'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import TopPostsRanking from '@/components/analytics/TopPostsRanking.vue'
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
@@ -114,10 +115,10 @@ function platformLabel(platform) {
 // Platform icons
 function platformIcon(platform) {
   switch (platform) {
-    case 'instagram_feed': return '📸'
-    case 'instagram_story': return '📱'
-    case 'tiktok': return '🎵'
-    default: return '📝'
+    case 'instagram_feed': return 'camera'
+    case 'instagram_story': return 'device-phone-mobile'
+    case 'tiktok': return 'musical-note'
+    default: return 'document-text'
   }
 }
 
@@ -687,7 +688,7 @@ onMounted(() => {
       message="Noch keine Posting-Ziele festgelegt? Konfiguriere woechentliche und monatliche Ziele in den Einstellungen."
       link-text="Einstellungen"
       link-to="/settings"
-      icon="🎯"
+      icon="fire"
       :show="goalsNotConfigured"
     />
 
@@ -726,7 +727,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📊</span>
+              <AppIcon name="chart-bar" class="w-7 h-7 inline-block" />
             </div>
           </div>
         </BaseCard>
@@ -741,7 +742,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-[#3B7AB1]/10 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📅</span>
+              <AppIcon name="calendar" class="w-7 h-7 inline-block" />
             </div>
           </div>
         </BaseCard>
@@ -756,7 +757,7 @@ onMounted(() => {
               </p>
             </div>
             <div class="w-12 h-12 bg-[#FDD000]/10 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📆</span>
+              <AppIcon name="calendar-days" class="w-7 h-7 inline-block" />
             </div>
           </div>
         </BaseCard>
@@ -955,7 +956,7 @@ onMounted(() => {
 
       <!-- Performance Reminder Banner -->
       <div v-if="performanceReminder.count > 0" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-3" data-testid="performance-reminder">
-        <span class="text-2xl">📝</span>
+        <AppIcon name="document-text" class="w-7 h-7 inline-block" />
         <div class="flex-1">
           <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
             {{ performanceReminder.count }} Post{{ performanceReminder.count > 1 ? 's' : '' }} warten auf Metriken-Eingabe
@@ -979,7 +980,7 @@ onMounted(() => {
       <!-- Performance Trend Chart -->
       <BaseCard padding="lg" :header-divider="false" data-testid="performance-trend-chart">
         <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">📈 Performance-Trend</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2"><AppIcon name="arrow-trending-up" class="w-5 h-5 inline-block" /> Performance-Trend</h2>
         </template>
         <template #headerAction>
           <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">

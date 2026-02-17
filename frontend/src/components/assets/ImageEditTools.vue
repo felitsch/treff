@@ -10,6 +10,7 @@
  * Shows Before/After comparison slider. Saves as new version (original preserved).
  */
 import { ref, computed, watch, nextTick } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 
@@ -45,30 +46,30 @@ const tools = [
   {
     id: 'remove_background',
     label: 'Hintergrund entfernen',
-    icon: '✂️',
+    icon: 'scissors',
     description: 'Freisteller erstellen – Hintergrund wird entfernt',
   },
   {
     id: 'style_transfer',
     label: 'Style Transfer',
-    icon: '🎨',
+    icon: 'paint-brush',
     description: 'Foto in einen anderen Stil umwandeln',
   },
   {
     id: 'outpainting',
     label: 'Format anpassen',
-    icon: '🖼️',
+    icon: 'photo',
     description: 'Bild mit KI auf neues Format erweitern',
   },
 ]
 
 // Style presets for style transfer
 const stylePresets = [
-  { id: 'illustration', label: 'Illustration', icon: '🎨', desc: 'Digital, bunt, flaches Design' },
-  { id: 'watercolor', label: 'Aquarell', icon: '💧', desc: 'Weiche Farben, Pinselstriche' },
-  { id: 'minimalist', label: 'Minimalistisch', icon: '◻️', desc: 'Klare Linien, wenig Farben' },
-  { id: 'comic', label: 'Comic', icon: '💥', desc: 'Outlines, Halftone, Pop-Art' },
-  { id: 'oil_painting', label: 'Oelgemaelde', icon: '🖌️', desc: 'Klassisch, Textur, tiefe Farben' },
+  { id: 'illustration', label: 'Illustration', icon: 'paint-brush', desc: 'Digital, bunt, flaches Design' },
+  { id: 'watercolor', label: 'Aquarell', icon: 'swatch', desc: 'Weiche Farben, Pinselstriche' },
+  { id: 'minimalist', label: 'Minimalistisch', icon: 'squares-2x2', desc: 'Klare Linien, wenig Farben' },
+  { id: 'comic', label: 'Comic', icon: 'sparkles', desc: 'Outlines, Halftone, Pop-Art' },
+  { id: 'oil_painting', label: 'Oelgemaelde', icon: 'swatch', desc: 'Klassisch, Textur, tiefe Farben' },
 ]
 
 // Aspect ratio presets for outpainting
@@ -199,7 +200,7 @@ function onSliderTouch(e) {
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              🎨 KI-Bildbearbeitung
+              <AppIcon name="paint-brush" class="w-5 h-5 inline-block" /> KI-Bildbearbeitung
             </h2>
             <button
               @click="closeModal"
@@ -230,7 +231,7 @@ function onSliderTouch(e) {
                   ]"
                   data-testid="tool-select"
                 >
-                  <span class="text-2xl">{{ tool.icon }}</span>
+                  <AppIcon :name="tool.icon" class="w-7 h-7" />
                   <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{ tool.label }}</span>
                   <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{{ tool.description }}</span>
                 </button>
@@ -253,7 +254,7 @@ function onSliderTouch(e) {
                   ]"
                   data-testid="style-select"
                 >
-                  <span class="text-xl">{{ sp.icon }}</span>
+                  <AppIcon :name="sp.icon" class="w-6 h-6" />
                   <span class="text-[10px] font-semibold text-gray-800 dark:text-gray-200">{{ sp.label }}</span>
                 </button>
               </div>
@@ -288,8 +289,8 @@ function onSliderTouch(e) {
               data-testid="apply-edit-btn"
               class="w-full py-3 px-4 bg-[#4C8BC2] text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <span v-if="processing" class="animate-spin">⏳</span>
-              <span v-else>✨</span>
+              <AppIcon v-if="processing" name="clock" class="w-5 h-5 animate-spin" />
+              <AppIcon v-else name="sparkles" class="w-5 h-5" />
               {{ processing ? 'Bearbeite...' : 'Bearbeitung starten' }}
             </button>
 
@@ -369,7 +370,7 @@ function onSliderTouch(e) {
               data-testid="use-edited-btn"
               class="px-5 py-2 text-sm font-semibold text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors"
             >
-              ✅ Bearbeitetes Bild verwenden
+              <AppIcon name="check-circle" class="w-4 h-4 inline-block" /> Bearbeitetes Bild verwenden
             </button>
           </div>
         </div>

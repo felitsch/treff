@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -43,21 +44,21 @@ const formats = [
     id: 'csv',
     label: 'CSV',
     description: 'Tabellendaten fuer Excel, Google Sheets',
-    icon: '📊',
+    icon: 'chart-bar',
     ext: '.csv',
   },
   {
     id: 'ical',
     label: 'iCal',
     description: 'Kalender-Events fuer Apple/Google/Outlook',
-    icon: '📅',
+    icon: 'calendar',
     ext: '.ics',
   },
   {
     id: 'pdf',
     label: 'PDF-Uebersicht',
     description: 'Druckbarer visueller Wochenplan (HTML)',
-    icon: '🖨️',
+    icon: 'printer',
     ext: '.html',
   },
 ]
@@ -326,7 +327,7 @@ const validRowCount = computed(() => {
                   v-model="exportFormat"
                   class="sr-only"
                 />
-                <span class="text-2xl">{{ fmt.icon }}</span>
+                <AppIcon :name="fmt.icon" class="w-7 h-7" />
                 <div class="flex-1">
                   <div class="font-medium text-gray-900 dark:text-white">{{ fmt.label }}</div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">{{ fmt.description }}</div>

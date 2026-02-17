@@ -16,6 +16,7 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import CampaignTimeline from '@/components/campaign/CampaignTimeline.vue'
 import CampaignPostCard from '@/components/campaign/CampaignPostCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -35,16 +36,16 @@ const form = ref({
 })
 
 const goalOptions = [
-  { value: 'awareness', label: 'Awareness', icon: '👁️', description: 'Reichweite aufbauen, Marke bekannt machen' },
-  { value: 'engagement', label: 'Engagement', icon: '💬', description: 'Interaktionen foerdern, Community aufbauen' },
-  { value: 'conversion', label: 'Conversion', icon: '🎯', description: 'Bewerbungen und Anmeldungen generieren' },
-  { value: 'traffic', label: 'Traffic', icon: '🔗', description: 'Website-Besuche steigern' },
+  { value: 'awareness', label: 'Awareness', icon: 'eye', description: 'Reichweite aufbauen, Marke bekannt machen' },
+  { value: 'engagement', label: 'Engagement', icon: 'chat-bubble', description: 'Interaktionen foerdern, Community aufbauen' },
+  { value: 'conversion', label: 'Conversion', icon: 'fire', description: 'Bewerbungen und Anmeldungen generieren' },
+  { value: 'traffic', label: 'Traffic', icon: 'link', description: 'Website-Besuche steigern' },
 ]
 
 const platformOptions = [
-  { value: 'instagram_feed', label: 'Instagram Feed', icon: '📸' },
-  { value: 'instagram_story', label: 'Instagram Story', icon: '📱' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'instagram_feed', label: 'Instagram Feed', icon: 'camera' },
+  { value: 'instagram_story', label: 'Instagram Story', icon: 'device-mobile' },
+  { value: 'tiktok', label: 'TikTok', icon: 'musical-note' },
 ]
 
 const countryOptions = [
@@ -378,7 +379,7 @@ function formatDateLong(dateStr) {
             ]"
             :data-testid="`goal-${opt.value}`"
           >
-            <span class="text-2xl">{{ opt.icon }}</span>
+            <AppIcon :name="opt.icon" class="w-7 h-7 text-gray-600 dark:text-gray-300" />
             <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ opt.label }}</span>
             <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{{ opt.description }}</span>
           </button>
@@ -427,7 +428,7 @@ function formatDateLong(dateStr) {
             ]"
             :data-testid="`platform-${opt.value}`"
           >
-            <span>{{ opt.icon }}</span>
+            <AppIcon :name="opt.icon" class="w-5 h-5" />
             <span>{{ opt.label }}</span>
           </button>
         </div>
@@ -503,8 +504,8 @@ function formatDateLong(dateStr) {
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ form.title }}</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {{ goalOptions.find(g => g.value === form.goal)?.icon }}
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+              <AppIcon :name="goalOptions.find(g => g.value === form.goal)?.icon || 'eye'" class="w-4 h-4 inline-block" />
               {{ goalOptions.find(g => g.value === form.goal)?.label }}
               &middot; {{ formatDate(form.startDate) }} – {{ formatDate(form.endDate) }}
               &middot; {{ generatedPosts.length }} Posts

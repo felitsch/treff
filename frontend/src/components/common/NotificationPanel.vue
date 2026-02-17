@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, markRaw } from 'vue'
 import { useSeriesReminders } from '@/composables/useSeriesReminders'
+import { BellIcon, CalendarDaysIcon, PauseCircleIcon, FlagIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { BellIcon as BellSolidIcon } from '@heroicons/vue/24/solid'
 
 const { reminders, unreadCount, loading, fetchReminders, markRead, markAllRead, dismissReminder } = useSeriesReminders()
 
@@ -40,12 +42,12 @@ function handleMarkAllRead() {
 // Reminder type styling
 function typeIcon(type) {
   const icons = {
-    upcoming_episode: '\uD83D\uDCC5',
-    series_paused: '\u23F8\uFE0F',
-    series_ending: '\uD83C\uDFC1',
-    gap_warning: '\u26A0\uFE0F',
+    upcoming_episode: markRaw(CalendarDaysIcon),
+    series_paused: markRaw(PauseCircleIcon),
+    series_ending: markRaw(FlagIcon),
+    gap_warning: markRaw(ExclamationTriangleIcon),
   }
-  return icons[type] || '\uD83D\uDD14'
+  return icons[type] || markRaw(BellIcon)
 }
 
 function typeLabel(type) {
@@ -99,10 +101,9 @@ function formatRelativeTime(dateStr) {
   }
 }
 
-// Bell emoji for template usage
-const bellEmoji = '\uD83D\uDD14'
-const checkEmoji = '\u2705'
-const hourglassEmoji = '\u23F3'
+// Icon components for template usage
+const BellIconComponent = markRaw(BellSolidIcon)
+const CheckCircleComponent = markRaw(CheckCircleIcon)
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -123,7 +124,7 @@ onUnmounted(() => {
       aria-label="Serien-Benachrichtigungen"
       data-testid="notification-bell"
     >
-      <span class="text-lg">{{ bellEmoji }}</span>
+      <BellSolidIcon class="h-5 w-5 text-yellow-500" />
       <!-- Unread badge -->
       <span
         v-if="unreadCount > 0"
@@ -152,7 +153,7 @@ onUnmounted(() => {
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 px-4 py-3">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>{{ bellEmoji }}</span> Serien-Erinnerungen
+            <BellSolidIcon class="h-4 w-4 text-yellow-500" /> Serien-Erinnerungen
           </h3>
           <div class="flex items-center gap-2">
             <button
@@ -177,13 +178,13 @@ onUnmounted(() => {
         <div class="overflow-y-auto max-h-[400px]">
           <!-- Loading -->
           <div v-if="loading" class="p-6 text-center">
-            <span class="animate-spin inline-block text-xl">{{ hourglassEmoji }}</span>
+            <svg class="animate-spin inline-block h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
             <p class="text-sm text-gray-400 mt-2">Lade Erinnerungen...</p>
           </div>
 
           <!-- Empty state -->
           <div v-else-if="reminders.length === 0" class="p-6 text-center">
-            <div class="text-3xl mb-2">{{ checkEmoji }}</div>
+            <CheckCircleIcon class="h-8 w-8 text-green-500 mx-auto mb-2" />
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Keine Erinnerungen</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Alle Serien sind auf dem neuesten Stand!
@@ -201,8 +202,8 @@ onUnmounted(() => {
             >
               <div class="flex items-start gap-3">
                 <!-- Type icon -->
-                <div class="mt-0.5 text-lg flex-shrink-0">
-                  {{ typeIcon(reminder.reminder_type) }}
+                <div class="mt-0.5 flex-shrink-0">
+                  <component :is="typeIcon(reminder.reminder_type)" class="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
 
                 <!-- Content -->

@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,9 +36,9 @@ const statusConfig = {
 }
 
 const episodeStatusConfig = {
-  planned: { label: 'Geplant', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300', icon: '\u{1F4CB}', dot: 'bg-gray-400 border-gray-300' },
-  draft: { label: 'Entwurf', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', icon: '\u{270F}\u{FE0F}', dot: 'bg-yellow-400 border-yellow-300' },
-  published: { label: 'Publiziert', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', icon: '\u{2705}', dot: 'bg-green-500 border-green-400' },
+  planned: { label: 'Geplant', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300', icon: 'clipboard-list', dot: 'bg-gray-400 border-gray-300' },
+  draft: { label: 'Entwurf', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', icon: 'pencil-square', dot: 'bg-yellow-400 border-yellow-300' },
+  published: { label: 'Publiziert', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', icon: 'check-circle', dot: 'bg-green-500 border-green-400' },
 }
 
 const progress = computed(() => {
@@ -114,7 +115,7 @@ onMounted(() => {
             class="w-full h-full object-cover"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <span class="text-7xl opacity-30">📖</span>
+            <AppIcon name="book-open" class="w-16 h-16 opacity-30" />
           </div>
           <!-- Status Badge -->
           <div class="absolute top-4 right-4">
@@ -137,16 +138,16 @@ onMounted(() => {
               <!-- Meta Tags -->
               <div class="flex flex-wrap gap-3">
                 <span v-if="arc.student_name" class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-full">
-                  <span>🎓</span> {{ arc.student_name }}
+                  <AppIcon name="academic-cap" class="w-4 h-4" /> {{ arc.student_name }}
                 </span>
                 <span v-if="arc.country" class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-full">
-                  {{ countryFlags[arc.country] || '\u{1F30D}' }} {{ countryLabels[arc.country] || arc.country }}
+                  <template v-if="countryFlags[arc.country]">{{ countryFlags[arc.country] }}</template><AppIcon v-else name="globe" class="w-4 h-4 inline-block" /> {{ countryLabels[arc.country] || arc.country }}
                 </span>
                 <span v-if="arc.tone" class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-full capitalize">
-                  <span>🎤</span> {{ arc.tone }}
+                  <AppIcon name="microphone" class="w-4 h-4" /> {{ arc.tone }}
                 </span>
                 <span class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-full">
-                  <span>📅</span> Erstellt {{ formatDate(arc.created_at) }}
+                  <AppIcon name="calendar" class="w-4 h-4" /> Erstellt {{ formatDate(arc.created_at) }}
                 </span>
               </div>
             </div>
@@ -185,7 +186,7 @@ onMounted(() => {
           v-if="!arc.episodes || arc.episodes.length === 0"
           class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
         >
-          <p class="text-4xl mb-3">📝</p>
+          <AppIcon name="document-text" class="w-10 h-10 mx-auto mb-3" />
           <p class="text-gray-500 dark:text-gray-400">Noch keine Episoden erstellt</p>
           <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">
             Episoden werden ueber den Story-Wizard oder die Kalender-Ansicht erstellt.
@@ -246,16 +247,16 @@ onMounted(() => {
                   <!-- Post link info -->
                   <div v-if="episode.post_id" class="flex flex-wrap items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                     <span v-if="episode.post_title" class="flex items-center gap-1">
-                      <span>📄</span> {{ episode.post_title }}
+                      <AppIcon name="document-text" class="w-3.5 h-3.5" /> {{ episode.post_title }}
                     </span>
                     <span v-if="episode.post_scheduled_date" class="flex items-center gap-1">
-                      <span>📅</span> {{ formatDate(episode.post_scheduled_date) }}
+                      <AppIcon name="calendar" class="w-3.5 h-3.5" /> {{ formatDate(episode.post_scheduled_date) }}
                     </span>
                     <span v-if="episode.post_platform" class="flex items-center gap-1">
-                      <span>📱</span> {{ episode.post_platform }}
+                      <AppIcon name="device-mobile" class="w-3.5 h-3.5" /> {{ episode.post_platform }}
                     </span>
                     <span v-if="episode.post_status" class="flex items-center gap-1">
-                      <span>{{ episode.post_status === 'posted' ? '\u{2705}' : episode.post_status === 'scheduled' ? '\u{1F551}' : '\u{270F}\u{FE0F}' }}</span>
+                      <AppIcon :name="episode.post_status === 'posted' ? 'check-circle' : episode.post_status === 'scheduled' ? 'clock' : 'pencil-square'" class="w-3.5 h-3.5" />
                       {{ episode.post_status }}
                     </span>
                   </div>

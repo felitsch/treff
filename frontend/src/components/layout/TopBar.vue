@@ -8,6 +8,7 @@ import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import NotificationHistoryPanel from '@/components/common/NotificationHistoryPanel.vue'
 import ProgressIndicator from '@/components/common/ProgressIndicator.vue'
 import tourConfigs from '@/tours/tourConfigs'
+import { Bars3Icon, SunIcon, MoonIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 defineEmits(['toggle-sidebar'])
 
@@ -136,7 +137,7 @@ if (localStorage.getItem('darkMode') === 'true') {
         @click="$emit('toggle-sidebar')"
         aria-label="Menu"
       >
-        ☰
+        <Bars3Icon class="h-6 w-6" />
       </button>
       <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
         {{ route.meta?.title || route.name }}
@@ -220,7 +221,8 @@ if (localStorage.getItem('darkMode') === 'true') {
         @click="toggleDarkMode"
         :aria-label="isDark ? 'Heller Modus' : 'Dunkler Modus'"
       >
-        {{ isDark ? '☀️' : '🌙' }}
+        <SunIcon v-if="isDark" class="h-5 w-5" />
+        <MoonIcon v-else class="h-5 w-5" />
       </button>
 
       <!-- User info -->
@@ -230,9 +232,10 @@ if (localStorage.getItem('darkMode') === 'true') {
 
       <!-- Logout -->
       <button
-        class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 focus-ring"
+        class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 focus-ring inline-flex items-center gap-1.5"
         @click="handleLogout"
       >
+        <ArrowRightOnRectangleIcon class="h-4 w-4" />
         Logout
       </button>
     </div>

@@ -8,6 +8,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -46,16 +47,16 @@ const workflowTourRef = ref(null)
 
 // Available formats
 const aspectRatios = {
-  '9:16': { width: 1080, height: 1920, label: 'Reel/TikTok (9:16)', icon: '📱' },
-  '1:1': { width: 1080, height: 1080, label: 'Feed Quadrat (1:1)', icon: '⬜' },
-  '4:5': { width: 1080, height: 1350, label: 'Feed Portrait (4:5)', icon: '📐' },
+  '9:16': { width: 1080, height: 1920, label: 'Reel/TikTok (9:16)', icon: 'device-mobile' },
+  '1:1': { width: 1080, height: 1080, label: 'Feed Quadrat (1:1)', icon: 'grid' },
+  '4:5': { width: 1080, height: 1350, label: 'Feed Portrait (4:5)', icon: 'photo' },
 }
 
 const platformPresets = {
-  instagram_reel: { label: 'Instagram Reel', aspect_ratio: '9:16', max_duration: 90, icon: '📸' },
-  instagram_feed: { label: 'Instagram Feed', aspect_ratio: '1:1', max_duration: 60, icon: '📸' },
-  instagram_feed_portrait: { label: 'Instagram Feed (Portrait)', aspect_ratio: '4:5', max_duration: 60, icon: '📸' },
-  tiktok: { label: 'TikTok', aspect_ratio: '9:16', max_duration: 180, icon: '🎵' },
+  instagram_reel: { label: 'Instagram Reel', aspect_ratio: '9:16', max_duration: 90, icon: 'camera' },
+  instagram_feed: { label: 'Instagram Feed', aspect_ratio: '1:1', max_duration: 60, icon: 'camera' },
+  instagram_feed_portrait: { label: 'Instagram Feed (Portrait)', aspect_ratio: '4:5', max_duration: 60, icon: 'camera' },
+  tiktok: { label: 'TikTok', aspect_ratio: '9:16', max_duration: 180, icon: 'musical-note' },
 }
 
 // ---- Computed ----
@@ -305,7 +306,7 @@ onMounted(() => {
     <div data-tour="ve-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="text-2xl">📤</span>
+          <AppIcon name="export" class="w-6 h-6" />
           Video-Export
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -318,7 +319,7 @@ onMounted(() => {
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
           title="Video-Workflow-Tour starten"
         >
-          🎬 Workflow
+          <AppIcon name="film" class="w-3.5 h-3.5 inline-block" /> Workflow
         </button>
         <button
           @click="tourRef?.startTour()"
@@ -337,7 +338,7 @@ onMounted(() => {
           ]"
           data-testid="batch-mode-toggle"
         >
-          {{ batchMode ? '📦 Batch-Modus AN' : '📦 Batch-Modus' }}
+          <AppIcon name="archive" class="w-3.5 h-3.5 inline-block" /> {{ batchMode ? 'Batch-Modus AN' : 'Batch-Modus' }}
         </button>
       </div>
     </div>
@@ -348,7 +349,7 @@ onMounted(() => {
         <div data-tour="ve-library" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📁</span> Video auswaehlen
+              <AppIcon name="folder" class="w-4 h-4" /> Video auswaehlen
               <span class="ml-auto text-xs font-normal text-gray-500 dark:text-gray-400" data-testid="video-count">
                 {{ videoAssets.length }} Videos
               </span>
@@ -384,7 +385,7 @@ onMounted(() => {
             >
               <div class="w-16 h-10 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
                 <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" loading="lazy" :alt="asset.original_filename || 'Video-Vorschau'" />
-                <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🎥</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs"><AppIcon name="video-camera" class="w-4 h-4" /></div>
                 <span class="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">
                   {{ formatTime(asset.duration_seconds) }}
                 </span>
@@ -407,7 +408,7 @@ onMounted(() => {
       <div class="lg:col-span-2 space-y-4">
         <!-- No video selected -->
         <div v-if="!selectedAsset && !analyzing" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
-          <div class="text-5xl mb-4">📤</div>
+          <AppIcon name="export" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Waehle ein Video zum Exportieren
           </h3>
@@ -430,12 +431,12 @@ onMounted(() => {
           <!-- Source Video Info -->
           <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="source-info">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>🎥</span> Quell-Video
+              <AppIcon name="video-camera" class="w-4 h-4" /> Quell-Video
             </h3>
             <div class="flex items-start gap-4">
               <div class="w-28 h-16 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
                 <img loading="lazy" v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
-                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">🎥</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400"><AppIcon name="video-camera" class="w-5 h-5" /></div>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 text-xs">
                 <div>
@@ -461,7 +462,7 @@ onMounted(() => {
           <!-- Aspect Ratio Selection -->
           <div data-tour="ve-aspect-ratio" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="aspect-ratio-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>📐</span> Seitenverhaeltnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
+              <AppIcon name="adjustments" class="w-4 h-4" /> Seitenverhaeltnis <HelpTooltip :text="tooltipTexts.video.aspectRatio" size="sm" />
             </h3>
             <div class="grid grid-cols-3 gap-3 mb-4">
               <button
@@ -491,7 +492,7 @@ onMounted(() => {
                 <!-- Crop indicator -->
                 <div v-if="analysisData?.aspect_ratios[key]?.needs_crop" class="mt-1.5">
                   <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                    ✂️ {{ analysisData.aspect_ratios[key].crop_percentage }}% Crop
+                    <AppIcon name="scissors" class="w-3 h-3 inline" /> {{ analysisData.aspect_ratios[key].crop_percentage }}% Crop
                   </span>
                 </div>
                 <div v-else-if="analysisData" class="mt-1.5">
@@ -505,7 +506,7 @@ onMounted(() => {
             <!-- Crop Info -->
             <div v-if="cropInfo?.needs_crop" class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs" data-testid="crop-info">
               <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                <span>✂️</span>
+                <AppIcon name="scissors" class="w-4 h-4 inline text-amber-600 dark:text-amber-400" />
                 <span>
                   <strong>{{ cropInfo.crop_direction === 'horizontal' ? 'Horizontal' : 'Vertikal' }}es Cropping</strong>:
                   {{ cropInfo.crop_percentage }}% des Bildes werden abgeschnitten.
@@ -518,7 +519,7 @@ onMounted(() => {
           <!-- Focus Point (Smart Cropping) -->
           <div v-if="cropInfo?.needs_crop" data-tour="ve-focus" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="focus-point-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>🎯</span> Fokus-Punkt (Smart Cropping) <HelpTooltip :text="tooltipTexts.video.focusPoint" size="sm" />
+              <AppIcon name="fire" class="w-4 h-4" /> Fokus-Punkt (Smart Cropping) <HelpTooltip :text="tooltipTexts.video.focusPoint" size="sm" />
             </h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
               Bestimme den Mittelpunkt des Ausschnitts. Der sichtbare Bereich wird um diesen Punkt zentriert.
@@ -570,7 +571,7 @@ onMounted(() => {
           <!-- Platform Preset -->
           <div data-tour="ve-platform" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="platform-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>📱</span> Platform-Preset
+              <AppIcon name="device-mobile" class="w-4 h-4" /> Platform-Preset
             </h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
@@ -585,7 +586,7 @@ onMounted(() => {
                 ]"
                 :data-testid="`platform-btn-${key}`"
               >
-                <span class="text-lg mb-1">{{ preset.icon }}</span>
+                <AppIcon :name="preset.icon" class="w-5 h-5 mb-1" />
                 <span class="text-[10px] font-medium text-gray-700 dark:text-gray-300">{{ preset.label }}</span>
                 <span class="text-[10px] text-gray-400">max {{ preset.max_duration }}s</span>
               </button>
@@ -593,7 +594,7 @@ onMounted(() => {
 
             <!-- Duration warning -->
             <div v-if="platformCompat && !platformCompat.duration_ok" class="mt-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2.5 text-xs text-red-700 dark:text-red-400 flex items-center gap-2" data-testid="duration-warning">
-              <span>⚠️</span>
+              <AppIcon name="exclamation-triangle" class="w-4 h-4 inline text-red-500 shrink-0" />
               <span>
                 Video ist {{ platformCompat.duration_over_by }}s zu lang fuer {{ currentPlatform.label }}.
                 Es wird auf {{ platformCompat.max_duration }}s gekuerzt.
@@ -604,7 +605,7 @@ onMounted(() => {
           <!-- Quality Slider -->
           <div data-tour="ve-quality" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="quality-section">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>🎚️</span> Kompression: Qualitaet vs. Dateigroesse <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
+              <AppIcon name="adjustments-vertical" class="w-4 h-4" /> Kompression: Qualitaet vs. Dateigroesse <HelpTooltip :text="tooltipTexts.video.qualitySlider" size="sm" />
             </h3>
             <div class="flex items-center gap-4">
               <span class="text-xs text-gray-400 shrink-0">Klein</span>
@@ -633,7 +634,7 @@ onMounted(() => {
           <!-- Batch Mode: Format Selection -->
           <div v-if="batchMode" data-tour="ve-batch" class="bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-200 dark:border-purple-800 p-4" data-testid="batch-section">
             <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
-              <span>📦</span> Batch-Export: Formate waehlen
+              <AppIcon name="archive" class="w-4 h-4" /> Batch-Export: Formate waehlen
             </h3>
             <p class="text-xs text-purple-600 dark:text-purple-400 mb-3">
               Waehle mehrere Formate aus, um das Video in allen gewuenschten Formaten gleichzeitig zu exportieren.
@@ -656,7 +657,7 @@ onMounted(() => {
                   class="rounded border-purple-400 text-purple-600 focus:ring-purple-500"
                   :data-testid="`batch-checkbox-${key}`"
                 />
-                <span class="text-sm">{{ preset.icon }}</span>
+                <AppIcon :name="preset.icon" class="w-4 h-4" />
                 <div class="flex-1">
                   <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ preset.label }}</span>
                   <span class="text-[10px] text-gray-400 ml-2">({{ preset.aspect_ratio }}, max {{ preset.max_duration }}s)</span>
@@ -682,7 +683,7 @@ onMounted(() => {
           <!-- Batch Results -->
           <div v-if="batchResults" class="bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-200 dark:border-green-800 p-4" data-testid="batch-results">
             <h3 class="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-              <span>✅</span> Batch-Export abgeschlossen
+              <AppIcon name="check-circle" class="w-4 h-4 inline text-green-500" /> Batch-Export abgeschlossen
             </h3>
             <p class="text-xs text-green-600 dark:text-green-400 mb-3">
               {{ batchResults.successful }} von {{ batchResults.total }} Formaten erfolgreich exportiert.
@@ -699,8 +700,8 @@ onMounted(() => {
                   <span v-if="exp.output_file_size" class="text-gray-400 ml-2">{{ formatFileSize(exp.output_file_size) }}</span>
                 </div>
                 <div class="flex items-center gap-1">
-                  <span v-if="exp.status === 'done'" class="text-green-500 text-xs">✅</span>
-                  <span v-else class="text-red-500 text-xs">❌</span>
+                  <AppIcon v-if="exp.status === 'done'" name="check-circle" class="w-4 h-4 inline text-green-500" />
+                  <AppIcon v-else name="x-circle" class="w-4 h-4 inline text-red-500" />
                   <button
                     v-if="exp.status === 'done' && exp.output_path"
                     @click="downloadExport(exp)"
@@ -715,7 +716,7 @@ onMounted(() => {
 
           <!-- Export Error -->
           <div v-if="exportError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start gap-3" role="alert" data-testid="export-error">
-            <span class="text-red-500 shrink-0 mt-0.5">⚠️</span>
+            <AppIcon name="exclamation-triangle" class="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <div class="flex-1">
               <p class="text-sm text-red-700 dark:text-red-400 font-medium">{{ exportError }}</p>
             </div>
@@ -742,7 +743,7 @@ onMounted(() => {
           <!-- Export Result -->
           <div v-if="exportResult" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4" data-testid="export-result">
             <h3 class="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-              <span>✅</span> Export erfolgreich!
+              <AppIcon name="check-circle" class="w-4 h-4 inline text-green-500" /> Export erfolgreich!
             </h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-3">
               <div>
@@ -798,7 +799,7 @@ onMounted(() => {
           <div v-if="exportHistory.length > 0" data-tour="ve-history" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-testid="export-history">
             <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <span>📋</span> Export-Verlauf
+              <AppIcon name="clipboard" class="w-4 h-4" /> Export-Verlauf
                 <span class="ml-auto text-xs font-normal text-gray-400">{{ exportHistory.length }} Exporte</span>
               </h3>
             </div>
@@ -809,9 +810,8 @@ onMounted(() => {
                 class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 <div class="flex items-center gap-3 text-xs">
-                  <span :class="exp.status === 'done' ? 'text-green-500' : 'text-red-500'">
-                    {{ exp.status === 'done' ? '✅' : '❌' }}
-                  </span>
+                  <AppIcon v-if="exp.status === 'done'" name="check-circle" class="w-4 h-4 inline text-green-500" />
+                  <AppIcon v-else name="x-circle" class="w-4 h-4 inline text-red-500" />
                   <div>
                     <span class="font-medium text-gray-700 dark:text-gray-300">{{ exp.aspect_ratio }}</span>
                     <span class="text-gray-400 ml-1.5">{{ exp.platform }}</span>

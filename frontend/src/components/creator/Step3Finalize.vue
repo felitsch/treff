@@ -13,6 +13,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import JSZip from 'jszip'
 import { usePostCreator } from '@/composables/usePostCreator'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
 import SmartScheduler from '@/components/creator/SmartScheduler.vue'
 
@@ -21,6 +22,7 @@ const router = useRouter()
 const {
   selectedCategory,
   selectedPillar,
+  selectedBuyerJourneyStage,
   selectedTemplate,
   selectedPlatform,
   selectedPlatforms,
@@ -49,9 +51,9 @@ const {
 const scheduleSelection = ref({ date: '', time: '' })
 
 const platforms = [
-  { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷', format: '1:1' },
-  { id: 'instagram_story', label: 'Instagram Story', icon: '📱', format: '9:16' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵', format: '9:16' },
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '1:1' },
+  { id: 'instagram_story', label: 'Instagram Story', icon: 'device-mobile', format: '9:16' },
+  { id: 'tiktok', label: 'TikTok', icon: 'musical-note', format: '9:16' },
 ]
 
 function togglePlatform(platformId) {
@@ -294,7 +296,7 @@ function startNewPost() {
   <div class="space-y-6" data-testid="step3-finalize">
     <!-- Export complete state -->
     <div v-if="exportComplete" class="max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-2xl border border-green-200 dark:border-green-800 p-8 text-center">
-      <div class="text-6xl mb-4">&#127881;</div>
+      <div class="flex justify-center mb-4"><AppIcon name="trophy" class="w-16 h-16 text-green-500" /></div>
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post erfolgreich erstellt!</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-4">
         Dein Post wurde in der Datenbank gespeichert und als exportiert markiert.
@@ -308,9 +310,9 @@ function startNewPost() {
           v-if="slides.length > 1"
           @click="downloadAsZip"
           class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg"
-        >&#128230; ZIP erneut herunterladen</button>
+        ><AppIcon name="archive" class="w-4 h-4 inline-block" /> ZIP erneut herunterladen</button>
         <button v-else @click="downloadAsImage(0)" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg">
-          &#11015; PNG herunterladen
+          <AppIcon name="download" class="w-4 h-4 inline-block" /> PNG herunterladen
         </button>
         <button @click="router.push('/home')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-lg">Startseite</button>
         <button @click="startNewPost" class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg">Neuen Post</button>
@@ -333,7 +335,7 @@ function startNewPost() {
               : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'"
             :data-testid="'platform-' + p.id"
           >
-            <span class="text-2xl">{{ p.icon }}</span>
+            <AppIcon :name="p.icon" class="w-7 h-7" />
             <div>
               <div class="font-semibold text-sm text-gray-900 dark:text-white">{{ p.label }}</div>
               <div class="text-xs text-gray-400">{{ p.format }}</div>
@@ -341,7 +343,7 @@ function startNewPost() {
             <span
               v-if="selectedPlatforms.includes(p.id)"
               class="absolute top-2 right-2 w-5 h-5 bg-[#3B7AB1] rounded-full flex items-center justify-center text-white text-xs"
-            >&#10003;</span>
+            ><AppIcon name="check-circle" class="w-3 h-3" /></span>
           </button>
         </div>
       </div>
@@ -351,7 +353,7 @@ function startNewPost() {
         <!-- Instagram -->
         <div class="space-y-3">
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">&#128247; Instagram Caption</label>
+            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="camera" class="w-4 h-4 inline-block" /> Instagram Caption</label>
             <textarea v-model="captionInstagram" rows="3"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] resize-none"
               data-testid="caption-instagram"
@@ -360,12 +362,13 @@ function startNewPost() {
           </div>
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-bold text-gray-700 dark:text-gray-300">#️⃣ Instagram Hashtags</label>
+              <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1"><AppIcon name="hashtag" class="w-4 h-4 inline-block" /> Instagram Hashtags</label>
               <button @click="suggestHashtags" :disabled="suggestingHashtags"
                 class="text-xs text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
                 data-testid="suggest-hashtags-btn"
               >
-                {{ suggestingHashtags ? 'Lade...' : '&#x2728; Auto-Suggest' }}
+                <template v-if="suggestingHashtags">Lade...</template>
+                <template v-else><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> Auto-Suggest</template>
               </button>
             </div>
             <textarea v-model="hashtagsInstagram" rows="2"
@@ -377,7 +380,7 @@ function startNewPost() {
         <!-- TikTok -->
         <div class="space-y-3">
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">&#127925; TikTok Caption</label>
+            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="musical-note" class="w-4 h-4 inline-block" /> TikTok Caption</label>
             <textarea v-model="captionTiktok" rows="3"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] resize-none"
               data-testid="caption-tiktok"
@@ -385,7 +388,7 @@ function startNewPost() {
             <div class="text-xs text-gray-400 text-right mt-0.5">{{ captionTiktok?.length || 0 }} / 2200</div>
           </div>
           <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">&#127925; TikTok Hashtags</label>
+            <label class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="musical-note" class="w-4 h-4 inline-block" /> TikTok Hashtags</label>
             <textarea v-model="hashtagsTiktok" rows="2"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 text-sm focus:ring-2 focus:ring-[#3B7AB1] resize-none"
             ></textarea>
@@ -442,7 +445,7 @@ function startNewPost() {
           @click="downloadAsZip"
           class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-xl"
         >
-          &#128230; ZIP ({{ slides.length }} Slides)
+          <AppIcon name="archive" class="w-4 h-4 inline-block" /> ZIP ({{ slides.length }} Slides)
         </button>
       </div>
     </template>

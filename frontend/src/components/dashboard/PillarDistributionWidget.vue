@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const loading = ref(true)
 const error = ref('')
@@ -29,7 +30,7 @@ const pillars = computed(() => distribution.value?.distribution || [])
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-        <span class="text-base">📊</span>
+        <AppIcon name="chart-bar" class="w-5 h-5" />
         Content-Pillar-Verteilung
       </h3>
       <button
@@ -55,7 +56,7 @@ const pillars = computed(() => distribution.value?.distribution || [])
       <!-- Warnings -->
       <div v-if="hasWarnings" class="mb-3 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
         <div class="text-xs font-medium text-amber-700 dark:text-amber-300 mb-1 flex items-center gap-1">
-          <span>⚠️</span> Verteilungs-Hinweise
+          <AppIcon name="exclamation-triangle" class="w-4 h-4 inline text-amber-600 dark:text-amber-400" /> Verteilungs-Hinweise
         </div>
         <ul class="text-xs text-amber-600 dark:text-amber-400 space-y-0.5">
           <li v-for="(w, i) in distribution.warnings.slice(0, 3)" :key="i">{{ w }}</li>
@@ -67,7 +68,7 @@ const pillars = computed(() => distribution.value?.distribution || [])
         <div v-for="p in pillars" :key="p.pillar_id" class="group">
           <div class="flex items-center justify-between text-xs mb-0.5">
             <span class="text-gray-700 dark:text-gray-300 truncate flex items-center gap-1">
-              <span>{{ p.icon }}</span>
+              <AppIcon :name="p.icon" class="w-4 h-4 inline-block" />
               <span class="truncate">{{ p.name }}</span>
             </span>
             <span class="flex items-center gap-1 text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">

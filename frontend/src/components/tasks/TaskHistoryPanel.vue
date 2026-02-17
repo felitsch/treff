@@ -8,6 +8,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useBackgroundTasks } from '@/composables/useBackgroundTasks'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 
 const {
@@ -91,13 +92,13 @@ function statusBadgeClass(status) {
 
 function typeIcon(taskType) {
   const icons = {
-    ai_image: '🎨',
-    bulk_export: '📦',
-    report_pdf: '📄',
-    template_render: '🖼️',
-    demo: '🧪',
+    ai_image: 'paint-brush',
+    bulk_export: 'archive',
+    report_pdf: 'document-text',
+    template_render: 'photo',
+    demo: 'sparkles',
   }
-  return icons[taskType] || '⚙️'
+  return icons[taskType] || 'settings'
 }
 
 function formatDate(isoString) {
@@ -134,7 +135,7 @@ onMounted(() => {
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>⚡</span> Hintergrund-Aufgaben
+            <AppIcon name="bolt" class="w-5 h-5 inline-block" /> Hintergrund-Aufgaben
           </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Verlauf der letzten Hintergrund-Operationen (KI-Bilder, Export, Reports)
@@ -200,7 +201,7 @@ onMounted(() => {
         :data-testid="`history-task-${task.task_id}`"
       >
         <!-- Type icon -->
-        <span class="mt-0.5 text-lg">{{ typeIcon(task.task_type) }}</span>
+        <AppIcon :name="typeIcon(task.task_type)" class="w-5 h-5 mt-0.5 flex-shrink-0" />
 
         <!-- Details -->
         <div class="flex-1 min-w-0">

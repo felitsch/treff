@@ -6,6 +6,7 @@ import { useToast } from '@/composables/useToast'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -59,10 +60,10 @@ const categoryLabels = {
 }
 
 const platformIcons = {
-  instagram_feed: '📷',
-  instagram_stories: '📱',
-  instagram_reels: '🎬',
-  tiktok: '🎵',
+  instagram_feed: 'camera',
+  instagram_stories: 'device-phone-mobile',
+  instagram_reels: 'film',
+  tiktok: 'musical-note',
 }
 
 const platformLabels = {
@@ -90,20 +91,20 @@ const countryNames = {
 
 // Available platform options for filter
 const platformOptions = [
-  { value: 'instagram_feed', label: 'IG Feed', icon: '📷' },
-  { value: 'instagram_story', label: 'IG Story', icon: '📱' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'instagram_feed', label: 'IG Feed', icon: 'camera' },
+  { value: 'instagram_story', label: 'IG Story', icon: 'device-phone-mobile' },
+  { value: 'tiktok', label: 'TikTok', icon: 'musical-note' },
 ]
 
 // Available theme/category options for focus
 const themeOptions = [
-  { value: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍' },
-  { value: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬' },
-  { value: 'infografiken', label: 'Infografiken', icon: '📊' },
-  { value: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰' },
-  { value: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡' },
-  { value: 'faq', label: 'FAQ', icon: '❓' },
-  { value: 'foto_posts', label: 'Foto-Posts', icon: '📸' },
+  { value: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt' },
+  { value: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right' },
+  { value: 'infografiken', label: 'Infografiken', icon: 'chart-bar' },
+  { value: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock' },
+  { value: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb' },
+  { value: 'faq', label: 'FAQ', icon: 'question-mark-circle' },
+  { value: 'foto_posts', label: 'Foto-Posts', icon: 'camera' },
 ]
 
 // Compute default week start (next Monday)
@@ -355,7 +356,7 @@ onMounted(() => {
     <div data-tour="wp-header" class="flex items-start justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span>📅</span> Wochen-Content-Planer
+          <AppIcon name="calendar" class="w-6 h-6 inline-block" /> Wochen-Content-Planer
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">
           KI-gestuetzter Wochenplaner mit Serien-Awareness, wiederkehrenden Formaten und ausgewogenem Content-Mix
@@ -444,7 +445,7 @@ onMounted(() => {
                 ? 'bg-treff-blue/10 border-treff-blue text-treff-blue dark:bg-treff-blue/20 dark:text-blue-300'
                 : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'"
             >
-              <span>{{ p.icon }}</span>
+              <AppIcon :name="p.icon" class="w-4 h-4 inline-block" />
               <span>{{ p.label }}</span>
               <svg v-if="selectedPlatforms.includes(p.value)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -469,7 +470,7 @@ onMounted(() => {
                 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 text-amber-700 dark:text-amber-300'
                 : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'"
             >
-              <span>{{ t.icon }}</span>
+              <AppIcon :name="t.icon" class="w-4 h-4 inline-block" />
               <span>{{ t.label }}</span>
               <svg v-if="selectedThemes.includes(t.value)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -485,8 +486,8 @@ onMounted(() => {
           :disabled="loading"
           class="px-5 py-2 bg-treff-blue text-white rounded-lg font-medium hover:bg-treff-blue/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
         >
-          <span v-if="loading" class="animate-spin">⏳</span>
-          <span v-else>✨</span>
+          <AppIcon v-if="loading" name="clock" class="w-5 h-5 inline-block animate-spin" />
+          <AppIcon v-else name="sparkles" class="w-5 h-5 inline-block" />
           {{ loading ? 'Generiere...' : 'Plan generieren' }}
         </button>
       </div>
@@ -495,7 +496,7 @@ onMounted(() => {
     <!-- Active Story Arcs Info -->
     <div v-if="activeArcs.length > 0" class="bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-4 mb-6">
       <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-2 flex items-center gap-2">
-        <span>📖</span> Aktive Story-Serien ({{ activeArcs.length }})
+        <AppIcon name="book-open" class="w-4 h-4 inline-block" /> Aktive Story-Serien ({{ activeArcs.length }})
       </h3>
       <div class="flex flex-wrap gap-3">
         <div
@@ -503,7 +504,7 @@ onMounted(() => {
           :key="arc.id"
           class="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 border border-purple-200 dark:border-purple-700 text-sm"
         >
-          <span>{{ countryFlags[arc.country] || '🌍' }}</span>
+          <span v-if="countryFlags[arc.country]">{{ countryFlags[arc.country] }}</span><AppIcon v-else name="globe-alt" class="w-4 h-4 inline-block" />
           <span class="font-medium text-gray-800 dark:text-gray-200">{{ arc.title }}</span>
           <span class="text-purple-600 dark:text-purple-400 text-xs">Ep. {{ arc.next_episode }}/{{ arc.planned_episodes || '?' }}</span>
         </div>
@@ -526,8 +527,8 @@ onMounted(() => {
             :disabled="adopting || totalSuggestions === 0"
             class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
-            <span v-if="adopting" class="animate-spin">⏳</span>
-            <span v-else>✅</span>
+            <AppIcon v-if="adopting" name="clock" class="w-5 h-5 inline-block animate-spin" />
+            <AppIcon v-else name="check-circle" class="w-5 h-5 inline-block" />
             {{ adopting ? 'Uebernehme...' : 'Plan uebernehmen' }}
           </button>
         </div>
@@ -563,7 +564,7 @@ onMounted(() => {
               :key="post.id"
               class="mb-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-xs opacity-70"
             >
-              <div class="font-medium text-gray-600 dark:text-gray-400 truncate">📌 {{ post.title || post.category }}</div>
+              <div class="font-medium text-gray-600 dark:text-gray-400 truncate flex items-center gap-1"><AppIcon name="map-pin" class="w-3 h-3 inline-block flex-shrink-0" /> {{ post.title || post.category }}</div>
             </div>
           </div>
 
@@ -596,13 +597,13 @@ onMounted(() => {
                   <div>
                     <label class="text-[10px] font-semibold text-gray-500 uppercase">Kategorie</label>
                     <select v-model="editForm.category" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                      <option v-for="t in themeOptions" :key="t.value" :value="t.value">{{ t.icon }} {{ t.label }}</option>
+                      <option v-for="t in themeOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
                     </select>
                   </div>
                   <div>
                     <label class="text-[10px] font-semibold text-gray-500 uppercase">Plattform</label>
                     <select v-model="editForm.platform" class="w-full mt-0.5 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                      <option v-for="p in platformOptions" :key="p.value" :value="p.value">{{ p.icon }} {{ p.label }}</option>
+                      <option v-for="p in platformOptions" :key="p.value" :value="p.value">{{ p.label }}</option>
                     </select>
                   </div>
                 </div>
@@ -644,7 +645,7 @@ onMounted(() => {
                       class="text-gray-400 hover:text-blue-500 text-xs p-0.5 rounded"
                       title="Bearbeiten"
                     >
-                      ✏️
+                      <AppIcon name="pencil-square" class="w-3 h-3 inline-block" />
                     </button>
                     <button
                       @click.stop="removeSuggestion(dayIndex, sIdx)"
@@ -664,13 +665,13 @@ onMounted(() => {
                 <!-- Meta row -->
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
-                    {{ platformIcons[suggestion.platform] }} {{ platformLabels[suggestion.platform] }}
+                    <AppIcon :name="platformIcons[suggestion.platform] || 'document-text'" class="w-3 h-3 inline-block" /> {{ platformLabels[suggestion.platform] }}
                   </span>
                   <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
                     {{ countryFlags[suggestion.country] }} {{ countryNames[suggestion.country] }}
                   </span>
                   <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-white/60 dark:bg-gray-900/40 text-[10px] font-medium text-gray-700 dark:text-gray-300">
-                    🕐 {{ suggestion.time }}
+                    <AppIcon name="clock" class="w-3 h-3 inline-block" /> {{ suggestion.time }}
                   </span>
                 </div>
 
@@ -686,7 +687,7 @@ onMounted(() => {
               v-if="!slot.suggestions.length && !(slot.existing_posts && slot.existing_posts.length)"
               class="py-6 text-center text-gray-400 dark:text-gray-600 text-xs"
             >
-              <div class="text-xl mb-1">📭</div>
+              <div class="mb-1"><AppIcon name="inbox" class="w-6 h-6 inline-block" /></div>
               Kein Post geplant
               <div class="text-[10px] mt-1">Ziehe einen Vorschlag hierher</div>
             </div>
@@ -707,7 +708,7 @@ onMounted(() => {
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-16">
-      <div class="text-4xl animate-bounce mb-4">🤖</div>
+      <div class="animate-bounce mb-4"><AppIcon name="cpu-chip" class="w-10 h-10 inline-block text-treff-blue" /></div>
       <p class="text-gray-600 dark:text-gray-400 font-medium">KI generiert deinen Wochenplan...</p>
       <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Beruecksichtigt Serien, Formate und Content-Mix</p>
     </div>
@@ -717,23 +718,23 @@ onMounted(() => {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600 dark:text-gray-400">
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-purple-400 ring-2 ring-purple-300"></span>
-          <span>📖 Story-Serie Episode</span>
+          <span class="flex items-center gap-1"><AppIcon name="book-open" class="w-3 h-3 inline-block" /> Story-Serie Episode</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-amber-400"></span>
-          <span>🔁 Wiederkehrendes Format</span>
+          <span class="flex items-center gap-1"><AppIcon name="arrow-path" class="w-3 h-3 inline-block" /> Wiederkehrendes Format</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-blue-400"></span>
-          <span>✨ Content-Mix Optimierung</span>
+          <span class="flex items-center gap-1"><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> Content-Mix Optimierung</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-gray-300"></span>
-          <span>📌 Bestehender Post</span>
+          <span class="flex items-center gap-1"><AppIcon name="map-pin" class="w-3 h-3 inline-block" /> Bestehender Post</span>
         </div>
       </div>
       <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
-        💡 Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan uebernehmen" erstellt alle Vorschlaege als geplante Posts im Kalender.
+        <AppIcon name="light-bulb" class="w-4 h-4 inline-block" /> Tipp: Ziehe Karten per Drag & Drop auf andere Tage. Klicke ✕ um einen Vorschlag zu entfernen. "Plan uebernehmen" erstellt alle Vorschlaege als geplante Posts im Kalender.
       </p>
     </BaseCard>
 

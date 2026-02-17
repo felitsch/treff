@@ -17,6 +17,7 @@ import { useToast } from '@/composables/useToast'
 import TemplateCard from '@/components/templates/TemplateCard.vue'
 import TemplatePreviewModal from '@/components/templates/TemplatePreviewModal.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -40,24 +41,24 @@ const showFavoritesOnly = ref(false)
 
 // ─── Category definitions ─────────────────────────────────────────
 const categories = {
-  laender_spotlight: { label: 'Laender-Spotlight', icon: '\u{1F30D}', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: '\u{1F4AC}', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
-  infografiken: { label: 'Infografiken', icon: '\u{1F4CA}', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-  fristen_cta: { label: 'Fristen & CTA', icon: '\u{23F0}', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-  tipps_tricks: { label: 'Tipps & Tricks', icon: '\u{1F4A1}', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-  faq: { label: 'FAQ', icon: '\u{2753}', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
-  foto_posts: { label: 'Foto-Posts', icon: '\u{1F4F8}', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
-  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '\u{1F3AC}', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-  story_posts: { label: 'Story-Posts', icon: '\u{1F4F1}', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
-  story_teaser: { label: 'Story-Teaser', icon: '\u{1F449}', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
-  story_series: { label: 'Story-Serien', icon: '\u{1F4DA}', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300' },
+  laender_spotlight: { label: 'Laender-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: 'chat-bubble', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
+  infografiken: { label: 'Infografiken', icon: 'chart-bar', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  fristen_cta: { label: 'Fristen & CTA', icon: 'clock', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+  tipps_tricks: { label: 'Tipps & Tricks', icon: 'light-bulb', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+  faq: { label: 'FAQ', icon: 'question-mark-circle', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
+  foto_posts: { label: 'Foto-Posts', icon: 'camera', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
+  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: 'film', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+  story_posts: { label: 'Story-Posts', icon: 'device-mobile', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
+  story_teaser: { label: 'Story-Teaser', icon: 'arrow-right', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
+  story_series: { label: 'Story-Serien', icon: 'book-open', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300' },
 }
 
 const platformLabels = {
-  feed_square: { label: '1:1 Feed', icon: '\u{2B1C}', dim: '1080x1080' },
-  feed_portrait: { label: '4:5 Portrait', icon: '\u{1F4F1}', dim: '1080x1350' },
-  story: { label: '9:16 Story', icon: '\u{1F4F2}', dim: '1080x1920' },
-  tiktok: { label: '9:16 TikTok', icon: '\u{1F3B5}', dim: '1080x1920' },
+  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
+  feed_portrait: { label: '4:5 Portrait', icon: 'device-mobile', dim: '1080x1350' },
+  story: { label: '9:16 Story', icon: 'device-mobile', dim: '1080x1920' },
+  tiktok: { label: '9:16 TikTok', icon: 'musical-note', dim: '1080x1920' },
 }
 
 const countryOptions = {
@@ -387,8 +388,8 @@ onMounted(async () => {
                   @change="toggleCategory(cat)"
                   class="w-4 h-4 rounded border-gray-300 text-treff-blue focus:ring-treff-blue"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-treff-blue transition-colors flex-1 truncate">
-                  {{ categories[cat]?.icon }} {{ categories[cat]?.label || cat }}
+                <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-treff-blue transition-colors flex-1 truncate inline-flex items-center gap-1">
+                  <AppIcon :name="categories[cat]?.icon || 'document-text'" class="w-4 h-4 inline-block" /> {{ categories[cat]?.label || cat }}
                 </span>
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">
                   {{ categoryCounts[cat] || 0 }}
@@ -417,8 +418,8 @@ onMounted(async () => {
                   @change="toggleFormat(fmt)"
                   class="w-4 h-4 rounded border-gray-300 text-treff-blue focus:ring-treff-blue"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-treff-blue transition-colors flex-1">
-                  {{ platformLabels[fmt]?.icon }} {{ platformLabels[fmt]?.label || fmt }}
+                <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-treff-blue transition-colors flex-1 inline-flex items-center gap-1">
+                  <AppIcon :name="platformLabels[fmt]?.icon || 'document-text'" class="w-4 h-4 inline-block" /> {{ platformLabels[fmt]?.label || fmt }}
                   <span class="text-xs text-gray-400">({{ platformLabels[fmt]?.dim }})</span>
                 </span>
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">
@@ -477,7 +478,7 @@ onMounted(async () => {
         <!-- Empty state -->
         <EmptyState
           v-else-if="filteredTemplates.length === 0 && !loading"
-          icon="📄"
+          icon="document-text"
           :title="searchQuery || activeFilterCount > 0 ? 'Keine Templates gefunden' : 'Noch keine Templates'"
           :description="searchQuery || activeFilterCount > 0
             ? 'Versuche andere Suchbegriffe oder entferne Filter.'

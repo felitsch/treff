@@ -19,6 +19,7 @@ import MusicSelector from '@/components/video/MusicSelector.vue'
 import MultiPlatformExport from '@/components/video/MultiPlatformExport.vue'
 import ContentMultiplierPanel from '@/components/video/ContentMultiplierPanel.vue'
 import ThumbnailAISuggestions from '@/components/video/ThumbnailAISuggestions.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -54,14 +55,14 @@ const musicConfig = ref({
 
 // ─── Section management ─────────────────────────────────────
 const sections = [
-  { key: 'upload', label: '1. Video waehlen', icon: '🎬', description: 'Video hochladen oder aus der Bibliothek waehlen' },
-  { key: 'branding', label: '2. Branding', icon: '🏷️', description: 'Intro/Outro-Templates fuer Laender-Branding' },
-  { key: 'lowerthird', label: '3. Lower Third', icon: '💬', description: 'Name & Titel als Texteinblendung' },
-  { key: 'music', label: '4. Musik', icon: '🎵', description: 'Hintergrundmusik auswaehlen und mischen' },
-  { key: 'thumbnail', label: '5. Thumbnail', icon: '🖼️', description: 'AI-Thumbnail aus Video-Frames mit Text-Overlay und A/B-Varianten' },
-  { key: 'preview', label: '6. Vorschau', icon: '👁️', description: 'Finales Video mit allen Overlays' },
-  { key: 'export', label: '7. Export', icon: '📤', description: 'Multi-Format-Export fuer alle Plattformen' },
-  { key: 'multiply', label: '8. Multiplizieren', icon: '🚀', description: '1 Video → 5 Formate als Draft-Posts' },
+  { key: 'upload', label: '1. Video waehlen', icon: 'film', description: 'Video hochladen oder aus der Bibliothek waehlen' },
+  { key: 'branding', label: '2. Branding', icon: 'tag', description: 'Intro/Outro-Templates fuer Laender-Branding' },
+  { key: 'lowerthird', label: '3. Lower Third', icon: 'chat-bubble', description: 'Name & Titel als Texteinblendung' },
+  { key: 'music', label: '4. Musik', icon: 'musical-note', description: 'Hintergrundmusik auswaehlen und mischen' },
+  { key: 'thumbnail', label: '5. Thumbnail', icon: 'photo', description: 'AI-Thumbnail aus Video-Frames mit Text-Overlay und A/B-Varianten' },
+  { key: 'preview', label: '6. Vorschau', icon: 'eye', description: 'Finales Video mit allen Overlays' },
+  { key: 'export', label: '7. Export', icon: 'export', description: 'Multi-Format-Export fuer alle Plattformen' },
+  { key: 'multiply', label: '8. Multiplizieren', icon: 'rocket', description: '1 Video → 5 Formate als Draft-Posts' },
 ]
 
 const expandedSections = ref({
@@ -96,7 +97,7 @@ function statusIcon(status) {
     case 'complete': return '&#10003;'
     case 'optional': return '○'
     case 'ready': return '→'
-    case 'locked': return '🔒'
+    case 'locked': return '&#128274;'
     default: return '○'
   }
 }
@@ -291,8 +292,9 @@ onMounted(() => {
             v-html="statusIcon(sectionStatus[section.key])"
           />
           <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-              {{ section.icon }} {{ section.label }}
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+              <AppIcon :name="section.icon" class="w-4 h-4 inline-block" />
+              {{ section.label }}
             </h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ section.description }}</p>
           </div>
@@ -488,7 +490,7 @@ onMounted(() => {
         @click="expandedSections.export = true; nextTick(() => document.querySelector('[data-testid=section-export]')?.scrollIntoView({ behavior: 'smooth' }))"
         class="w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center text-xl hover:bg-blue-700 transition-all"
       >
-        📤
+        <AppIcon name="export" class="w-6 h-6" />
       </button>
     </div>
   </div>

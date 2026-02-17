@@ -18,8 +18,10 @@
  * @emits update:generating - v-model for generating state
  */
 import { ref, computed, watch, nextTick } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { getHooksForPlatform, getHooksSortedByEffectiveness, HOOK_CATEGORIES } from '@/config/hookFormulas'
 
 const props = defineProps({
   /** Category for the post */
@@ -65,6 +67,26 @@ const variants = ref([])           // Array of generated content variants
 const selectedVariantIndex = ref(0)
 const generatingVariants = ref(false)
 const variantError = ref('')
+
+// ── Hook formula state ──────────────────────────────────────────────────
+const selectedHookId = ref('')
+const showHookPanel = ref(false)
+
+/** Hook formulas filtered for the current platform */
+const platformHooks = computed(() => getHooksForPlatform(props.platform))
+
+/** Top 3 hooks sorted by effectiveness for current platform */
+const topHooks = computed(() => getHooksSortedByEffectiveness(props.platform).slice(0, 3))
+
+/** The selected hook formula object */
+const selectedHook = computed(() =>
+  platformHooks.value.find(h => h.id === selectedHookId.value) || null
+)
+
+/** Select a hook formula */
+function selectHook(hookId) {
+  selectedHookId.value = selectedHookId.value === hookId ? '' : hookId
+}
 
 // ── Typing animation state ──────────────────────────────────────────────
 const typingText = ref('')
@@ -201,7 +223,9 @@ onUnmounted(cleanup)
   <div class="ai-text-generator" data-testid="ai-text-generator">
     <!-- Header -->
     <div class="text-center mb-6">
-      <div class="text-5xl mb-4">{{ humorFormat ? humorFormat.icon : '&#x2728;' }}</div>
+      <div class="flex justify-center mb-4">
+        <AppIcon :name="humorFormat ? humorFormat.icon : 'sparkles'" class="w-12 h-12" />
+      </div>
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
         {{ humorFormat ? 'Humor-Content generieren' : 'KI-Textgenerierung' }}
       </h3>
@@ -219,6 +243,73 @@ onUnmounted(cleanup)
       </slot>
     </div>
 
+    <!-- Hook Formula Suggestions (from hookFormulas.js config) -->
+    <div v-if="!compact && !humorFormat && platformHooks.length > 0" class="mb-6" data-testid="hook-formula-panel">
+      <button
+        @click="showHookPanel = !showHookPanel"
+        class="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-[#3B7AB1] transition-colors"
+      >
+        <span class="flex items-center gap-1.5">
+          <AppIcon name="sparkles" class="w-4 h-4" />
+          Hook-Formel waehlen
+          <span v-if="selectedHook" class="px-1.5 py-0.5 rounded-full bg-[#3B7AB1]/10 text-[#3B7AB1] text-[10px]">{{ selectedHook.name }}</span>
+        </span>
+        <span>{{ showHookPanel ? '▲' : '▼' }}</span>
+      </button>
+
+      <div v-if="showHookPanel" class="mt-2 space-y-2">
+        <!-- Top 3 recommended hooks -->
+        <div class="grid grid-cols-1 gap-2">
+          <button
+            v-for="hook in topHooks"
+            :key="hook.id"
+            @click="selectHook(hook.id)"
+            class="text-left p-3 rounded-lg border-2 transition-all"
+            :class="selectedHookId === hook.id
+              ? 'border-[#3B7AB1] bg-[#3B7AB1]/5'
+              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
+            :data-testid="'hook-' + hook.id"
+          >
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ hook.name }}</span>
+              <span class="flex items-center gap-1">
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full" :class="'bg-' + (HOOK_CATEGORIES[hook.category]?.color === '#3B82F6' ? 'blue' : HOOK_CATEGORIES[hook.category]?.color === '#EF4444' ? 'red' : HOOK_CATEGORIES[hook.category]?.color === '#F59E0B' ? 'amber' : HOOK_CATEGORIES[hook.category]?.color === '#8B5CF6' ? 'purple' : 'green') + '-100 dark:bg-' + (HOOK_CATEGORIES[hook.category]?.color === '#3B82F6' ? 'blue' : HOOK_CATEGORIES[hook.category]?.color === '#EF4444' ? 'red' : HOOK_CATEGORIES[hook.category]?.color === '#F59E0B' ? 'amber' : HOOK_CATEGORIES[hook.category]?.color === '#8B5CF6' ? 'purple' : 'green') + '-900/20 text-gray-600 dark:text-gray-400'">{{ HOOK_CATEGORIES[hook.category]?.name || hook.category }}</span>
+                <span class="text-[10px] font-bold" :class="hook.effectiveness >= 9 ? 'text-green-600 dark:text-green-400' : hook.effectiveness >= 8 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'">{{ hook.effectiveness }}/10</span>
+              </span>
+            </div>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 italic">{{ hook.template }}</p>
+            <p v-if="hook.tip" class="text-[10px] text-gray-400 mt-1 flex items-start gap-1"><AppIcon name="light-bulb" class="w-3 h-3 flex-shrink-0 mt-px" /> {{ hook.tip }}</p>
+          </button>
+        </div>
+
+        <!-- Show remaining hooks link -->
+        <button
+          v-if="platformHooks.length > 3"
+          @click="showHookPanel = 'all'"
+          class="text-[11px] text-[#3B7AB1] hover:underline"
+        >
+          +{{ platformHooks.length - 3 }} weitere Hooks anzeigen
+        </button>
+
+        <!-- All hooks (when expanded) -->
+        <template v-if="showHookPanel === 'all'">
+          <button
+            v-for="hook in platformHooks.slice(3)"
+            :key="hook.id"
+            @click="selectHook(hook.id)"
+            class="w-full text-left p-2 rounded-lg border transition-all text-xs"
+            :class="selectedHookId === hook.id
+              ? 'border-[#3B7AB1] bg-[#3B7AB1]/5'
+              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'"
+          >
+            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ hook.name }}</span>
+            <span class="ml-2 text-gray-400">{{ hook.effectiveness }}/10</span>
+            <span class="block text-gray-500 dark:text-gray-400 italic mt-0.5">{{ hook.template }}</span>
+          </button>
+        </template>
+      </div>
+    </div>
+
     <!-- Main Generate Button -->
     <div class="flex flex-col items-center gap-3 mb-6">
       <button
@@ -231,7 +322,7 @@ onUnmounted(cleanup)
         data-testid="generate-content-btn"
       >
         <span v-if="generating" class="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full"></span>
-        <span v-else>{{ humorFormat ? humorFormat.icon : '&#x2728;' }}</span>
+        <AppIcon v-else :name="humorFormat ? humorFormat.icon : 'sparkles'" class="w-5 h-5" />
         {{ generating ? 'Generiere...' : (humorFormat ? 'Humor-Content generieren' : 'Inhalt generieren') }}
       </button>
 
@@ -244,7 +335,7 @@ onUnmounted(cleanup)
         data-testid="generate-variants-btn"
       >
         <span v-if="generatingVariants" class="animate-spin h-4 w-4 border-2 border-[#3B7AB1] border-t-transparent rounded-full"></span>
-        <span v-else>🎲</span>
+        <AppIcon v-else name="sparkles" class="w-4 h-4" />
         {{ generatingVariants ? 'Generiere Varianten...' : '3 Varianten generieren' }}
       </button>
     </div>
@@ -262,7 +353,7 @@ onUnmounted(cleanup)
           <span class="w-1.5 h-1.5 bg-[#3B7AB1] rounded-full animate-bounce" style="animation-delay: 150ms"></span>
           <span class="w-1.5 h-1.5 bg-[#3B7AB1] rounded-full animate-bounce" style="animation-delay: 300ms"></span>
         </span>
-        <span v-else class="text-green-500 text-sm">&#10003;</span>
+        <AppIcon v-else name="check-circle" class="w-4 h-4 text-green-500" />
       </div>
       <p class="text-gray-800 dark:text-gray-200 text-base font-medium leading-relaxed">
         {{ typingText }}<span v-if="isTyping" class="inline-block w-0.5 h-5 bg-[#3B7AB1] ml-0.5 animate-pulse"></span>
@@ -318,7 +409,7 @@ onUnmounted(cleanup)
         class="w-full px-4 py-2.5 bg-[#3B7AB1] hover:bg-[#2E6A9E] text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
         data-testid="apply-variant-btn"
       >
-        &#10003; Variante {{ selectedVariantIndex + 1 }} uebernehmen
+        <AppIcon name="check-circle" class="w-4 h-4" /> Variante {{ selectedVariantIndex + 1 }} uebernehmen
       </button>
     </div>
 
@@ -328,14 +419,14 @@ onUnmounted(cleanup)
       class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400 flex items-center gap-2"
       data-testid="variant-error"
     >
-      <span>&#x26A0;&#xFE0F;</span>
+      <AppIcon name="warning" class="w-4 h-4 flex-shrink-0" />
       {{ variantError }}
     </div>
 
     <!-- Generated content summary -->
     <div v-if="generatedContent && !variants.length" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-left">
       <div class="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3">
-        <span class="text-lg">&#10003;</span>
+        <AppIcon name="check-circle" class="w-5 h-5" />
         <span class="font-bold">{{ generatedContent.humor_format ? 'Humor-Content generiert!' : 'Inhalt generiert!' }}</span>
       </div>
       <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside" data-testid="generation-summary">
@@ -354,7 +445,7 @@ onUnmounted(cleanup)
         class="mt-4 px-4 py-2 text-sm font-medium rounded-lg border border-[#3B7AB1] text-[#3B7AB1] hover:bg-[#3B7AB1]/10 transition-colors flex items-center gap-1.5 disabled:opacity-40"
         data-testid="regenerate-btn"
       >
-        <span>&#x1F504;</span> Nochmal generieren
+        <AppIcon name="arrow-path" class="w-4 h-4" /> Nochmal generieren
       </button>
     </div>
 

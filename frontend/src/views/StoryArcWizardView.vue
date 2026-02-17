@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -39,8 +40,8 @@ const editDescription = ref('')
 // Step 4: Tone & Style
 const selectedTone = ref('jugendlich')
 const toneOptions = [
-  { value: 'jugendlich', label: 'Jugendlich', icon: '🔥', description: 'Begeisternd, energetisch, motivierend - perfekt fuer die Zielgruppe' },
-  { value: 'serioess', label: 'Serioees', icon: '📋', description: 'Professionell, vertrauenswuerdig - ideal wenn Eltern mitlesen' },
+  { value: 'jugendlich', label: 'Jugendlich', icon: 'fire', description: 'Begeisternd, energetisch, motivierend - perfekt fuer die Zielgruppe' },
+  { value: 'serioess', label: 'Serioees', icon: 'clipboard-list', description: 'Professionell, vertrauenswuerdig - ideal wenn Eltern mitlesen' },
 ]
 
 // Step 5: Schedule
@@ -48,10 +49,10 @@ const scheduleFrequency = ref('weekly')
 const scheduleStartDate = ref('')
 const createCalendarPlaceholders = ref(true)
 const frequencyOptions = [
-  { value: 'daily', label: 'Taeglich', icon: '🔥', description: '1 Episode pro Tag - intensiv' },
-  { value: 'twice_weekly', label: '2x pro Woche', icon: '📅', description: 'Montag & Donnerstag - gut fuer Engagement' },
-  { value: 'weekly', label: 'Woechentlich', icon: '📋', description: '1x pro Woche - nachhaltig und konsistent' },
-  { value: 'biweekly', label: 'Alle 2 Wochen', icon: '🐢', description: 'Gemaechtlich - fuer langfristige Serien' },
+  { value: 'daily', label: 'Taeglich', icon: 'fire', description: '1 Episode pro Tag - intensiv' },
+  { value: 'twice_weekly', label: '2x pro Woche', icon: 'calendar', description: 'Montag & Donnerstag - gut fuer Engagement' },
+  { value: 'weekly', label: 'Woechentlich', icon: 'clipboard-list', description: '1x pro Woche - nachhaltig und konsistent' },
+  { value: 'biweekly', label: 'Alle 2 Wochen', icon: 'clock', description: 'Gemaechtlich - fuer langfristige Serien' },
 ]
 
 // Step 6: Cover Image
@@ -456,7 +457,8 @@ onMounted(() => {
           >
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-full bg-treff-blue/10 flex items-center justify-center text-lg">
-                {{ countries.find(c => c.value === student.country)?.flag || '🎓' }}
+                <template v-if="countries.find(c => c.value === student.country)?.flag">{{ countries.find(c => c.value === student.country).flag }}</template>
+                <AppIcon v-else name="academic-cap" class="w-5 h-5" />
               </div>
               <div>
                 <div class="font-medium text-gray-900 dark:text-white">{{ student.name }}</div>
@@ -541,7 +543,8 @@ onMounted(() => {
             :disabled="loadingTitleSuggestions"
             class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50"
           >
-            <span>{{ loadingTitleSuggestions ? '...' : '✨' }}</span>
+            <span v-if="loadingTitleSuggestions">...</span>
+            <AppIcon v-else name="sparkles" class="w-4 h-4" />
             {{ loadingTitleSuggestions ? 'Generiere Vorschlaege...' : 'KI-Titelvorschlaege' }}
           </button>
 
@@ -621,7 +624,8 @@ onMounted(() => {
             :disabled="loadingEpisodes"
             class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50"
           >
-            <span>{{ loadingEpisodes ? '...' : '✨' }}</span>
+            <span v-if="loadingEpisodes">...</span>
+            <AppIcon v-else name="sparkles" class="w-4 h-4" />
             {{ loadingEpisodes ? 'Generiere...' : 'KI-Vorschlaege' }}
           </button>
           <button
@@ -685,7 +689,7 @@ onMounted(() => {
 
           <!-- Empty state -->
           <div v-if="episodes.length === 0" class="text-center py-8 text-gray-400">
-            <p class="text-3xl mb-2">📖</p>
+            <AppIcon name="book-open" class="w-8 h-8 mx-auto mb-2" />
             <p>Klicke auf "KI-Vorschlaege" um Kapitel zu generieren</p>
           </div>
         </div>
@@ -712,7 +716,7 @@ onMounted(() => {
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300',
             ]"
           >
-            <div class="text-3xl mb-2">{{ option.icon }}</div>
+            <AppIcon :name="option.icon" class="w-8 h-8 mb-2" />
             <div class="font-semibold text-gray-900 dark:text-white">{{ option.label }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ option.description }}</div>
           </button>
@@ -748,7 +752,7 @@ onMounted(() => {
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300',
             ]"
           >
-            <span class="text-2xl">{{ option.icon }}</span>
+            <AppIcon :name="option.icon" class="w-7 h-7" />
             <div>
               <div class="font-medium text-gray-900 dark:text-white">{{ option.label }}</div>
               <div class="text-xs text-gray-500">{{ option.description }}</div>
@@ -828,7 +832,8 @@ onMounted(() => {
               :disabled="generatingCoverImage"
               class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 whitespace-nowrap"
             >
-              {{ generatingCoverImage ? 'Generiere...' : '✨ Generieren' }}
+              <template v-if="generatingCoverImage">Generiere...</template>
+              <template v-else><AppIcon name="sparkles" class="w-4 h-4 inline-block" /> Generieren</template>
             </button>
           </div>
         </div>

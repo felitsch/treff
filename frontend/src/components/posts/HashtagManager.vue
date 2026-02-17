@@ -16,6 +16,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { PREDEFINED_SETS, getHashtagLimit, buildOptimizedSet, PLATFORM_HASHTAG_LIMITS } from '@/config/hashtagSets'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   /** Space-separated hashtag string (v-model) */
@@ -328,6 +330,60 @@ function toggleSetsPanel() {
   }
 }
 
+// ── Predefined Sets (from hashtagSets.js config) ────────────────────────
+const showPredefinedSets = ref(false)
+
+/** Predefined sets filtered by current country/platform */
+const filteredPredefinedSets = computed(() => {
+  let sets = PREDEFINED_SETS
+  // Prioritize sets matching the current country
+  if (props.country) {
+    const countryKey = props.country.toLowerCase()
+    sets = [
+      ...sets.filter(s => s.country === countryKey),
+      ...sets.filter(s => !s.country),
+    ]
+  }
+  return sets
+})
+
+/** Platform hashtag limits from config */
+const platformLimit = computed(() => getHashtagLimit(props.platform))
+
+/** Apply a predefined set from the config */
+function applyPredefinedSet(set) {
+  const tags = set.hashtags || []
+  for (const tag of tags) {
+    const normalized = tag.startsWith('#') ? tag : '#' + tag
+    const existing = suggestedHashtags.value.find(h => h.tag.toLowerCase() === normalized.toLowerCase())
+    if (!existing) {
+      suggestedHashtags.value.push({ tag: normalized, selected: true, category: categorizeHashtag(normalized) })
+    } else {
+      existing.selected = true
+    }
+  }
+  toast.success(`Vordefiniertes Set "${set.name}" geladen (${tags.length} Hashtags)`)
+}
+
+/** Build and apply an optimized set based on current context */
+function applyOptimizedSet() {
+  const countryKey = props.country?.toLowerCase() || ''
+  const tags = buildOptimizedSet({
+    platform: props.platform,
+    country: countryKey,
+    niche: 'auslandsjahr',
+  })
+  for (const tag of tags) {
+    const existing = suggestedHashtags.value.find(h => h.tag.toLowerCase() === tag.toLowerCase())
+    if (!existing) {
+      suggestedHashtags.value.push({ tag, selected: true, category: categorizeHashtag(tag) })
+    } else {
+      existing.selected = true
+    }
+  }
+  toast.success(`Optimiertes Set geladen (${tags.length} Hashtags)`)
+}
+
 // ── Init ────────────────────────────────────────────────────────────────
 onMounted(() => {
   // Pre-load sets in background
@@ -368,7 +424,7 @@ onMounted(() => {
           title="Hashtags kopieren"
           data-testid="copy-hashtags-btn"
         >
-          📋
+          <AppIcon name="clipboard-list" class="w-4 h-4" />
         </button>
         <!-- Sets toggle -->
         <button
@@ -378,7 +434,7 @@ onMounted(() => {
           title="Hashtag-Sets verwalten"
           data-testid="toggle-sets-btn"
         >
-          💾 Sets
+          <AppIcon name="document" class="w-4 h-4 inline-block" /> Sets
         </button>
       </div>
     </div>
@@ -490,7 +546,7 @@ onMounted(() => {
 
       <!-- Sets list -->
       <div v-if="loadingSets" class="text-center py-3 text-sm text-gray-400">
-        <span class="animate-spin inline-block mr-1">⏳</span> Lade Sets...
+        <AppIcon name="clock" class="w-4 h-4 animate-spin inline-block mr-1" /> Lade Sets...
       </div>
       <div v-else-if="hashtagSets.length === 0" class="text-center py-3 text-sm text-gray-400">
         Keine gespeicherten Sets vorhanden.
@@ -523,9 +579,60 @@ onMounted(() => {
               title="Set loeschen"
               :disabled="disabled"
             >
-              🗑
+              <AppIcon name="trash" class="w-3.5 h-3.5" />
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ Predefined Sets (from hashtagSets.js config) ═══════ -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-3" data-testid="predefined-sets-section">
+      <button
+        @click="showPredefinedSets = !showPredefinedSets"
+        class="w-full flex items-center justify-between text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+      >
+        <span class="flex items-center gap-1.5">
+          <AppIcon name="clipboard-list" class="w-4 h-4" />
+          Vordefinierte Hashtag-Sets
+          <span class="text-[10px] text-gray-400">({{ filteredPredefinedSets.length }})</span>
+        </span>
+        <span>{{ showPredefinedSets ? '▲' : '▼' }}</span>
+      </button>
+
+      <div v-if="showPredefinedSets" class="mt-2 space-y-2">
+        <!-- Quick optimized set button -->
+        <button
+          @click="applyOptimizedSet"
+          :disabled="disabled"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex items-center justify-center gap-1.5"
+          data-testid="optimized-set-btn"
+        >
+          <AppIcon name="sparkles" class="w-4 h-4 inline" /> Optimiertes Set generieren ({{ platformLimit.ideal }} Hashtags)
+        </button>
+
+        <!-- Platform limit info -->
+        <div class="text-[10px] text-gray-400 text-center">
+          {{ props.platform === 'tiktok' ? 'TikTok' : 'Instagram' }}: {{ platformLimit.min }}-{{ platformLimit.max }} Hashtags, ideal {{ platformLimit.ideal }}
+        </div>
+
+        <!-- Predefined sets grid -->
+        <div class="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+          <button
+            v-for="set in filteredPredefinedSets.slice(0, 8)"
+            :key="set.id"
+            @click="applyPredefinedSet(set)"
+            :disabled="disabled"
+            class="text-left p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-all"
+            :data-testid="'predefined-set-' + set.id"
+          >
+            <div class="text-[11px] font-semibold text-gray-800 dark:text-gray-200 truncate">{{ set.name }}</div>
+            <div class="text-[10px] text-gray-400 truncate">{{ set.hashtags.slice(0, 3).join(' ') }}</div>
+            <div class="flex items-center gap-1 mt-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">{{ set.hashtags.length }} Tags</span>
+              <span v-if="set.country" class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400">{{ set.country }}</span>
+            </div>
+          </button>
         </div>
       </div>
     </div>

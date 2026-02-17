@@ -15,6 +15,7 @@
  * @emits image-generated - Emitted immediately after successful generation with full result
  */
 import { ref, computed, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 
@@ -63,17 +64,17 @@ const progressInterval = ref(null)
 
 // ── Style options ───────────────────────────────────────────────────────
 const styleOptions = [
-  { value: 'photorealistic', label: 'Fotorealistisch', icon: '📸', description: 'Hochwertige Fotos' },
-  { value: 'illustration', label: 'Illustration', icon: '🎨', description: 'Bunte Illustrationen' },
-  { value: 'minimalist', label: 'Minimalistisch', icon: '◻️', description: 'Klare, einfache Designs' },
-  { value: 'branded', label: 'TREFF-Branded', icon: '🏷️', description: 'TREFF-Markenfarben' },
+  { value: 'photorealistic', label: 'Fotorealistisch', icon: 'camera', description: 'Hochwertige Fotos' },
+  { value: 'illustration', label: 'Illustration', icon: 'paint-brush', description: 'Bunte Illustrationen' },
+  { value: 'minimalist', label: 'Minimalistisch', icon: 'squares-2x2', description: 'Klare, einfache Designs' },
+  { value: 'branded', label: 'TREFF-Branded', icon: 'tag', description: 'TREFF-Markenfarben' },
 ]
 
 // ── Aspect ratio options ────────────────────────────────────────────────
 const aspectRatioOptions = [
-  { value: '1:1', label: '1:1', sublabel: 'Feed', icon: '⬜' },
-  { value: '4:5', label: '4:5', sublabel: 'Portrait', icon: '📱' },
-  { value: '9:16', label: '9:16', sublabel: 'Story', icon: '📲' },
+  { value: '1:1', label: '1:1', sublabel: 'Feed', icon: 'photo' },
+  { value: '4:5', label: '4:5', sublabel: 'Portrait', icon: 'device-mobile' },
+  { value: '9:16', label: '9:16', sublabel: 'Story', icon: 'device-mobile' },
 ]
 
 // ── Platform to default aspect ratio mapping ────────────────────────────
@@ -282,7 +283,7 @@ onUnmounted(() => {
   <div class="border-2 border-purple-300 dark:border-purple-600 rounded-xl p-6 bg-purple-50/50 dark:bg-purple-900/10" data-testid="ai-image-generator">
     <!-- Header -->
     <div class="flex items-center gap-2 mb-4">
-      <span class="text-2xl">🤖</span>
+      <AppIcon name="sparkles" class="w-7 h-7" />
       <h3 class="text-sm font-semibold text-purple-800 dark:text-purple-300">KI-Bild generieren</h3>
     </div>
 
@@ -303,7 +304,7 @@ onUnmounted(() => {
           :disabled="generating || disabled"
           :data-testid="'style-' + opt.value"
         >
-          <span class="text-lg">{{ opt.icon }}</span>
+          <AppIcon :name="opt.icon" class="w-5 h-5" />
           <span class="font-medium">{{ opt.label }}</span>
           <span :class="['text-[10px]', style === opt.value ? 'text-purple-200' : 'text-gray-400']">{{ opt.description }}</span>
         </button>
@@ -364,7 +365,7 @@ onUnmounted(() => {
           :disabled="generating || disabled"
           :data-testid="'format-' + ar.value.replace(':', 'x')"
         >
-          <span>{{ ar.icon }}</span>
+          <AppIcon :name="ar.icon" class="w-4 h-4" />
           <span>{{ ar.label }}</span>
           <span :class="['text-[10px]', (aspectRatio === ar.value || (!aspectRatio && ar.value === platformDefaultAspectRatio)) ? 'text-purple-200' : 'text-gray-400']">
             {{ ar.sublabel }}
@@ -391,7 +392,7 @@ onUnmounted(() => {
         <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
         Bild wird generiert...
       </span>
-      <span v-else>🎨 Bild generieren ({{ effectiveAspectRatio }})</span>
+      <span v-else class="inline-flex items-center gap-1"><AppIcon name="paint-brush" class="w-4 h-4" /> Bild generieren ({{ effectiveAspectRatio }})</span>
     </button>
 
     <!-- ═══════ Progress Indicator ═══════ -->
@@ -461,7 +462,7 @@ onUnmounted(() => {
           :disabled="generating"
           data-testid="regenerate-btn"
         >
-          <span>🔄</span> Nochmal
+          <AppIcon name="arrow-path" class="w-4 h-4" /> Nochmal
         </button>
       </div>
     </div>

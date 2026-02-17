@@ -10,6 +10,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 
@@ -20,12 +21,12 @@ const sortBy = ref('engagement_rate')
 const period = ref(null) // null = all time
 
 const sortOptions = [
-  { value: 'engagement_rate', label: 'Engagement Rate', icon: '📈' },
-  { value: 'likes', label: 'Likes', icon: '❤️' },
-  { value: 'comments', label: 'Kommentare', icon: '💬' },
-  { value: 'shares', label: 'Shares', icon: '🔄' },
-  { value: 'saves', label: 'Saves', icon: '🔖' },
-  { value: 'reach', label: 'Reichweite', icon: '👁️' },
+  { value: 'engagement_rate', label: 'Engagement Rate', icon: 'analytics' },
+  { value: 'likes', label: 'Likes', icon: 'heart' },
+  { value: 'comments', label: 'Kommentare', icon: 'chat-bubble' },
+  { value: 'shares', label: 'Shares', icon: 'arrow-path' },
+  { value: 'saves', label: 'Saves', icon: 'bookmark' },
+  { value: 'reach', label: 'Reichweite', icon: 'eye' },
 ]
 
 const periodOptions = [
@@ -55,18 +56,18 @@ function categoryLabel(cat) {
 
 function platformIcon(platform) {
   switch (platform) {
-    case 'instagram_feed': return '📸'
-    case 'instagram_story': return '📱'
-    case 'tiktok': return '🎵'
-    default: return '📝'
+    case 'instagram_feed': return 'camera'
+    case 'instagram_story': return 'device-mobile'
+    case 'tiktok': return 'musical-note'
+    default: return 'document-text'
   }
 }
 
 function rankBadge(index) {
-  if (index === 0) return { text: '🥇', bg: 'bg-yellow-100 dark:bg-yellow-900/30' }
-  if (index === 1) return { text: '🥈', bg: 'bg-gray-100 dark:bg-gray-700' }
-  if (index === 2) return { text: '🥉', bg: 'bg-orange-100 dark:bg-orange-900/30' }
-  return { text: `#${index + 1}`, bg: 'bg-gray-50 dark:bg-gray-700/50' }
+  if (index === 0) return { text: '#1', bg: 'bg-yellow-100 dark:bg-yellow-900/30', textClass: 'text-yellow-700 dark:text-yellow-300', icon: 'trophy' }
+  if (index === 1) return { text: '#2', bg: 'bg-gray-100 dark:bg-gray-700', textClass: 'text-gray-600 dark:text-gray-300', icon: 'trophy' }
+  if (index === 2) return { text: '#3', bg: 'bg-orange-100 dark:bg-orange-900/30', textClass: 'text-orange-700 dark:text-orange-300', icon: 'trophy' }
+  return { text: `#${index + 1}`, bg: 'bg-gray-50 dark:bg-gray-700/50', textClass: 'text-gray-500 dark:text-gray-400', icon: null }
 }
 
 function engagementColor(rate) {
@@ -131,7 +132,7 @@ onMounted(() => {
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <div class="flex items-center gap-2">
         <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-          🏆 Top-Performing Posts
+          <AppIcon name="trophy" class="w-5 h-5 inline-block" /> Top-Performing Posts
         </h3>
         <span v-if="totalWithMetrics > 0" class="text-xs px-2 py-0.5 bg-[#3B7AB1]/10 text-[#3B7AB1] rounded-full font-medium">
           {{ totalWithMetrics }} Posts
@@ -157,7 +158,7 @@ onMounted(() => {
           data-testid="sort-filter"
         >
           <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
-            {{ opt.icon }} {{ opt.label }}
+            {{ opt.label }}
           </option>
         </select>
 
@@ -168,7 +169,7 @@ onMounted(() => {
           title="Performance-Daten als CSV exportieren"
           data-testid="export-csv-btn"
         >
-          📥 CSV
+          <AppIcon name="download" class="w-4 h-4" /> CSV
         </button>
       </div>
     </div>
@@ -199,14 +200,15 @@ onMounted(() => {
         :data-testid="'top-post-' + index"
       >
         <!-- Rank badge -->
-        <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold" :class="rankBadge(index).bg">
-          {{ rankBadge(index).text }}
+        <div class="flex-shrink-0 w-9 h-9 rounded-lg flex flex-col items-center justify-center" :class="rankBadge(index).bg">
+          <AppIcon v-if="rankBadge(index).icon" :name="rankBadge(index).icon" class="w-4 h-4" :class="rankBadge(index).textClass" />
+          <span class="text-[10px] font-bold" :class="rankBadge(index).textClass">{{ rankBadge(index).text }}</span>
         </div>
 
         <!-- Post info -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="text-sm">{{ platformIcon(post.platform) }}</span>
+            <AppIcon :name="platformIcon(post.platform)" class="w-4 h-4" />
             <p class="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-[#3B7AB1]">
               {{ post.title || 'Ohne Titel' }}
             </p>
@@ -219,9 +221,9 @@ onMounted(() => {
 
         <!-- Metrics summary -->
         <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-          <span v-if="post.perf_likes !== null" title="Likes">❤️ {{ post.perf_likes }}</span>
-          <span v-if="post.perf_comments !== null" title="Kommentare">💬 {{ post.perf_comments }}</span>
-          <span v-if="post.perf_reach !== null" title="Reichweite">👁️ {{ post.perf_reach }}</span>
+          <span v-if="post.perf_likes !== null" title="Likes" class="inline-flex items-center gap-0.5"><AppIcon name="heart" class="w-3.5 h-3.5" /> {{ post.perf_likes }}</span>
+          <span v-if="post.perf_comments !== null" title="Kommentare" class="inline-flex items-center gap-0.5"><AppIcon name="chat-bubble" class="w-3.5 h-3.5" /> {{ post.perf_comments }}</span>
+          <span v-if="post.perf_reach !== null" title="Reichweite" class="inline-flex items-center gap-0.5"><AppIcon name="eye" class="w-3.5 h-3.5" /> {{ post.perf_reach }}</span>
         </div>
 
         <!-- Engagement rate -->

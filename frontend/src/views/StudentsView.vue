@@ -19,6 +19,7 @@ import api from '@/utils/api'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const store = useStudentStore()
@@ -282,16 +283,16 @@ function getStudentPipelineCount(studentId) {
 
 // ── Personality Badge ──
 const toneIcons = {
-  witzig: '😂',
-  emotional: '🥺',
-  motivierend: '💪',
-  jugendlich: '✨',
-  serioess: '📋',
-  storytelling: '📖',
-  'behind-the-scenes': '🎬',
-  provokant: '⚡',
-  wholesome: '🥰',
-  informativ: '📊',
+  witzig: 'face-smile',
+  emotional: 'heart',
+  motivierend: 'thumb-up',
+  jugendlich: 'sparkles',
+  serioess: 'clipboard-list',
+  storytelling: 'book-open',
+  'behind-the-scenes': 'film',
+  provokant: 'bolt',
+  wholesome: 'heart',
+  informativ: 'chart-bar',
 }
 
 function getPersonalityBadge(student) {
@@ -301,8 +302,8 @@ function getPersonalityBadge(student) {
       ? JSON.parse(student.personality_preset)
       : student.personality_preset
     if (!preset || !preset.tone) return null
-    const icon = toneIcons[preset.tone] || '🎭'
-    return `${icon} ${preset.tone} (H${preset.humor_level || 3}/5)`
+    const iconName = toneIcons[preset.tone] || 'user'
+    return { iconName, label: `${preset.tone} (H${preset.humor_level || 3}/5)` }
   } catch {
     return null
   }
@@ -381,7 +382,7 @@ onMounted(() => {
         message="Tipp: Erstelle einen Story-Arc fuer deine Schueler, um mehrteilige Serien zu planen."
         link-text="Story-Arcs"
         link-to="/calendar/story-arcs"
-        icon="📖"
+        icon="book-open"
         :show="showStoryArcHint"
       />
     </div>
@@ -515,8 +516,9 @@ onMounted(() => {
 
           <!-- Personality Badge -->
           <div v-if="getPersonalityBadge(student)" class="mb-3">
-            <span class="inline-block px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-[10px] font-medium">
-              {{ getPersonalityBadge(student) }}
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-[10px] font-medium">
+              <AppIcon :name="getPersonalityBadge(student).iconName" class="w-3 h-3 inline-block" />
+              {{ getPersonalityBadge(student).label }}
             </span>
           </div>
 

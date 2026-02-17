@@ -8,6 +8,8 @@ import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import { useContentDraftStore } from '@/stores/contentDraft'
 import { CATEGORY_TO_PILLAR, getPillarById } from '@/config/contentPillars'
+import ContentPillarSelector from '@/components/posts/ContentPillarSelector.vue'
+import BuyerJourneySelector from '@/components/posts/BuyerJourneySelector.vue'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import { useAutoSave } from '@/composables/useAutoSave'
@@ -19,6 +21,7 @@ import EngagementBoostPanel from '@/components/posts/EngagementBoostPanel.vue'
 import CliffhangerPanel from '@/components/posts/CliffhangerPanel.vue'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import WorkflowHint from '@/components/common/WorkflowHint.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import AIImageGenerator from '@/components/common/AIImageGenerator.vue'
 import AITextGenerator from '@/components/common/AITextGenerator.vue'
 import HashtagManager from '@/components/posts/HashtagManager.vue'
@@ -45,6 +48,7 @@ const {
   successMsg,
   selectedCategory,
   selectedPillar,
+  selectedBuyerJourneyStage,
   templates,
   selectedTemplate,
   loadingTemplates,
@@ -235,24 +239,24 @@ const showOverwriteDialog = ref(false) // Controls the overwrite confirmation di
 
 // Step 1: Category selection (static data - no need for store)
 const categories = [
-  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: '🌍', desc: 'Informative Posts ueber Ziellaender' },
-  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: '💬', desc: 'Alumni-Erfahrungen & Testimonials' },
-  { id: 'infografiken', label: 'Infografiken', icon: '📊', desc: 'Vergleiche, Statistiken, Fakten' },
-  { id: 'fristen_cta', label: 'Fristen & CTA', icon: '⏰', desc: 'Bewerbungsfristen & Calls-to-Action' },
-  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: '💡', desc: 'Praktische Tipps fuers Auslandsjahr' },
-  { id: 'faq', label: 'FAQ', icon: '❓', desc: 'Haeufig gestellte Fragen' },
-  { id: 'foto_posts', label: 'Foto-Posts', icon: '📸', desc: 'Fotos mit Branding-Overlay' },
-  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: '🎬', desc: 'Thumbnails fuer Videos' },
-  { id: 'story_posts', label: 'Story-Posts', icon: '📱', desc: 'Instagram Story Content' },
-  { id: 'story_teaser', label: 'Story-Teaser', icon: '👉', desc: 'Feed-Post als Wegweiser zu Story-Serien' },
-  { id: 'story_series', label: 'Story-Serien', icon: '📚', desc: 'Mehrteilige Story-Serien mit Episoden' },
+  { id: 'laender_spotlight', label: 'Laender-Spotlight', icon: 'globe-alt', desc: 'Informative Posts ueber Ziellaender' },
+  { id: 'erfahrungsberichte', label: 'Erfahrungsberichte', icon: 'chat-bubble-left-right', desc: 'Alumni-Erfahrungen & Testimonials' },
+  { id: 'infografiken', label: 'Infografiken', icon: 'chart-bar', desc: 'Vergleiche, Statistiken, Fakten' },
+  { id: 'fristen_cta', label: 'Fristen & CTA', icon: 'clock', desc: 'Bewerbungsfristen & Calls-to-Action' },
+  { id: 'tipps_tricks', label: 'Tipps & Tricks', icon: 'light-bulb', desc: 'Praktische Tipps fuers Auslandsjahr' },
+  { id: 'faq', label: 'FAQ', icon: 'question-mark-circle', desc: 'Haeufig gestellte Fragen' },
+  { id: 'foto_posts', label: 'Foto-Posts', icon: 'camera', desc: 'Fotos mit Branding-Overlay' },
+  { id: 'reel_tiktok_thumbnails', label: 'Reel/TikTok', icon: 'film', desc: 'Thumbnails fuer Videos' },
+  { id: 'story_posts', label: 'Story-Posts', icon: 'device-phone-mobile', desc: 'Instagram Story Content' },
+  { id: 'story_teaser', label: 'Story-Teaser', icon: 'arrow-right', desc: 'Feed-Post als Wegweiser zu Story-Serien' },
+  { id: 'story_series', label: 'Story-Serien', icon: 'book-open', desc: 'Mehrteilige Story-Serien mit Episoden' },
 ]
 
 // Step 3: Platform (static data)
 const platforms = [
-  { id: 'instagram_feed', label: 'Instagram Feed', icon: '📷', format: '1:1 / 4:5' },
-  { id: 'instagram_story', label: 'Instagram Story', icon: '📱', format: '9:16' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵', format: '9:16' },
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '1:1 / 4:5' },
+  { id: 'instagram_story', label: 'Instagram Story', icon: 'device-phone-mobile', format: '9:16' },
+  { id: 'tiktok', label: 'TikTok', icon: 'musical-note', format: '9:16' },
 ]
 
 // Step 4: Countries (static data)
@@ -266,16 +270,16 @@ const countries = [
 
 // Step 4: Tone options (static data)
 const toneOptions = [
-  { id: 'jugendlich', label: 'Jugendlich', icon: '🎯', desc: 'Locker, Gen-Z-freundlich', example: '"Hey, dein Abenteuer wartet!"' },
-  { id: 'serioess', label: 'Serioes', icon: '🏛️', desc: 'Fuer Eltern & Entscheider', example: '"Vertrauen Sie auf 40 Jahre Erfahrung."' },
-  { id: 'witzig', label: 'Witzig', icon: '😂', desc: 'Humor & Wortspiele', example: '"Dein Koffer ist schwerer als deine Mathe-Note?"' },
-  { id: 'emotional', label: 'Emotional', icon: '🥺', desc: 'Beruehrend & persoenlich', example: '"Der Moment, wenn du ankommst und weisst: Hier gehoere ich hin."' },
-  { id: 'motivierend', label: 'Motivierend', icon: '💪', desc: 'Empowernd & aktivierend', example: '"Trau dich! Dein Auslandsjahr wartet auf DICH!"' },
-  { id: 'informativ', label: 'Informativ', icon: '📊', desc: 'Fakten & Details', example: '"Highschool USA vs. Kanada: Kosten im Vergleich."' },
-  { id: 'behind-the-scenes', label: 'Behind the Scenes', icon: '👀', desc: 'Authentisch & transparent', example: '"Was passiert bei TREFF, bevor ihr in den Flieger steigt?"' },
-  { id: 'storytelling', label: 'Storytelling', icon: '📖', desc: 'Erzaehlerisch & narrativ', example: '"Es war 6 Uhr morgens am Frankfurter Flughafen..."' },
-  { id: 'provokant', label: 'Provokant', icon: '⚡', desc: 'Mutig & scroll-stoppend', example: '"Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abi."' },
-  { id: 'wholesome', label: 'Wholesome', icon: '🥰', desc: 'Herzlich & warmherzig', example: '"Wenn deine Gastmutter dir deinen Lieblingskuchen backt..."' },
+  { id: 'jugendlich', label: 'Jugendlich', icon: 'fire', desc: 'Locker, Gen-Z-freundlich', example: '"Hey, dein Abenteuer wartet!"' },
+  { id: 'serioess', label: 'Serioes', icon: 'building-library', desc: 'Fuer Eltern & Entscheider', example: '"Vertrauen Sie auf 40 Jahre Erfahrung."' },
+  { id: 'witzig', label: 'Witzig', icon: 'face-smile', desc: 'Humor & Wortspiele', example: '"Dein Koffer ist schwerer als deine Mathe-Note?"' },
+  { id: 'emotional', label: 'Emotional', icon: 'heart', desc: 'Beruehrend & persoenlich', example: '"Der Moment, wenn du ankommst und weisst: Hier gehoere ich hin."' },
+  { id: 'motivierend', label: 'Motivierend', icon: 'rocket-launch', desc: 'Empowernd & aktivierend', example: '"Trau dich! Dein Auslandsjahr wartet auf DICH!"' },
+  { id: 'informativ', label: 'Informativ', icon: 'chart-bar', desc: 'Fakten & Details', example: '"Highschool USA vs. Kanada: Kosten im Vergleich."' },
+  { id: 'behind-the-scenes', label: 'Behind the Scenes', icon: 'eye', desc: 'Authentisch & transparent', example: '"Was passiert bei TREFF, bevor ihr in den Flieger steigt?"' },
+  { id: 'storytelling', label: 'Storytelling', icon: 'book-open', desc: 'Erzaehlerisch & narrativ', example: '"Es war 6 Uhr morgens am Frankfurter Flughafen..."' },
+  { id: 'provokant', label: 'Provokant', icon: 'bolt', desc: 'Mutig & scroll-stoppend', example: '"Unpopular Opinion: Ein Auslandsjahr bringt dir mehr als jedes Abi."' },
+  { id: 'wholesome', label: 'Wholesome', icon: 'heart', desc: 'Herzlich & warmherzig', example: '"Wenn deine Gastmutter dir deinen Lieblingskuchen backt..."' },
 ]
 
 const selectedToneObj = computed(() => toneOptions.find(t => t.id === tone.value))
@@ -415,9 +419,9 @@ const selectedStudentPreset = computed(() => {
 })
 
 const toneIcons = {
-  witzig: '😂', emotional: '🥺', motivierend: '💪', jugendlich: '✨',
-  serioess: '📋', storytelling: '📖', 'behind-the-scenes': '🎬',
-  provokant: '⚡', wholesome: '🥰', informativ: '📊',
+  witzig: 'face-smile', emotional: 'heart', motivierend: 'rocket-launch', jugendlich: 'sparkles',
+  serioess: 'clipboard-document-list', storytelling: 'book-open', 'behind-the-scenes': 'film',
+  provokant: 'bolt', wholesome: 'heart', informativ: 'chart-bar',
 }
 
 function selectStudent(studentId) {
@@ -727,6 +731,8 @@ async function generateText() {
       tone: tone.value,
       student_id: selectedStudentId.value || null,
       pillar_id: selectedPillar.value || null,
+      content_pillar: selectedPillar.value || null,
+      buyer_journey_stage: selectedBuyerJourneyStage.value || null,
     })
 
     // Check if this is still the latest request (another generation may have started)
@@ -1827,19 +1833,19 @@ function getTemplateGradient(template) {
 // ── Template Placeholder System ──────────────────────────────────────
 // Standard placeholder variables with display names and descriptions
 const STANDARD_PLACEHOLDERS = {
-  headline: { label: 'Ueberschrift', desc: 'Hauptueberschrift des Posts', icon: '📝' },
-  subheadline: { label: 'Unterueberschrift', desc: 'Zweite Zeile / Untertitel', icon: '📋' },
-  body_text: { label: 'Fliesstext', desc: 'Haupttext / Beschreibung', icon: '📄' },
-  name: { label: 'Name', desc: 'Person oder Schueler-Name', icon: '👤' },
-  land: { label: 'Land', desc: 'Zielland (z.B. USA, Kanada)', icon: '🌍' },
-  stadt: { label: 'Stadt', desc: 'Stadt oder Region', icon: '🏙️' },
-  datum: { label: 'Datum', desc: 'Datum oder Zeitangabe', icon: '📅' },
-  quote: { label: 'Zitat', desc: 'Zitat oder Erfahrungsbericht', icon: '💬' },
-  zahl: { label: 'Zahl', desc: 'Statistik oder Kennzahl', icon: '🔢' },
-  cta_text: { label: 'CTA-Text', desc: 'Call-to-Action Button-Text', icon: '🚀' },
-  quote_text: { label: 'Zitat-Text', desc: 'Vollstaendiger Zitattext', icon: '💬' },
-  quote_author: { label: 'Zitat-Autor', desc: 'Name des Zitatgebers', icon: '✍️' },
-  image: { label: 'Bild', desc: 'Bild-Platzhalter ({{bild}})', icon: '🖼️' },
+  headline: { label: 'Ueberschrift', desc: 'Hauptueberschrift des Posts', icon: 'document-text' },
+  subheadline: { label: 'Unterueberschrift', desc: 'Zweite Zeile / Untertitel', icon: 'clipboard-document-list' },
+  body_text: { label: 'Fliesstext', desc: 'Haupttext / Beschreibung', icon: 'document' },
+  name: { label: 'Name', desc: 'Person oder Schueler-Name', icon: 'user' },
+  land: { label: 'Land', desc: 'Zielland (z.B. USA, Kanada)', icon: 'globe-alt' },
+  stadt: { label: 'Stadt', desc: 'Stadt oder Region', icon: 'building-office-2' },
+  datum: { label: 'Datum', desc: 'Datum oder Zeitangabe', icon: 'calendar' },
+  quote: { label: 'Zitat', desc: 'Zitat oder Erfahrungsbericht', icon: 'chat-bubble-left-right' },
+  zahl: { label: 'Zahl', desc: 'Statistik oder Kennzahl', icon: 'hashtag' },
+  cta_text: { label: 'CTA-Text', desc: 'Call-to-Action Button-Text', icon: 'rocket-launch' },
+  quote_text: { label: 'Zitat-Text', desc: 'Vollstaendiger Zitattext', icon: 'chat-bubble-left-right' },
+  quote_author: { label: 'Zitat-Autor', desc: 'Name des Zitatgebers', icon: 'pencil' },
+  image: { label: 'Bild', desc: 'Bild-Platzhalter ({{bild}})', icon: 'photo' },
 }
 
 // Parse placeholder_fields from the selected template
@@ -1883,7 +1889,7 @@ function getPlaceholderInfo(fieldName) {
   return STANDARD_PLACEHOLDERS[fieldName] || {
     label: fieldName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
     desc: `Platzhalter: {{${fieldName}}}`,
-    icon: '📝',
+    icon: 'document-text',
   }
 }
 
@@ -2219,7 +2225,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       message="Kein passendes Bild? Lade Bilder in die Asset-Bibliothek hoch, um sie hier zu verwenden."
       link-text="Asset-Bibliothek"
       link-to="/library/assets"
-      icon="🖼️"
+      icon="photo"
       :show="showAssetsHint"
     />
     <WorkflowHint
@@ -2227,7 +2233,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       message="Keine Templates gefunden? Erstelle oder importiere Vorlagen fuer schnellere Post-Erstellung."
       link-text="Templates verwalten"
       link-to="/library/templates"
-      icon="📄"
+      icon="document"
       :show="showTemplatesHint"
     />
 
@@ -2345,25 +2351,35 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 shadow-md'
             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
         >
-          <div class="text-2xl mb-2">{{ cat.icon }}</div>
+          <div class="mb-2"><AppIcon :name="cat.icon" class="w-7 h-7 inline-block" /></div>
           <div class="font-semibold text-gray-900 dark:text-white">{{ cat.label }}</div>
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ cat.desc }}</div>
         </button>
       </div>
 
-      <!-- Content Pillar Info (shown when category is selected) -->
-      <div v-if="selectedPillarObj" class="mt-4 p-3 rounded-lg border flex items-start gap-3" :style="{ borderColor: selectedPillarObj.color + '40', backgroundColor: selectedPillarObj.color + '08' }">
-        <span class="text-xl">{{ selectedPillarObj.icon }}</span>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">Content Pillar:</span>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white" :style="{ backgroundColor: selectedPillarObj.color }">
-              {{ selectedPillarObj.name }}
-            </span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">(Ziel: {{ selectedPillarObj.targetPercentage }}%)</span>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ selectedPillarObj.description }}</p>
-        </div>
+      <!-- Content Pillar Selector (manual override) -->
+      <div class="mt-6">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          Content Pillar
+          <span class="font-normal text-gray-400 text-xs">(optional — wird automatisch aus Kategorie abgeleitet)</span>
+        </h3>
+        <ContentPillarSelector
+          v-model="selectedPillar"
+          data-testid="create-pillar-selector"
+        />
+      </div>
+
+      <!-- Buyer Journey Stage Selector -->
+      <div class="mt-6">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          Buyer Journey Phase
+          <span class="font-normal text-gray-400 text-xs">(beeinflusst KI-Textgenerierung und Hook-Formeln)</span>
+        </h3>
+        <BuyerJourneySelector
+          v-model="selectedBuyerJourneyStage"
+          :selected-pillar="selectedPillar"
+          data-testid="create-journey-selector"
+        />
       </div>
     </div>
 
@@ -2408,7 +2424,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       >
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-            <span class="text-base">🔤</span>
+            <AppIcon name="language" class="w-5 h-5" />
             Template-Platzhalter ausfuellen
             <HelpTooltip text="Dieses Template verwendet Platzhalter ({{variable}}). Fuelle die Felder aus, damit sie im Post-Preview und Export korrekt angezeigt werden. Standard-Variablen: name, land, stadt, datum, quote, zahl, cta_text." />
           </h3>
@@ -2436,7 +2452,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               :for="'ph-' + field"
               class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1.5"
             >
-              <span>{{ getPlaceholderInfo(field).icon }}</span>
+              <AppIcon :name="getPlaceholderInfo(field).icon" class="w-4 h-4 inline-block" />
               {{ getPlaceholderInfo(field).label }}
               <span class="text-[10px] text-gray-400 dark:text-gray-500 font-mono" v-text="'{{' + field + '}}'"></span>
             </label>
@@ -2459,7 +2475,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           v-if="unfilledPlaceholderCount > 0"
           class="mt-3 flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400"
         >
-          <span class="mt-0.5">⚠️</span>
+          <AppIcon name="exclamation-triangle" class="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
           <span>{{ unfilledPlaceholderCount }} Platzhalter {{ unfilledPlaceholderCount === 1 ? 'ist' : 'sind' }} noch nicht ausgefuellt. Du kannst trotzdem fortfahren, aber leere Felder werden im Post nicht angezeigt.</span>
         </div>
       </div>
@@ -2484,7 +2500,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div v-if="selectedPlatforms.includes(p.id)" class="absolute top-2 right-2 w-6 h-6 bg-[#3B7AB1] rounded-full flex items-center justify-center">
             <span class="text-white text-xs font-bold">&#10003;</span>
           </div>
-          <div class="text-3xl mb-2">{{ p.icon }}</div>
+          <div class="mb-2"><AppIcon :name="p.icon" class="w-8 h-8 inline-block" /></div>
           <div class="font-semibold text-gray-900 dark:text-white">{{ p.label }}</div>
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ p.format }}</div>
         </button>
@@ -2567,21 +2583,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
         <!-- Student / Personality Preset (optional) -->
         <div v-if="studentStore.students.length > 0" class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">🎭 Studenten-Persoenlichkeit (optional) <HelpTooltip :text="tooltipTexts.createPost.studentSelector" size="sm" /></label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="user" class="w-5 h-5 inline-block" /> Studenten-Persoenlichkeit (optional) <HelpTooltip :text="tooltipTexts.createPost.studentSelector" size="sm" /></label>
           <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Waehle einen Studenten, um dessen Persoenlichkeits-Preset fuer die KI-Textgenerierung zu verwenden.</p>
           <div class="flex flex-wrap gap-2">
             <button v-for="student in studentStore.students" :key="student.id" type="button" @click="selectStudent(student.id)" class="px-3 py-2 rounded-lg border-2 transition-all text-sm text-left" :class="selectedStudentId === student.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-500/30' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'">
               <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ student.name }}</div>
-              <div v-if="student.personality_preset" class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">🎭 Preset aktiv</div>
+              <div v-if="student.personality_preset" class="text-xs text-purple-600 dark:text-purple-400 mt-0.5 flex items-center gap-1"><AppIcon name="user" class="w-3 h-3 inline-block" /> Preset aktiv</div>
               <div v-else class="text-xs text-gray-400 mt-0.5">Kein Preset</div>
             </button>
           </div>
-          <div v-if="selectedStudentPreset" class="mt-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-xs text-purple-700 dark:text-purple-300"><span class="font-medium">Aktives Preset:</span> {{ toneIcons[selectedStudentPreset.tone] || '🎭' }} {{ selectedStudentPreset.tone }} · Humor {{ selectedStudentPreset.humor_level || 3 }}/5 · Emoji: {{ selectedStudentPreset.emoji_usage || 'moderate' }} · {{ selectedStudentPreset.perspective === 'first_person' ? 'Ich-Perspektive' : 'Dritte Person' }}</div>
+          <div v-if="selectedStudentPreset" class="mt-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1 flex-wrap"><span class="font-medium">Aktives Preset:</span> <AppIcon :name="toneIcons[selectedStudentPreset.tone] || 'user'" class="w-3 h-3 inline-block" /> {{ selectedStudentPreset.tone }} · Humor {{ selectedStudentPreset.humor_level || 3 }}/5 · Emoji: {{ selectedStudentPreset.emoji_usage || 'moderate' }} · {{ selectedStudentPreset.perspective === 'first_person' ? 'Ich-Perspektive' : 'Dritte Person' }}</div>
         </div>
 
         <!-- Story-Arc / Episode (optional) -->
         <div v-if="storyArcStore.storyArcs.length > 0" class="mb-6" data-testid="story-arc-section">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">📖 Story-Arc (optional) <HelpTooltip :text="tooltipTexts.createPost.storyArcSelector" size="sm" /></label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1"><AppIcon name="book-open" class="w-5 h-5 inline-block" /> Story-Arc (optional) <HelpTooltip :text="tooltipTexts.createPost.storyArcSelector" size="sm" /></label>
           <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Ist dieser Post Teil einer Story-Serie? Waehle einen Arc, um Episoden-Felder anzuzeigen.</p>
           <div class="flex flex-wrap gap-2">
             <button
@@ -2604,7 +2620,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <!-- Episode fields (shown when an arc is selected) -->
           <div v-if="selectedArcId" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl space-y-4" data-testid="episode-fields">
             <h4 class="font-bold text-[#3B7AB1] text-sm flex items-center gap-2">
-              📖 Episoden-Details
+              <AppIcon name="book-open" class="w-4 h-4 inline-block" /> Episoden-Details
               <span v-if="loadingArcEpisodes" class="animate-spin h-4 w-4 border-2 border-[#3B7AB1] border-t-transparent rounded-full"></span>
             </h4>
 
@@ -2634,7 +2650,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   data-testid="suggest-previously-btn"
                 >
                   <span v-if="suggestingEpisodeField === 'previously_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
-                  ✨ KI-Vorschlag
+                  <AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI-Vorschlag
                 </button>
               </div>
               <textarea
@@ -2657,7 +2673,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   data-testid="suggest-cliffhanger-btn"
                 >
                   <span v-if="suggestingEpisodeField === 'cliffhanger_text'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
-                  ✨ KI-Vorschlag
+                  <AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI-Vorschlag
                 </button>
               </div>
               <textarea
@@ -2680,7 +2696,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                   data-testid="suggest-nexthint-btn"
                 >
                   <span v-if="suggestingEpisodeField === 'next_episode_hint'" class="animate-spin inline-block h-3 w-3 border-2 border-[#3B7AB1] border-t-transparent rounded-full mr-1"></span>
-                  ✨ KI-Vorschlag
+                  <AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI-Vorschlag
                 </button>
               </div>
               <textarea
@@ -2719,7 +2735,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 ? 'border-[#3B7AB1] bg-blue-50 dark:bg-blue-900/20 ring-1 ring-[#3B7AB1]/30'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'"
             >
-              <div class="font-semibold text-gray-900 dark:text-white text-sm">{{ t.icon }} {{ t.label }}</div>
+              <div class="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-1"><AppIcon :name="t.icon" class="w-4 h-4 inline-block" /> {{ t.label }}</div>
               <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">{{ t.desc }}</div>
             </button>
           </div>
@@ -2773,7 +2789,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
               :data-testid="'humor-format-' + fmt.id"
             >
-              <div class="text-xl mb-1">{{ fmt.icon }}</div>
+              <div class="mb-1"><AppIcon :name="fmt.icon" class="w-6 h-6 inline-block" /></div>
               <div class="font-semibold text-gray-900 dark:text-white text-xs leading-tight">{{ fmt.name }}</div>
               <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">
                 {{ fmt.platform_fit === 'both' ? 'IG + TT' : fmt.platform_fit === 'instagram' ? 'Instagram' : 'TikTok' }}
@@ -2784,7 +2800,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <!-- Selected humor format detail -->
           <div v-if="selectedHumorFormat" class="mt-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-[#FDD000]/40 rounded-xl" data-testid="humor-format-detail">
             <div class="flex items-start gap-3">
-              <span class="text-2xl">{{ selectedHumorFormat.icon }}</span>
+              <AppIcon :name="selectedHumorFormat.icon" class="w-7 h-7 inline-block" />
               <div class="flex-1 min-w-0">
                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">{{ selectedHumorFormat.name }}</h4>
                 <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ selectedHumorFormat.description }}</p>
@@ -2830,21 +2846,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <template #summary>
             <!-- Summary of selections -->
             <div class="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-left space-y-1">
-              <div><strong>Kategorie:</strong> {{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
-              <div v-if="selectedPillarObj"><strong>Content Pillar:</strong> <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-white" :style="{ backgroundColor: selectedPillarObj.color }">{{ selectedPillarObj.icon }} {{ selectedPillarObj.name }}</span></div>
+              <div class="flex items-center gap-1"><strong>Kategorie:</strong> <AppIcon v-if="selectedCategoryObj?.icon" :name="selectedCategoryObj.icon" class="w-4 h-4 inline-block" /> {{ selectedCategoryObj?.label }}</div>
+              <div v-if="selectedPillarObj"><strong>Content Pillar:</strong> <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-white" :style="{ backgroundColor: selectedPillarObj.color }"><AppIcon :name="selectedPillarObj.icon" class="w-3 h-3 inline-block" /> {{ selectedPillarObj.name }}</span></div>
               <div><strong>Template:</strong> {{ selectedTemplate?.name }} ({{ selectedTemplate?.slide_count }} Slide{{ selectedTemplate?.slide_count > 1 ? 's' : '' }})</div>
-              <div><strong>Plattform:</strong> {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
+              <div class="flex items-center gap-1"><strong>Plattform:</strong> <AppIcon v-if="selectedPlatformObj?.icon" :name="selectedPlatformObj.icon" class="w-4 h-4 inline-block" /> {{ selectedPlatformObj?.label }}</div>
               <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>
               <div v-if="topic"><strong>Thema:</strong> {{ topic }}</div>
               <div v-if="keyPoints"><strong>Stichpunkte:</strong> {{ keyPoints }}</div>
-              <div><strong>Tonalitaet:</strong> {{ selectedToneObj?.icon }} {{ selectedToneObj?.label || tone }}</div>
-              <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)"><strong>🎭 Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
+              <div class="flex items-center gap-1"><strong>Tonalitaet:</strong> <AppIcon v-if="selectedToneObj?.icon" :name="selectedToneObj.icon" class="w-4 h-4 inline-block" /> {{ selectedToneObj?.label || tone }}</div>
+              <div v-if="selectedStudentId && studentStore.students.find(s => s.id === selectedStudentId)" class="flex items-center gap-1"><strong class="flex items-center gap-1"><AppIcon name="user" class="w-4 h-4 inline-block" /> Student:</strong> {{ studentStore.students.find(s => s.id === selectedStudentId)?.name }} <span v-if="selectedStudentPreset" class="text-purple-600 dark:text-purple-400">(Preset: {{ selectedStudentPreset.tone }}, H{{ selectedStudentPreset.humor_level }}/5)</span></div>
               <div v-if="selectedHumorFormat" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
-                <strong>Humor-Format:</strong> {{ selectedHumorFormat.icon }} {{ selectedHumorFormat.name }}
+                <strong>Humor-Format:</strong> <AppIcon :name="selectedHumorFormat.icon" class="w-4 h-4 inline-block" /> {{ selectedHumorFormat.name }}
                 <span class="text-[10px] ml-1 px-1.5 py-0.5 bg-[#FDD000]/20 text-yellow-700 dark:text-yellow-300 rounded-full">Meme</span>
               </div>
               <div v-if="selectedArcId" class="pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
-                <strong>📖 Story-Arc:</strong> {{ storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.title || 'Arc #' + selectedArcId }}
+                <strong class="flex items-center gap-1"><AppIcon name="book-open" class="w-4 h-4 inline-block" /> Story-Arc:</strong> {{ storyArcStore.storyArcs.find(a => a.id === selectedArcId)?.title || 'Arc #' + selectedArcId }}
                 <span class="ml-1 text-xs text-[#3B7AB1]">Episode {{ selectedEpisodeNumber }}</span>
               </div>
             </div>
@@ -2899,7 +2915,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
               :data-testid="'preview-toggle-' + p.id"
             >
-              <span>{{ p.icon }}</span>
+              <AppIcon :name="p.icon" class="w-4 h-4 inline-block" />
               <span class="hidden sm:inline">{{ p.label }}</span>
               <span class="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">({{ p.format }})</span>
             </button>
@@ -3006,7 +3022,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <!-- Captions & hashtags sidebar -->
         <div class="space-y-4">
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📷 Instagram Caption</h4>
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1"><AppIcon name="camera" class="w-4 h-4 inline-block" /> Instagram Caption</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-line max-h-32 overflow-auto">{{ captionInstagram }}</p>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -3014,15 +3030,15 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <p class="text-xs text-blue-600 dark:text-blue-400 break-words">{{ hashtagsInstagram }}</p>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">🎵 TikTok Caption</h4>
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1"><AppIcon name="musical-note" class="w-4 h-4 inline-block" /> TikTok Caption</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ captionTiktok }}</p>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">🎵 TikTok Hashtags</h4>
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1"><AppIcon name="musical-note" class="w-4 h-4 inline-block" /> TikTok Hashtags</h4>
             <p class="text-xs text-blue-600 dark:text-blue-400 break-words">{{ hashtagsTiktok }}</p>
           </div>
           <div v-if="ctaText" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2">📢 Call-to-Action</h4>
+            <h4 class="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1"><AppIcon name="megaphone" class="w-4 h-4 inline-block" /> Call-to-Action</h4>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ ctaText }}</p>
           </div>
           <!-- Engagement Boost Panel -->
@@ -3035,7 +3051,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           />
 
           <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-center text-xs text-gray-500 dark:text-gray-400" data-testid="preview-platform-info">
-            {{ effectivePreviewPlatformObj?.icon }} {{ effectivePreviewPlatformObj?.label }}
+            <AppIcon v-if="effectivePreviewPlatformObj?.icon" :name="effectivePreviewPlatformObj.icon" class="w-4 h-4 inline-block" /> {{ effectivePreviewPlatformObj?.label }}
             <span v-if="effectivePreviewPlatform !== selectedPlatform" class="text-[#3B7AB1] font-medium">(Vorschau)</span>
             &middot; {{ selectedCategoryObj?.label }}
             <span v-if="selectedCountryObj"> &middot; {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</span>
@@ -3390,7 +3406,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
             <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div class="flex items-center gap-1 mb-2">
-                <label class="text-sm font-bold text-gray-700 dark:text-gray-300">🎵 TikTok Hashtags</label>
+                <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1"><AppIcon name="musical-note" class="w-4 h-4 inline-block" /> TikTok Hashtags</label>
                 <HelpTooltip :text="tooltipTexts.createPost.hashtagsTiktok" size="sm" />
               </div>
               <HashtagManager
@@ -3421,7 +3437,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <!-- Episode Fields (shown when post is part of a Story-Arc) -->
           <div v-if="selectedArcId" class="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 space-y-3" data-testid="episode-edit-fields">
             <h4 class="text-sm font-bold text-[#3B7AB1] flex items-center gap-2">
-              📖 Episoden-Texte
+              <AppIcon name="book-open" class="w-4 h-4 inline-block" /> Episoden-Texte
               <span class="text-xs font-normal text-gray-500">Episode {{ selectedEpisodeNumber }}</span>
             </h4>
             <div>
@@ -3430,8 +3446,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="suggestEpisodeText('previously_text')"
                   :disabled="!!suggestingEpisodeField"
-                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
-                >✨ KI</button>
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50 flex items-center gap-0.5"
+                ><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI</button>
               </div>
               <textarea v-model="episodePreviouslyText" rows="2" placeholder="Bisher bei..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
             </div>
@@ -3441,8 +3457,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="suggestEpisodeText('cliffhanger_text')"
                   :disabled="!!suggestingEpisodeField"
-                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
-                >✨ KI</button>
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50 flex items-center gap-0.5"
+                ><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI</button>
               </div>
               <textarea v-model="episodeCliffhangerText" rows="2" placeholder="Cliffhanger am Ende..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
             </div>
@@ -3452,8 +3468,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <button
                   @click="suggestEpisodeText('next_episode_hint')"
                   :disabled="!!suggestingEpisodeField"
-                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50"
-                >✨ KI</button>
+                  class="text-[10px] text-[#3B7AB1] hover:text-[#2E6A9E] font-medium disabled:opacity-50 flex items-center gap-0.5"
+                ><AppIcon name="sparkles" class="w-3 h-3 inline-block" /> KI</button>
               </div>
               <textarea v-model="episodeNextHint" rows="2" placeholder="Naechste Episode..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#3B7AB1] focus:border-transparent resize-none"></textarea>
             </div>
@@ -3491,7 +3507,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 :data-testid="'mini-preview-toggle-' + p.id"
                 :title="p.label + ' (' + p.format + ')'"
               >
-                {{ p.icon }}
+                <AppIcon :name="p.icon" class="w-4 h-4 inline-block" />
               </button>
             </div>
           </div>
@@ -3613,7 +3629,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </div>
 
           <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-sm text-gray-500 dark:text-gray-400">
-            💡 Dieser Schritt ist optional. Ohne Bild wird der Standard-Farbverlauf verwendet.
+            <AppIcon name="light-bulb" class="w-5 h-5 inline-block" /> Dieser Schritt ist optional. Ohne Bild wird der Standard-Farbverlauf verwendet.
           </div>
         </div>
 
@@ -3659,13 +3675,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <div class="grid grid-cols-2 gap-3 text-sm mb-6">
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-gray-500 dark:text-gray-400 text-xs">Kategorie</div>
-            <div class="font-medium text-gray-900 dark:text-white">{{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
+            <div class="font-medium text-gray-900 dark:text-white flex items-center gap-1"><AppIcon v-if="selectedCategoryObj?.icon" :name="selectedCategoryObj.icon" class="w-4 h-4 inline-block" /> {{ selectedCategoryObj?.label }}</div>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-gray-500 dark:text-gray-400 text-xs">Plattform{{ selectedPlatforms.length > 1 ? 'en' : '' }}</div>
             <div class="font-medium text-gray-900 dark:text-white">
               <span v-for="(pId, idx) in selectedPlatforms" :key="pId">
-                {{ platforms.find(p => p.id === pId)?.icon }} {{ platforms.find(p => p.id === pId)?.label }}<span v-if="idx < selectedPlatforms.length - 1">, </span>
+                <AppIcon v-if="platforms.find(p => p.id === pId)?.icon" :name="platforms.find(p => p.id === pId).icon" class="w-4 h-4 inline-block" /> {{ platforms.find(p => p.id === pId)?.label }}<span v-if="idx < selectedPlatforms.length - 1">, </span>
               </span>
             </div>
           </div>
@@ -3690,7 +3706,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <!-- Interactive Elements Reminder (shown when elements exist) -->
         <div v-if="interactiveElements.length > 0" class="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800" data-testid="export-interactive-reminder">
           <div class="flex items-start gap-3">
-            <span class="text-2xl">🎯</span>
+            <AppIcon name="fire" class="w-7 h-7 inline-block flex-shrink-0" />
             <div>
               <h4 class="font-bold text-amber-800 dark:text-amber-300 text-sm mb-1">Vergiss nicht die interaktiven Elemente!</h4>
               <p class="text-xs text-amber-700 dark:text-amber-400 leading-relaxed mb-2">
@@ -3698,7 +3714,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </p>
               <ul class="space-y-1">
                 <li v-for="(el, idx) in interactiveElements" :key="idx" class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
-                  <span>{{ { poll: '📊', quiz: '🧠', slider: '🎚️', question: '❓' }[el.element_type] }}</span>
+                  <AppIcon :name="{ poll: 'chart-bar', quiz: 'sparkles', slider: 'adjustments-vertical', question: 'question-mark-circle' }[el.element_type]" class="w-4 h-4 inline-block" />
                   <span class="font-medium">{{ { poll: 'Umfrage', quiz: 'Quiz', slider: 'Emoji-Slider', question: 'Fragen-Sticker' }[el.element_type] }}:</span>
                   <span class="truncate">{{ el.question_text }}</span>
                 </li>
@@ -3768,7 +3784,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             :disabled="slides.length === 0"
             class="flex-1 px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] disabled:bg-gray-300 text-[#1A1A2E] font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
           >
-            📦 Als ZIP herunterladen ({{ slides.length }} Slides)
+            <AppIcon name="archive-box" class="w-5 h-5 inline-block" /> Als ZIP herunterladen ({{ slides.length }} Slides)
           </button>
           <button
             v-else
@@ -3776,14 +3792,14 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             :disabled="slides.length === 0"
             class="flex-1 px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] disabled:bg-gray-300 text-[#1A1A2E] font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
           >
-            ⬇ Als PNG herunterladen
+            <AppIcon name="arrow-down-tray" class="w-5 h-5 inline-block" /> Als PNG herunterladen
           </button>
         </div>
       </div>
 
       <!-- Export complete -->
       <div v-if="exportComplete" class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl border border-green-200 dark:border-green-800 p-8 text-center">
-        <div class="text-6xl mb-4">🎉</div>
+        <div class="mb-4"><AppIcon name="trophy" class="w-16 h-16 inline-block text-[#FDD000]" /></div>
         <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Post erfolgreich erstellt!</h3>
         <p class="text-gray-500 dark:text-gray-400 mb-4">
           Dein Post wurde in der Datenbank gespeichert und als exportiert markiert.
@@ -3796,13 +3812,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         </div>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <button v-if="selectedPlatforms.length > 1" @click="exportAllPlatforms" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
-            📦 Alle Plattformen erneut herunterladen
+            <AppIcon name="archive-box" class="w-5 h-5 inline-block" /> Alle Plattformen erneut herunterladen
           </button>
           <button v-else-if="slides.length > 1" @click="downloadAsZip" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
-            📦 ZIP herunterladen ({{ slides.length }} Slides)
+            <AppIcon name="archive-box" class="w-5 h-5 inline-block" /> ZIP herunterladen ({{ slides.length }} Slides)
           </button>
           <button v-else @click="downloadAsImage" class="px-6 py-3 bg-[#FDD000] hover:bg-[#e5c000] text-[#1A1A2E] font-bold rounded-lg transition-colors">
-            ⬇ PNG herunterladen
+            <AppIcon name="arrow-down-tray" class="w-5 h-5 inline-block" /> PNG herunterladen
           </button>
           <button @click="router.push('/home')" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition-colors">
             Zur Startseite

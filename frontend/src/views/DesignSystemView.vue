@@ -6,21 +6,22 @@ import PostPreviewCardTikTok from '@/components/posts/PostPreviewCardTikTok.vue'
 import PostPreviewGrid from '@/components/posts/PostPreviewGrid.vue'
 import TCountryThemeProvider from '@/components/ui/TCountryThemeProvider.vue'
 import { useCountryTheme, getCountryKeys, COUNTRY_THEMES } from '@/composables/useCountryTheme'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const activeSection = ref('colors')
 
 const sections = [
-  { id: 'colors', label: 'Farben', icon: '🎨' },
-  { id: 'country-themes', label: 'Country Themes', icon: '🌍' },
-  { id: 'typography', label: 'Typografie', icon: '📝' },
-  { id: 'buttons', label: 'Buttons', icon: '🔘' },
-  { id: 'cards', label: 'Cards', icon: '📦' },
-  { id: 'inputs', label: 'Inputs', icon: '📋' },
-  { id: 'badges', label: 'Badges', icon: '🏷️' },
-  { id: 'shadows', label: 'Shadows', icon: '🌑' },
-  { id: 'spacing', label: 'Spacing', icon: '📐' },
-  { id: 'radius', label: 'Radius', icon: '⬜' },
-  { id: 'previews', label: 'Post Previews', icon: '📱' },
+  { id: 'colors', label: 'Farben', icon: 'paint-brush' },
+  { id: 'country-themes', label: 'Country Themes', icon: 'globe-alt' },
+  { id: 'typography', label: 'Typografie', icon: 'document-text' },
+  { id: 'buttons', label: 'Buttons', icon: 'cursor-arrow-rays' },
+  { id: 'cards', label: 'Cards', icon: 'archive-box' },
+  { id: 'inputs', label: 'Inputs', icon: 'clipboard-document-list' },
+  { id: 'badges', label: 'Badges', icon: 'tag' },
+  { id: 'shadows', label: 'Shadows', icon: 'moon' },
+  { id: 'spacing', label: 'Spacing', icon: 'arrows-pointing-out' },
+  { id: 'radius', label: 'Radius', icon: 'square-2-stack' },
+  { id: 'previews', label: 'Post Previews', icon: 'device-phone-mobile' },
 ]
 
 // Country theme demo state
@@ -204,7 +205,7 @@ const scrollToSection = (id) => {
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700',
         ]"
       >
-        {{ section.icon }} {{ section.label }}
+        <AppIcon :name="section.icon" class="w-4 h-4 inline-block" /> {{ section.label }}
       </button>
     </div>
 

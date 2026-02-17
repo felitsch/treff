@@ -13,6 +13,7 @@
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   campaigns: {
@@ -41,11 +42,11 @@ function statusBadge(status) {
 // Goal icon
 function goalIcon(goal) {
   switch (goal) {
-    case 'awareness': return '👀'
-    case 'engagement': return '💬'
-    case 'conversion': return '🎯'
-    case 'traffic': return '🔗'
-    default: return '📊'
+    case 'awareness': return 'eye'
+    case 'engagement': return 'chat-bubble'
+    case 'conversion': return 'fire'
+    case 'traffic': return 'link'
+    default: return 'chart-bar'
   }
 }
 
@@ -83,7 +84,7 @@ function viewCampaign(id) {
   <BaseCard padding="none" data-tour="dashboard-active-campaigns" data-testid="active-campaigns-widget">
     <template #header>
       <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>🎯</span> Aktive Kampagnen
+        <AppIcon name="fire" class="w-5 h-5" /> Aktive Kampagnen
       </h2>
     </template>
     <template #headerAction>
@@ -142,7 +143,7 @@ function viewCampaign(id) {
           <!-- Title row -->
           <div class="flex items-start justify-between gap-2 mb-2">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span class="text-sm flex-shrink-0">{{ goalIcon(campaign.goal) }}</span>
+              <AppIcon :name="goalIcon(campaign.goal)" class="w-4 h-4 flex-shrink-0" />
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">
                 {{ campaign.title }}
               </h3>

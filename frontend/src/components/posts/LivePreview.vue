@@ -12,6 +12,7 @@
  * On mobile: toggle-able bottom sheet / floating button.
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   /** Currently selected platform id: 'instagram_feed' | 'instagram_story' | 'tiktok' */
@@ -114,9 +115,9 @@ const isSquare = computed(() => activePlatform.value === 'instagram_feed')
 
 // ── Platform pill display data ───────────────────────────────────────
 const platformData = {
-  instagram_feed: { icon: '\uD83D\uDCF7', label: 'Feed', format: '1:1' },
-  instagram_story: { icon: '\uD83D\uDCF1', label: 'Story', format: '9:16' },
-  tiktok: { icon: '\uD83C\uDFB5', label: 'TikTok', format: '9:16' },
+  instagram_feed: { icon: 'camera', label: 'Feed', format: '1:1' },
+  instagram_story: { icon: 'device-mobile', label: 'Story', format: '9:16' },
+  tiktok: { icon: 'musical-note', label: 'TikTok', format: '9:16' },
 }
 
 // ── Mobile toggle ────────────────────────────────────────────────────
@@ -187,7 +188,7 @@ const resolvedTemplateHtml = computed(() => {
       const val = vals[key]
       if (key === 'image' || key === 'bild') {
         // Image placeholders: show a placeholder box or actual image if uploaded
-        return val ? `<img src="${val}" style="max-width:100%;height:auto;border-radius:8px;" alt="Bild" />` : '<div style="width:100%;height:120px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:12px;">🖼️ Bild</div>'
+        return val ? `<img src="${val}" style="max-width:100%;height:auto;border-radius:8px;" alt="Bild" />` : '<div style="width:100%;height:120px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:12px;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>Bild</div>'
       }
       return (val && val.trim()) ? val : `<span style="opacity:0.4;font-style:italic;">${match}</span>`
     })
@@ -228,7 +229,7 @@ const hasTemplateHtml = computed(() => {
             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
           :data-testid="'live-preview-toggle-' + pId"
         >
-          <span>{{ platformData[pId]?.icon }}</span>
+          <AppIcon :name="platformData[pId]?.icon" class="w-4 h-4" />
           <span>{{ platformData[pId]?.label }}</span>
         </button>
       </div>
@@ -253,8 +254,8 @@ const hasTemplateHtml = computed(() => {
           >
             <!-- ═══ EMPTY STATE ═══ -->
             <div v-if="!hasContent" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <div class="text-3xl mb-3 opacity-40">
-                {{ activePlatform === 'tiktok' ? '\uD83C\uDFB5' : '\uD83D\uDCF7' }}
+              <div class="mb-3 opacity-40">
+                <AppIcon :name="activePlatform === 'tiktok' ? 'musical-note' : 'camera'" class="w-8 h-8 mx-auto" />
               </div>
               <p class="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                 Waehle Kategorie, Template &amp; erstelle Inhalte — die Vorschau aktualisiert sich in Echtzeit.
@@ -570,7 +571,7 @@ const hasTemplateHtml = computed(() => {
 
       <!-- Platform info badge -->
       <div class="mt-2 text-center text-[10px] text-gray-400 dark:text-gray-500">
-        {{ platformData[activePlatform]?.icon }} {{ platformData[activePlatform]?.label }}
+        <AppIcon :name="platformData[activePlatform]?.icon" class="w-3 h-3 inline-block" /> {{ platformData[activePlatform]?.label }}
         ({{ platformData[activePlatform]?.format }})
         <span v-if="categoryLabel"> &middot; {{ categoryLabel }}</span>
         <span v-if="country"> &middot; {{ country.flag }} {{ country.label }}</span>
@@ -634,7 +635,7 @@ const hasTemplateHtml = computed(() => {
                 ? 'bg-white dark:bg-gray-700 text-[#3B7AB1] shadow-sm'
                 : 'text-gray-500 dark:text-gray-400'"
             >
-              <span>{{ platformData[pId]?.icon }}</span>
+              <AppIcon :name="platformData[pId]?.icon" class="w-4 h-4" />
               <span>{{ platformData[pId]?.label }}</span>
             </button>
           </div>

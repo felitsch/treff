@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   show: {
@@ -36,7 +37,7 @@ function skipAll() {
 // Area data for step 2
 const mainAreas = [
   {
-    icon: '✏️',
+    icon: 'pencil-square',
     title: 'Content-Erstellung',
     desc: 'Posts erstellen mit Templates, KI-Texten und CTA-Bibliothek',
     color: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700',
@@ -44,7 +45,7 @@ const mainAreas = [
     pages: ['Post erstellen', 'Templates', 'Assets', 'Students'],
   },
   {
-    icon: '📅',
+    icon: 'calendar',
     title: 'Planung',
     desc: 'Content-Kalender, Wochenplaner und Story-Arcs organisieren',
     color: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700',
@@ -52,7 +53,7 @@ const mainAreas = [
     pages: ['Kalender', 'Wochenplaner', 'Story-Arcs', 'Formate'],
   },
   {
-    icon: '🎬',
+    icon: 'film',
     title: 'Video-Tools',
     desc: 'Video-Branding, Export, Audio-Mixer und Overlays',
     color: 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700',
@@ -60,7 +61,7 @@ const mainAreas = [
     pages: ['Video-Templates', 'Video-Export', 'Audio-Mixer', 'Overlays'],
   },
   {
-    icon: '📊',
+    icon: 'chart-bar',
     title: 'Analyse',
     desc: 'Performance tracken, Ziele setzen und Content optimieren',
     color: 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700',
@@ -71,52 +72,52 @@ const mainAreas = [
 
 // Workflow steps for step 3
 const workflowSteps = [
-  { icon: '💡', label: 'Idee', desc: 'Content-Vorschlaege oder eigene Ideen' },
-  { icon: '📋', label: 'Planen', desc: 'Wochenplaner oder Kalender nutzen' },
-  { icon: '✏️', label: 'Erstellen', desc: 'Post mit Templates und KI gestalten' },
-  { icon: '📅', label: 'Schedulen', desc: 'Datum und Uhrzeit festlegen' },
-  { icon: '📊', label: 'Analysieren', desc: 'Performance auswerten' },
+  { icon: 'light-bulb', label: 'Idee', desc: 'Content-Vorschlaege oder eigene Ideen' },
+  { icon: 'clipboard-list', label: 'Planen', desc: 'Wochenplaner oder Kalender nutzen' },
+  { icon: 'pencil-square', label: 'Erstellen', desc: 'Post mit Templates und KI gestalten' },
+  { icon: 'calendar', label: 'Schedulen', desc: 'Datum und Uhrzeit festlegen' },
+  { icon: 'chart-bar', label: 'Analysieren', desc: 'Performance auswerten' },
 ]
 
 // Connection data for step 4
 const connections = [
   {
     from: 'Students',
-    fromIcon: '👤',
+    fromIcon: 'user',
     to: 'Story-Arcs',
-    toIcon: '📖',
+    toIcon: 'book-open',
     desc: 'Studenten-Profile fuettern Story-Arcs mit persoenlichen Geschichten',
     color: 'text-blue-500',
   },
   {
     from: 'Story-Arcs',
-    fromIcon: '📖',
+    fromIcon: 'book-open',
     to: 'Kalender',
-    toIcon: '📅',
+    toIcon: 'calendar',
     desc: 'Story-Arc Episoden erscheinen als Timeline im Kalender',
     color: 'text-purple-500',
   },
   {
     from: 'Formate',
-    fromIcon: '🔄',
+    fromIcon: 'arrow-path',
     to: 'Wochenplaner',
-    toIcon: '📋',
+    toIcon: 'clipboard-list',
     desc: 'Wiederkehrende Formate werden vom Wochenplaner beruecksichtigt',
     color: 'text-amber-500',
   },
   {
     from: 'Templates',
-    fromIcon: '🎨',
+    fromIcon: 'paint-brush',
     to: 'Post erstellen',
-    toIcon: '✏️',
+    toIcon: 'pencil-square',
     desc: 'Templates bilden die Grundlage fuer neue Posts',
     color: 'text-green-500',
   },
   {
     from: 'CTA-Bibliothek',
-    fromIcon: '📢',
+    fromIcon: 'megaphone',
     to: 'Post erstellen',
-    toIcon: '✏️',
+    toIcon: 'pencil-square',
     desc: 'Vorgefertigte Call-to-Actions fuer schnelle Post-Erstellung',
     color: 'text-red-500',
   },
@@ -158,7 +159,7 @@ const connections = [
             <Transition name="slide-step" mode="out-in">
               <div v-if="currentStep === 0" key="step0" class="text-center py-8">
                 <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#4C8BC2] to-[#FDD000] rounded-2xl flex items-center justify-center shadow-lg">
-                  <span class="text-4xl">🎓</span>
+                  <AppIcon name="academic-cap" class="w-10 h-10 text-white" />
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                   Willkommen beim TREFF Post-Generator!
@@ -169,16 +170,16 @@ const connections = [
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-400 dark:text-gray-500">
                   <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full">
-                    🤖 KI-Textgenerierung
+                    <AppIcon name="sparkles" class="w-4 h-4" /> KI-Textgenerierung
                   </span>
                   <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full">
-                    🎨 Anpassbare Templates
+                    <AppIcon name="paint-brush" class="w-4 h-4" /> Anpassbare Templates
                   </span>
                   <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full">
-                    📅 Content-Kalender
+                    <AppIcon name="calendar" class="w-4 h-4" /> Content-Kalender
                   </span>
                   <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full">
-                    📊 Analytics
+                    <AppIcon name="chart-bar" class="w-4 h-4" /> Analytics
                   </span>
                 </div>
               </div>
@@ -205,7 +206,7 @@ const connections = [
                         class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         :class="area.iconBg"
                       >
-                        <span class="text-xl">{{ area.icon }}</span>
+                        <AppIcon :name="area.icon" class="w-6 h-6" />
                       </div>
                       <div class="min-w-0">
                         <h3 class="font-semibold text-gray-900 dark:text-white text-sm">
@@ -246,7 +247,7 @@ const connections = [
                       class="flex items-center gap-4 w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-3.5 shadow-sm hover:shadow-md transition-all"
                     >
                       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4C8BC2]/10 to-[#FDD000]/10 dark:from-[#4C8BC2]/20 dark:to-[#FDD000]/20 flex items-center justify-center flex-shrink-0">
-                        <span class="text-2xl">{{ step.icon }}</span>
+                        <AppIcon :name="step.icon" class="w-7 h-7" />
                       </div>
                       <div>
                         <div class="flex items-center gap-2">
@@ -290,7 +291,7 @@ const connections = [
                   >
                     <!-- From -->
                     <div class="flex flex-col items-center flex-shrink-0 w-16">
-                      <span class="text-xl">{{ conn.fromIcon }}</span>
+                      <AppIcon :name="conn.fromIcon" class="w-6 h-6" />
                       <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 mt-0.5 text-center leading-tight">
                         {{ conn.from }}
                       </span>
@@ -303,7 +304,7 @@ const connections = [
                     </div>
                     <!-- To -->
                     <div class="flex flex-col items-center flex-shrink-0 w-16">
-                      <span class="text-xl">{{ conn.toIcon }}</span>
+                      <AppIcon :name="conn.toIcon" class="w-6 h-6" />
                       <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 mt-0.5 text-center leading-tight">
                         {{ conn.to }}
                       </span>
@@ -395,7 +396,7 @@ const connections = [
               <!-- Step 5: Tour Hints -->
               <div v-else-if="currentStep === 5" key="step5" class="text-center py-8">
                 <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-[#4C8BC2]/10 to-[#FDD000]/10 dark:from-[#4C8BC2]/20 dark:to-[#FDD000]/20 rounded-full flex items-center justify-center">
-                  <span class="text-3xl">❓</span>
+                  <AppIcon name="question-mark-circle" class="w-8 h-8" />
                 </div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
                   Seitenspezifische Hilfe
@@ -420,7 +421,7 @@ const connections = [
                 </div>
                 <div class="mt-8">
                   <p class="text-sm font-medium text-[#4C8BC2]">
-                    Bereit loszulegen? 🚀
+                    Bereit loszulegen? <AppIcon name="rocket" class="w-4 h-4 inline-block" />
                   </p>
                   <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Nach dem Schliessen startet die Dashboard-Tour automatisch.

@@ -16,6 +16,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   postId: { type: Number, required: true },
@@ -129,7 +130,7 @@ onMounted(() => {
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5" data-testid="performance-input">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span class="text-lg">📊</span>
+        <AppIcon name="chart-bar" class="w-5 h-5" />
         Performance-Metriken
       </h3>
       <span v-if="lastUpdated" class="text-xs text-gray-400 dark:text-gray-500">
@@ -148,7 +149,7 @@ onMounted(() => {
         <!-- Likes -->
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            ❤️ Likes
+            <AppIcon name="heart" class="w-3.5 h-3.5 inline-block" /> Likes
           </label>
           <input
             v-model="likes"
@@ -163,7 +164,7 @@ onMounted(() => {
         <!-- Comments -->
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            💬 Kommentare
+            <AppIcon name="chat-bubble" class="w-3.5 h-3.5 inline-block" /> Kommentare
           </label>
           <input
             v-model="comments"
@@ -178,7 +179,7 @@ onMounted(() => {
         <!-- Shares -->
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            🔄 Shares
+            <AppIcon name="arrow-path" class="w-3.5 h-3.5 inline-block" /> Shares
           </label>
           <input
             v-model="shares"
@@ -193,7 +194,7 @@ onMounted(() => {
         <!-- Saves -->
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            🔖 Saves
+            <AppIcon name="bookmark" class="w-3.5 h-3.5 inline-block" /> Saves
           </label>
           <input
             v-model="saves"
@@ -208,7 +209,7 @@ onMounted(() => {
         <!-- Reach -->
         <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            👁️ Reichweite
+            <AppIcon name="eye" class="w-3.5 h-3.5 inline-block" /> Reichweite
           </label>
           <input
             v-model="reach"
@@ -255,7 +256,7 @@ onMounted(() => {
           data-testid="save-performance-btn"
         >
           <span v-if="saving" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-          <span v-else>💾</span>
+          <AppIcon v-else name="document" class="w-4 h-4" />
           {{ saving ? 'Speichern...' : 'Metriken speichern' }}
         </button>
       </div>

@@ -17,6 +17,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import api from '@/utils/api'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -42,12 +43,12 @@ const deleteConfirmId = ref(null)
 
 // Type definitions for UI
 const PROMPT_TYPES = [
-  { key: '', label: 'Alle', icon: '📋' },
-  { key: 'text', label: 'Text', icon: '✏️' },
-  { key: 'image', label: 'Bild', icon: '🖼️' },
-  { key: 'hashtags', label: 'Hashtags', icon: '#️⃣' },
-  { key: 'optimization', label: 'Optimierung', icon: '🔧' },
-  { key: 'video_script', label: 'Video-Script', icon: '🎬' },
+  { key: '', label: 'Alle', icon: 'clipboard-list' },
+  { key: 'text', label: 'Text', icon: 'pencil-square' },
+  { key: 'image', label: 'Bild', icon: 'photo' },
+  { key: 'hashtags', label: 'Hashtags', icon: 'hashtag' },
+  { key: 'optimization', label: 'Optimierung', icon: 'wrench' },
+  { key: 'video_script', label: 'Video-Script', icon: 'film' },
 ]
 
 // ─── Computed ────────────────────────────────────────────────────
@@ -61,7 +62,7 @@ const typeLabel = computed(() => {
 const typeIcon = computed(() => {
   return (type) => {
     const found = PROMPT_TYPES.find(t => t.key === type)
-    return found ? found.icon : '📋'
+    return found ? found.icon : 'clipboard-list'
   }
 })
 
@@ -192,7 +193,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        🧠 KI-Prompt-History
+        <AppIcon name="sparkles" class="w-6 h-6 inline-block" /> KI-Prompt-History
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
         Alle KI-Aufrufe mit Ergebnissen, Favoriten und Wiederverwendung
@@ -236,7 +237,7 @@ onMounted(() => {
             ]"
             :data-testid="`filter-type-${typeObj.key || 'all'}`"
           >
-            {{ typeObj.icon }} {{ typeObj.label }}
+            <AppIcon :name="typeObj.icon" class="w-3.5 h-3.5 inline-block" /> {{ typeObj.label }}
             <span v-if="typeObj.key && stats.by_type[typeObj.key]" class="ml-1 opacity-70">
               ({{ stats.by_type[typeObj.key] }})
             </span>
@@ -254,7 +255,7 @@ onMounted(() => {
           ]"
           data-testid="filter-favorites"
         >
-          ⭐ Nur Favoriten
+          <AppIcon name="star" class="w-3.5 h-3.5 inline-block" /> Nur Favoriten
         </button>
 
         <!-- Search -->
@@ -311,7 +312,7 @@ onMounted(() => {
                 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               ]"
             >
-              {{ typeIcon(item.prompt_type) }} {{ typeLabel(item.prompt_type) }}
+              <AppIcon :name="typeIcon(item.prompt_type)" class="w-3.5 h-3.5 inline-block" /> {{ typeLabel(item.prompt_type) }}
             </span>
 
             <!-- Timestamp -->

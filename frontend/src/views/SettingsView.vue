@@ -9,6 +9,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import { useTour } from '@/composables/useTour'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import TaskHistoryPanel from '@/components/tasks/TaskHistoryPanel.vue'
 
 const tourRef = ref(null)
@@ -334,7 +335,7 @@ onMounted(() => {
         class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         title="Seiten-Tour starten"
       >
-        &#10067; Tour starten
+        <AppIcon name="question-mark-circle" class="w-4 h-4 inline-block" /> Tour starten
       </button>
     </div>
 
@@ -388,7 +389,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>&#128100;</span> Konto
+              <AppIcon name="user" class="w-5 h-5 inline-block" /> Konto
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Deine Account-Informationen</p>
           </div>
@@ -431,7 +432,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>&#127912;</span> Marken-Einstellungen
+              <AppIcon name="paint-brush" class="w-5 h-5 inline-block" /> Marken-Einstellungen
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Passe die Farben fuer dein Branding an</p>
           </div>
@@ -531,7 +532,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>&#128273;</span> API-Schluessel
+              <AppIcon name="key" class="w-5 h-5 inline-block" /> API-Schluessel
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Konfiguriere externe Dienste fuer KI-Generierung und Bilder</p>
           </div>
@@ -588,7 +589,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>&#127919;</span> Posting-Ziele
+              <AppIcon name="fire" class="w-5 h-5 inline-block" /> Posting-Ziele
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Setze deine Content-Ziele und bevorzugte Zeiten</p>
           </div>
@@ -684,7 +685,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📊</span> Ziel Content-Mix
+              <AppIcon name="chart-bar" class="w-5 h-5 inline-block" /> Ziel Content-Mix
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Definiere die ideale Verteilung deiner Posts (in Prozent)</p>
           </div>
@@ -988,7 +989,7 @@ onMounted(() => {
         <template #header>
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>&#128640;</span> Social-Content-Strategie
+              <AppIcon name="rocket-launch" class="w-5 h-5 inline-block" /> Social-Content-Strategie
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Plattform-spezifische Best Practices, Hook-Formeln, Engagement-Strategien und Content-Kalender-Regeln.
@@ -1029,7 +1030,7 @@ onMounted(() => {
               data-testid="social-strategy-platforms-toggle"
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
-                <span>&#128241;</span> Plattform-Strategien
+                <AppIcon name="device-phone-mobile" class="w-4 h-4 inline-block" /> Plattform-Strategien
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Posting-Frequenz, Zeiten, Best Practices)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.platforms }">&#9660;</span>
@@ -1065,7 +1066,7 @@ onMounted(() => {
               data-testid="social-strategy-hooks-toggle"
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
-                <span>&#127907;</span> Hook-Formeln
+                <AppIcon name="bolt" class="w-4 h-4 inline-block" /> Hook-Formeln
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.hook_formulas?.formulas?.length || 0 }} Formeln)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.hooks }">&#9660;</span>
@@ -1100,7 +1101,7 @@ onMounted(() => {
               data-testid="social-strategy-repurposing-toggle"
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
-                <span>&#128260;</span> Content-Repurposing
+                <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Content-Repurposing
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.content_repurposing?.workflows?.length || 0 }} Workflows)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.repurposing }">&#9660;</span>
@@ -1129,7 +1130,7 @@ onMounted(() => {
               data-testid="social-strategy-engagement-toggle"
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
-                <span>&#128170;</span> Engagement-Strategien
+                <AppIcon name="hand-thumb-up" class="w-4 h-4 inline-block" /> Engagement-Strategien
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(CTAs, UGC, Community Building)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.engagement }">&#9660;</span>
@@ -1165,7 +1166,7 @@ onMounted(() => {
               data-testid="social-strategy-viral-toggle"
             >
               <span class="font-medium text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
-                <span>&#128293;</span> Virale Content-Patterns
+                <AppIcon name="fire" class="w-4 h-4 inline-block" /> Virale Content-Patterns
                 <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">({{ socialStrategy.viral_patterns?.patterns?.length || 0 }} Patterns)</span>
               </span>
               <span class="text-gray-400 transform transition-transform" :class="{ 'rotate-180': socialStrategyExpanded.viral }">&#9660;</span>

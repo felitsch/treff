@@ -18,6 +18,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -53,15 +54,15 @@ const savedPostId = ref(null)
 
 // ─── Post type options ───────────────────────────────────────
 const postTypeOptions = [
-  { value: 'instagram_feed', label: 'Feed Post', icon: '📸', description: 'Standard Instagram Post' },
-  { value: 'instagram_story', label: 'Story', icon: '📱', description: 'Instagram Story (9:16)' },
-  { value: 'tiktok', label: 'Reel/TikTok', icon: '🎵', description: 'Kurzvideo fuer Reels/TikTok' },
-  { value: 'carousel', label: 'Carousel', icon: '🎠', description: 'Mehrere Slides als Carousel' },
+  { value: 'instagram_feed', label: 'Feed Post', icon: 'camera', description: 'Standard Instagram Post' },
+  { value: 'instagram_story', label: 'Story', icon: 'device-mobile', description: 'Instagram Story (9:16)' },
+  { value: 'tiktok', label: 'Reel/TikTok', icon: 'musical-note', description: 'Kurzvideo fuer Reels/TikTok' },
+  { value: 'carousel', label: 'Carousel', icon: 'stack', description: 'Mehrere Slides als Carousel' },
 ]
 
 const platformOptions = [
-  { value: 'instagram', label: 'Instagram', icon: '📸' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'instagram', label: 'Instagram', icon: 'camera' },
+  { value: 'tiktok', label: 'TikTok', icon: 'musical-note' },
 ]
 
 const toneOptions = [
@@ -447,7 +448,7 @@ function startOver() {
                 ]"
                 :data-testid="`post-type-${opt.value}`"
               >
-                <span class="text-lg">{{ opt.icon }}</span>
+                <AppIcon :name="opt.icon" class="w-5 h-5 inline-block" />
                 <span class="font-medium">{{ opt.label }}</span>
               </button>
             </div>
@@ -523,7 +524,7 @@ function startOver() {
                   ]"
                   :data-testid="`platform-${opt.value}`"
                 >
-                  <span>{{ opt.icon }}</span>
+                  <AppIcon :name="opt.icon" class="w-4 h-4 inline-block" />
                   <span>{{ opt.label }}</span>
                 </button>
               </div>

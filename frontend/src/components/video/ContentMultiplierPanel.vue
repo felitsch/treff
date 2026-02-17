@@ -14,6 +14,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -28,9 +29,9 @@ const DERIVATIVES = [
   {
     key: 'reel_cut',
     name: 'Reel-Cut',
-    icon: '📱',
+    icon: 'device-mobile',
     platform: 'Instagram Reels',
-    platformIcon: '📸',
+    platformIcon: 'camera',
     format: '9:16',
     resolution: '1080 x 1920',
     estimatedDuration: '15-60s',
@@ -42,9 +43,9 @@ const DERIVATIVES = [
   {
     key: 'story_sequence',
     name: 'Story-Sequence',
-    icon: '📖',
+    icon: 'book-open',
     platform: 'Instagram Stories',
-    platformIcon: '📸',
+    platformIcon: 'camera',
     format: '9:16',
     resolution: '1080 x 1920',
     estimatedDuration: '3-5 Slides',
@@ -56,9 +57,9 @@ const DERIVATIVES = [
   {
     key: 'feed_post',
     name: 'Feed-Post',
-    icon: '⬜',
+    icon: 'photo',
     platform: 'Instagram Feed',
-    platformIcon: '📸',
+    platformIcon: 'camera',
     format: '1:1',
     resolution: '1080 x 1080',
     estimatedDuration: 'Standbild',
@@ -70,9 +71,9 @@ const DERIVATIVES = [
   {
     key: 'tiktok_version',
     name: 'TikTok-Version',
-    icon: '🎵',
+    icon: 'musical-note',
     platform: 'TikTok',
-    platformIcon: '🎵',
+    platformIcon: 'musical-note',
     format: '9:16',
     resolution: '1080 x 1920',
     estimatedDuration: '15-180s',
@@ -84,9 +85,9 @@ const DERIVATIVES = [
   {
     key: 'carousel',
     name: 'Carousel',
-    icon: '🎠',
+    icon: 'stack',
     platform: 'Instagram Carousel',
-    platformIcon: '📸',
+    platformIcon: 'camera',
     format: '1:1',
     resolution: '1080 x 1080',
     estimatedDuration: '5-10 Slides',
@@ -323,8 +324,8 @@ function progressLabel(status) {
   <div class="space-y-6" data-testid="content-multiplier-panel">
     <!-- Source video info -->
     <div v-if="videoAsset" class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex items-center gap-4" data-testid="source-video-info">
-      <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-2xl shrink-0">
-        🎬
+      <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0">
+        <AppIcon name="film" class="w-7 h-7 text-gray-500 dark:text-gray-400" />
       </div>
       <div class="flex-1 min-w-0">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">
@@ -387,11 +388,11 @@ function progressLabel(status) {
 
             <!-- Icon & Name -->
             <div class="flex items-center gap-2 flex-1 min-w-0">
-              <span class="text-xl">{{ d.icon }}</span>
+              <AppIcon :name="d.icon" class="w-6 h-6" />
               <div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ d.name }}</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ d.platformIcon }} {{ d.platform }} · {{ d.format }} · {{ d.estimatedDuration }}
+                  <AppIcon :name="d.platformIcon" class="w-3.5 h-3.5 inline-block" /> {{ d.platform }} · {{ d.format }} · {{ d.estimatedDuration }}
                 </p>
               </div>
             </div>
@@ -477,7 +478,7 @@ function progressLabel(status) {
           Wird generiert... (kann einige Minuten dauern)
         </template>
         <template v-else>
-          🚀 {{ selectedCount }} Derivat{{ selectedCount !== 1 ? 'e' : '' }} generieren
+          <AppIcon name="rocket" class="w-5 h-5" /> {{ selectedCount }} Derivat{{ selectedCount !== 1 ? 'e' : '' }} generieren
         </template>
       </button>
     </div>

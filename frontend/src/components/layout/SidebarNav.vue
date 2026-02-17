@@ -1,6 +1,32 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, markRaw } from 'vue'
 import { useRoute } from 'vue-router'
+import {
+  ChartBarIcon,
+  PencilSquareIcon,
+  BoltIcon,
+  DocumentIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  BookOpenIcon,
+  ArrowPathIcon,
+  PhotoIcon,
+  DocumentTextIcon,
+  ClipboardDocumentListIcon,
+  AcademicCapIcon,
+  FilmIcon,
+  VideoCameraIcon,
+  ScissorsIcon,
+  TagIcon,
+  ArrowUpTrayIcon,
+  MusicalNoteIcon,
+  SparklesIcon,
+  PresentationChartLineIcon,
+  Cog6ToothIcon,
+  PaintBrushIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   collapsed: Boolean,
@@ -15,72 +41,72 @@ const navGroups = [
     label: 'Home',
     key: 'home',
     items: [
-      { name: 'Home', path: '/home', icon: '📊' },
+      { name: 'Home', path: '/home', icon: markRaw(ChartBarIcon) },
     ],
   },
   {
     label: 'Erstellen',
     key: 'create',
     items: [
-      { name: 'Erstellen', path: '/create', icon: '✏️' },
-      { name: 'Quick Post', path: '/create/quick', icon: '⚡' },
-      { name: 'Entwuerfe', path: '/create/drafts', icon: '💾' },
-      { name: 'Kampagne', path: '/create/campaign', icon: '📅' },
+      { name: 'Erstellen', path: '/create', icon: markRaw(PencilSquareIcon) },
+      { name: 'Quick Post', path: '/create/quick', icon: markRaw(BoltIcon) },
+      { name: 'Entwuerfe', path: '/create/drafts', icon: markRaw(DocumentIcon) },
+      { name: 'Kampagne', path: '/create/campaign', icon: markRaw(CalendarDaysIcon) },
     ],
   },
   {
     label: 'Kalender',
     key: 'calendar',
     items: [
-      { name: 'Kalender', path: '/calendar', icon: '📅' },
-      { name: 'Wochenplaner', path: '/calendar/week-planner', icon: '🗓️' },
-      { name: 'Story-Arcs', path: '/calendar/story-arcs', icon: '📖' },
-      { name: 'Formate', path: '/calendar/recurring-formats', icon: '🔄' },
+      { name: 'Kalender', path: '/calendar', icon: markRaw(CalendarIcon) },
+      { name: 'Wochenplaner', path: '/calendar/week-planner', icon: markRaw(CalendarDaysIcon) },
+      { name: 'Story-Arcs', path: '/calendar/story-arcs', icon: markRaw(BookOpenIcon) },
+      { name: 'Formate', path: '/calendar/recurring-formats', icon: markRaw(ArrowPathIcon) },
     ],
   },
   {
     label: 'Bibliothek',
     key: 'library',
     items: [
-      { name: 'Assets', path: '/library/assets', icon: '🖼️' },
-      { name: 'Templates', path: '/library/templates', icon: '📄' },
-      { name: 'Posts', path: '/library/history', icon: '📋' },
+      { name: 'Assets', path: '/library/assets', icon: markRaw(PhotoIcon) },
+      { name: 'Templates', path: '/library/templates', icon: markRaw(DocumentTextIcon) },
+      { name: 'Posts', path: '/library/history', icon: markRaw(ClipboardDocumentListIcon) },
     ],
   },
   {
     label: 'Schueler',
     key: 'students',
     items: [
-      { name: 'Schueler', path: '/students', icon: '🎓' },
+      { name: 'Schueler', path: '/students', icon: markRaw(AcademicCapIcon) },
     ],
   },
   {
     label: 'Video-Tools',
     key: 'video',
     items: [
-      { name: 'Thumbnails', path: '/video/thumbnails', icon: '🎬' },
-      { name: 'Video-Overlay', path: '/video/overlays', icon: '🎞️' },
-      { name: 'Video-Schnitt', path: '/video/composer', icon: '✂️' },
-      { name: 'Video-Branding', path: '/video/templates', icon: '🏷️' },
-      { name: 'Video-Export', path: '/video/export', icon: '📤' },
-      { name: 'Audio-Mixer', path: '/video/audio-mixer', icon: '🎵' },
-      { name: 'Script-Generator', path: '/video/script-generator', icon: '📝' },
+      { name: 'Thumbnails', path: '/video/thumbnails', icon: markRaw(FilmIcon) },
+      { name: 'Video-Overlay', path: '/video/overlays', icon: markRaw(VideoCameraIcon) },
+      { name: 'Video-Schnitt', path: '/video/composer', icon: markRaw(ScissorsIcon) },
+      { name: 'Video-Branding', path: '/video/templates', icon: markRaw(TagIcon) },
+      { name: 'Video-Export', path: '/video/export', icon: markRaw(ArrowUpTrayIcon) },
+      { name: 'Audio-Mixer', path: '/video/audio-mixer', icon: markRaw(MusicalNoteIcon) },
+      { name: 'Script-Generator', path: '/video/script-generator', icon: markRaw(DocumentTextIcon) },
     ],
   },
   {
     label: 'KI-Tools',
     key: 'ai',
     items: [
-      { name: 'Prompt-History', path: '/ai/prompt-history', icon: '🧠' },
+      { name: 'Prompt-History', path: '/ai/prompt-history', icon: markRaw(SparklesIcon) },
     ],
   },
   {
     label: 'Analyse & Einstellungen',
     key: 'analytics',
     items: [
-      { name: 'Analytics', path: '/analytics', icon: '📈' },
-      { name: 'Settings', path: '/settings', icon: '⚙️' },
-      { name: 'Design-System', path: '/design-system', icon: '🎨' },
+      { name: 'Analytics', path: '/analytics', icon: markRaw(PresentationChartLineIcon) },
+      { name: 'Settings', path: '/settings', icon: markRaw(Cog6ToothIcon) },
+      { name: 'Design-System', path: '/design-system', icon: markRaw(PaintBrushIcon) },
     ],
   },
 ]
@@ -196,7 +222,7 @@ const isActive = (path) => route.path.startsWith(path)
                 :title="item.name"
                 :data-tour="item.path === '/create' || item.path === '/create/quick' ? 'create-post' : item.path === '/library/templates' ? 'templates' : undefined"
               >
-                <span class="text-lg">{{ item.icon }}</span>
+                <component :is="item.icon" class="w-5 h-5" />
               </router-link>
             </li>
           </template>
@@ -247,7 +273,7 @@ const isActive = (path) => route.path.startsWith(path)
                 :aria-label="item.name"
                 :data-tour="item.path === '/create' || item.path === '/create/quick' ? 'create-post' : item.path === '/library/templates' ? 'templates' : undefined"
               >
-                <span class="text-lg mr-3">{{ item.icon }}</span>
+                <component :is="item.icon" class="w-5 h-5 mr-3 shrink-0" />
                 <span>{{ item.name }}</span>
               </router-link>
             </li>
@@ -268,7 +294,7 @@ const isActive = (path) => route.path.startsWith(path)
       @click="$emit('toggle')"
       aria-label="Sidebar ein-/ausklappen"
     >
-      {{ collapsed ? '→' : '←' }}
+      <component :is="collapsed ? ChevronRightIcon : ChevronLeftIcon" class="w-5 h-5" />
     </button>
   </aside>
 </template>

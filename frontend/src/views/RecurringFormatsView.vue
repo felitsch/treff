@@ -6,6 +6,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const auth = useAuthStore()
 
@@ -41,7 +42,7 @@ const form = ref({
   preferred_time: '18:00',
   tone: 'jugendlich',
   hashtags: '',
-  icon: '🔄',
+  icon: 'arrow-path',
   category: 'tipps_tricks',
   is_active: true,
 })
@@ -78,7 +79,7 @@ const COUNTRIES = [
   { value: 'neuseeland', label: 'Neuseeland' },
   { value: 'irland', label: 'Irland' },
 ]
-const ICONS = ['💪', '😂', '📸', '🤓', '🌅', '🔄', '🎯', '🎉', '🌍', '🏆', '❓', '🎬']
+const ICONS = ['rocket', 'face-smile', 'camera', 'academic-cap', 'sparkles', 'arrow-path', 'fire', 'trophy', 'globe', 'trophy', 'question-mark-circle', 'film']
 
 // Computed
 const filteredFormats = computed(() => {
@@ -263,7 +264,7 @@ function resetForm() {
     preferred_time: '18:00',
     tone: 'jugendlich',
     hashtags: '',
-    icon: '🔄',
+    icon: 'arrow-path',
     category: 'tipps_tricks',
     is_active: true,
   }
@@ -345,12 +346,12 @@ onMounted(fetchFormats)
               v-for="ic in ICONS" :key="ic" type="button"
               @click="form.icon = ic"
               :class="[
-                'w-9 h-9 rounded-lg text-lg flex items-center justify-center border transition-colors',
+                'w-9 h-9 rounded-lg flex items-center justify-center border transition-colors',
                 form.icon === ic
                   ? 'border-treff-blue bg-treff-blue/10'
                   : 'border-gray-200 dark:border-gray-600 hover:border-treff-blue/50',
               ]"
-            >{{ ic }}</button>
+            ><AppIcon :name="ic" class="w-5 h-5" /></button>
           </div>
         </div>
 
@@ -453,7 +454,7 @@ onMounted(fetchFormats)
         <!-- Header -->
         <div class="flex items-start justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-2xl">{{ fmt.icon || '🔄' }}</span>
+            <AppIcon :name="fmt.icon || 'arrow-path'" class="w-7 h-7" />
             <div>
               <h3 class="font-semibold text-gray-900 dark:text-white text-sm">{{ fmt.name }}</h3>
               <div class="flex items-center gap-1.5 mt-0.5">
@@ -549,7 +550,7 @@ onMounted(fetchFormats)
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ aiPreviewFormat.icon }} KI-Textvorschlag: {{ aiPreviewFormat.name }}
+            <AppIcon :name="aiPreviewFormat.icon || 'arrow-path'" class="w-5 h-5 inline-block" /> KI-Textvorschlag: {{ aiPreviewFormat.name }}
           </h3>
           <button @click="closeAIPreview" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
         </div>

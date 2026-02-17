@@ -16,6 +16,7 @@ import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import { toSeasonalMarkers, getMonthConfig } from '@/config/seasonalCalendar'
 import WeekStrategyPanel from '@/components/calendar/WeekStrategyPanel.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -130,10 +131,10 @@ const tooltipPosition = ref({ x: 0, y: 0 })
 
 // Platform filter options
 const platformOptions = [
-  { value: null, label: 'Alle', icon: '📋' },
-  { value: 'instagram_feed', label: 'IG Feed', icon: '📷' },
-  { value: 'instagram_story', label: 'IG Story', icon: '📱' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: null, label: 'Alle', icon: 'clipboard-list' },
+  { value: 'instagram_feed', label: 'IG Feed', icon: 'camera' },
+  { value: 'instagram_story', label: 'IG Story', icon: 'device-mobile' },
+  { value: 'tiktok', label: 'TikTok', icon: 'musical-note' },
 ]
 
 // Weekly view state
@@ -180,27 +181,27 @@ const categoryColors = {
 
 // Category labels & icons
 const categoryMeta = {
-  laender_spotlight: { label: 'Laender', icon: '🌍' },
-  erfahrungsberichte: { label: 'Erfahrung', icon: '💬' },
-  infografiken: { label: 'Infografik', icon: '📊' },
-  fristen_cta: { label: 'Fristen', icon: '⏰' },
-  tipps_tricks: { label: 'Tipps', icon: '💡' },
-  faq: { label: 'FAQ', icon: '❓' },
-  foto_posts: { label: 'Foto', icon: '📸' },
-  reel_tiktok_thumbnails: { label: 'Reel', icon: '🎬' },
-  story_posts: { label: 'Story', icon: '📱' },
-  story_teaser: { label: 'Teaser', icon: '👉' },
+  laender_spotlight: { label: 'Laender', icon: 'globe' },
+  erfahrungsberichte: { label: 'Erfahrung', icon: 'chat-bubble' },
+  infografiken: { label: 'Infografik', icon: 'chart-bar' },
+  fristen_cta: { label: 'Fristen', icon: 'clock' },
+  tipps_tricks: { label: 'Tipps', icon: 'light-bulb' },
+  faq: { label: 'FAQ', icon: 'question-mark-circle' },
+  foto_posts: { label: 'Foto', icon: 'camera' },
+  reel_tiktok_thumbnails: { label: 'Reel', icon: 'film' },
+  story_posts: { label: 'Story', icon: 'device-mobile' },
+  story_teaser: { label: 'Teaser', icon: 'arrow-right' },
 }
 
 // Status icons and labels
 const statusMeta = {
-  draft: { label: 'Entwurf', icon: '📝', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-700', badge: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300' },
-  scheduled: { label: 'Geplant', icon: '📅', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
-  in_review: { label: 'In Review', icon: '👁', color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20', badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
-  reminded: { label: 'Erinnert', icon: '🔔', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' },
-  exported: { label: 'Exportiert', icon: '📤', color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', badge: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
-  posted: { label: 'Veroeffentlicht', icon: '✅', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
-  archived: { label: 'Archiviert', icon: '📦', color: 'text-slate-400', bg: 'bg-slate-50 dark:bg-slate-900/20', badge: 'bg-slate-100 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400' },
+  draft: { label: 'Entwurf', icon: 'document-text', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-700', badge: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300' },
+  scheduled: { label: 'Geplant', icon: 'calendar', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+  in_review: { label: 'In Review', icon: 'eye', color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20', badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
+  reminded: { label: 'Erinnert', icon: 'bell', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' },
+  exported: { label: 'Exportiert', icon: 'export', color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', badge: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
+  posted: { label: 'Veroeffentlicht', icon: 'check-circle', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+  archived: { label: 'Archiviert', icon: 'archive', color: 'text-slate-400', bg: 'bg-slate-50 dark:bg-slate-900/20', badge: 'bg-slate-100 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400' },
 }
 
 // Status transition rules (which statuses a post can move to)
@@ -223,9 +224,9 @@ const showBatchStatusMenu = ref(false)
 
 // Platform icons
 const platformIcons = {
-  instagram_feed: '📷',
-  instagram_story: '📱',
-  tiktok: '🎵',
+  instagram_feed: 'camera',
+  instagram_story: 'device-mobile',
+  tiktok: 'musical-note',
 }
 
 // Time slots for weekly view (6:00 - 23:00)
@@ -837,15 +838,15 @@ function getCategoryLabel(category) {
 }
 
 function getCategoryIcon(category) {
-  return categoryMeta[category]?.icon || '📄'
+  return categoryMeta[category]?.icon || 'document-text'
 }
 
 function getPlatformIcon(platform) {
-  return platformIcons[platform] || '📄'
+  return platformIcons[platform] || 'document-text'
 }
 
 function getStatusMeta(status) {
-  return statusMeta[status] || { label: status, icon: '📄', color: 'text-gray-500' }
+  return statusMeta[status] || { label: status, icon: 'document-text', color: 'text-gray-500' }
 }
 
 // ========== DATE HELPERS ==========
@@ -1465,7 +1466,7 @@ onUnmounted(() => {
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
             :title="'Filtern nach ' + opt.label"
           >
-            {{ opt.icon }} {{ opt.label }}
+            <AppIcon :name="opt.icon" class="w-4 h-4 inline-block" /> {{ opt.label }}
           </button>
         </div>
 
@@ -1481,7 +1482,7 @@ onUnmounted(() => {
               : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400 line-through opacity-50'"
             :title="(isStatusVisible(key) ? 'Verbergen: ' : 'Anzeigen: ') + meta.label"
           >
-            <span>{{ meta.icon }}</span>
+            <AppIcon :name="meta.icon" class="w-4 h-4 inline-block" />
             <span class="hidden sm:inline">{{ meta.label }}</span>
             <span v-if="statusOverview[key]" class="ml-0.5 text-[10px] font-bold">{{ statusOverview[key] }}</span>
           </button>
@@ -1568,7 +1569,7 @@ onUnmounted(() => {
           title="Saisonale Markierungen anzeigen/ausblenden (Bewerbungsfristen, Abflugzeiten, etc.)"
           aria-label="Saisonale Markierungen anzeigen/ausblenden"
         >
-          <span v-if="showSeasonalMarkers">📋</span><span v-else>📅</span>
+          <AppIcon v-if="showSeasonalMarkers" name="clipboard-list" class="w-4 h-4 inline-block" /><AppIcon v-else name="calendar" class="w-4 h-4 inline-block" />
           Fristen
           <HelpTooltip :text="tooltipTexts.calendar.seasonalMarkers" size="sm" />
           <span v-if="showSeasonalMarkers && seasonalMarkers.length > 0" class="bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -1588,7 +1589,7 @@ onUnmounted(() => {
           title="Story-Arc-Timeline anzeigen/ausblenden"
           aria-label="Story-Arc-Timeline anzeigen/ausblenden"
         >
-          <span v-if="showArcTimeline">📖</span><span v-else>📕</span>
+          <AppIcon name="book-open" class="w-4 h-4 inline-block" />
           Arcs
           <HelpTooltip :text="tooltipTexts.calendar.storyArcTimeline" size="sm" />
           <span v-if="showArcTimeline && arcTimelineData.length > 0" class="bg-violet-200 dark:bg-violet-800 text-violet-800 dark:text-violet-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -1607,7 +1608,7 @@ onUnmounted(() => {
           title="Wiederkehrende Formate anzeigen/ausblenden"
           aria-label="Wiederkehrende Formate anzeigen/ausblenden"
         >
-          <span>🔄</span>
+          <AppIcon name="arrow-path" class="w-4 h-4 inline-block" />
           Formate
           <span v-if="showRecurringFormats && recurringPlaceholders.length > 0" class="bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {{ recurringPlaceholders.length }}
@@ -1625,7 +1626,7 @@ onUnmounted(() => {
           title="Content-Mix Analyse anzeigen/ausblenden"
           aria-label="Content-Mix Analyse anzeigen/ausblenden"
         >
-          <span>📊</span>
+          <AppIcon name="chart-bar" class="w-4 h-4 inline-block" />
           Mix
           <HelpTooltip :text="tooltipTexts.calendar.contentMix" size="sm" />
         </button>
@@ -1640,7 +1641,7 @@ onUnmounted(() => {
           title="Wochen-Strategie-Assistent anzeigen/ausblenden"
           aria-label="Wochen-Strategie-Assistent anzeigen/ausblenden"
         >
-          <span>🎯</span>
+          <AppIcon name="fire" class="w-4 h-4 inline-block" />
           Strategie
         </button>
 
@@ -1691,7 +1692,7 @@ onUnmounted(() => {
     <BaseCard padding="md" :header-divider="false" class="mb-4">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <span class="text-lg">🎯</span>
+          <AppIcon name="fire" class="w-5 h-5 inline-block" />
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Woechentliches Posting-Ziel</h3>
         </div>
         <div class="flex items-center gap-2">
@@ -1701,7 +1702,7 @@ onUnmounted(() => {
           >
             {{ goalStats.posts_this_week }}/{{ goalStats.weekly_goal }}
           </span>
-          <span v-if="weeklyGoalMet" class="text-green-500 text-lg">✅</span>
+          <AppIcon v-if="weeklyGoalMet" name="check-circle" class="w-5 h-5 inline-block text-green-500" />
         </div>
       </div>
       <!-- Progress bar -->
@@ -1720,7 +1721,7 @@ onUnmounted(() => {
           Noch {{ goalStats.weekly_goal - goalStats.posts_this_week }} {{ (goalStats.weekly_goal - goalStats.posts_this_week) === 1 ? 'Post' : 'Posts' }} diese Woche
         </span>
         <span v-else-if="weeklyGoalMet" class="text-xs text-green-600 dark:text-green-400 font-medium">
-          Ziel erreicht! 🎉
+          Ziel erreicht! <AppIcon name="trophy" class="w-3.5 h-3.5 inline-block" />
         </span>
       </div>
     </BaseCard>
@@ -1736,7 +1737,7 @@ onUnmounted(() => {
       message="Keine wiederkehrenden Formate eingerichtet? Richte Formate ein, um deinen Kalender automatisch zu fuellen."
       link-text="Formate einrichten"
       link-to="/calendar/recurring-formats"
-      icon="🔄"
+      icon="arrow-path"
       :show="showRecurringFormatsHint"
     />
     <WorkflowHint
@@ -1744,7 +1745,7 @@ onUnmounted(() => {
       message="Dein Kalender ist noch leer. Nutze den KI-Wochenplaner, um schnell eine ganze Woche zu planen."
       link-text="Wochenplaner"
       link-to="/calendar/week-planner"
-      icon="🗓️"
+      icon="calendar-days"
       :show="showWeekPlannerHint"
     />
 
@@ -1826,7 +1827,7 @@ onUnmounted(() => {
 
           <!-- Empty state -->
           <div v-else-if="unscheduledPosts.length === 0" class="p-4 text-center">
-            <div class="text-3xl mb-2">🎉</div>
+            <div class="mb-2"><AppIcon name="trophy" class="w-8 h-8 inline-block text-green-500" /></div>
             <p class="text-sm text-gray-500 dark:text-gray-400">
               Alle Posts sind geplant!
             </p>
@@ -1858,14 +1859,14 @@ onUnmounted(() => {
                 <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
                 </svg>
-                <span class="flex-shrink-0 text-sm">{{ getCategoryIcon(post.category) }}</span>
+                <AppIcon :name="getCategoryIcon(post.category)" class="w-4 h-4 inline-block flex-shrink-0" />
                 <span class="truncate text-sm font-medium">{{ post.title || 'Unbenannt' }}</span>
               </div>
               <div class="flex items-center gap-1.5 mt-1 text-xs opacity-75">
-                <span>{{ getPlatformIcon(post.platform) }}</span>
+                <AppIcon :name="getPlatformIcon(post.platform)" class="w-3.5 h-3.5 inline-block" />
                 <span>{{ getCategoryLabel(post.category) }}</span>
-                <span class="ml-auto" :class="getStatusMeta(post.status).color">
-                  {{ getStatusMeta(post.status).icon }} {{ getStatusMeta(post.status).label }}
+                <span class="ml-auto flex items-center gap-1" :class="getStatusMeta(post.status).color">
+                  <AppIcon :name="getStatusMeta(post.status).icon" class="w-3.5 h-3.5 inline-block" /> {{ getStatusMeta(post.status).label }}
                 </span>
               </div>
             </div>
@@ -2012,7 +2013,7 @@ onUnmounted(() => {
               ]"
               :title="marker.description"
             >
-              <span class="flex-shrink-0">{{ marker.icon }}</span>
+              <AppIcon :name="marker.icon" class="w-3 h-3 inline-block flex-shrink-0" />
               <span class="truncate">{{ marker.label }}</span>
             </div>
           </div>
@@ -2026,7 +2027,7 @@ onUnmounted(() => {
               :title="rp.format_name + (rp.preferred_time ? ' um ' + rp.preferred_time : '')"
               @click="$router.push('/create/quick')"
             >
-              <span class="flex-shrink-0">{{ rp.format_icon || '🔄' }}</span>
+              <AppIcon :name="rp.format_icon || 'arrow-path'" class="w-3 h-3 inline-block flex-shrink-0" />
               <span class="truncate">{{ rp.format_name }}</span>
             </div>
           </div>
@@ -2060,14 +2061,14 @@ onUnmounted(() => {
                   @click.stop="togglePostSelection(post, $event)"
                   class="w-3 h-3 rounded border-gray-400 text-blue-600 focus:ring-blue-500 flex-shrink-0 cursor-pointer"
                 />
-                <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+                <AppIcon :name="getCategoryIcon(post.category)" class="w-3.5 h-3.5 inline-block flex-shrink-0" />
                 <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
                 <span
                   v-if="post.is_recurring_instance || post.recurring_rule_id"
                   class="flex-shrink-0 text-[10px] cursor-pointer hover:scale-125 transition-transform"
                   title="Wiederkehrender Post – Klicken fuer Einstellungen"
                   @click.stop="openRecurringSettings(post)"
-                >🔁</span>
+                ><AppIcon name="arrow-path" class="w-3 h-3 inline-block" /></span>
                 <span
                   v-if="post.episode_number"
                   class="flex-shrink-0 ml-auto text-[9px] font-bold px-1 py-0 rounded bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-300"
@@ -2075,7 +2076,7 @@ onUnmounted(() => {
                 >E{{ post.episode_number }}</span>
               </div>
               <div class="flex items-center gap-1 mt-0.5 opacity-75">
-                <span class="flex-shrink-0 text-[10px]">{{ getPlatformIcon(post.platform) }}</span>
+                <AppIcon :name="getPlatformIcon(post.platform)" class="w-3 h-3 inline-block flex-shrink-0" />
                 <span v-if="post.scheduled_time" class="text-[10px]">{{ post.scheduled_time }}</span>
                 <!-- Status badge with click-to-change dropdown -->
                 <span class="ml-auto relative">
@@ -2085,7 +2086,7 @@ onUnmounted(() => {
                     :class="getStatusMeta(post.status).color"
                     :title="'Status: ' + getStatusMeta(post.status).label + ' – Klicken zum Aendern'"
                   >
-                    {{ getStatusMeta(post.status).icon }}
+                    <AppIcon :name="getStatusMeta(post.status).icon" class="w-3 h-3 inline-block" />
                   </button>
                   <!-- Status dropdown -->
                   <div
@@ -2101,7 +2102,7 @@ onUnmounted(() => {
                       class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       :class="getStatusMeta(nextStatus).color"
                     >
-                      <span>{{ getStatusMeta(nextStatus).icon }}</span>
+                      <AppIcon :name="getStatusMeta(nextStatus).icon" class="w-3.5 h-3.5 inline-block" />
                       <span>{{ getStatusMeta(nextStatus).label }}</span>
                     </button>
                     <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
@@ -2109,7 +2110,7 @@ onUnmounted(() => {
                       @click.stop="statusDropdownPost = null; openRecurringSettings(post)"
                       class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-blue-600 dark:text-blue-400"
                     >
-                      <span>🔁</span>
+                      <AppIcon name="arrow-path" class="w-3.5 h-3.5 inline-block" />
                       <span>{{ post.recurring_rule_id ? 'Wiederkehr bearbeiten' : 'Wiederkehrend machen' }}</span>
                     </button>
                   </div>
@@ -2265,13 +2266,13 @@ onUnmounted(() => {
               @click.meta="togglePostSelection(post, $event)"
             >
               <div class="flex items-center gap-1">
-                <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+                <AppIcon :name="getCategoryIcon(post.category)" class="w-3.5 h-3.5 inline-block flex-shrink-0" />
                 <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
               </div>
               <div class="flex items-center gap-1 mt-0.5 opacity-75">
-                <span class="flex-shrink-0 text-[10px]">{{ getPlatformIcon(post.platform) }}</span>
+                <AppIcon :name="getPlatformIcon(post.platform)" class="w-3 h-3 inline-block flex-shrink-0" />
                 <span v-if="post.scheduled_time" class="text-[10px]">{{ post.scheduled_time }}</span>
-                <span class="ml-auto text-[10px]" :class="getStatusMeta(post.status).color">{{ getStatusMeta(post.status).icon }}</span>
+                <span class="ml-auto text-[10px]" :class="getStatusMeta(post.status).color"><AppIcon :name="getStatusMeta(post.status).icon" class="w-3 h-3 inline-block" /></span>
               </div>
             </div>
           </div>
@@ -2284,7 +2285,7 @@ onUnmounted(() => {
       <!-- Cross-Platform Stats Summary -->
       <BaseCard v-if="crossPlatformStats && crossPlatformStats.total !== undefined" padding="md" :header-divider="false" class="mb-4">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-lg">📊</span>
+          <AppIcon name="chart-bar" class="w-5 h-5 inline-block" />
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Cross-Platform Statistik</h3>
           <span class="text-xs text-gray-500 dark:text-gray-400">{{ currentMonthLabel }}</span>
         </div>
@@ -2296,15 +2297,15 @@ onUnmounted(() => {
           </div>
           <div class="text-center p-3 rounded-lg bg-pink-50 dark:bg-pink-900/20">
             <div class="text-2xl font-bold text-pink-600 dark:text-pink-400">{{ crossPlatformStats.instagram_feed || 0 }}</div>
-            <div class="text-xs text-pink-600 dark:text-pink-400 mt-0.5">📷 IG Feed</div>
+            <div class="text-xs text-pink-600 dark:text-pink-400 mt-0.5 flex items-center justify-center gap-0.5"><AppIcon name="camera" class="w-3 h-3 inline-block" /> IG Feed</div>
           </div>
           <div class="text-center p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
             <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ crossPlatformStats.instagram_story || 0 }}</div>
-            <div class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">📱 IG Story</div>
+            <div class="text-xs text-purple-600 dark:text-purple-400 mt-0.5 flex items-center justify-center gap-0.5"><AppIcon name="device-mobile" class="w-3 h-3 inline-block" /> IG Story</div>
           </div>
           <div class="text-center p-3 rounded-lg bg-cyan-50 dark:bg-cyan-900/20">
             <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{{ crossPlatformStats.tiktok || 0 }}</div>
-            <div class="text-xs text-cyan-600 dark:text-cyan-400 mt-0.5">🎵 TikTok</div>
+            <div class="text-xs text-cyan-600 dark:text-cyan-400 mt-0.5 flex items-center justify-center gap-0.5"><AppIcon name="musical-note" class="w-3 h-3 inline-block" /> TikTok</div>
           </div>
         </div>
         <!-- Platform distribution bars -->
@@ -2330,15 +2331,15 @@ onUnmounted(() => {
             ></div>
           </div>
           <div class="flex justify-between mt-1 text-[10px] text-gray-500 dark:text-gray-400">
-            <span v-if="crossPlatformStats.instagram_feed">📷 {{ Math.round((crossPlatformStats.instagram_feed / crossPlatformStats.total) * 100) }}%</span>
-            <span v-if="crossPlatformStats.instagram_story">📱 {{ Math.round((crossPlatformStats.instagram_story / crossPlatformStats.total) * 100) }}%</span>
-            <span v-if="crossPlatformStats.tiktok">🎵 {{ Math.round((crossPlatformStats.tiktok / crossPlatformStats.total) * 100) }}%</span>
+            <span v-if="crossPlatformStats.instagram_feed" class="inline-flex items-center gap-0.5"><AppIcon name="camera" class="w-3 h-3 inline-block" /> {{ Math.round((crossPlatformStats.instagram_feed / crossPlatformStats.total) * 100) }}%</span>
+            <span v-if="crossPlatformStats.instagram_story" class="inline-flex items-center gap-0.5"><AppIcon name="device-mobile" class="w-3 h-3 inline-block" /> {{ Math.round((crossPlatformStats.instagram_story / crossPlatformStats.total) * 100) }}%</span>
+            <span v-if="crossPlatformStats.tiktok" class="inline-flex items-center gap-0.5"><AppIcon name="musical-note" class="w-3 h-3 inline-block" /> {{ Math.round((crossPlatformStats.tiktok / crossPlatformStats.total) * 100) }}%</span>
           </div>
         </div>
         <!-- Linked groups info -->
         <div v-if="crossPlatformStats.linked_groups > 0" class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
-            🔗 {{ crossPlatformStats.linked_groups }} verknuepfte Gruppen
+            <AppIcon name="link" class="w-3.5 h-3.5 inline-block" /> {{ crossPlatformStats.linked_groups }} verknuepfte Gruppen
           </span>
           <span>Posts werden parallel auf mehreren Plattformen geplant</span>
         </div>
@@ -2349,7 +2350,7 @@ onUnmounted(() => {
             :key="'rec-' + rIdx"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 text-xs"
           >
-            <span>⚠️</span>
+            <AppIcon name="exclamation-triangle" class="w-3.5 h-3.5 inline-block" />
             <span>{{ rec.message }}</span>
           </div>
         </div>
@@ -2432,7 +2433,7 @@ onUnmounted(() => {
                 laneIdx === 2 ? 'bg-cyan-50 dark:bg-cyan-900/10 text-cyan-700 dark:text-cyan-300' : '',
               ]"
             >
-              <span>{{ lane.icon }}</span>
+              <AppIcon :name="lane.icon" class="w-4 h-4 inline-block" />
               <span class="truncate">{{ lane.label }}</span>
               <span
                 v-if="lane.total > 0"
@@ -2465,20 +2466,20 @@ onUnmounted(() => {
                   getCategoryStyle(post.category).text,
                   getCategoryStyle(post.category).border,
                 ]"
-                :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' 🔗 Verknuepft' : ''}`"
+                :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' Verknuepft' : ''}`"
                 @click="router.push(`/create/post/${post.id}/edit`)"
               >
                 <div class="flex items-center gap-0.5">
-                  <span class="flex-shrink-0">{{ getCategoryIcon(post.category) }}</span>
+                  <AppIcon :name="getCategoryIcon(post.category)" class="w-3 h-3 inline-block flex-shrink-0" />
                   <span class="truncate font-medium">{{ post.title || 'Unbenannt' }}</span>
                   <span
                     v-if="post.linked_post_group_id"
                     class="flex-shrink-0 ml-auto text-[9px]"
                     title="Verknuepfter Multi-Plattform Post"
-                  >🔗</span>
+                  ><AppIcon name="link" class="w-2.5 h-2.5 inline-block" /></span>
                 </div>
-                <div v-if="post.scheduled_time" class="opacity-70 text-[9px]">
-                  {{ post.scheduled_time }} {{ getStatusMeta(post.status).icon }}
+                <div v-if="post.scheduled_time" class="opacity-70 text-[9px] flex items-center gap-0.5">
+                  {{ post.scheduled_time }} <AppIcon :name="getStatusMeta(post.status).icon" class="w-2.5 h-2.5 inline-block" />
                 </div>
               </div>
               <!-- Empty state dot for days without posts -->
@@ -2499,7 +2500,7 @@ onUnmounted(() => {
       <!-- Queue header -->
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <div class="flex items-center gap-3">
-          <span class="text-xl">📋</span>
+          <AppIcon name="clipboard-list" class="w-6 h-6 inline-block" />
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Anstehende Posts</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -2558,7 +2559,7 @@ onUnmounted(() => {
                 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300': post.status === 'posted',
               }"
             >
-              {{ getStatusMeta(post.status).icon }}
+              <AppIcon :name="getStatusMeta(post.status).icon" class="w-3.5 h-3.5 inline-block" />
               {{ getStatusMeta(post.status).label }}
             </span>
           </div>
@@ -2567,7 +2568,7 @@ onUnmounted(() => {
 
       <!-- Empty state -->
       <div v-else class="py-12 text-center">
-        <div class="text-5xl mb-3">📭</div>
+        <div class="mb-3"><AppIcon name="inbox" class="w-12 h-12 inline-block text-gray-400" /></div>
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
           Keine anstehenden Posts
         </h3>
@@ -2598,7 +2599,7 @@ onUnmounted(() => {
               class="flex items-center gap-1.5"
             >
               <span class="w-3 h-3 rounded-full" :class="getCategoryStyle(catId).dot"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">{{ meta.icon }} {{ meta.label }}</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon :name="meta.icon" class="w-3.5 h-3.5 inline-block" /> {{ meta.label }}</span>
             </div>
           </div>
         </div>
@@ -2607,27 +2608,27 @@ onUnmounted(() => {
           <div class="flex flex-wrap gap-3">
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-red-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">📋 Bewerbungsfristen</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="clipboard-list" class="w-3.5 h-3.5 inline-block" /> Bewerbungsfristen</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">✈️ Abflugzeiten</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="paper-airplane" class="w-3.5 h-3.5 inline-block" /> Abflugzeiten</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-green-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">🏫 Schuljahresbeginn</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="academic-cap" class="w-3.5 h-3.5 inline-block" /> Schuljahresbeginn</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">🏠 Rueckkehr</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="home" class="w-3.5 h-3.5 inline-block" /> Rueckkehr</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">🎓 Stipendien</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="academic-cap" class="w-3.5 h-3.5 inline-block" /> Stipendien</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3 h-3 rounded-full bg-teal-500"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">🎪 Messen</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 inline-flex items-center gap-1"><AppIcon name="star" class="w-3.5 h-3.5 inline-block" /> Messen</span>
             </div>
           </div>
         </div>
@@ -2905,7 +2906,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 :class="meta.color"
               >
-                <span>{{ meta.icon }}</span>
+                <AppIcon :name="meta.icon" class="w-3.5 h-3.5 inline-block" />
                 <span>{{ meta.label }}</span>
               </button>
             </div>

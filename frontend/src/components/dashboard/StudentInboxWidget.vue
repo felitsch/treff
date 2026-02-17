@@ -14,6 +14,7 @@
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   items: {
@@ -90,7 +91,7 @@ function viewInbox() {
   <BaseCard padding="none" data-tour="dashboard-student-inbox" data-testid="student-inbox-widget">
     <template #header>
       <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>📬</span> Student Inbox
+        <AppIcon name="inbox" class="w-5 h-5" /> Student Inbox
         <span
           v-if="total > 0"
           class="ml-1 text-[10px] font-bold bg-[#FDD000] text-gray-900 px-1.5 py-0.5 rounded-full"

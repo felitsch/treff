@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -164,7 +165,7 @@ onMounted(() => {
               title="Fuer andere Plattform anpassen"
               data-testid="repurpose-draft-btn"
             >
-              🔄 Anpassen
+              <AppIcon name="arrow-path" class="w-4 h-4 inline-block" /> Anpassen
             </button>
             <button
               @click="openDraft(draft)"

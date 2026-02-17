@@ -8,6 +8,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -80,9 +81,9 @@ const buyerStages = [
 ]
 
 const platforms = [
-  { value: 'reels', label: 'Instagram Reels', icon: '📸' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
-  { value: 'story', label: 'Instagram Story', icon: '📱' },
+  { value: 'reels', label: 'Instagram Reels', icon: 'camera' },
+  { value: 'tiktok', label: 'TikTok', icon: 'musical-note' },
+  { value: 'story', label: 'Instagram Story', icon: 'device-mobile' },
 ]
 
 const durations = [
@@ -409,7 +410,7 @@ function formatDuration(seconds) {
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
             ]"
           >
-            <span class="text-2xl block mb-1">{{ p.icon }}</span>
+            <AppIcon :name="p.icon" class="w-6 h-6 mx-auto mb-1" />
             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ p.label }}</span>
           </button>
         </div>

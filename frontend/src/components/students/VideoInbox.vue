@@ -17,6 +17,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { getCountryTheme } from '@/composables/useCountryTheme'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   compact: {
@@ -50,12 +51,12 @@ const processingIds = ref(new Set())
 
 // ── Status config ──
 const statusConfig = {
-  pending: { label: 'Neu', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: '🆕' },
-  analyzed: { label: 'Analysiert', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: '🔍' },
-  processing: { label: 'Verarbeitung...', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: '⏳' },
-  processed: { label: 'Verarbeitet', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: '✅' },
-  deferred: { label: 'Zurueckgestellt', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', icon: '⏸️' },
-  failed: { label: 'Fehler', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: '❌' },
+  pending: { label: 'Neu', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: 'sparkles' },
+  analyzed: { label: 'Analysiert', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: 'search' },
+  processing: { label: 'Verarbeitung...', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: 'clock' },
+  processed: { label: 'Verarbeitet', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: 'check-circle' },
+  deferred: { label: 'Zurueckgestellt', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', icon: 'pause' },
+  failed: { label: 'Fehler', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: 'x-circle' },
 }
 
 const postTypeLabels = {
@@ -202,10 +203,10 @@ function formatDate(iso) {
 }
 
 function getFileIcon(fileType) {
-  if (!fileType) return '📎'
-  if (fileType.startsWith('video')) return '🎬'
-  if (fileType.startsWith('image')) return '🖼️'
-  return '📎'
+  if (!fileType) return 'link'
+  if (fileType.startsWith('video')) return 'film'
+  if (fileType.startsWith('image')) return 'photo'
+  return 'link'
 }
 
 // ── Watchers ──
@@ -286,7 +287,7 @@ onMounted(loadInbox)
       :class="compact ? 'py-6 text-center' : 'p-8 text-center'"
       data-testid="inbox-empty"
     >
-      <div class="text-3xl mb-2">📭</div>
+      <AppIcon name="inbox" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
       <p class="text-sm text-gray-500 dark:text-gray-400">Keine neuen Videos in der Inbox</p>
       <p v-if="!compact" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
         Lade Schueler-Content ueber die Pipeline hoch, um ihn hier zu verarbeiten.
@@ -337,7 +338,7 @@ onMounted(loadInbox)
               :alt="item.asset_filename"
               class="w-full h-full object-cover"
             />
-            <span v-else>{{ getFileIcon(item.asset_file_type) }}</span>
+            <AppIcon v-else :name="getFileIcon(item.asset_file_type)" class="w-5 h-5" />
           </div>
 
           <!-- Content -->

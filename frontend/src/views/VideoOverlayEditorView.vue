@@ -5,6 +5,7 @@ import api from '@/utils/api'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,11 +42,11 @@ const TREFF_DARK = '#1A1A2E'
 
 // Animation options
 const animationOptions = [
-  { value: 'none', label: 'Keine', icon: '—' },
-  { value: 'fade_in', label: 'Einblenden', icon: '🌅' },
-  { value: 'slide_in_left', label: 'Von Links', icon: '➡️' },
-  { value: 'slide_in_bottom', label: 'Von Unten', icon: '⬆️' },
-  { value: 'pop_in', label: 'Pop-In', icon: '💥' },
+  { value: 'none', label: 'Keine', icon: '' },
+  { value: 'fade_in', label: 'Einblenden', icon: 'sparkles' },
+  { value: 'slide_in_left', label: 'Von Links', icon: 'arrow-path' },
+  { value: 'slide_in_bottom', label: 'Von Unten', icon: 'arrow-path' },
+  { value: 'pop_in', label: 'Pop-In', icon: 'bolt' },
 ]
 
 // Font options
@@ -58,25 +59,25 @@ const layerPresets = [
   {
     type: 'text',
     label: 'Text',
-    icon: '✏️',
+    icon: 'pencil-square',
     defaults: { text: 'Neuer Text', x: 10, y: 50, width: 80, height: 8, fontSize: 32, color: '#FFFFFF', bgColor: 'rgba(0,0,0,0.6)', animation: 'none' },
   },
   {
     type: 'logo',
     label: 'TREFF Logo',
-    icon: '🏷️',
+    icon: 'tag',
     defaults: { text: 'TREFF Sprachreisen', x: 5, y: 3, width: 40, height: 6, fontSize: 24, color: '#FFFFFF', bgColor: TREFF_BLUE, bold: true, animation: 'fade_in' },
   },
   {
     type: 'subtitle',
     label: 'Untertitel',
-    icon: '💬',
+    icon: 'chat-bubble',
     defaults: { text: 'Untertitel hier', x: 5, y: 85, width: 90, height: 8, fontSize: 28, color: '#FFFFFF', bgColor: 'rgba(0,0,0,0.7)', textAlign: 'center', animation: 'fade_in' },
   },
   {
     type: 'hashtag',
     label: 'Hashtags',
-    icon: '#️⃣',
+    icon: 'hashtag',
     defaults: { text: '#treffsprachreisen #highschool #auslandsjahr', x: 5, y: 92, width: 90, height: 5, fontSize: 18, color: TREFF_YELLOW, bgColor: 'rgba(0,0,0,0.5)', animation: 'slide_in_bottom' },
   },
 ]
@@ -475,7 +476,7 @@ onUnmounted(() => {
     <div data-tour="vo-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          🎬 Video-Overlay Editor
+          <AppIcon name="film" class="w-6 h-6 inline-block" /> Video-Overlay Editor
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">
           TREFF-Branding, Texte und Untertitel auf Videos legen
@@ -486,7 +487,7 @@ onUnmounted(() => {
         class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
         title="Video-Workflow-Tour starten"
       >
-        🎬 Workflow
+        <AppIcon name="film" class="w-4 h-4 inline-block" /> Workflow
       </button>
     </div>
 
@@ -518,7 +519,7 @@ onUnmounted(() => {
           >
             <div class="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
               <img loading="lazy" v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
-              <span v-else class="text-3xl">🎬</span>
+              <AppIcon v-else name="film" class="w-8 h-8" />
             </div>
             <div class="p-2 text-xs text-gray-700 dark:text-gray-300 truncate">
               {{ asset.original_filename || asset.filename }}
@@ -565,7 +566,7 @@ onUnmounted(() => {
                 @click="addLayer(preset)"
                 class="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors"
               >
-                <span>{{ preset.icon }}</span>
+                <AppIcon :name="preset.icon" class="w-4 h-4" />
                 <span>{{ preset.label }}</span>
               </button>
             </div>
@@ -594,7 +595,7 @@ onUnmounted(() => {
                 <!-- Visibility indicator -->
                 <span :class="isLayerVisible(layer) ? 'text-green-500' : 'text-gray-300'" class="text-xs">●</span>
                 <!-- Type icon -->
-                <span>{{ layerPresets.find(p => p.type === layer.type)?.icon || '✏️' }}</span>
+                <AppIcon :name="layerPresets.find(p => p.type === layer.type)?.icon || 'pencil-square'" class="w-3.5 h-3.5" />
                 <!-- Name/text preview -->
                 <span class="flex-1 truncate text-gray-700 dark:text-gray-300">
                   {{ layer.text.substring(0, 20) || '(leer)' }}
@@ -726,8 +727,8 @@ onUnmounted(() => {
                     :disabled="saving || !hasChanges"
                     class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-xs rounded-lg flex items-center gap-1 transition-colors"
                   >
-                    <span v-if="saving" class="animate-spin">⏳</span>
-                    <span v-else>💾</span>
+                    <AppIcon v-if="saving" name="clock" class="w-3.5 h-3.5 animate-spin" />
+                    <AppIcon v-else name="document" class="w-3.5 h-3.5" />
                     Speichern
                   </button>
                   <button
@@ -735,8 +736,8 @@ onUnmounted(() => {
                     :disabled="rendering || layers.length === 0"
                     class="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded-lg flex items-center gap-1 transition-colors"
                   >
-                    <span v-if="rendering" class="animate-spin">⏳</span>
-                    <span v-else>🎬</span>
+                    <AppIcon v-if="rendering" name="clock" class="w-3.5 h-3.5 animate-spin" />
+                    <AppIcon v-else name="film" class="w-3.5 h-3.5" />
                     Rendern
                   </button>
                   <button
@@ -744,14 +745,14 @@ onUnmounted(() => {
                     @click="deleteOverlay"
                     class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors"
                   >
-                    🗑️
+                    <AppIcon name="archive" class="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               <!-- Render status -->
               <div v-if="renderStatus === 'done' && renderedPath" class="mt-2 p-2 bg-green-900/40 rounded-lg flex items-center justify-between">
-                <span class="text-green-400 text-xs">✅ Gerendert!</span>
+                <span class="text-green-400 text-xs flex items-center gap-1"><AppIcon name="check-circle" class="w-3.5 h-3.5 inline-block" /> Gerendert!</span>
                 <a
                   :href="renderedPath"
                   target="_blank"
@@ -761,10 +762,10 @@ onUnmounted(() => {
                 </a>
               </div>
               <div v-else-if="renderStatus === 'rendering'" class="mt-2 p-2 bg-yellow-900/40 rounded-lg">
-                <span class="text-yellow-400 text-xs animate-pulse">⏳ Video wird gerendert...</span>
+                <span class="text-yellow-400 text-xs animate-pulse flex items-center gap-1"><AppIcon name="clock" class="w-3.5 h-3.5 inline-block" /> Video wird gerendert...</span>
               </div>
               <div v-else-if="renderStatus === 'error'" class="mt-2 p-2 bg-red-900/40 rounded-lg">
-                <span class="text-red-400 text-xs">❌ Rendering fehlgeschlagen</span>
+                <span class="text-red-400 text-xs flex items-center gap-1"><AppIcon name="x-circle" class="w-3.5 h-3.5 inline-block" /> Rendering fehlgeschlagen</span>
               </div>
             </div>
           </div>
@@ -854,7 +855,7 @@ onUnmounted(() => {
                   @click="selectedLayer.textAlign = align"
                   :class="selectedLayer.textAlign === align ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
                   class="px-3 py-1.5 rounded-lg text-xs transition-colors"
-                >{{ align === 'left' ? '◁' : align === 'center' ? '☰' : '▷' }}</button>
+                ><template v-if="align === 'left'">&#9665;</template><AppIcon v-else-if="align === 'center'" name="bars-3" class="w-3.5 h-3.5 inline" /><template v-else>&#9655;</template></button>
               </div>
 
               <!-- Colors -->
@@ -936,7 +937,8 @@ onUnmounted(() => {
                       : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'"
                     class="px-2 py-1.5 rounded-lg border text-xs flex items-center gap-1 transition-colors"
                   >
-                    <span>{{ anim.icon }}</span>
+                    <AppIcon v-if="anim.icon" :name="anim.icon" class="w-3.5 h-3.5" />
+                    <span v-else>&mdash;</span>
                     <span>{{ anim.label }}</span>
                   </button>
                 </div>

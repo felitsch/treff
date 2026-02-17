@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   topic: { type: String, default: '' },
@@ -34,6 +35,14 @@ const hookTypeSelectedColors = {
   emotion: 'bg-pink-100 dark:bg-pink-800/50 border-pink-500 dark:border-pink-400 ring-2 ring-pink-300 dark:ring-pink-600',
   provokation: 'bg-amber-100 dark:bg-amber-800/50 border-amber-500 dark:border-amber-400 ring-2 ring-amber-300 dark:ring-amber-600',
   story_opener: 'bg-green-100 dark:bg-green-800/50 border-green-500 dark:border-green-400 ring-2 ring-green-300 dark:ring-green-600',
+}
+
+const hookTypeIconMap = {
+  frage: 'question-mark-circle',
+  statistik: 'chart-bar',
+  emotion: 'heart',
+  provokation: 'bolt',
+  story_opener: 'book-open',
 }
 
 const selectedHook = computed(() => {
@@ -101,7 +110,7 @@ function getCardClasses(index, hookType) {
     <!-- Header -->
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
-        <span class="text-xl">🎣</span>
+        <AppIcon name="sparkles" class="w-5 h-5" />
         <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Hook / Attention-Grabber</h3>
       </div>
       <button
@@ -114,7 +123,7 @@ function getCardClasses(index, hookType) {
         data-testid="generate-hooks-btn"
       >
         <span v-if="loading" class="animate-spin h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full"></span>
-        <span v-else>✨</span>
+        <AppIcon v-else name="sparkles" class="w-3.5 h-3.5" />
         {{ loading ? 'Generiere...' : (hasGenerated ? 'Neu generieren' : 'Hooks generieren') }}
       </button>
     </div>
@@ -137,7 +146,7 @@ function getCardClasses(index, hookType) {
         <div class="flex items-start gap-2.5">
           <!-- Type Icon & Badge -->
           <div class="flex-shrink-0 mt-0.5">
-            <span class="text-lg">{{ hook.hook_type_icon }}</span>
+            <AppIcon :name="hookTypeIconMap[hook.hook_type] || 'sparkles'" class="w-5 h-5" />
           </div>
 
           <!-- Hook Content -->

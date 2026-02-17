@@ -11,6 +11,7 @@
  */
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { useTour } from '@/composables/useTour'
 
 const TOUR_KEY = 'video-tools-overview'
@@ -23,14 +24,14 @@ const currentStep = ref(0)
 
 const steps = [
   {
-    icon: '🎬',
+    icon: 'film',
     title: 'Die Video-Tool-Suite im Ueberblick',
     description:
       'TREFF Sprachreisen bietet dir 6 spezialisierte Video-Tools, die perfekt zusammenarbeiten. Der typische Workflow: Thumbnails erstellen, Overlays hinzufuegen, Clips zusammenschneiden, Branding-Templates anwenden, fuer Plattformen exportieren und Audio-Spuren mixen. Lass uns jeden Schritt kennenlernen!',
     page: null,
   },
   {
-    icon: '🎬',
+    icon: 'film',
     title: '1. Thumbnail-Generator',
     description:
       'Erstelle klickstarke Vorschaubilder fuer deine Videos und Reels. Waehle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Woerter) und exportiere in verschiedenen Groessen (YouTube 1280x720, Instagram 1080x1080, Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
@@ -38,7 +39,7 @@ const steps = [
     navLabel: 'Thumbnails oeffnen',
   },
   {
-    icon: '🎞️',
+    icon: 'video-camera',
     title: '2. Video-Overlay-Editor',
     description:
       'Fuege Text, Logos, Sticker und Animationen ueber deine Videos. Ideal fuer TREFF-Branding, Untertitel und Call-to-Actions. Jeder Overlay-Layer kann einzeln positioniert, skaliert und zeitlich eingestellt werden. Mehrere Layer uebereinander sind moeglich — so entsteht professionelles Video-Branding.',
@@ -46,7 +47,7 @@ const steps = [
     navLabel: 'Overlay-Editor oeffnen',
   },
   {
-    icon: '✂️',
+    icon: 'scissors',
     title: '3. Video-Composer (Schnitt)',
     description:
       'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kuerze sie auf die optimale Laenge und fuege Uebergaenge (Crossfade, Cut) hinzu. Waehle das Ausgabeformat: 9:16 fuer Reels/TikTok, 1:1 fuer Instagram Feed, 16:9 fuer YouTube. Ideal sind 15-60 Sekunden fuer Social Media.',
@@ -54,7 +55,7 @@ const steps = [
     navLabel: 'Composer oeffnen',
   },
   {
-    icon: '🏷️',
+    icon: 'tag',
     title: '4. Video-Branding-Templates',
     description:
       'Verwalte wiederverwendbare Vorlagen fuer Intros, Outros, Bauchbinden und Texteinblendungen — alles im TREFF-Design (Blau #4C8BC2, Gelb #FDD000). Einmal erstellt, kannst du Templates immer wieder auf verschiedene Videos anwenden. Konsistentes Branding ueber alle Videos staerkt die Markenwahrnehmung.',
@@ -62,7 +63,7 @@ const steps = [
     navLabel: 'Templates oeffnen',
   },
   {
-    icon: '📤',
+    icon: 'export',
     title: '5. Video-Export',
     description:
       'Optimiere deine Videos fuer verschiedene Plattformen mit dem richtigen Seitenverhaeltnis, Fokuspunkt und Qualitaetseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 fuer Reels UND 1:1 fuer den Feed. Alle Varianten als ZIP herunterladen.',
@@ -70,7 +71,7 @@ const steps = [
     navLabel: 'Export oeffnen',
   },
   {
-    icon: '🎵',
+    icon: 'musical-note',
     title: '6. Audio-Mixer',
     description:
       'Fuege Hintergrundmusik, Soundeffekte und Voiceover zu deinen Videos hinzu. Regle die Lautstaerke jeder Spur einzeln (Musik 20-30%, Voiceover 100%, Original-Audio 50%) und fuege Fade-In/Fade-Out hinzu. Professioneller Sound macht den Unterschied zwischen amateurhaft und hochwertig!',
@@ -78,7 +79,7 @@ const steps = [
     navLabel: 'Audio-Mixer oeffnen',
   },
   {
-    icon: '🔄',
+    icon: 'arrow-path',
     title: 'Der komplette Workflow',
     description:
       'So arbeiten die Tools zusammen: (1) Erstelle ein Thumbnail fuer dein Video. (2) Fuege Overlays wie Logos und Untertitel hinzu. (3) Schneide Clips im Composer zusammen. (4) Wende Branding-Templates an (Intro, Outro). (5) Exportiere fuer Instagram, TikTok oder YouTube. (6) Mixe Hintergrundmusik dazu. Jede Seite hat auch eine eigene Mini-Tour — klicke den ?-Button oben rechts!',
@@ -158,7 +159,7 @@ onMounted(async () => {
         <!-- Header with gradient -->
         <div class="bg-gradient-to-r from-[#4C8BC2] to-[#3B7AB1] px-6 py-4">
           <div class="flex items-center gap-2">
-            <span class="text-2xl">{{ currentStepData.icon }}</span>
+            <AppIcon :name="currentStepData.icon" class="w-7 h-7 text-white" />
             <div>
               <p class="text-[10px] uppercase tracking-wider font-semibold text-white/70">
                 Video-Tool-Suite Tour
@@ -211,17 +212,17 @@ onMounted(async () => {
         <!-- Workflow steps visual (compact) -->
         <div class="px-6 pb-2">
           <div class="flex items-center justify-center gap-1 text-xs">
-            <span :class="currentStep === 1 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">🎬</span>
-            <span class="text-gray-300 dark:text-gray-600">→</span>
-            <span :class="currentStep === 2 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">🎞️</span>
-            <span class="text-gray-300 dark:text-gray-600">→</span>
-            <span :class="currentStep === 3 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">✂️</span>
-            <span class="text-gray-300 dark:text-gray-600">→</span>
-            <span :class="currentStep === 4 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">🏷️</span>
-            <span class="text-gray-300 dark:text-gray-600">→</span>
-            <span :class="currentStep === 5 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">📤</span>
-            <span class="text-gray-300 dark:text-gray-600">→</span>
-            <span :class="currentStep === 6 ? 'font-bold text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'">🎵</span>
+            <AppIcon name="film" class="w-4 h-4" :class="currentStep === 1 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
+            <span class="text-gray-300 dark:text-gray-600">&rarr;</span>
+            <AppIcon name="video-camera" class="w-4 h-4" :class="currentStep === 2 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
+            <span class="text-gray-300 dark:text-gray-600">&rarr;</span>
+            <AppIcon name="scissors" class="w-4 h-4" :class="currentStep === 3 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
+            <span class="text-gray-300 dark:text-gray-600">&rarr;</span>
+            <AppIcon name="tag" class="w-4 h-4" :class="currentStep === 4 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
+            <span class="text-gray-300 dark:text-gray-600">&rarr;</span>
+            <AppIcon name="export" class="w-4 h-4" :class="currentStep === 5 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
+            <span class="text-gray-300 dark:text-gray-600">&rarr;</span>
+            <AppIcon name="musical-note" class="w-4 h-4" :class="currentStep === 6 ? 'text-[#4C8BC2]' : 'text-gray-400 dark:text-gray-500'" />
           </div>
         </div>
 

@@ -9,6 +9,7 @@
 import { ref, computed } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   /** Current caption text to optimize */
@@ -46,13 +47,13 @@ const showVariants = ref(false)
 
 // Optimization options
 const optimizationOptions = [
-  { id: 'shorten', label: 'Kuerzen', icon: '✂️', desc: 'Auf das Wesentliche kuerzen' },
-  { id: 'add_emojis', label: 'Emojis +', icon: '😊', desc: 'Passende Emojis einfuegen' },
-  { id: 'remove_emojis', label: 'Emojis -', icon: '🚫', desc: 'Alle Emojis entfernen' },
-  { id: 'change_tone_casual', label: 'Lockerer', icon: '😎', desc: 'Jugendlicher, lockerer Ton' },
-  { id: 'change_tone_serious', label: 'Serioeser', icon: '👔', desc: 'Professioneller, serioeser Ton' },
-  { id: 'add_cta', label: '+ CTA', icon: '👉', desc: 'Call-to-Action hinzufuegen' },
-  { id: 'add_hook', label: '+ Hook', icon: '🎣', desc: 'Aufmerksamkeitsstarken Einstieg' },
+  { id: 'shorten', label: 'Kuerzen', icon: 'scissors', desc: 'Auf das Wesentliche kuerzen' },
+  { id: 'add_emojis', label: 'Emojis +', icon: 'face-smile', desc: 'Passende Emojis einfuegen' },
+  { id: 'remove_emojis', label: 'Emojis -', icon: 'x-circle', desc: 'Alle Emojis entfernen' },
+  { id: 'change_tone_casual', label: 'Lockerer', icon: 'face-smile', desc: 'Jugendlicher, lockerer Ton' },
+  { id: 'change_tone_serious', label: 'Serioeser', icon: 'academic-cap', desc: 'Professioneller, serioeser Ton' },
+  { id: 'add_cta', label: '+ CTA', icon: 'megaphone', desc: 'Call-to-Action hinzufuegen' },
+  { id: 'add_hook', label: '+ Hook', icon: 'bolt', desc: 'Aufmerksamkeitsstarken Einstieg' },
 ]
 
 // Platform-specific character limits
@@ -166,7 +167,7 @@ function getHighlightedDiff(variantText) {
     <!-- Header -->
     <div class="px-4 py-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
       <div class="flex items-center gap-2">
-        <span class="text-lg">✨</span>
+        <AppIcon name="sparkles" class="w-5 h-5" />
         <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200">KI Caption-Optimierung</h3>
         <span
           v-if="source"
@@ -196,7 +197,7 @@ function getHighlightedDiff(variantText) {
             :title="opt.desc"
             :data-testid="`opt-${opt.id}`"
           >
-            <span>{{ opt.icon }}</span>
+            <AppIcon :name="opt.icon" class="w-4 h-4 inline-block" />
             <span>{{ opt.label }}</span>
           </button>
         </div>
@@ -209,8 +210,8 @@ function getHighlightedDiff(variantText) {
         class="w-full py-2.5 px-4 bg-[#4C8BC2] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         data-testid="optimize-btn"
       >
-        <span v-if="optimizing" class="animate-spin">⏳</span>
-        <span v-else>✨</span>
+        <AppIcon v-if="optimizing" name="clock" class="w-4 h-4 animate-spin" />
+        <AppIcon v-else name="sparkles" class="w-4 h-4" />
         {{ optimizing ? 'Optimiere...' : 'Varianten generieren' }}
       </button>
 

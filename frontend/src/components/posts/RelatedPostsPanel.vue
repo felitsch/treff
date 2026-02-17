@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   postId: { type: [Number, String], default: null },
@@ -26,16 +27,16 @@ const searchLoading = ref(false)
 
 // Relation type labels
 const typeLabels = {
-  story_teaser: { label: 'Story-Teaser', icon: '📱', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
-  cross_reference: { label: 'Verweis', icon: '🔗', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-  sequel: { label: 'Fortsetzung', icon: '📖', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
-  related: { label: 'Verwandt', icon: '🔄', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
+  story_teaser: { label: 'Story-Teaser', icon: 'device-mobile', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
+  cross_reference: { label: 'Verweis', icon: 'link', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
+  sequel: { label: 'Fortsetzung', icon: 'book-open', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
+  related: { label: 'Verwandt', icon: 'arrow-path', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
 }
 
 const platformIcons = {
-  instagram_feed: '📷',
-  instagram_story: '📱',
-  tiktok: '🎵',
+  instagram_feed: 'camera',
+  instagram_story: 'device-mobile',
+  tiktok: 'musical-note',
 }
 
 const platformLabels = {
@@ -157,7 +158,7 @@ const selectedType = ref('cross_reference')
       data-testid="related-posts-toggle"
     >
       <div class="flex items-center gap-2">
-        <span>🔗</span>
+        <AppIcon name="link" class="w-5 h-5" />
         <span class="text-sm font-bold text-gray-700 dark:text-gray-300">
           Verknuepfte Posts
         </span>
@@ -189,7 +190,7 @@ const selectedType = ref('cross_reference')
             class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium"
             :class="typeLabels[rel.relation_type]?.color || 'bg-gray-100 text-gray-600'"
           >
-            {{ typeLabels[rel.relation_type]?.icon || '🔗' }}
+            <AppIcon :name="typeLabels[rel.relation_type]?.icon || 'link'" class="w-3 h-3 inline-block" />
             {{ typeLabels[rel.relation_type]?.label || rel.relation_type }}
           </span>
           <!-- Direction arrow -->
@@ -203,7 +204,7 @@ const selectedType = ref('cross_reference')
               class="text-xs font-medium text-[#3B7AB1] hover:underline truncate block"
               :title="rel.related_post.title"
             >
-              {{ platformIcons[rel.related_post.platform] || '' }}
+              <AppIcon v-if="platformIcons[rel.related_post.platform]" :name="platformIcons[rel.related_post.platform]" class="w-3 h-3 inline-block" />
               {{ rel.related_post.title || 'Ohne Titel' }}
               <span class="text-gray-400">#{{ rel.related_post.id }}</span>
             </router-link>
@@ -244,13 +245,13 @@ const selectedType = ref('cross_reference')
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium"
               :class="typeLabels[sug.suggested_type]?.color || 'bg-gray-100 text-gray-600'"
             >
-              {{ typeLabels[sug.suggested_type]?.icon || '🔗' }}
+              <AppIcon :name="typeLabels[sug.suggested_type]?.icon || 'link'" class="w-3 h-3 inline-block" />
               {{ typeLabels[sug.suggested_type]?.label || sug.suggested_type }}
             </span>
             <!-- Post info -->
             <div class="flex-1 min-w-0">
               <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate block">
-                {{ platformIcons[sug.post.platform] || '' }}
+                <AppIcon v-if="platformIcons[sug.post.platform]" :name="platformIcons[sug.post.platform]" class="w-3 h-3 inline-block" />
                 {{ sug.post.title || 'Ohne Titel' }}
                 <span class="text-gray-400">#{{ sug.post.id }}</span>
               </span>
@@ -292,10 +293,10 @@ const selectedType = ref('cross_reference')
               v-model="selectedType"
               class="px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-xs text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[#3B7AB1]"
             >
-              <option value="cross_reference">🔗 Verweis</option>
-              <option value="story_teaser">📱 Story-Teaser</option>
-              <option value="sequel">📖 Fortsetzung</option>
-              <option value="related">🔄 Verwandt</option>
+              <option value="cross_reference">Verweis</option>
+              <option value="story_teaser">Story-Teaser</option>
+              <option value="sequel">Fortsetzung</option>
+              <option value="related">Verwandt</option>
             </select>
           </div>
 
@@ -311,7 +312,7 @@ const selectedType = ref('cross_reference')
               @click="addRelation(result.id, selectedType)"
               data-testid="search-result-item"
             >
-              <span class="text-xs">{{ platformIcons[result.platform] || '📄' }}</span>
+              <AppIcon :name="platformIcons[result.platform] || 'document-text'" class="w-3.5 h-3.5" />
               <div class="flex-1 min-w-0">
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate block">
                   {{ result.title || 'Ohne Titel' }}
@@ -340,7 +341,7 @@ const selectedType = ref('cross_reference')
         data-testid="teaser-suggestion-hint"
       >
         <div class="flex items-start gap-2">
-          <span class="text-sm">💡</span>
+          <AppIcon name="light-bulb" class="w-4 h-4 shrink-0" />
           <div>
             <p class="text-xs font-medium text-amber-700 dark:text-amber-300">
               Tipp: Erstelle einen Feed-Teaser-Post!

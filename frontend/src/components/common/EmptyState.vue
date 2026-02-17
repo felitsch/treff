@@ -24,11 +24,12 @@
  */
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 
 const props = defineProps({
-  icon: { type: String, default: '📭' },
+  icon: { type: String, default: 'inbox' },
   svgIcon: { type: String, default: '' },
   title: { type: String, required: true },
   description: { type: String, default: '' },
@@ -110,8 +111,18 @@ const svgPath = computed(() => svgPaths[props.svgIcon] || '')
         </svg>
       </div>
     </div>
-    <!-- Emoji Icon (fallback) -->
-    <div v-else :class="compact ? 'text-4xl mb-2' : 'text-5xl mb-4'">{{ icon }}</div>
+    <!-- Icon (fallback via AppIcon) -->
+    <div v-else :class="compact ? 'mb-2' : 'mb-4'" class="flex justify-center">
+      <div :class="[
+        'rounded-full bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center',
+        compact ? 'w-14 h-14' : 'w-20 h-20'
+      ]">
+        <AppIcon :name="icon" :class="[
+          'text-gray-400 dark:text-gray-500',
+          compact ? 'w-7 h-7' : 'w-10 h-10'
+        ]" />
+      </div>
+    </div>
 
     <!-- Title -->
     <h3 :class="[

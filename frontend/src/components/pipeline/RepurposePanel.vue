@@ -15,6 +15,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 const router = useRouter()
@@ -67,7 +68,7 @@ const TARGET_FORMATS = [
   {
     key: 'instagram_feed',
     label: 'Instagram Feed',
-    icon: '📸',
+    icon: 'camera',
     format: '1:1',
     description: 'Quadratischer Feed-Post (1080x1080)',
     captionHint: 'Ausfuehrlich, storytelling-orientiert, 150-500 Zeichen',
@@ -77,7 +78,7 @@ const TARGET_FORMATS = [
   {
     key: 'instagram_story',
     label: 'Instagram Story',
-    icon: '📖',
+    icon: 'book-open',
     format: '9:16',
     description: 'Vertikale Story (1080x1920)',
     captionHint: 'Kurz & direkt, max. 200 Zeichen, Sticker-Aufforderung',
@@ -87,7 +88,7 @@ const TARGET_FORMATS = [
   {
     key: 'tiktok',
     label: 'TikTok',
-    icon: '🎵',
+    icon: 'musical-note',
     format: '9:16',
     description: 'Vertikales TikTok-Video (1080x1920)',
     captionHint: 'Knackig, trend-bewusst, Hook am Anfang, max. 300 Zeichen',
@@ -97,7 +98,7 @@ const TARGET_FORMATS = [
   {
     key: 'carousel',
     label: 'Carousel',
-    icon: '🎠',
+    icon: 'star',
     format: '1:1',
     description: 'Swipeable Carousel-Slides (1080x1080)',
     captionHint: 'Slide-by-slide Erklaerung, educational, 200-500 Zeichen',
@@ -380,7 +381,7 @@ watch(() => props.postId, (newId) => {
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="text-xl">🔄</span>
+          <AppIcon name="arrow-path" class="w-5 h-5" />
           Content Repurposing
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -427,7 +428,7 @@ watch(() => props.postId, (newId) => {
           <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="text-lg">{{ sourcePlatformLabel.includes('TikTok') ? '🎵' : '📸' }}</span>
+                <AppIcon :name="sourcePlatformLabel.includes('TikTok') ? 'musical-note' : 'camera'" class="w-5 h-5" />
                 <div>
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ sourcePost.title || 'Ohne Titel' }}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">{{ sourcePlatformLabel }}</p>
@@ -504,7 +505,7 @@ watch(() => props.postId, (newId) => {
             ]"
             :data-testid="`target-${fmt.key}`"
           >
-            <span class="text-lg">{{ fmt.icon }}</span>
+            <AppIcon :name="fmt.icon" class="w-5 h-5" />
             <div class="flex-1 min-w-0">
               <p class="font-semibold truncate">{{ fmt.label }}</p>
               <p class="text-[10px] opacity-70">{{ fmt.format }}</p>
@@ -537,7 +538,7 @@ watch(() => props.postId, (newId) => {
           <!-- Platform mockup header -->
           <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-2">
-              <span class="text-lg">{{ selectedTarget?.icon }}</span>
+              <AppIcon :name="selectedTarget?.icon" class="w-5 h-5" />
               <div class="flex-1">
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedTarget?.label }} Preview</p>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400">{{ selectedTarget?.description }}</p>
@@ -659,7 +660,7 @@ watch(() => props.postId, (newId) => {
       v-if="!sourcePost && !loadingSource && !errorMessage"
       class="text-center py-12 text-gray-500 dark:text-gray-400"
     >
-      <span class="text-4xl block mb-3">🔄</span>
+      <AppIcon name="arrow-path" class="w-10 h-10 mx-auto mb-3" />
       <p class="text-sm">Waehle einen Post aus, um ihn fuer eine andere Plattform anzupassen.</p>
     </div>
   </div>

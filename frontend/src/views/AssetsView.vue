@@ -9,6 +9,7 @@ import ImageEditTools from '@/components/assets/ImageEditTools.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const tourRef = ref(null)
 
@@ -1094,7 +1095,7 @@ onMounted(() => {
       data-tour="assets-usage-hint"
       class="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
     >
-      <span class="text-lg shrink-0">💡</span>
+      <AppIcon name="light-bulb" class="w-5 h-5 shrink-0" />
       <div>
         <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Assets in Posts verwenden</p>
         <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">

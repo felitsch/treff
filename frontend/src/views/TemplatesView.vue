@@ -6,6 +6,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonGrid from '@/components/common/SkeletonGrid.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const tourRef = ref(null)
 
@@ -56,19 +57,19 @@ const showPlaceholderDropdown = ref(false)
 const htmlTextareaRef = ref(null)
 
 const AVAILABLE_PLACEHOLDERS = [
-  { name: 'headline', label: 'Ueberschrift', icon: '📝' },
-  { name: 'subheadline', label: 'Unterueberschrift', icon: '📋' },
-  { name: 'body_text', label: 'Fliesstext', icon: '📄' },
-  { name: 'cta_text', label: 'CTA-Text', icon: '🚀' },
-  { name: 'name', label: 'Name', icon: '👤' },
-  { name: 'land', label: 'Land', icon: '🌍' },
-  { name: 'stadt', label: 'Stadt', icon: '🏙️' },
-  { name: 'datum', label: 'Datum', icon: '📅' },
-  { name: 'quote', label: 'Zitat', icon: '💬' },
-  { name: 'quote_text', label: 'Zitat-Text', icon: '💬' },
-  { name: 'quote_author', label: 'Zitat-Autor', icon: '✍️' },
-  { name: 'zahl', label: 'Zahl / Statistik', icon: '🔢' },
-  { name: 'image', label: 'Bild-Platzhalter', icon: '🖼️' },
+  { name: 'headline', label: 'Ueberschrift', icon: 'document-text' },
+  { name: 'subheadline', label: 'Unterueberschrift', icon: 'clipboard-list' },
+  { name: 'body_text', label: 'Fliesstext', icon: 'document-text' },
+  { name: 'cta_text', label: 'CTA-Text', icon: 'rocket' },
+  { name: 'name', label: 'Name', icon: 'user' },
+  { name: 'land', label: 'Land', icon: 'globe' },
+  { name: 'stadt', label: 'Stadt', icon: 'building-office' },
+  { name: 'datum', label: 'Datum', icon: 'calendar' },
+  { name: 'quote', label: 'Zitat', icon: 'chat-bubble' },
+  { name: 'quote_text', label: 'Zitat-Text', icon: 'chat-bubble' },
+  { name: 'quote_author', label: 'Zitat-Autor', icon: 'pencil' },
+  { name: 'zahl', label: 'Zahl / Statistik', icon: 'hashtag' },
+  { name: 'image', label: 'Bild-Platzhalter', icon: 'photo' },
 ]
 
 function insertPlaceholder(placeholderName) {
@@ -430,25 +431,25 @@ function getPreviewScale(platformFormat) {
 
 // Category definitions with German labels and colors
 const categories = {
-  laender_spotlight: { label: 'Laender-Spotlight', icon: '\u{1F30D}', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: '\u{1F4AC}', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
-  infografiken: { label: 'Infografiken', icon: '\u{1F4CA}', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-  fristen_cta: { label: 'Fristen & CTA', icon: '\u{23F0}', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-  tipps_tricks: { label: 'Tipps & Tricks', icon: '\u{1F4A1}', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-  faq: { label: 'FAQ', icon: '\u{2753}', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
-  foto_posts: { label: 'Foto-Posts', icon: '\u{1F4F8}', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
-  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: '\u{1F3AC}', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-  story_posts: { label: 'Story-Posts', icon: '\u{1F4F1}', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
-  story_teaser: { label: 'Story-Teaser', icon: '\u{1F449}', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
-  story_series: { label: 'Story-Serien', icon: '\u{1F4DA}', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300' },
+  laender_spotlight: { label: 'Laender-Spotlight', icon: 'globe', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  erfahrungsberichte: { label: 'Erfahrungsberichte', icon: 'chat-bubble', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
+  infografiken: { label: 'Infografiken', icon: 'chart-bar', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  fristen_cta: { label: 'Fristen & CTA', icon: 'clock', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+  tipps_tricks: { label: 'Tipps & Tricks', icon: 'light-bulb', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+  faq: { label: 'FAQ', icon: 'question-mark-circle', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
+  foto_posts: { label: 'Foto-Posts', icon: 'camera', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
+  reel_tiktok_thumbnails: { label: 'Reel/TikTok', icon: 'film', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+  story_posts: { label: 'Story-Posts', icon: 'device-mobile', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
+  story_teaser: { label: 'Story-Teaser', icon: 'arrow-right', color: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300' },
+  story_series: { label: 'Story-Serien', icon: 'book-open', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300' },
 }
 
 // Platform format labels
 const platformLabels = {
-  feed_square: { label: '1:1 Feed', icon: '\u{2B1C}', dim: '1080x1080' },
-  feed_portrait: { label: '4:5 Portrait', icon: '\u{1F4F1}', dim: '1080x1350' },
-  story: { label: '9:16 Story', icon: '\u{1F4F2}', dim: '1080x1920' },
-  tiktok: { label: '9:16 TikTok', icon: '\u{1F3B5}', dim: '1080x1920' },
+  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
+  feed_portrait: { label: '4:5 Portrait', icon: 'device-mobile', dim: '1080x1350' },
+  story: { label: '9:16 Story', icon: 'device-mobile', dim: '1080x1920' },
+  tiktok: { label: '9:16 TikTok', icon: 'musical-note', dim: '1080x1920' },
 }
 
 // Country flags
@@ -529,11 +530,11 @@ const canCreate = computed(() => {
 })
 
 function getCategoryInfo(cat) {
-  return categories[cat] || { label: cat, icon: '\u{1F4C4}', color: 'bg-gray-100 text-gray-700' }
+  return categories[cat] || { label: cat, icon: 'document-text', color: 'bg-gray-100 text-gray-700' }
 }
 
 function getPlatformInfo(platform) {
-  return platformLabels[platform] || { label: platform, icon: '\u{1F4C4}', dim: '' }
+  return platformLabels[platform] || { label: platform, icon: 'document-text', dim: '' }
 }
 
 function getCountryFlag(country) {
@@ -820,7 +821,7 @@ onMounted(() => {
             >
               <option value="">Alle Kategorien</option>
               <option v-for="cat in availableCategories" :key="cat" :value="cat">
-                {{ getCategoryInfo(cat).icon }} {{ getCategoryInfo(cat).label }} ({{ categoryCount[cat] }})
+                {{ getCategoryInfo(cat).label }} ({{ categoryCount[cat] }})
               </option>
             </select>
           </div>
@@ -835,7 +836,7 @@ onMounted(() => {
             >
               <option value="">Alle Formate</option>
               <option v-for="plat in availablePlatforms" :key="plat" :value="plat">
-                {{ getPlatformInfo(plat).icon }} {{ getPlatformInfo(plat).label }}
+                {{ getPlatformInfo(plat).label }}
               </option>
             </select>
           </div>
@@ -893,7 +894,7 @@ onMounted(() => {
       <div v-for="(catTemplates, category) in groupedTemplates" :key="category" class="space-y-3" data-tour="tpl-grid">
         <!-- Category Header -->
         <div class="flex items-center gap-2">
-          <span class="text-xl">{{ getCategoryInfo(category).icon }}</span>
+          <AppIcon :name="getCategoryInfo(category).icon" class="w-6 h-6 inline-block" />
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             {{ getCategoryInfo(category).label }}
           </h2>
@@ -1040,7 +1041,7 @@ onMounted(() => {
               <div class="flex items-center gap-2 mt-2 flex-wrap">
                 <!-- Platform badge -->
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                  {{ getPlatformInfo(template.platform_format).icon }}
+                  <AppIcon :name="getPlatformInfo(template.platform_format).icon" class="w-3.5 h-3.5 inline-block" />
                   {{ getPlatformInfo(template.platform_format).label }}
                 </span>
                 <!-- Country badge if themed -->
@@ -1083,7 +1084,7 @@ onMounted(() => {
       class="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-5 flex items-start gap-4"
       data-tour="tpl-video-hint"
     >
-      <div class="text-3xl flex-shrink-0">🎬</div>
+      <div class="flex-shrink-0"><AppIcon name="film" class="w-8 h-8 inline-block text-indigo-600" /></div>
       <div class="flex-1">
         <h3 class="text-sm font-semibold text-indigo-900 dark:text-indigo-200 mb-1">
           Video-Templates fuer Reels &amp; TikTok
@@ -1186,7 +1187,7 @@ onMounted(() => {
               >
                 <option value="" disabled>Kategorie waehlen...</option>
                 <option v-for="(info, key) in categories" :key="key" :value="key">
-                  {{ info.icon }} {{ info.label }}
+                  {{ info.label }}
                 </option>
               </select>
               <p v-if="createSubmitted && createFieldErrors.category" class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert" data-testid="create-category-error">
@@ -1205,7 +1206,7 @@ onMounted(() => {
                 class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-treff-blue focus:border-transparent text-sm"
               >
                 <option v-for="(info, key) in platformLabels" :key="key" :value="key">
-                  {{ info.icon }} {{ info.label }} ({{ info.dim }})
+                  {{ info.label }} ({{ info.dim }})
                 </option>
               </select>
             </div>
@@ -1240,7 +1241,7 @@ onMounted(() => {
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
                   data-testid="insert-placeholder-btn"
                 >
-                  <span>🔤</span>
+                  <AppIcon name="variable" class="w-3.5 h-3.5 inline-block" />
                   Platzhalter einfuegen
                   <svg class="w-3.5 h-3.5 transition-transform" :class="showPlaceholderDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -1256,7 +1257,7 @@ onMounted(() => {
                     @click="insertPlaceholder(ph.name)"
                     class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors"
                   >
-                    <span>{{ ph.icon }}</span>
+                    <AppIcon :name="ph.icon" class="w-4 h-4 inline-block" />
                     <span class="flex-1">{{ ph.label }}</span>
                     <span class="text-[10px] text-gray-400 dark:text-gray-500 font-mono" v-text="'{{' + ph.name + '}}'"></span>
                   </button>
@@ -1382,7 +1383,7 @@ onMounted(() => {
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {{ editorTemplate.name }} &middot;
-              {{ getCategoryInfo(editorTemplate.category).icon }} {{ getCategoryInfo(editorTemplate.category).label }} &middot;
+              <AppIcon :name="getCategoryInfo(editorTemplate.category).icon" class="w-4 h-4 inline-block" /> {{ getCategoryInfo(editorTemplate.category).label }} &middot;
               {{ getPlatformInfo(editorTemplate.platform_format).label }}
               <span v-if="editorIsEditMode" class="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs bg-treff-blue/10 text-treff-blue font-medium">Bearbeiten</span>
             </p>

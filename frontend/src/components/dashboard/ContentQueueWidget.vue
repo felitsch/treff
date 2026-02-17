@@ -14,6 +14,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   posts: {
@@ -32,10 +33,10 @@ const router = useRouter()
 // Platform icons
 function platformIcon(platform) {
   switch (platform) {
-    case 'instagram_feed': return '📸'
-    case 'instagram_story': return '📱'
-    case 'tiktok': return '🎵'
-    default: return '📝'
+    case 'instagram_feed': return 'camera'
+    case 'instagram_story': return 'device-mobile'
+    case 'tiktok': return 'musical-note'
+    default: return 'document-text'
   }
 }
 
@@ -100,7 +101,7 @@ function editPost(postId) {
   <BaseCard padding="none" data-tour="dashboard-content-queue" data-testid="content-queue-widget">
     <template #header>
       <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>📋</span> Content Queue
+        <AppIcon name="clipboard-list" class="w-5 h-5" /> Content Queue
       </h2>
     </template>
     <template #headerAction>
@@ -164,7 +165,7 @@ function editPost(postId) {
               :alt="post.title"
               class="w-full h-full object-cover"
             />
-            <span v-else class="text-lg">{{ platformIcon(post.platform) }}</span>
+            <AppIcon v-else :name="platformIcon(post.platform)" class="w-5 h-5" />
           </div>
 
           <!-- Post info -->

@@ -9,6 +9,7 @@ import { tooltipTexts } from '@/utils/tooltipTexts'
 import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { STUDENT_CONTENT_TYPES, CONTENT_LIFECYCLE } from '@/config/studentContentGuide'
 
 const router = useRouter()
@@ -158,7 +159,7 @@ onMounted(() => {
       message="Lege zuerst Studentenprofile an, um personalisierte Story-Serien zu erstellen."
       link-text="Studenten verwalten"
       link-to="/students"
-      icon="🎓"
+      icon="academic-cap"
       :show="showStudentsHint"
     />
 
@@ -269,7 +270,7 @@ onMounted(() => {
             class="w-full h-full object-cover"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <span class="text-5xl opacity-40">📖</span>
+            <AppIcon name="book-open" class="w-12 h-12 opacity-40" />
           </div>
           <!-- Status Badge -->
           <div class="absolute top-3 right-3">
@@ -282,7 +283,8 @@ onMounted(() => {
           <!-- Country Flag -->
           <div v-if="arc.country" class="absolute top-3 left-3">
             <span class="text-xl bg-white/80 dark:bg-gray-900/80 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
-              {{ countryFlags[arc.country] || '\u{1F30D}' }}
+              <template v-if="countryFlags[arc.country]">{{ countryFlags[arc.country] }}</template>
+              <AppIcon v-else name="globe" class="w-5 h-5" />
             </span>
           </div>
         </div>
@@ -299,7 +301,7 @@ onMounted(() => {
 
           <!-- Student Name -->
           <div v-if="arc.student_name" class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 mb-3">
-            <span class="text-base">🎓</span>
+            <AppIcon name="academic-cap" class="w-4 h-4" />
             <span>{{ arc.student_name }}</span>
           </div>
 
@@ -331,7 +333,7 @@ onMounted(() => {
 
     <!-- Students connection hint -->
     <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3" data-tour="arcs-students-hint">
-      <span class="text-2xl mt-0.5">🎓</span>
+      <AppIcon name="academic-cap" class="w-7 h-7 mt-0.5" />
       <div>
         <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Schueler-Profile als Protagonisten</p>
         <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">

@@ -18,6 +18,7 @@ import api from '@/utils/api'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
 
 const props = defineProps({
@@ -46,15 +47,15 @@ const updateSuggestions = (newSuggestions) => {
 
 function suggestionTypeIcon(type) {
   const icons = {
-    seasonal: '🌸',
-    country_rotation: '🌍',
-    category_balance: '⚖️',
-    gap_fill: '📅',
-    weekly_plan: '📋',
-    story_teaser: '👉',
-    holiday: '🎉',
+    seasonal: 'sparkles',
+    country_rotation: 'globe',
+    category_balance: 'adjustments-vertical',
+    gap_fill: 'calendar',
+    weekly_plan: 'clipboard-list',
+    story_teaser: 'paper-airplane',
+    holiday: 'trophy',
   }
-  return icons[type] || '💡'
+  return icons[type] || 'light-bulb'
 }
 
 function suggestionTypeLabel(type) {
@@ -123,14 +124,14 @@ function formatLabel(format) {
 
 function formatIcon(format) {
   const icons = {
-    instagram_feed: '📸',
-    instagram_story: '📱',
-    instagram_stories: '📱',
-    instagram_reels: '🎬',
-    tiktok: '🎵',
-    carousel: '🎠',
+    instagram_feed: 'camera',
+    instagram_story: 'device-mobile',
+    instagram_stories: 'device-mobile',
+    instagram_reels: 'film',
+    tiktok: 'musical-note',
+    carousel: 'stack',
   }
-  return icons[format] || '📝'
+  return icons[format] || 'document-text'
 }
 
 function formatDate(dateStr) {
@@ -204,7 +205,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
   <BaseCard padding="none" data-tour="dashboard-suggestions" data-testid="content-suggestions">
     <template #header>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>💡</span> Content-Vorschlaege
+        <AppIcon name="light-bulb" class="w-5 h-5" /> Content-Vorschlaege
         <HelpTooltip :text="tooltipTexts.dashboard.suggestions" size="sm" />
       </h2>
     </template>
@@ -222,8 +223,8 @@ defineExpose({ updateSuggestions, generateSuggestions })
           data-testid="generate-suggestions-btn"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span v-if="generatingSuggestions" class="animate-spin">⏳</span>
-          <span v-else>✨</span>
+          <AppIcon v-if="generatingSuggestions" name="clock" class="w-4 h-4 animate-spin" />
+          <AppIcon v-else name="sparkles" class="w-4 h-4" />
           {{ generatingSuggestions ? 'Generiere...' : 'Neue Vorschlaege' }}
         </button>
       </div>
@@ -254,7 +255,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
               class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
               :class="suggestionTypeBadge(suggestion.suggestion_type)"
             >
-              {{ suggestionTypeIcon(suggestion.suggestion_type) }}
+              <AppIcon :name="suggestionTypeIcon(suggestion.suggestion_type)" class="w-3.5 h-3.5 inline-block" />
               {{ suggestionTypeLabel(suggestion.suggestion_type) }}
             </span>
             <span
@@ -275,7 +276,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
               class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
               data-testid="suggestion-format"
             >
-              {{ formatIcon(suggestion.suggested_format) }}
+              <AppIcon :name="formatIcon(suggestion.suggested_format)" class="w-3.5 h-3.5 inline-block" />
               {{ formatLabel(suggestion.suggested_format) }}
             </span>
             <!-- Suggested date -->
@@ -284,7 +285,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
               class="text-xs text-gray-400 dark:text-gray-500 ml-auto"
               data-testid="suggestion-date"
             >
-              📅 {{ formatDate(suggestion.suggested_date) }}
+              <AppIcon name="calendar" class="w-3.5 h-3.5 inline-block" /> {{ formatDate(suggestion.suggested_date) }}
             </span>
           </div>
 
@@ -307,7 +308,7 @@ defineExpose({ updateSuggestions, generateSuggestions })
             v-if="suggestion.reason"
             class="flex items-start gap-1.5 mb-3"
           >
-            <span class="text-xs text-gray-400 mt-0.5">💬</span>
+            <AppIcon name="chat-bubble" class="w-3.5 h-3.5 text-gray-400 mt-0.5" />
             <p class="text-xs text-gray-400 dark:text-gray-500 italic">
               {{ suggestion.reason }}
             </p>
@@ -321,8 +322,8 @@ defineExpose({ updateSuggestions, generateSuggestions })
               data-testid="accept-suggestion-btn"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#4C8BC2] rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span v-if="acceptingId === suggestion.id" class="animate-spin">⏳</span>
-              <span v-else>✅</span>
+              <AppIcon v-if="acceptingId === suggestion.id" name="clock" class="w-4 h-4 animate-spin" />
+              <AppIcon v-else name="check-circle" class="w-4 h-4" />
               Post erstellen
             </button>
             <button
@@ -331,8 +332,8 @@ defineExpose({ updateSuggestions, generateSuggestions })
               data-testid="dismiss-suggestion-btn"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span v-if="dismissingId === suggestion.id" class="animate-spin">⏳</span>
-              <span v-else>👎</span>
+              <AppIcon v-if="dismissingId === suggestion.id" name="clock" class="w-4 h-4 animate-spin" />
+              <AppIcon v-else name="x-circle" class="w-4 h-4" />
               Nicht interessant
             </button>
           </div>

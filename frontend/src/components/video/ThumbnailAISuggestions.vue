@@ -13,6 +13,7 @@
 import { ref, computed, watch } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -174,14 +175,14 @@ const fontOptions = [
 ]
 
 const positionOptions = [
-  { value: 'top', label: 'Oben', icon: '⬆️' },
-  { value: 'center', label: 'Mitte', icon: '⏺️' },
-  { value: 'bottom', label: 'Unten', icon: '⬇️' },
+  { value: 'top', label: 'Oben', icon: 'arrow-up-tray' },
+  { value: 'center', label: 'Mitte', icon: 'adjustments' },
+  { value: 'bottom', label: 'Unten', icon: 'arrow-down-tray' },
 ]
 
 const exportSizes = [
-  { value: '1080x1080', label: '1080x1080 (Feed)', icon: '⬜' },
-  { value: '1080x1920', label: '1080x1920 (Reel/Story)', icon: '📱' },
+  { value: '1080x1080', label: '1080x1080 (Feed)', icon: 'photo' },
+  { value: '1080x1920', label: '1080x1920 (Reel/Story)', icon: 'device-mobile' },
 ]
 
 // Auto-extract when video changes
@@ -209,7 +210,7 @@ watch(() => props.videoAsset, (asset) => {
           class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-2"
           data-testid="extract-frames-button"
         >
-          🤖 Beste Frames extrahieren (AI)
+          <AppIcon name="sparkles" class="w-5 h-5" /> Beste Frames extrahieren (AI)
         </button>
         <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
           Extrahiert 5-8 der besten Frames aus dem Video fuer Thumbnails.
@@ -311,13 +312,13 @@ watch(() => props.videoAsset, (asset) => {
               :key="pos.value"
               @click="overlayConfig.position = pos.value"
               :class="[
-                'flex-1 px-3 py-2 rounded-lg text-xs font-medium text-center transition-all',
+                'flex-1 px-3 py-2 rounded-lg text-xs font-medium text-center transition-all flex items-center justify-center gap-1',
                 overlayConfig.position === pos.value
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 ring-1 ring-blue-300'
                   : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200',
               ]"
             >
-              {{ pos.icon }} {{ pos.label }}
+              <AppIcon :name="pos.icon" class="w-4 h-4" /> {{ pos.label }}
             </button>
           </div>
         </div>
@@ -375,7 +376,7 @@ watch(() => props.videoAsset, (asset) => {
             Varianten werden generiert...
           </template>
           <template v-else>
-            🎨 A/B-Varianten generieren ({{ overlayConfig.headline ? 'mit Text' : 'ohne Text' }})
+            <AppIcon name="paint-brush" class="w-5 h-5" /> A/B-Varianten generieren ({{ overlayConfig.headline ? 'mit Text' : 'ohne Text' }})
           </template>
         </button>
       </div>
@@ -436,7 +437,7 @@ watch(() => props.videoAsset, (asset) => {
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200',
             ]"
           >
-            {{ size.icon }} {{ size.label }}
+            <AppIcon :name="size.icon" class="w-4 h-4 inline-block" /> {{ size.label }}
           </button>
         </div>
 
@@ -452,7 +453,7 @@ watch(() => props.videoAsset, (asset) => {
             Wird exportiert...
           </template>
           <template v-else>
-            📥 Als PNG exportieren ({{ exportSize }})
+            <AppIcon name="arrow-down-tray" class="w-5 h-5" /> Als PNG exportieren ({{ exportSize }})
           </template>
         </button>
       </div>

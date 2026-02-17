@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -21,7 +22,7 @@ const formats = [
     key: '9:16',
     label: 'Reel / TikTok',
     sublabel: '1080 x 1920',
-    icon: '📱',
+    icon: 'device-mobile',
     platforms: ['Instagram Reels', 'TikTok'],
     width: 1080,
     height: 1920,
@@ -30,7 +31,7 @@ const formats = [
     key: '1:1',
     label: 'Feed Quadrat',
     sublabel: '1080 x 1080',
-    icon: '⬜',
+    icon: 'photo',
     platforms: ['Instagram Feed'],
     width: 1080,
     height: 1080,
@@ -39,7 +40,7 @@ const formats = [
     key: '16:9',
     label: 'Landscape',
     sublabel: '1920 x 1080',
-    icon: '🖥️',
+    icon: 'desktop',
     platforms: ['YouTube', 'Twitter'],
     width: 1920,
     height: 1080,
@@ -228,7 +229,9 @@ async function downloadExport(result) {
           </div>
 
           <!-- Format preview -->
-          <div class="mb-2 text-2xl">{{ fmt.icon }}</div>
+          <div class="mb-2">
+            <AppIcon :name="fmt.icon" class="w-7 h-7" />
+          </div>
           <div
             class="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 mb-2"
             :style="{
@@ -311,7 +314,7 @@ async function downloadExport(result) {
         Wird exportiert...
       </template>
       <template v-else>
-        📤 {{ selectedFormats.length }} Format{{ selectedFormats.length !== 1 ? 'e' : '' }} exportieren
+        <AppIcon name="export" class="w-5 h-5" /> {{ selectedFormats.length }} Format{{ selectedFormats.length !== 1 ? 'e' : '' }} exportieren
       </template>
     </button>
 

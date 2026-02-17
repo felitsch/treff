@@ -5,6 +5,7 @@ import { useToast } from '@/composables/useToast'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -90,12 +91,12 @@ const musicVolumeLabel = computed(() => {
 })
 
 const categoryIcons = {
-  upbeat: '🎉',
-  emotional: '💝',
-  chill: '🌊',
-  dramatic: '🎭',
-  inspirational: '✨',
-  fun: '🎈',
+  upbeat: 'trophy',
+  emotional: 'heart',
+  chill: 'globe',
+  dramatic: 'theater',
+  inspirational: 'sparkles',
+  fun: 'face-smile',
 }
 
 const moodLabels = {
@@ -299,7 +300,7 @@ onMounted(async () => {
       <div data-tour="am-header" class="flex items-start justify-between mb-6">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>🎵</span> Musik- und Audio-Layer
+            <AppIcon name="musical-note" class="w-6 h-6" /> Musik- und Audio-Layer
           </h1>
           <p class="text-gray-500 dark:text-gray-400 mt-1">
             Hintergrundmusik und Audio-Effekte zu Videos hinzufuegen. Lautstaerke-Kontrolle fuer Original-Audio vs. Musik.
@@ -311,7 +312,7 @@ onMounted(async () => {
             class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
             title="Video-Workflow-Tour starten"
           >
-            🎬 Workflow
+            <AppIcon name="film" class="w-3.5 h-3.5 inline-block" /> Workflow
           </button>
           <button
             @click="tourRef?.startTour()"
@@ -364,7 +365,7 @@ onMounted(async () => {
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                     <img loading="lazy" v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
-                    <span v-else class="text-xl">🎬</span>
+                    <AppIcon v-else name="film" class="w-5 h-5" />
                   </div>
                   <div class="min-w-0 flex-1">
                     <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -399,7 +400,7 @@ onMounted(async () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                 ]"
               >
-                📚 Musik-Bibliothek
+                <AppIcon name="library" class="w-3.5 h-3.5 inline-block" /> Musik-Bibliothek
               </button>
               <button
                 @click="audioSource = 'upload'"
@@ -410,7 +411,7 @@ onMounted(async () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                 ]"
               >
-                🎤 Eigene Audios
+                <AppIcon name="microphone" class="w-3.5 h-3.5 inline-block" /> Eigene Audios
               </button>
             </div>
 
@@ -448,7 +449,7 @@ onMounted(async () => {
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                   ]"
                 >
-                  {{ categoryIcons[cat.category] || '🎵' }} {{ cat.category }} ({{ cat.count }})
+                  <AppIcon :name="categoryIcons[cat.category] || 'musical-note'" class="w-3.5 h-3.5 inline-block" /> {{ cat.category }} ({{ cat.count }})
                 </button>
               </div>
 
@@ -478,7 +479,7 @@ onMounted(async () => {
                   ]"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-lg flex-shrink-0">{{ categoryIcons[track.category] || '🎵' }}</span>
+                    <AppIcon :name="categoryIcons[track.category] || 'musical-note'" class="w-5 h-5 flex-shrink-0" />
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ track.name }}</p>
                       <div class="flex items-center gap-2 text-xs text-gray-500">
@@ -502,7 +503,7 @@ onMounted(async () => {
             <!-- User Audio Assets -->
             <div v-else>
               <div v-if="userAudioAssets.length === 0" class="text-center py-6 text-gray-400">
-                <p class="text-3xl mb-2">🎤</p>
+                <AppIcon name="microphone" class="w-8 h-8 mx-auto mb-2" />
                 <p class="text-sm">Keine Audio-Dateien hochgeladen.</p>
                 <p class="text-xs mt-1">Lade MP3, WAV oder AAC in der Assets-Seite hoch.</p>
               </div>
@@ -520,7 +521,7 @@ onMounted(async () => {
                   ]"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-lg flex-shrink-0">🎤</span>
+                    <AppIcon name="microphone" class="w-5 h-5 flex-shrink-0" />
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {{ asset.original_filename || asset.filename }}
@@ -552,7 +553,7 @@ onMounted(async () => {
             <div class="mb-4">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  🎬 Original-Audio
+                  <AppIcon name="film" class="w-3.5 h-3.5 inline-block" /> Original-Audio
                   <span v-if="selectedVideo" class="text-gray-400">({{ selectedVideo.original_filename || selectedVideo.filename }})</span>
                 </span>
                 <span class="text-xs text-gray-400">{{ originalVolumeLabel }} ({{ Math.round(originalVolume * 100) }}%)</span>
@@ -586,7 +587,7 @@ onMounted(async () => {
             <div>
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  🎵 Hintergrundmusik
+                  <AppIcon name="musical-note" class="w-3.5 h-3.5 inline-block" /> Hintergrundmusik
                   <span v-if="selectedAudio" class="text-gray-400">({{ selectedAudio.name || selectedAudio.original_filename || selectedAudio.filename }})</span>
                 </span>
                 <span class="text-xs text-gray-400">{{ musicVolumeLabel }} ({{ Math.round(musicVolume * 100) }}%)</span>
@@ -628,8 +629,8 @@ onMounted(async () => {
               <!-- Original Volume -->
               <div>
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    🎬 Original-Audio
+                  <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <AppIcon name="film" class="w-4 h-4 inline-block" /> Original-Audio
                   </label>
                   <span class="text-sm font-mono text-treff-blue">{{ Math.round(originalVolume * 100) }}%</span>
                 </div>
@@ -667,8 +668,8 @@ onMounted(async () => {
               <!-- Music Volume -->
               <div>
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    🎵 Hintergrundmusik
+                  <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <AppIcon name="musical-note" class="w-4 h-4 inline-block" /> Hintergrundmusik
                   </label>
                   <span class="text-sm font-mono text-amber-500">{{ Math.round(musicVolume * 100) }}%</span>
                 </div>
@@ -857,7 +858,7 @@ onMounted(async () => {
                 ]"
               >
                 <span v-if="mixing" class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-                <span v-else>🎚️</span>
+                <AppIcon v-else name="slider" class="w-4 h-4" />
                 {{ mixing ? 'Mische Audio...' : 'Audio mixen' }}
               </button>
 

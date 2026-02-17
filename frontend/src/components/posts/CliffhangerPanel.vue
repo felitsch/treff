@@ -3,12 +3,12 @@
     <!-- Header -->
     <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 border-b border-amber-200 dark:border-amber-800">
       <div class="flex items-center gap-2">
-        <span class="text-xl">👀</span>
+        <AppIcon name="eye" class="w-5 h-5" />
         <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200">Cliffhanger & Teaser</h3>
       </div>
       <div class="flex items-center gap-2">
         <span v-if="isLastEpisode" class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-[10px] font-semibold">
-          <span>🏁</span> Letzte Episode
+          <AppIcon name="flag" class="w-3 h-3 inline-block" /> Letzte Episode
         </span>
         <button
           @click="generateCliffhanger"
@@ -17,7 +17,7 @@
           data-testid="generate-cliffhanger-btn"
         >
           <span v-if="generating" class="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
-          <span v-else>✨</span>
+          <AppIcon v-else name="sparkles" class="w-3.5 h-3.5" />
           {{ generating ? 'Generiere...' : 'Generieren' }}
         </button>
       </div>
@@ -27,7 +27,7 @@
       <!-- Cliffhanger Text -->
       <div>
         <label class="block text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
-          📖 Cliffhanger-Text
+          <AppIcon name="book-open" class="w-3.5 h-3.5 inline-block" /> Cliffhanger-Text
         </label>
         <textarea
           v-model="cliffhangerText"
@@ -42,7 +42,7 @@
       <!-- Teaser Variant Selector -->
       <div>
         <label class="block text-xs font-semibold text-amber-800 dark:text-amber-300 mb-2">
-          🎯 Teaser-Variante
+          <AppIcon name="map-pin" class="w-3.5 h-3.5 inline-block" /> Teaser-Variante
         </label>
         <div class="grid grid-cols-3 gap-2">
           <button
@@ -57,7 +57,7 @@
             ]"
             :data-testid="'teaser-variant-' + key"
           >
-            <span class="text-lg">{{ variant.icon }}</span>
+            <AppIcon :name="variant.icon" class="w-5 h-5" />
             <span class="font-semibold">{{ variant.label }}</span>
             <span class="text-[10px] opacity-70">{{ variant.description }}</span>
           </button>
@@ -67,7 +67,7 @@
       <!-- Days Until Next (for countdown variant) -->
       <div v-if="selectedVariant === 'countdown'" class="flex items-center gap-3">
         <label class="text-xs font-semibold text-amber-800 dark:text-amber-300 whitespace-nowrap">
-          ⏳ Tage bis naechste Episode:
+          <AppIcon name="clock" class="w-3.5 h-3.5 inline-block" /> Tage bis naechste Episode:
         </label>
         <input
           v-model.number="daysUntilNext"
@@ -83,7 +83,7 @@
       <!-- Teaser Text -->
       <div>
         <label class="block text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
-          💬 Teaser-Text
+          <AppIcon name="chat-bubble" class="w-3.5 h-3.5 inline-block" /> Teaser-Text
         </label>
         <textarea
           v-model="teaserText"
@@ -98,7 +98,7 @@
       <!-- All Variants Display (when generated) -->
       <div v-if="allVariants && Object.keys(allVariants).length > 0" class="space-y-2">
         <label class="block text-xs font-semibold text-amber-800 dark:text-amber-300">
-          🔄 Alle Varianten (zum Wechseln klicken)
+          <AppIcon name="arrow-path" class="w-3.5 h-3.5 inline-block" /> Alle Varianten (zum Wechseln klicken)
         </label>
         <div class="space-y-1.5">
           <button
@@ -113,7 +113,7 @@
             ]"
             :data-testid="'variant-option-' + key"
           >
-            <span class="mt-0.5 shrink-0">{{ variantIcons[key] }}</span>
+            <AppIcon :name="variantIcons[key] || 'sparkles'" class="w-4 h-4 mt-0.5 shrink-0" />
             <span>{{ text }}</span>
           </button>
         </div>
@@ -123,7 +123,7 @@
       <div v-if="nextEpisodeInfo" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-sm">🔗</span>
+            <AppIcon name="link" class="w-4 h-4 shrink-0" />
             <div>
               <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">Naechste Episode verknuepft:</span>
               <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
@@ -148,7 +148,7 @@
       <!-- Preview Card -->
       <div v-if="cliffhangerText || teaserText" class="rounded-xl overflow-hidden" data-testid="cliffhanger-preview">
         <div class="bg-[#1A1A2E] p-6 text-center space-y-4">
-          <div class="text-5xl animate-pulse">👀</div>
+          <AppIcon name="eye" class="w-12 h-12 animate-pulse text-white" />
           <p class="text-white/90 text-sm italic leading-relaxed max-w-xs mx-auto">{{ cliffhangerText }}</p>
           <div class="w-12 h-0.5 bg-[#FDD000] mx-auto rounded"></div>
           <h4 class="text-[#FDD000] text-lg font-extrabold">Fortsetzung folgt...</h4>
@@ -167,6 +167,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   arcId: { type: Number, required: true },
@@ -191,12 +192,12 @@ const nextEpisodeInfo = ref(null)
 const isLastEpisode = ref(false)
 
 const teaserVariants = {
-  countdown: { label: 'Countdown', description: 'Noch X Tage...', icon: '⏳' },
-  question: { label: 'Frage', description: 'Was passiert...?', icon: '❓' },
-  spoiler: { label: 'Spoiler', description: 'Naechstes Mal:', icon: '👀' },
+  countdown: { label: 'Countdown', description: 'Noch X Tage...', icon: 'clock' },
+  question: { label: 'Frage', description: 'Was passiert...?', icon: 'question-mark-circle' },
+  spoiler: { label: 'Spoiler', description: 'Naechstes Mal:', icon: 'eye' },
 }
 
-const variantIcons = { countdown: '⏳', question: '❓', spoiler: '👀' }
+const variantIcons = { countdown: 'clock', question: 'question-mark-circle', spoiler: 'eye' }
 
 const teaserPlaceholder = computed(() => {
   const placeholders = {

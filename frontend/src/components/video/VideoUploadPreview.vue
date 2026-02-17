@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 const emit = defineEmits(['select', 'upload-complete'])
@@ -140,7 +141,7 @@ onMounted(loadAssets)
         @change="onFileInput"
       />
       <div v-if="uploading" class="space-y-3">
-        <div class="text-3xl">⬆️</div>
+        <AppIcon name="arrow-path" class="w-8 h-8 text-blue-500" />
         <p class="text-sm text-gray-600 dark:text-gray-400">Wird hochgeladen... {{ uploadProgress }}%</p>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
@@ -150,7 +151,7 @@ onMounted(loadAssets)
         </div>
       </div>
       <div v-else class="space-y-2">
-        <div class="text-3xl">🎬</div>
+        <AppIcon name="film" class="w-8 h-8 text-gray-400" />
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
           Video hierher ziehen oder klicken
         </p>
@@ -208,7 +209,7 @@ onMounted(loadAssets)
           class="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:ring-2 hover:ring-blue-500 transition-all text-left"
         >
           <div class="aspect-video bg-gray-800 flex items-center justify-center">
-            <span class="text-2xl">🎬</span>
+            <AppIcon name="film" class="w-7 h-7 text-gray-500" />
           </div>
           <div class="p-1.5">
             <p class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">

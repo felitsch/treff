@@ -15,6 +15,7 @@
  */
 import { computed } from 'vue'
 import BaseCard from '@/components/common/BaseCard.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   data: {
@@ -100,7 +101,7 @@ const goalPercent = computed(() => {
   <BaseCard padding="none" data-tour="dashboard-performance-pulse" data-testid="performance-pulse-widget">
     <template #header>
       <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <span>📈</span> Performance Pulse
+        <AppIcon name="analytics" class="w-5 h-5" /> Performance Pulse
       </h2>
     </template>
     <template #headerAction>

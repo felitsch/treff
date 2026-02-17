@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -183,7 +184,7 @@ function close() {
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span class="text-xl">🔁</span>
+              <AppIcon name="arrow-path" class="w-6 h-6" />
               Wiederkehrender Post
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[300px]">{{ postTitle }}</p>
@@ -214,7 +215,7 @@ function close() {
             <!-- Existing Rule Info -->
             <div v-if="existingRule" class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
               <div class="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-medium mb-1">
-                <span>🔁</span>
+                <AppIcon name="arrow-path" class="w-5 h-5" />
                 Aktive Wiederkehr-Regel
               </div>
               <div class="text-sm text-blue-600 dark:text-blue-400">

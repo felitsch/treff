@@ -12,6 +12,7 @@
 import { ref, computed } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -41,10 +42,10 @@ const selectedType = ref('poll')
 const editingElement = ref(null)
 
 const elementTypes = [
-  { id: 'poll', label: 'Umfrage', icon: '📊', desc: 'Ja/Nein oder A/B Abstimmung' },
-  { id: 'quiz', label: 'Quiz', icon: '🧠', desc: 'Multiple-Choice mit richtiger Antwort' },
-  { id: 'slider', label: 'Emoji-Slider', icon: '🎚️', desc: 'Bewertungs-Slider mit Emoji' },
-  { id: 'question', label: 'Fragen-Sticker', icon: '❓', desc: 'Offene Frage an die Community' },
+  { id: 'poll', label: 'Umfrage', icon: 'chart-bar', desc: 'Ja/Nein oder A/B Abstimmung' },
+  { id: 'quiz', label: 'Quiz', icon: 'sparkles', desc: 'Multiple-Choice mit richtiger Antwort' },
+  { id: 'slider', label: 'Emoji-Slider', icon: 'slider', desc: 'Bewertungs-Slider mit Emoji' },
+  { id: 'question', label: 'Fragen-Sticker', icon: 'question-mark-circle', desc: 'Offene Frage an die Community' },
 ]
 
 const currentSlideElements = computed(() =>
@@ -69,7 +70,7 @@ async function generateElement() {
         _tempId: Date.now(), // Temporary ID for local state
       }
       emit('add', newElement)
-      toast.success(`${elementTypes.find(t => t.id === selectedType.value)?.icon} ${elementTypes.find(t => t.id === selectedType.value)?.label} generiert!`)
+      toast.success(`${elementTypes.find(t => t.id === selectedType.value)?.label} generiert!`)
     }
   } catch (err) {
     console.error('Failed to generate interactive element:', err)
@@ -160,7 +161,7 @@ function removeOption(idx) {
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" data-testid="interactive-editor">
     <div class="flex items-center gap-2 mb-3">
-      <span class="text-lg">🎯</span>
+      <AppIcon name="map-pin" class="w-5 h-5" />
       <h4 class="font-semibold text-sm text-gray-900 dark:text-white">Interaktive Story-Elemente</h4>
       <span class="text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-full font-medium">Instagram Story</span>
     </div>
@@ -181,7 +182,7 @@ function removeOption(idx) {
           : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'"
         :data-testid="'select-type-' + t.id"
       >
-        <span class="text-base">{{ t.icon }}</span>
+        <AppIcon :name="t.icon" class="w-4 h-4" />
         <div>
           <div class="font-semibold">{{ t.label }}</div>
           <div class="text-[10px] opacity-70 leading-tight">{{ t.desc }}</div>
@@ -198,7 +199,7 @@ function removeOption(idx) {
         data-testid="generate-interactive-btn"
       >
         <span v-if="generating" class="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></span>
-        <span v-else>✨</span>
+        <AppIcon v-else name="sparkles" class="w-3.5 h-3.5" />
         {{ generating ? 'Generiere...' : 'KI generieren' }}
       </button>
       <button
@@ -223,7 +224,7 @@ function removeOption(idx) {
         class="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700"
         :data-testid="'element-item-' + el.element_type"
       >
-        <span class="text-base">{{ elementTypes.find(t => t.id === el.element_type)?.icon }}</span>
+        <AppIcon :name="elementTypes.find(t => t.id === el.element_type)?.icon || 'chart-bar'" class="w-4 h-4" />
         <div class="flex-1 min-w-0">
           <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{{ el.question_text }}</div>
           <div class="text-[10px] text-gray-500 dark:text-gray-400">
@@ -323,7 +324,7 @@ function removeOption(idx) {
     <!-- Export reminder -->
     <div class="mt-3 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800" data-testid="interactive-export-reminder">
       <div class="flex items-start gap-2">
-        <span class="text-sm">💡</span>
+        <AppIcon name="light-bulb" class="w-4 h-4 shrink-0" />
         <p class="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
           <strong>Vergiss nicht:</strong> Interaktive Elemente (Umfragen, Quizze, Slider, Fragen) muessen beim echten Posten in Instagram manuell hinzugefuegt werden! Die Vorschau hier zeigt dir, wo und wie sie aussehen sollen.
         </p>

@@ -7,6 +7,7 @@
  * these native elements when actually posting to Instagram.
  */
 import { computed } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   element: {
@@ -32,12 +33,12 @@ const elementStyle = computed(() => ({
 
 const typeIcon = computed(() => {
   const icons = {
-    poll: '📊',
-    quiz: '🧠',
-    slider: '🎚️',
-    question: '❓',
+    poll: 'chart-bar',
+    quiz: 'sparkles',
+    slider: 'slider',
+    question: 'question-mark-circle',
   }
-  return icons[props.element.element_type] || '📊'
+  return icons[props.element.element_type] || 'chart-bar'
 })
 
 const typeLabel = computed(() => {
@@ -56,7 +57,7 @@ const typeLabel = computed(() => {
     <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/30 p-3 relative">
       <!-- Type badge -->
       <div class="absolute -top-2 -right-2 bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md flex items-center gap-1">
-        {{ typeIcon }} {{ typeLabel }}
+        <AppIcon :name="typeIcon" class="w-3 h-3 inline-block" /> {{ typeLabel }}
       </div>
 
       <!-- Interactive controls (edit/remove) -->

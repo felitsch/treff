@@ -17,6 +17,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useCountryTheme } from '@/composables/useCountryTheme'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 
@@ -179,8 +180,8 @@ function formatTimeAgo(dateStr) {
 }
 
 function platformIcon(platform) {
-  if (platform === 'tiktok') return '🎵'
-  return '📸' // instagram default
+  if (platform === 'tiktok') return 'musical-note'
+  return 'camera' // instagram default
 }
 
 function statusBadgeClass(status) {
@@ -343,7 +344,7 @@ onMounted(() => {
 
           <!-- Meta: platform + category -->
           <div class="flex items-center gap-2 mt-2">
-            <span class="text-sm">{{ platformIcon(draft.platform) }}</span>
+            <AppIcon :name="platformIcon(draft.platform)" class="w-4 h-4 inline-block" />
             <span v-if="draft.category" class="text-xs text-gray-500 dark:text-gray-400 truncate">
               {{ draft.category }}
             </span>

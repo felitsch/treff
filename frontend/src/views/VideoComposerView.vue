@@ -7,6 +7,7 @@ import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -290,7 +291,7 @@ onMounted(() => {
     <div data-tour="vc-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="text-2xl">🎬</span>
+          <AppIcon name="film" class="w-7 h-7" />
           Video-Zusammenschnitt
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -303,7 +304,7 @@ onMounted(() => {
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
           title="Video-Workflow-Tour starten"
         >
-          🎬 Workflow
+          <AppIcon name="film" class="w-4 h-4 inline-block" /> Workflow
         </button>
         <router-link
           to="/video/templates"
@@ -311,7 +312,7 @@ onMounted(() => {
           data-testid="branding-templates-link"
           data-tour="vc-branding-link"
         >
-          <span>🏷️</span> Intro/Outro Branding
+          <AppIcon name="tag" class="w-4 h-4" /> Intro/Outro Branding
         </router-link>
         <button
           v-if="clips.length > 0"
@@ -330,7 +331,7 @@ onMounted(() => {
         <div data-tour="vc-library" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📁</span> Video-Bibliothek
+              <AppIcon name="archive" class="w-4 h-4" /> Video-Bibliothek
               <span class="ml-auto text-xs font-normal text-gray-500 dark:text-gray-400" data-testid="video-count">
                 {{ videoAssets.length }} Videos
               </span>
@@ -373,8 +374,8 @@ onMounted(() => {
                   class="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  🎥
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                  <AppIcon name="video-camera" class="w-4 h-4" />
                 </div>
                 <!-- Duration badge -->
                 <span class="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">
@@ -440,7 +441,7 @@ onMounted(() => {
         <div data-tour="vc-timeline" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>🎞️</span> Timeline
+              <AppIcon name="video-camera" class="w-4 h-4" /> Timeline
             </h2>
             <p class="text-xs text-gray-400 dark:text-gray-500">
               Per Drag & Drop neu anordnen
@@ -520,7 +521,7 @@ onMounted(() => {
                       class="w-full h-full object-cover"
                       loading="lazy"
                     />
-                    <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-sm">🎥</div>
+                    <div v-else class="w-full h-full flex items-center justify-center text-gray-400"><AppIcon name="video-camera" class="w-4 h-4" /></div>
                     <span class="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">
                       {{ formatTime(clipDuration(clip)) }}
                     </span>
@@ -671,7 +672,7 @@ onMounted(() => {
         <!-- Compose Result -->
         <div v-if="composeResult" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4" data-testid="compose-result">
           <h3 class="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-            <span>✅</span> Video erfolgreich zusammengeschnitten!
+            <AppIcon name="check-circle" class="w-4 h-4 inline-block" /> Video erfolgreich zusammengeschnitten!
           </h3>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-3">
             <div>

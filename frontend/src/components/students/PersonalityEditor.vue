@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   modelValue: {
@@ -66,16 +67,16 @@ function removeCatchphrase(index) {
 }
 
 const toneOptions = [
-  { value: 'witzig', label: 'Witzig', icon: '😂' },
-  { value: 'emotional', label: 'Emotional', icon: '🥺' },
-  { value: 'motivierend', label: 'Motivierend', icon: '💪' },
-  { value: 'jugendlich', label: 'Jugendlich', icon: '✨' },
-  { value: 'serioess', label: 'Serioees', icon: '📋' },
-  { value: 'storytelling', label: 'Storytelling', icon: '📖' },
-  { value: 'behind-the-scenes', label: 'Behind the Scenes', icon: '🎬' },
-  { value: 'provokant', label: 'Provokant', icon: '⚡' },
-  { value: 'wholesome', label: 'Wholesome', icon: '🥰' },
-  { value: 'informativ', label: 'Informativ', icon: '📊' },
+  { value: 'witzig', label: 'Witzig', icon: 'face-smile' },
+  { value: 'emotional', label: 'Emotional', icon: 'heart' },
+  { value: 'motivierend', label: 'Motivierend', icon: 'rocket' },
+  { value: 'jugendlich', label: 'Jugendlich', icon: 'sparkles' },
+  { value: 'serioess', label: 'Serioees', icon: 'clipboard-list' },
+  { value: 'storytelling', label: 'Storytelling', icon: 'book-open' },
+  { value: 'behind-the-scenes', label: 'Behind the Scenes', icon: 'film' },
+  { value: 'provokant', label: 'Provokant', icon: 'bolt' },
+  { value: 'wholesome', label: 'Wholesome', icon: 'heart' },
+  { value: 'informativ', label: 'Informativ', icon: 'chart-bar' },
 ]
 
 const emojiOptions = [
@@ -98,7 +99,7 @@ const currentHumorLabel = computed(() => humorLevelLabels[preset.value.humor_lev
 <template>
   <div class="space-y-5">
     <div class="flex items-center gap-2 mb-1">
-      <span class="text-lg">🎭</span>
+      <AppIcon name="user" class="w-5 h-5" />
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Persoenlichkeits-Preset</h3>
     </div>
 
@@ -118,7 +119,7 @@ const currentHumorLabel = computed(() => humorLevelLabels[preset.value.humor_lev
           ]"
           @click="preset.tone = opt.value"
         >
-          <span>{{ opt.icon }}</span>
+          <AppIcon :name="opt.icon" class="w-4 h-4 inline-block" />
           <span>{{ opt.label }}</span>
         </button>
       </div>
@@ -139,11 +140,11 @@ const currentHumorLabel = computed(() => humorLevelLabels[preset.value.humor_lev
         class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-treff-blue"
       />
       <div class="flex justify-between text-xs text-gray-400 mt-1 px-0.5">
-        <span>😐 Kaum</span>
-        <span>😄 Leicht</span>
-        <span>😁 Mittel</span>
-        <span>🤣 Deutlich</span>
-        <span>💀 Maximal</span>
+        <span class="flex items-center gap-0.5"><AppIcon name="face-smile" class="w-3 h-3" /> Kaum</span>
+        <span class="flex items-center gap-0.5"><AppIcon name="face-smile" class="w-3 h-3" /> Leicht</span>
+        <span class="flex items-center gap-0.5"><AppIcon name="face-smile" class="w-3 h-3" /> Mittel</span>
+        <span class="flex items-center gap-0.5"><AppIcon name="face-smile" class="w-3 h-3" /> Deutlich</span>
+        <span class="flex items-center gap-0.5"><AppIcon name="fire" class="w-3 h-3" /> Maximal</span>
       </div>
     </div>
 
@@ -236,7 +237,7 @@ const currentHumorLabel = computed(() => humorLevelLabels[preset.value.humor_lev
     <!-- Preview summary -->
     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-xs text-gray-500 dark:text-gray-400">
       <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">Vorschau:</div>
-      <span>{{ toneOptions.find(t => t.value === preset.tone)?.icon || '🎭' }}</span>
+      <AppIcon :name="toneOptions.find(t => t.value === preset.tone)?.icon || 'user'" class="w-4 h-4 inline-block" />
       {{ toneOptions.find(t => t.value === preset.tone)?.label || preset.tone }}
       &middot; Humor {{ preset.humor_level }}/5
       &middot; Emoji: {{ emojiOptions.find(e => e.value === preset.emoji_usage)?.label || preset.emoji_usage }}

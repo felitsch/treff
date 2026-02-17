@@ -5,6 +5,7 @@ import { useToast } from '@/composables/useToast'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TourSystem from '@/components/common/TourSystem.vue'
 import VideoWorkflowTour from '@/components/common/VideoWorkflowTour.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 const workflowTourRef = ref(null)
@@ -262,7 +263,7 @@ onMounted(() => {
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4C8BC2] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
           title="Video-Workflow-Tour starten"
         >
-          🎬 Workflow
+          <AppIcon name="film" class="w-3.5 h-3.5 inline-block" /> Workflow
         </button>
         <button
           data-tour="vt-create"

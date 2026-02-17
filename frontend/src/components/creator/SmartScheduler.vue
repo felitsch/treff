@@ -11,7 +11,9 @@
  * - Date picker for target date
  */
 import { ref, computed, watch, onMounted } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import api from '@/utils/api'
+import { getStrategyForPlatform, evaluatePostingTime, getBestDaysSorted, getFrequencySummary, PLATFORMS } from '@/config/postingStrategy'
 
 const props = defineProps({
   platform: { type: String, default: 'instagram_feed' },
@@ -35,6 +37,28 @@ const bestTime = computed(() => scheduleData.value?.best_time || '17:00')
 const platformTip = computed(() => scheduleData.value?.platform_tip || '')
 const targetDayName = computed(() => scheduleData.value?.target_day_name || '')
 const postsOnTarget = computed(() => scheduleData.value?.posts_on_target_date || 0)
+
+// ─── Strategy Config (local, from postingStrategy.js) ────────────
+const platformStrategy = computed(() => getStrategyForPlatform(props.platform))
+const strategyBestDays = computed(() => getBestDaysSorted(props.platform))
+const platformInfo = computed(() => PLATFORMS[props.platform] || { name: props.platform, icon: 'device-mobile' })
+const frequencyInfo = computed(() => {
+  const s = platformStrategy.value
+  if (!s) return null
+  return s.postingFrequency
+})
+
+/**
+ * Evaluate the currently selected time against the posting strategy.
+ * Returns { score, isPeak, isRecommended, warning } from the local config.
+ */
+const timeEvaluation = computed(() => {
+  if (!selectedDate.value || !selectedTime.value) return null
+  const [hours, minutes] = selectedTime.value.split(':').map(Number)
+  const dt = new Date(selectedDate.value)
+  dt.setHours(hours, minutes || 0, 0, 0)
+  return evaluatePostingTime(props.platform, dt)
+})
 
 // Heatmap for the target day
 const heatmapHours = computed(() => {
@@ -148,7 +172,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="flex items-center justify-between">
       <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-        <span>🤖</span> Smart-Scheduling
+        <AppIcon name="sparkles" class="w-5 h-5" /> Smart-Scheduling
       </h3>
       <span v-if="scheduleData" class="text-xs text-gray-400">
         {{ scheduleData.platform_label }}
@@ -268,7 +292,7 @@ onMounted(() => {
           :key="i"
           :class="['px-3 py-2 rounded-lg border text-xs', getWarningStyle(warning.severity)]"
         >
-          <span class="mr-1">{{ warning.severity === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+          <AppIcon :name="warning.severity === 'warning' ? 'warning' : 'info'" class="w-4 h-4 inline-block mr-1" />
           {{ warning.message }}
         </div>
       </div>
@@ -308,15 +332,56 @@ onMounted(() => {
       <!-- Platform Tip -->
       <div v-if="platformTip" class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div class="text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
-          <span>💡</span>
+          <AppIcon name="light-bulb" class="w-4 h-4 flex-shrink-0" />
           <span>{{ platformTip }}</span>
+        </div>
+      </div>
+
+      <!-- Posting Strategy Info (from postingStrategy.js config) -->
+      <div v-if="frequencyInfo" class="px-3 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2" data-testid="strategy-info">
+        <div class="text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+          <AppIcon :name="platformInfo.icon" class="w-4 h-4" />
+          <span>{{ platformInfo.name }} — Posting-Strategie</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-white dark:bg-gray-700 rounded-md px-2 py-1.5">
+            <div class="text-[10px] text-gray-400">Min/Woche</div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">{{ frequencyInfo.minPerWeek }}</div>
+          </div>
+          <div class="bg-white dark:bg-gray-700 rounded-md px-2 py-1.5">
+            <div class="text-[10px] text-gray-400">Ideal/Woche</div>
+            <div class="text-sm font-bold text-[#3B7AB1]">{{ frequencyInfo.idealPerWeek }}</div>
+          </div>
+          <div class="bg-white dark:bg-gray-700 rounded-md px-2 py-1.5">
+            <div class="text-[10px] text-gray-400">Max/Tag</div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">{{ platformStrategy?.maxPostsPerDay }}</div>
+          </div>
+        </div>
+        <div v-if="strategyBestDays.length" class="flex flex-wrap gap-1">
+          <span
+            v-for="day in strategyBestDays.slice(0, 3)"
+            :key="day.day"
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border"
+            :class="day.score >= 85 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400'"
+          >
+            {{ day.day }} {{ day.peak }}
+            <span v-if="day.score >= 85" class="text-green-500">★</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Time Evaluation (from config) -->
+      <div v-if="timeEvaluation && selectedTime && timeEvaluation.warning" class="px-3 py-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg" data-testid="time-evaluation-warning">
+        <div class="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+          <AppIcon name="warning" class="w-4 h-4 flex-shrink-0" />
+          <span>{{ timeEvaluation.warning }}</span>
         </div>
       </div>
 
       <!-- Selected summary -->
       <div v-if="selectedTime" class="px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg" data-testid="schedule-summary">
         <div class="text-xs text-green-800 dark:text-green-300 flex items-center gap-2">
-          <span>✅</span>
+          <AppIcon name="check-circle" class="w-4 h-4 flex-shrink-0" />
           <span>Geplant fuer: <strong>{{ new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) }}, {{ selectedTime }} Uhr</strong></span>
         </div>
       </div>

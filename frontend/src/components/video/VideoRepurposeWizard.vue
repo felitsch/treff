@@ -29,6 +29,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 const router = useRouter()
@@ -50,7 +51,7 @@ const DERIVATIVE_FORMATS = [
   {
     key: 'tiktok',
     name: 'TikTok-Version',
-    icon: '🎵',
+    icon: 'musical-note',
     platform: 'TikTok',
     format: '9:16',
     description: 'Gleicher Clip, TikTok-optimierter Hook, andere Hashtags (3-5), Trending-Audio-Hinweis',
@@ -65,7 +66,7 @@ const DERIVATIVE_FORMATS = [
   {
     key: 'instagram_story',
     name: 'Story-Sequenz',
-    icon: '📱',
+    icon: 'device-mobile',
     platform: 'Instagram Stories',
     format: '9:16',
     description: '3-5 Key-Frames als Story-Slides mit Text-Overlays und Swipe-Up CTA',
@@ -80,7 +81,7 @@ const DERIVATIVE_FORMATS = [
   {
     key: 'instagram_feed',
     name: 'Feed-Post',
-    icon: '🖼️',
+    icon: 'photo',
     platform: 'Instagram Feed',
     format: '1:1',
     description: 'Bestes Frame als Thumbnail, Carousel aus 3 Keyframes mit Feed-optimierter Caption',
@@ -95,7 +96,7 @@ const DERIVATIVE_FORMATS = [
   {
     key: 'carousel',
     name: 'Carousel',
-    icon: '📚',
+    icon: 'stack',
     platform: 'Instagram Carousel',
     format: '1:1',
     description: '5-7 Keyframes mit Text-Overlays als Slide-Carousel (beliebtestes Instagram-Format)',
@@ -159,11 +160,11 @@ const totalEstimatedMinutes = computed(() => {
 /** Platform badge for source post */
 const sourcePlatformLabel = computed(() => {
   const p = sourcePost.value?.platform?.toLowerCase() || ''
-  if (p.includes('reel')) return { label: 'Instagram Reel', icon: '🎬', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' }
-  if (p.includes('tiktok')) return { label: 'TikTok', icon: '🎵', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' }
-  if (p.includes('story')) return { label: 'Instagram Story', icon: '📱', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' }
-  if (p.includes('feed')) return { label: 'Instagram Feed', icon: '🖼️', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' }
-  return { label: p || 'Unbekannt', icon: '📄', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
+  if (p.includes('reel')) return { label: 'Instagram Reel', icon: 'film', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' }
+  if (p.includes('tiktok')) return { label: 'TikTok', icon: 'musical-note', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' }
+  if (p.includes('story')) return { label: 'Instagram Story', icon: 'device-mobile', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' }
+  if (p.includes('feed')) return { label: 'Instagram Feed', icon: 'photo', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' }
+  return { label: p || 'Unbekannt', icon: 'document', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
 })
 
 /** Country accent for source post */
@@ -191,12 +192,12 @@ function getEffortBadge(formatKey) {
   const label = effort?.label ?? fmt?.defaultEffort ?? 'mittel'
 
   if (label === 'niedrig' || minutes <= 3) {
-    return { label: `Niedrig (${minutes}min)`, color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: '⚡' }
+    return { label: `Niedrig (${minutes}min)`, color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: 'bolt' }
   }
   if (label === 'hoch' || minutes >= 12) {
-    return { label: `Hoch (${minutes}min)`, color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', icon: '🔨' }
+    return { label: `Hoch (${minutes}min)`, color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', icon: 'wrench' }
   }
-  return { label: `Mittel (${minutes}min)`, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', icon: '⏱️' }
+  return { label: `Mittel (${minutes}min)`, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', icon: 'clock' }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -340,7 +341,7 @@ watch(() => props.postId, (newId) => {
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="lg:w-[380px] flex-shrink-0">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-        <span class="text-xl">🎬</span>
+        <AppIcon name="film" class="w-5 h-5" />
         Quell-Video
       </h3>
 
@@ -368,7 +369,7 @@ watch(() => props.postId, (newId) => {
             loading="lazy"
           />
           <div v-else class="absolute inset-0 flex flex-col items-center justify-center text-white/60">
-            <span class="text-4xl mb-2">🎬</span>
+            <AppIcon name="film" class="w-10 h-10 mb-2" />
             <span class="text-sm">Kein Thumbnail</span>
           </div>
           <!-- Play overlay -->
@@ -393,7 +394,7 @@ watch(() => props.postId, (newId) => {
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
               :class="sourcePlatformLabel.color"
             >
-              <span>{{ sourcePlatformLabel.icon }}</span>
+              <AppIcon :name="sourcePlatformLabel.icon" class="w-4 h-4" />
               {{ sourcePlatformLabel.label }}
             </span>
             <span
@@ -428,7 +429,7 @@ watch(() => props.postId, (newId) => {
         v-else
         class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 text-center"
       >
-        <span class="text-3xl mb-2 block">🎬</span>
+        <AppIcon name="film" class="w-8 h-8 mx-auto mb-2" />
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Kein Quell-Video ausgewaehlt
         </p>
@@ -441,7 +442,7 @@ watch(() => props.postId, (newId) => {
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="text-xl">🔄</span>
+          <AppIcon name="arrow-path" class="w-5 h-5" />
           Derivative Formate
         </h3>
         <div class="flex items-center gap-2 text-xs">
@@ -494,10 +495,10 @@ watch(() => props.postId, (newId) => {
             <!-- Header: icon + name + format badge -->
             <div class="flex items-start gap-3 mb-2">
               <div
-                class="w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center text-white text-lg flex-shrink-0"
+                class="w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center text-white flex-shrink-0"
                 :class="fmt.color"
               >
-                {{ fmt.icon }}
+                <AppIcon :name="fmt.icon" class="w-5 h-5" />
               </div>
               <div class="min-w-0">
                 <h4 class="font-semibold text-sm text-gray-900 dark:text-white">{{ fmt.name }}</h4>
@@ -518,7 +519,7 @@ watch(() => props.postId, (newId) => {
                 :class="getEffortBadge(fmt.key).color"
                 :data-testid="`video-repurpose-effort-${fmt.key}`"
               >
-                <span>{{ getEffortBadge(fmt.key).icon }}</span>
+                <AppIcon :name="getEffortBadge(fmt.key).icon" class="w-3 h-3" />
                 {{ getEffortBadge(fmt.key).label }}
               </span>
               <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">{{ fmt.workflow }}</span>
@@ -598,7 +599,7 @@ watch(() => props.postId, (newId) => {
           data-testid="video-repurpose-generate-all"
         >
           <span v-if="generating" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-          <span v-else>🚀</span>
+          <AppIcon v-else name="rocket" class="w-5 h-5" />
           {{ generating ? 'Generiere...' : 'Alle generieren' }}
         </button>
       </div>
@@ -619,7 +620,7 @@ watch(() => props.postId, (newId) => {
         data-testid="video-repurpose-results"
       >
         <h4 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span>✅</span>
+          <AppIcon name="check-circle" class="w-5 h-5 inline text-green-500" />
           Generierte Derivative ({{ generationResults.derivatives.length }})
         </h4>
 
@@ -652,7 +653,7 @@ watch(() => props.postId, (newId) => {
           @click="openCalendar"
           class="w-full mt-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
         >
-          <span>📅</span>
+          <AppIcon name="calendar" class="w-4 h-4" />
           Im Kalender ansehen
         </button>
       </div>

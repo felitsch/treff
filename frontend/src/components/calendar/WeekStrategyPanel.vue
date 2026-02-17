@@ -13,6 +13,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   collapsed: {
@@ -133,7 +134,7 @@ const platformLabels = {
       <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-            <span class="text-base">🎯</span>
+            <AppIcon name="fire" class="w-5 h-5" />
             Wochen-Strategie
           </h3>
           <div class="flex items-center gap-1">
@@ -243,7 +244,7 @@ const platformLabels = {
         <div v-if="seasonalContext" class="p-3">
           <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5">
             <div class="flex items-start gap-2">
-              <span class="text-base flex-shrink-0">📅</span>
+              <AppIcon name="calendar" class="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
               <p class="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">{{ seasonalContext }}</p>
             </div>
           </div>
@@ -313,7 +314,7 @@ const platformLabels = {
 
         <!-- All good state -->
         <div v-if="warnings.length === 0 && recommendations.length === 0" class="p-4 text-center">
-          <span class="text-2xl">🎉</span>
+          <AppIcon name="trophy" class="w-7 h-7 text-green-500" />
           <p class="text-sm font-medium text-green-600 dark:text-green-400 mt-1">Perfekt!</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">Alle Strategie-Ziele fuer diese Woche erreicht.</p>
         </div>

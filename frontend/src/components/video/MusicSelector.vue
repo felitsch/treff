@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const toast = useToast()
 
@@ -148,7 +149,7 @@ onMounted(loadTracks)
     <div v-if="props.modelValue.enabled" class="space-y-4">
       <!-- Selected track info -->
       <div v-if="selectedTrack" class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 flex items-center gap-3">
-        <span class="text-2xl">🎵</span>
+        <AppIcon name="musical-note" class="w-7 h-7 text-blue-500" />
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ selectedTrack.name }}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -248,7 +249,7 @@ onMounted(loadTracks)
           ]"
           data-testid="music-track-item"
         >
-          <span class="text-lg">🎶</span>
+          <AppIcon name="musical-note" class="w-5 h-5 text-gray-400" />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ track.name }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">

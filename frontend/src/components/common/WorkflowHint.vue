@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWorkflowHints } from '@/composables/useWorkflowHints'
+import AppIcon from '@/components/icons/AppIcon.vue'
 
 const props = defineProps({
   /** Unique hint ID for localStorage tracking */
@@ -12,8 +13,8 @@ const props = defineProps({
   linkText: { type: String, default: '' },
   /** Vue Router path to navigate to */
   linkTo: { type: String, default: '' },
-  /** Icon/emoji to show (default: lightbulb) */
-  icon: { type: String, default: '💡' },
+  /** Icon name for AppIcon component (default: light-bulb) */
+  icon: { type: String, default: 'light-bulb' },
   /** Whether the condition to show this hint is met */
   show: { type: Boolean, default: true },
 })
@@ -52,7 +53,7 @@ function handleNavigate() {
       data-testid="workflow-hint"
     >
       <!-- Icon -->
-      <span class="text-lg flex-shrink-0 mt-0.5">{{ icon }}</span>
+      <AppIcon :name="icon" class="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-500 dark:text-blue-400" />
 
       <!-- Content -->
       <div class="flex-1 min-w-0">

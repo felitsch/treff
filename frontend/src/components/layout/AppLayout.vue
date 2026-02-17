@@ -4,11 +4,14 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import SidebarNav from './SidebarNav.vue'
 import TopBar from './TopBar.vue'
 import BreadcrumbNav from './BreadcrumbNav.vue'
+import MobileBottomNav from './MobileBottomNav.vue'
 import { useReminders } from '@/composables/useReminders'
 import { useSeriesReminders } from '@/composables/useSeriesReminders'
 
 const router = useRouter()
-const sidebarCollapsed = ref(false)
+// Restore sidebar state from localStorage (default: expanded on desktop)
+const savedSidebarState = localStorage.getItem('treff-sidebar-collapsed')
+const sidebarCollapsed = ref(savedSidebarState === 'true')
 const isMobileOverlay = ref(false)
 const { startPolling, stopPolling } = useReminders()
 const { startPolling: startSeriesPolling, stopPolling: stopSeriesPolling } = useSeriesReminders()
@@ -26,6 +29,8 @@ const toggleSidebar = () => {
     isMobileOverlay.value = !isMobileOverlay.value
   } else {
     sidebarCollapsed.value = !sidebarCollapsed.value
+    // Persist sidebar state
+    localStorage.setItem('treff-sidebar-collapsed', String(sidebarCollapsed.value))
   }
 }
 
@@ -99,7 +104,7 @@ onUnmounted(() => {
       <TopBar @toggle-sidebar="toggleSidebar" />
       <BreadcrumbNav />
 
-      <main id="main-content" class="flex-1 overflow-y-auto p-6" role="main" aria-label="Hauptinhalt">
+      <main id="main-content" class="flex-1 overflow-y-auto p-6 pb-20 md:pb-6" role="main" aria-label="Hauptinhalt">
         <RouterView v-slot="{ Component, route }">
           <Transition :name="transitionName" mode="out-in">
             <div :key="route.path" class="page-wrapper">
@@ -109,5 +114,8 @@ onUnmounted(() => {
         </RouterView>
       </main>
     </div>
+
+    <!-- Mobile Bottom Navigation (visible only on mobile) -->
+    <MobileBottomNav />
   </div>
 </template>

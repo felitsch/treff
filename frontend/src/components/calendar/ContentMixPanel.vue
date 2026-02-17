@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { Doughnut, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -320,7 +321,7 @@ const arcStats = computed(() => {
       aria-label="Content-Mix Panel umschalten"
     >
       <span v-if="!collapsed" class="flex items-center gap-2">
-        <span class="text-base">📊</span>
+        <AppIcon name="chart-bar" class="w-5 h-5" />
         Content-Mix
         <span
           v-if="mixData && mixData.total > 0"
@@ -461,7 +462,7 @@ const arcStats = computed(() => {
             <Doughnut :data="currentDonutData" :options="donutOptions" />
           </div>
           <div v-else class="text-center py-6">
-            <span class="text-2xl">📭</span>
+            <AppIcon name="inbox" class="w-7 h-7 text-gray-400" />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Keine Daten</p>
           </div>
 
@@ -535,7 +536,7 @@ const arcStats = computed(() => {
 
         <!-- No data state -->
         <div v-if="mixData.total === 0 && (!mixData.warnings || mixData.warnings.length === 0)" class="text-center py-4">
-          <span class="text-3xl">📋</span>
+          <AppIcon name="clipboard-list" class="w-8 h-8 text-gray-400" />
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
             Noch keine Posts {{ period === 'week' ? 'diese Woche' : 'diesen Monat' }}
           </p>
