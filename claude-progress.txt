@@ -1,5 +1,67 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Features #304 & #306: Page Transitions & Dark Mode Refinement
+**Date:** 2026-02-17
+**Feature IDs:** #304 (Page Transition Animations), #306 (Dark Mode Refinement)
+**Status:** BOTH PASSING
+
+### Feature #304: Page Transition Animations
+**What was implemented:**
+1. **Vue Transition wrapper** around RouterView in AppLayout.vue with `mode="out-in"`
+2. **Direction-based transitions**: Forward navigation slides left, backward slides right
+3. **Page transition CSS classes**: `page-slide` and `page-slide-back` with fade + translateX
+4. **Stagger animations for card grids**: Dashboard stat cards, template cards, asset grid, history posts
+5. **Nested RouterView transitions**: LibraryView and StudentsHubView also have transitions
+6. **Performance**: Uses only transform/opacity (GPU-accelerated, no layout reflow)
+7. **Accessibility**: prefers-reduced-motion already covered by existing global media query
+
+**Files modified:**
+- frontend/src/components/layout/AppLayout.vue - Transition wrapper + direction computed
+- frontend/src/router/index.js - Navigation direction tracking + scrollBehavior
+- frontend/src/assets/main.css - Page transition CSS, stagger animation keyframes
+- frontend/src/views/LibraryView.vue - Nested transition wrapper
+- frontend/src/views/StudentsHubView.vue - Nested transition wrapper
+- frontend/src/views/DashboardView.vue - stagger-item on stat cards and post cards
+- frontend/src/views/TemplatesView.vue - stagger-item on template cards
+- frontend/src/views/AssetsView.vue - stagger-item on asset grid
+- frontend/src/views/HistoryView.vue - stagger-item on post list
+
+**Git commit:** 332f77b
+
+### Feature #306: Dark Mode Refinement
+**What was fixed:**
+1. **ProgressIndicator.vue**: Fixed invalid `dark:bg-gray-750` to `dark:bg-gray-700/50`
+2. **AnalyticsView.vue**: Enhanced Chart.js configs with dark-mode-aware colors:
+   - Frequency chart: isDark-based tick colors, tooltip backgrounds, text colors, grid colors
+   - Performance trend chart: isDark-based legend colors, tooltip styling, tick colors
+3. **RecurringPostSettings.vue**: Added `dark:border-gray-600` to radio button borders
+4. **CalendarExportImport.vue**: Added `dark:border-gray-600 dark:bg-gray-700` to checkbox
+5. **AssetCropModal.vue**: Added `dark:border-gray-600 dark:bg-gray-700` to checkbox
+
+**Audit results:**
+- Base UI components (BaseCard, ErrorBanner, EmptyState, ToastItem, HelpTooltip): All excellent
+- Layout components (AppLayout, SidebarNav, TopBar, BreadcrumbNav): All excellent
+- Template components (TemplateCard, TemplatePreviewModal): All good
+- Video components: All good (no missing dark variants)
+- Charts: Fixed legend/tick/tooltip colors for dark mode
+- Country accent colors: Already have dark mode gradient variants in main.css
+- No bg-white without dark:bg-gray-* found anywhere in codebase
+
+**Browser verification:**
+- Dashboard, Calendar, Templates, Settings, Create Hub all verified in dark mode
+- Light <-> Dark toggle works cleanly with no visual breaks
+- Zero white-background elements detected in dark mode
+- Zero JavaScript console errors (only rate-limit 429s from rapid navigation)
+
+**Git commit:** ab2fa56 (included in QA cleanup batch)
+
+### Current state:
+- Feature #304 marked as PASSING
+- Feature #306 marked as PASSING
+- Progress: 277/321 features passing (86.3%)
+
+---
+
 ## Session - Feature #267: Rate-Limiting & API-Sicherheit
 **Date:** 2026-02-17
 **Feature ID:** #267
