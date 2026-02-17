@@ -7,6 +7,7 @@ import JSZip from 'jszip'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
 import { useContentDraftStore } from '@/stores/contentDraft'
+import { CATEGORY_TO_PILLAR, getPillarById } from '@/config/contentPillars'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
 import { useAutoSave } from '@/composables/useAutoSave'
@@ -43,6 +44,7 @@ const {
   error,
   successMsg,
   selectedCategory,
+  selectedPillar,
   templates,
   selectedTemplate,
   loadingTemplates,
@@ -189,6 +191,7 @@ const engagementBoostPostContent = computed(() => ({
   category: selectedCategory.value,
   country: country.value,
   tone: tone.value,
+  pillar_id: selectedPillar.value || null,
 }))
 
 function onApplyEngagementSuggestion(suggestion) {
@@ -490,6 +493,14 @@ const selectedCategoryObj = computed(() => categories.find(c => c.id === selecte
 const selectedPlatformObj = computed(() => platforms.find(p => p.id === selectedPlatform.value))
 const selectedCountryObj = computed(() => countries.find(c => c.id === country.value))
 
+// Content Pillar: auto-assign from category selection
+const selectedPillarObj = computed(() => selectedPillar.value ? getPillarById(selectedPillar.value) : null)
+watch(selectedCategory, (newCat) => {
+  if (newCat && CATEGORY_TO_PILLAR[newCat]) {
+    selectedPillar.value = CATEGORY_TO_PILLAR[newCat]
+  }
+})
+
 // Background image for live preview (from current slide's background_value if type is 'image')
 const previewBackgroundImage = computed(() => {
   const slide = slides.value[currentPreviewSlide.value]
@@ -715,6 +726,7 @@ async function generateText() {
       slide_count: slideCount,
       tone: tone.value,
       student_id: selectedStudentId.value || null,
+      pillar_id: selectedPillar.value || null,
     })
 
     // Check if this is still the latest request (another generation may have started)
@@ -867,6 +879,7 @@ async function regenerateField(field, slideIndex = 0) {
       slide_count: slides.value.length || 1,
       current_headline: slides.value[currentPreviewSlide.value]?.headline || '',
       current_body: slides.value[currentPreviewSlide.value]?.body_text || '',
+      pillar_id: selectedPillar.value || null,
     })
 
     const newValue = response.data.value
@@ -1217,6 +1230,7 @@ async function saveAndExport() {
       cta_text: ctaText.value,
       story_arc_id: selectedArcId.value || null,
       episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
+      pillar_id: selectedPillar.value || null,
     }
 
     const response = await api.post('/api/posts', postData)
@@ -1322,6 +1336,7 @@ async function saveDraft() {
       story_arc_id: selectedArcId.value || null,
       episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
       student_id: selectedStudentId.value || null,
+      pillar_id: selectedPillar.value || null,
     }
 
     if (savedPost.value?.id) {
@@ -1669,6 +1684,7 @@ async function exportAllPlatforms() {
       cta_text: ctaText.value,
       story_arc_id: selectedArcId.value || null,
       episode_number: selectedArcId.value ? selectedEpisodeNumber.value : null,
+      pillar_id: selectedPillar.value || null,
     }
 
     // Use multi-platform endpoint to create linked sibling posts
@@ -2334,6 +2350,21 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ cat.desc }}</div>
         </button>
       </div>
+
+      <!-- Content Pillar Info (shown when category is selected) -->
+      <div v-if="selectedPillarObj" class="mt-4 p-3 rounded-lg border flex items-start gap-3" :style="{ borderColor: selectedPillarObj.color + '40', backgroundColor: selectedPillarObj.color + '08' }">
+        <span class="text-xl">{{ selectedPillarObj.icon }}</span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">Content Pillar:</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white" :style="{ backgroundColor: selectedPillarObj.color }">
+              {{ selectedPillarObj.name }}
+            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">(Ziel: {{ selectedPillarObj.targetPercentage }}%)</span>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ selectedPillarObj.description }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -2800,6 +2831,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             <!-- Summary of selections -->
             <div class="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-left space-y-1">
               <div><strong>Kategorie:</strong> {{ selectedCategoryObj?.icon }} {{ selectedCategoryObj?.label }}</div>
+              <div v-if="selectedPillarObj"><strong>Content Pillar:</strong> <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-white" :style="{ backgroundColor: selectedPillarObj.color }">{{ selectedPillarObj.icon }} {{ selectedPillarObj.name }}</span></div>
               <div><strong>Template:</strong> {{ selectedTemplate?.name }} ({{ selectedTemplate?.slide_count }} Slide{{ selectedTemplate?.slide_count > 1 ? 's' : '' }})</div>
               <div><strong>Plattform:</strong> {{ selectedPlatformObj?.icon }} {{ selectedPlatformObj?.label }}</div>
               <div v-if="selectedCountryObj"><strong>Land:</strong> {{ selectedCountryObj.flag }} {{ selectedCountryObj.label }}</div>

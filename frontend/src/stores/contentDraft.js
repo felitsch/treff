@@ -42,6 +42,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   // Step 1: Category  |  Step 2: Template  |  Step 3: Platform
   // ═══════════════════════════════════════════════════════════════════
   const selectedCategory = ref('')
+  const selectedPillar = ref('')  // Content pillar ID (auto-set from category, or manually overridden)
   const templates = ref([])
   const selectedTemplate = ref(null)
   const loadingTemplates = ref(false)
@@ -129,6 +130,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   function resetWorkflow() {
     currentStep.value = 1
     selectedCategory.value = ''
+    selectedPillar.value = ''
     selectedTemplate.value = null
     templatePlaceholderValues.value = {}
     selectedPlatform.value = 'instagram_feed'
@@ -199,6 +201,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     successMsg,
     // Step 1
     selectedCategory,
+    selectedPillar,
     // Step 2
     templates,
     selectedTemplate,

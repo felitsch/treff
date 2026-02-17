@@ -20,6 +20,7 @@ const router = useRouter()
 
 const {
   selectedCategory,
+  selectedPillar,
   selectedTemplate,
   selectedPlatform,
   selectedPlatforms,
@@ -224,6 +225,7 @@ async function saveAndExport() {
       template_id: selectedTemplate.value?.id || null,
       scheduled_date: hasSchedule ? scheduleSelection.value.date : null,
       scheduled_time: hasSchedule ? scheduleSelection.value.time : null,
+      pillar_id: selectedPillar.value || null,
     }
 
     const response = await api.post('/api/posts', postData)

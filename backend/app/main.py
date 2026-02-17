@@ -32,8 +32,9 @@ from app.core.seed_music_tracks import seed_music_tracks
 from app.core.seed_video_templates import seed_video_templates
 from app.core.seed_treff_standard_templates import seed_treff_standard_templates
 from app.core.seed_recurring_formats import seed_recurring_formats
+from app.core.seed_content_pillars import seed_content_pillars
 from app.schemas.responses import ERROR_CODES
-from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks, reports
+from app.api.routes import auth, posts, templates, assets, calendar, suggestions, analytics, settings as settings_router, health, export, slides, ai, students, story_arcs, story_episodes, hashtag_sets, ctas, interactive_elements, recycling, series_reminders, video_overlays, audio_mixer, video_composer, video_templates, video_export, recurring_formats, recurring_posts, post_relations, pipeline, content_strategy, campaigns, template_favorites, video_scripts, prompt_history, smart_scheduling, tasks, reports, content_pillars, video_thumbnails
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,12 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
         # Asset management enhancements: multi-size thumbnails, EXIF, garbage collection
+        # Content Pillar column on posts
+        try:
+            await conn.execute(text("ALTER TABLE posts ADD COLUMN pillar_id VARCHAR"))
+            logger.info("Added pillar_id column to posts table")
+        except Exception:
+            pass  # Column already exists
         for col_sql in [
             "ALTER TABLE assets ADD COLUMN thumbnail_small VARCHAR",
             "ALTER TABLE assets ADD COLUMN thumbnail_medium VARCHAR",
@@ -289,6 +296,15 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Seeded {count} default recurring formats")
         except Exception as e:
             logger.error(f"Failed to seed recurring formats: {e}")
+
+    # Seed default content pillars
+    async with async_session() as session:
+        try:
+            count = await seed_content_pillars(session)
+            if count > 0:
+                logger.info(f"Seeded {count} default content pillars")
+        except Exception as e:
+            logger.error(f"Failed to seed content pillars: {e}")
 
     yield
 
@@ -438,6 +454,10 @@ OPENAPI_TAGS = [
     {
         "name": "Content Strategy",
         "description": "Brand content strategy: content pillars, buyer journey mapping, platform-specific strategies, seasonal planning, competitor analysis, and KPI definitions.",
+    },
+    {
+        "name": "Content Pillars",
+        "description": "Content pillar management: CRUD for thematic content categories (e.g., Erfahrungsberichte, Laender-Spotlights), distribution tracking against target percentages, and seed endpoint.",
     },
     {
         "name": "Campaigns",
@@ -754,6 +774,7 @@ app.include_router(audio_mixer.router, prefix="/api/audio", tags=["Audio Mixer"]
 app.include_router(video_composer.router, prefix="/api/video-composer", tags=["Video Composer"])
 app.include_router(video_templates.router, prefix="/api/video-templates", tags=["Video Templates"])
 app.include_router(video_export.router, prefix="/api/video-export", tags=["Video Export"])
+app.include_router(video_thumbnails.router, prefix="/api/video/thumbnails", tags=["Video Thumbnails"])
 app.include_router(recurring_formats.router, prefix="/api/recurring-formats", tags=["Recurring Formats"])
 app.include_router(recurring_posts.router, prefix="/api/recurring-posts", tags=["Recurring Posts"])
 app.include_router(post_relations.router, prefix="/api/posts", tags=["Post Relations"])
@@ -766,6 +787,7 @@ app.include_router(prompt_history.router, prefix="/api/ai", tags=["AI Prompt His
 app.include_router(smart_scheduling.router, prefix="/api/ai", tags=["Smart Scheduling"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Background Tasks"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
+app.include_router(content_pillars.router, prefix="/api/content-pillars", tags=["Content Pillars"])
 
 
 if __name__ == "__main__":

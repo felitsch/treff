@@ -33,6 +33,7 @@ export function usePostCreator() {
 
   const {
     selectedCategory,
+    selectedPillar,
     selectedTemplate,
     selectedPlatform,
     selectedPlatforms,
@@ -170,6 +171,7 @@ export function usePostCreator() {
 
     // Forwarded store state
     selectedCategory,
+    selectedPillar,
     selectedTemplate,
     selectedPlatform,
     selectedPlatforms,

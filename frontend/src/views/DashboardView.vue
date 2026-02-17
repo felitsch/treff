@@ -18,6 +18,7 @@ import ContentQueueWidget from '@/components/dashboard/ContentQueueWidget.vue'
 import StudentInboxWidget from '@/components/dashboard/StudentInboxWidget.vue'
 import PerformancePulseWidget from '@/components/dashboard/PerformancePulseWidget.vue'
 import ActiveCampaignsWidget from '@/components/dashboard/ActiveCampaignsWidget.vue'
+import PillarDistributionWidget from '@/components/dashboard/PillarDistributionWidget.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -539,6 +540,9 @@ onMounted(() => {
           :loading="widgetsLoading"
           @refresh="fetchWidgetData"
         />
+
+        <!-- Widget 4b: Content Pillar Distribution -->
+        <PillarDistributionWidget />
 
         <!-- Widget 5: Mini Calendar (existing, moved into grid) -->
         <BaseCard padding="none" data-tour="dashboard-calendar">

@@ -32,6 +32,7 @@ from app.models.video_script import VideoScript
 from app.models.prompt_history import PromptHistory
 from app.models.recurring_post_rule import RecurringPostRule
 from app.models.background_task import BackgroundTask
+from app.models.content_pillar import ContentPillar
 
 __all__ = [
     "User",
@@ -66,4 +67,5 @@ __all__ = [
     "PromptHistory",
     "RecurringPostRule",
     "BackgroundTask",
+    "ContentPillar",
 ]

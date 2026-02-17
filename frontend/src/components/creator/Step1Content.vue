@@ -14,9 +14,11 @@ import { usePostCreator } from '@/composables/usePostCreator'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import ImageUploader from '@/components/assets/ImageUploader.vue'
 import api from '@/utils/api'
+import { CATEGORY_TO_PILLAR, getPillarById } from '@/config/contentPillars'
 
 const {
   selectedCategory,
+  selectedPillar,
   topic,
   keyPoints,
   country,
@@ -60,6 +62,14 @@ const categories = [
   { id: 'story_teaser', label: 'Story-Teaser', icon: '👉' },
   { id: 'story_series', label: 'Story-Serien', icon: '📚' },
 ]
+
+// Auto-assign content pillar from category
+const selectedPillarObj = computed(() => selectedPillar.value ? getPillarById(selectedPillar.value) : null)
+watch(selectedCategory, (newCat) => {
+  if (newCat && CATEGORY_TO_PILLAR[newCat]) {
+    selectedPillar.value = CATEGORY_TO_PILLAR[newCat]
+  }
+})
 
 const countries = [
   { id: 'usa', label: 'USA', flag: '🇺🇸' },
@@ -199,6 +209,13 @@ async function generateAiImage() {
         >
           <span class="mr-1">{{ cat.icon }}</span>{{ cat.label }}
         </button>
+      </div>
+      <!-- Content Pillar badge -->
+      <div v-if="selectedPillarObj" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border" :style="{ borderColor: selectedPillarObj.color + '40', backgroundColor: selectedPillarObj.color + '08' }">
+        <span>{{ selectedPillarObj.icon }}</span>
+        <span class="text-gray-600 dark:text-gray-400">Content Pillar:</span>
+        <span class="font-medium text-white px-1.5 py-0.5 rounded" :style="{ backgroundColor: selectedPillarObj.color }">{{ selectedPillarObj.name }}</span>
+        <span class="text-gray-400 dark:text-gray-500">({{ selectedPillarObj.targetPercentage }}%)</span>
       </div>
     </div>
 
