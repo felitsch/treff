@@ -245,7 +245,7 @@ function close() {
                   <div
                     :class="[
                       'w-4 h-4 rounded-full border-2 flex items-center justify-center',
-                      frequency === opt.value ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                      frequency === opt.value ? 'border-blue-500 bg-blue-500' : 'border-gray-300 dark:border-gray-600'
                     ]"
                   >
                     <div v-if="frequency === opt.value" class="w-2 h-2 bg-white rounded-full"></div>

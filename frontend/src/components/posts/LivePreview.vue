@@ -667,7 +667,7 @@ const hasTemplateHtml = computed(() => {
                     <span class="text-[8px] font-semibold text-gray-900 dark:text-white">treff_sprachreisen</span>
                   </div>
                   <div class="flex-1 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]">
-                    <img v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
+                    <img loading="lazy" v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
                     <div v-if="resolvedSlide" class="absolute inset-0 p-3 flex flex-col justify-center z-10">
                       <h4 class="text-[#3B7AB1] text-[11px] font-extrabold leading-tight mb-1 line-clamp-2">{{ resolvedSlide.headline }}</h4>
                       <p v-if="resolvedSlide.body_text" class="text-gray-300 text-[7px] line-clamp-3">{{ resolvedSlide.body_text }}</p>
@@ -681,7 +681,7 @@ const hasTemplateHtml = computed(() => {
 
                 <!-- IG Story mobile -->
                 <div v-else-if="activePlatform === 'instagram_story'" class="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]">
-                  <img v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
+                  <img loading="lazy" v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
                   <div class="absolute top-2 left-2 right-2 flex gap-0.5 z-20">
                     <div v-for="(s, i) in (dSlides.length > 0 ? dSlides : [{}])" :key="i" class="flex-1 h-0.5 rounded-full" :class="i <= props.currentSlideIndex ? 'bg-white' : 'bg-white/30'"></div>
                   </div>
@@ -693,7 +693,7 @@ const hasTemplateHtml = computed(() => {
 
                 <!-- TikTok mobile -->
                 <div v-else-if="activePlatform === 'tiktok'" class="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] to-[#010101]">
-                  <img v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
+                  <img loading="lazy" v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
                   <div v-if="resolvedSlide" class="absolute inset-0 flex flex-col justify-end p-3 pb-10 z-10">
                     <h4 class="text-white text-[10px] font-extrabold leading-tight mb-1 drop-shadow line-clamp-2">{{ resolvedSlide.headline }}</h4>
                     <p class="text-white/70 text-[7px] line-clamp-2">@treff_sprachreisen {{ resolvedCaption?.slice(0, 40) }}</p>

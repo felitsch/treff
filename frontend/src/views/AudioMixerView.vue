@@ -363,7 +363,7 @@ onMounted(async () => {
               >
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
+                    <img loading="lazy" v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
                     <span v-else class="text-xl">🎬</span>
                   </div>
                   <div class="min-w-0 flex-1">

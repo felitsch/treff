@@ -249,6 +249,9 @@ const frequencyChartData = computed(() => {
 })
 
 const frequencyChartOptions = computed(() => {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  const tickColor = isDark ? '#D1D5DB' : '#9CA3AF'
+  const gridColor = isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(156, 163, 175, 0.15)'
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -265,9 +268,11 @@ const frequencyChartOptions = computed(() => {
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(26, 26, 46, 0.9)',
         titleFont: { size: 13, weight: 'bold' },
+        titleColor: isDark ? '#F3F4F6' : '#FFFFFF',
         bodyFont: { size: 12 },
+        bodyColor: isDark ? '#D1D5DB' : '#FFFFFF',
         padding: 12,
         cornerRadius: 8,
         displayColors: false,
@@ -290,14 +295,14 @@ const frequencyChartOptions = computed(() => {
         title: {
           display: true,
           text: 'Datum',
-          color: '#9CA3AF',
+          color: tickColor,
           font: { size: 12, weight: 'bold' },
         },
         grid: {
           display: false,
         },
         ticks: {
-          color: '#9CA3AF',
+          color: tickColor,
           font: { size: 11 },
           maxRotation: 45,
           autoSkip: true,
@@ -309,18 +314,18 @@ const frequencyChartOptions = computed(() => {
         title: {
           display: true,
           text: 'Anzahl',
-          color: '#9CA3AF',
+          color: tickColor,
           font: { size: 12, weight: 'bold' },
         },
         beginAtZero: true,
         ticks: {
-          color: '#9CA3AF',
+          color: tickColor,
           font: { size: 11 },
           stepSize: 1,
           precision: 0,
         },
         grid: {
-          color: 'rgba(156, 163, 175, 0.15)',
+          color: gridColor,
         },
       },
     },
@@ -435,6 +440,9 @@ const performanceTrendChartData = computed(() => {
 })
 
 const performanceTrendChartOptions = computed(() => {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  const tickColor = isDark ? '#D1D5DB' : '#9CA3AF'
+  const gridColor = isDark ? 'rgba(156,163,175,0.15)' : 'rgba(156,163,175,0.1)'
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -443,19 +451,21 @@ const performanceTrendChartOptions = computed(() => {
       legend: {
         display: true,
         position: 'bottom',
-        labels: { usePointStyle: true, pointStyle: 'circle', padding: 12, font: { size: 11 } },
+        labels: { usePointStyle: true, pointStyle: 'circle', padding: 12, font: { size: 11 }, color: tickColor },
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+        backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(26, 26, 46, 0.9)',
+        titleColor: isDark ? '#F3F4F6' : '#FFFFFF',
+        bodyColor: isDark ? '#D1D5DB' : '#FFFFFF',
         padding: 10,
         cornerRadius: 8,
       },
     },
     scales: {
-      x: { display: true, grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 15 } },
-      y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Eng. Rate (%)', color: '#22C55E', font: { size: 10 } }, beginAtZero: true, ticks: { color: '#22C55E', font: { size: 10 } }, grid: { color: 'rgba(156,163,175,0.1)' } },
-      y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Anzahl', color: '#9CA3AF', font: { size: 10 } }, beginAtZero: true, ticks: { color: '#9CA3AF', font: { size: 10 } }, grid: { drawOnChartArea: false } },
+      x: { display: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 15 } },
+      y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Eng. Rate (%)', color: '#22C55E', font: { size: 10 } }, beginAtZero: true, ticks: { color: '#22C55E', font: { size: 10 } }, grid: { color: gridColor } },
+      y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Anzahl', color: tickColor, font: { size: 10 } }, beginAtZero: true, ticks: { color: tickColor, font: { size: 10 } }, grid: { drawOnChartArea: false } },
     },
   }
 })

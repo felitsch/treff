@@ -652,7 +652,7 @@ loadAssets()
                     ? 'border-[#3B7AB1] ring-2 ring-[#3B7AB1]/30'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'"
                 >
-                  <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
+                  <img loading="lazy" :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
                 </button>
               </div>
             </div>

@@ -5,14 +5,26 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TREFF Post-Generator</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <!-- Performance: DNS prefetch and preconnect for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Performance: Preload critical font (Inter 400 is used most) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+
+    <!-- Performance: Meta tags for caching and rendering hints -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#4C8BC2" />
+    <meta name="description" content="TREFF Sprachreisen Post-Generator - Social Media Content Tool" />
   </head>
   <body class="bg-treff-light dark:bg-treff-dark">
     <div id="app"></div>
     <script>
-      // Initialize dark mode before Vue loads to prevent flash
+      // Initialize dark mode before Vue loads to prevent flash (FOUC prevention)
       if (localStorage.getItem('darkMode') === 'true') {
         document.documentElement.classList.add('dark')
       }

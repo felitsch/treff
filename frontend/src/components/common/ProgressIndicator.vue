@@ -155,7 +155,7 @@ onUnmounted(() => {
           <div
             v-for="task in allDisplayTasks"
             :key="task.task_id"
-            class="mb-1.5 rounded-lg border border-gray-100 bg-gray-50 p-3 last:mb-0 dark:border-gray-700 dark:bg-gray-750"
+            class="mb-1.5 rounded-lg border border-gray-100 bg-gray-50 p-3 last:mb-0 dark:border-gray-700 dark:bg-gray-700/50"
             :data-testid="`task-item-${task.task_id}`"
           >
             <div class="flex items-start justify-between gap-2">

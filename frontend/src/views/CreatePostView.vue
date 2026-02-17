@@ -3563,7 +3563,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 class="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-[#3B7AB1] transition-all relative group cursor-pointer"
                 @click="selectAssetAsBackground(asset)"
               >
-                <img :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
+                <img loading="lazy" :src="`/api/uploads/assets/${asset.filename}`" :alt="asset.original_filename" class="w-full h-full object-cover" />
                 <div v-if="asset.source === 'ai_generated'" class="absolute top-1 right-1 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">KI</div>
                 <!-- KI Edit button overlay -->
                 <button

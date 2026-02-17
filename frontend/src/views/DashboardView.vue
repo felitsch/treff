@@ -14,6 +14,10 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap.vue'
+import ContentQueueWidget from '@/components/dashboard/ContentQueueWidget.vue'
+import StudentInboxWidget from '@/components/dashboard/StudentInboxWidget.vue'
+import PerformancePulseWidget from '@/components/dashboard/PerformancePulseWidget.vue'
+import ActiveCampaignsWidget from '@/components/dashboard/ActiveCampaignsWidget.vue'
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
@@ -40,6 +44,15 @@ const calendarEntries = ref([])
 const suggestions = ref([])
 const contentSuggestionsRef = ref(null)
 const generatingSuggestions = ref(false)
+
+// Dashboard 6-Widget-Architektur data
+const widgetData = ref({
+  content_queue: [],
+  student_inbox: { items: [], total: 0 },
+  performance_pulse: { weeks: [], goal: 3, trend: 'stable', current_week_count: 0 },
+  active_campaigns: [],
+})
+const widgetsLoading = ref(false)
 
 // Animated counters
 const animatedStats = ref({
@@ -209,6 +222,20 @@ async function generateSuggestions() {
   }
 }
 
+async function fetchWidgetData() {
+  widgetsLoading.value = true
+  try {
+    const res = await api.get('/api/analytics/dashboard-widgets')
+    if (res.data) {
+      widgetData.value = res.data
+    }
+  } catch {
+    // Widget data is non-critical; fail silently
+  } finally {
+    widgetsLoading.value = false
+  }
+}
+
 async function fetchDashboardData() {
   const result = await apiExecute(() => api.get('/api/analytics/dashboard'))
   if (result) {
@@ -278,6 +305,7 @@ const todayFormatted = computed(() => {
 
 onMounted(() => {
   fetchDashboardData()
+  fetchWidgetData()
   checkWelcomeStatus()
 })
 </script>
@@ -327,6 +355,16 @@ onMounted(() => {
               <SkeletonBase width="4rem" height="2rem" />
             </div>
             <SkeletonBase width="3rem" height="3rem" rounded="xl" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton: 6-Widget Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="i in 6" :key="'wid-sk-'+i" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <SkeletonBase width="8rem" height="1rem" class="mb-4" />
+          <div class="space-y-2">
+            <SkeletonBase v-for="j in 3" :key="'wid-inner-'+i+'-'+j" width="100%" height="2.5rem" rounded="lg" />
           </div>
         </div>
       </div>
@@ -471,6 +509,153 @@ onMounted(() => {
         </BaseCard>
       </div>
 
+      <!-- ─── 6-Widget-Architektur: 3x2 Grid (Desktop), 2x3 (Tablet), 1x6 (Mobile) ─── -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Widget 1: Content Queue -->
+        <ContentQueueWidget
+          :posts="widgetData.content_queue"
+          :loading="widgetsLoading"
+          @refresh="fetchWidgetData"
+        />
+
+        <!-- Widget 2: Student Inbox -->
+        <StudentInboxWidget
+          :items="widgetData.student_inbox.items"
+          :total="widgetData.student_inbox.total"
+          :loading="widgetsLoading"
+          @refresh="fetchWidgetData"
+        />
+
+        <!-- Widget 3: Performance Pulse -->
+        <PerformancePulseWidget
+          :data="widgetData.performance_pulse"
+          :loading="widgetsLoading"
+          @refresh="fetchWidgetData"
+        />
+
+        <!-- Widget 4: Active Campaigns -->
+        <ActiveCampaignsWidget
+          :campaigns="widgetData.active_campaigns"
+          :loading="widgetsLoading"
+          @refresh="fetchWidgetData"
+        />
+
+        <!-- Widget 5: Mini Calendar (existing, moved into grid) -->
+        <BaseCard padding="none" data-tour="dashboard-calendar">
+          <template #header>
+            <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📅</span> Naechste 7 Tage
+              <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
+            </h2>
+          </template>
+          <template #headerAction>
+            <button
+              @click="router.push('/calendar')"
+              class="text-xs text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+            >
+              Kalender &rarr;
+            </button>
+          </template>
+          <div class="p-4">
+            <div class="space-y-1">
+              <div
+                v-for="day in next7Days"
+                :key="day.dateStr"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
+                :class="[
+                  day.isToday
+                    ? 'bg-[#4C8BC2]/10 dark:bg-[#4C8BC2]/20 ring-1 ring-[#4C8BC2]/30'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
+                ]"
+              >
+                <div class="w-10 text-center flex-shrink-0">
+                  <span class="block text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase leading-none">
+                    {{ day.dayName }}
+                  </span>
+                  <span
+                    class="block text-lg font-bold leading-tight mt-0.5"
+                    :class="day.isToday ? 'text-[#4C8BC2]' : 'text-gray-900 dark:text-white'"
+                  >
+                    {{ day.dayNum }}
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div
+                    v-if="getEntriesForDate(day.dateStr).length > 0"
+                    class="flex items-center gap-1.5 flex-wrap"
+                  >
+                    <span
+                      v-for="(entry, idx) in getEntriesForDate(day.dateStr).slice(0, 3)"
+                      :key="entry.id"
+                      class="w-2 h-2 rounded-full bg-[#4C8BC2] flex-shrink-0"
+                    ></span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                      {{ getEntriesForDate(day.dateStr).length }} Post{{ getEntriesForDate(day.dateStr).length !== 1 ? 's' : '' }}
+                    </span>
+                  </div>
+                  <span v-else class="text-xs text-gray-300 dark:text-gray-600">&mdash;</span>
+                </div>
+                <span
+                  v-if="day.isToday"
+                  class="text-[10px] font-bold text-[#4C8BC2] uppercase flex-shrink-0"
+                >
+                  Heute
+                </span>
+              </div>
+            </div>
+            <div v-if="calendarEntries.length === 0" class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 rounded-lg py-2.5 px-3">
+              Keine geplanten Posts in den naechsten 7 Tagen.
+              <button
+                @click="router.push('/calendar/week-planner')"
+                class="text-[#4C8BC2] hover:underline font-medium ml-1"
+              >
+                Wochenplaner
+              </button>
+            </div>
+          </div>
+        </BaseCard>
+
+        <!-- Widget 6: AI Suggestions (compact version) -->
+        <BaseCard padding="none" data-tour="dashboard-suggestions-widget">
+          <template #header>
+            <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>✨</span> KI-Vorschlaege
+            </h2>
+          </template>
+          <template #headerAction>
+            <button
+              @click="generateSuggestions"
+              :disabled="generatingSuggestions"
+              class="text-xs text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium disabled:opacity-50"
+            >
+              {{ generatingSuggestions ? 'Generiere...' : 'Neue Ideen' }} &rarr;
+            </button>
+          </template>
+          <div class="p-4">
+            <EmptyState
+              v-if="suggestions.length === 0"
+              svgIcon="sparkles"
+              title="Keine Vorschlaege"
+              description="Generiere KI-Ideen fuer deinen naechsten Post."
+              actionLabel="Vorschlaege generieren"
+              @action="generateSuggestions"
+              :compact="true"
+            />
+            <div v-else class="space-y-2">
+              <div
+                v-for="sug in suggestions.slice(0, 3)"
+                :key="sug.id"
+                class="p-2 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-[#FDD000]/50 dark:hover:border-[#FDD000]/50 transition-all cursor-pointer"
+                @click="router.push({ path: '/create/quick', query: { category: sug.suggested_category, country: sug.suggested_country } })"
+              >
+                <p class="text-xs font-semibold text-gray-900 dark:text-white truncate">{{ sug.title }}</p>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{{ sug.description }}</p>
+              </div>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+
       <!-- ─── Main Content Grid: 3 cols desktop, 2 tablet, 1 mobile ─── -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -563,93 +748,6 @@ onMounted(() => {
           </div>
         </BaseCard>
 
-        <!-- Mini Calendar Widget (right column on lg) -->
-        <BaseCard padding="none" data-tour="dashboard-calendar">
-          <template #header>
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>📅</span> Naechste 7 Tage
-              <HelpTooltip :text="tooltipTexts.dashboard.next7Days" size="sm" />
-            </h2>
-          </template>
-          <template #headerAction>
-            <button
-              @click="router.push('/calendar')"
-              class="text-xs text-[#4C8BC2] hover:text-blue-600 dark:hover:text-blue-400 font-medium"
-            >
-              Kalender &rarr;
-            </button>
-          </template>
-          <div class="p-4">
-            <div class="space-y-1">
-              <div
-                v-for="day in next7Days"
-                :key="day.dateStr"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
-                :class="[
-                  day.isToday
-                    ? 'bg-[#4C8BC2]/10 dark:bg-[#4C8BC2]/20 ring-1 ring-[#4C8BC2]/30'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
-                ]"
-              >
-                <!-- Day name + number -->
-                <div class="w-10 text-center flex-shrink-0">
-                  <span class="block text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase leading-none">
-                    {{ day.dayName }}
-                  </span>
-                  <span
-                    class="block text-lg font-bold leading-tight mt-0.5"
-                    :class="
-                      day.isToday
-                        ? 'text-[#4C8BC2]'
-                        : 'text-gray-900 dark:text-white'
-                    "
-                  >
-                    {{ day.dayNum }}
-                  </span>
-                </div>
-
-                <!-- Entries or empty -->
-                <div class="flex-1 min-w-0">
-                  <div
-                    v-if="getEntriesForDate(day.dateStr).length > 0"
-                    class="flex items-center gap-1.5 flex-wrap"
-                  >
-                    <span
-                      v-for="(entry, idx) in getEntriesForDate(day.dateStr).slice(0, 3)"
-                      :key="entry.id"
-                      class="w-2 h-2 rounded-full bg-[#4C8BC2] flex-shrink-0"
-                    ></span>
-                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                      {{ getEntriesForDate(day.dateStr).length }} Post{{ getEntriesForDate(day.dateStr).length !== 1 ? 's' : '' }}
-                    </span>
-                  </div>
-                  <span v-else class="text-xs text-gray-300 dark:text-gray-600">
-                    &mdash;
-                  </span>
-                </div>
-
-                <!-- Today badge -->
-                <span
-                  v-if="day.isToday"
-                  class="text-[10px] font-bold text-[#4C8BC2] uppercase flex-shrink-0"
-                >
-                  Heute
-                </span>
-              </div>
-            </div>
-
-            <!-- No scheduled posts hint -->
-            <div v-if="calendarEntries.length === 0" class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 rounded-lg py-2.5 px-3">
-              Keine geplanten Posts in den naechsten 7 Tagen.
-              <button
-                @click="router.push('/calendar/week-planner')"
-                class="text-[#4C8BC2] hover:underline font-medium ml-1"
-              >
-                Wochenplaner
-              </button>
-            </div>
-          </div>
-        </BaseCard>
       </div>
 
       <!-- ─── Activity Heatmap (mini, optional on Dashboard) ─── -->
@@ -675,7 +773,7 @@ onMounted(() => {
         <RecyclingPanel />
       </div>
 
-      <!-- ─── Content Suggestions Section (extracted component) ─── -->
+      <!-- ─── Content Suggestions Section (full detail view, below widgets) ─── -->
       <ContentSuggestions
         ref="contentSuggestionsRef"
         :initial-suggestions="suggestions"

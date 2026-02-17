@@ -693,7 +693,7 @@ const fontWeights = ['300', '400', '500', '600', '700', '800', '900']
                 justifyContent: 'center',
               }"
             >
-              <img v-if="el.src" :src="el.src" class="w-full h-full object-cover" alt="Template-Bildelement" />
+              <img loading="lazy" v-if="el.src" :src="el.src" class="w-full h-full object-cover" alt="Template-Bildelement" />
               <span v-else class="text-gray-400" :style="{ fontSize: 16 * canvasScale + 'px' }">Bild</span>
             </div>
 

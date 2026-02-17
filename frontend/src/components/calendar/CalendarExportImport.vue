@@ -535,7 +535,7 @@ const validRowCount = computed(() => {
                   <input
                     type="checkbox"
                     v-model="skipDuplicates"
-                    class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500"
                   />
                   Duplikate ueberspringen ({{ importPreviewData.duplicate_rows }} Zeilen)
                 </label>

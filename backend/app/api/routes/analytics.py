@@ -21,6 +21,10 @@ from app.models.asset import Asset
 from app.models.calendar_entry import CalendarEntry
 from app.models.content_suggestion import ContentSuggestion
 from app.models.setting import Setting
+from app.models.campaign import Campaign
+from app.models.campaign_post import CampaignPost
+from app.models.pipeline_item import PipelineItem
+from app.models.student import Student
 
 router = APIRouter()
 
@@ -1293,4 +1297,226 @@ async def get_heatmap(
         "total_days_with_posts": total_days_with_posts,
         "grid_start": grid_start.isoformat(),
         "grid_end": today.isoformat(),
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /api/analytics/dashboard-widgets
+# Aggregated data for Dashboard 6-Widget-Architektur
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/dashboard-widgets")
+async def get_dashboard_widgets(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get aggregated data for dashboard widgets: content queue, student inbox,
+    performance pulse, and active campaigns."""
+    import json as _json
+    from calendar import monthrange
+    from sqlalchemy import and_
+
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    # ── 1. Content Queue: next 5 scheduled posts ──
+    queue_query = (
+        select(Post)
+        .where(
+            Post.user_id == user_id,
+            Post.status == "scheduled",
+            Post.scheduled_date.isnot(None),
+            Post.scheduled_date >= today.isoformat(),
+        )
+        .order_by(Post.scheduled_date.asc(), Post.scheduled_time.asc())
+        .limit(5)
+    )
+    queue_result = await db.execute(queue_query)
+    queue_posts = queue_result.scalars().all()
+
+    content_queue = []
+    for p in queue_posts:
+        thumbnail_url = None
+        try:
+            slides = _json.loads(p.slide_data) if p.slide_data else []
+            if slides and isinstance(slides, list) and len(slides) > 0:
+                first_slide = slides[0]
+                thumbnail_url = first_slide.get("background_image") or first_slide.get("image_url") or first_slide.get("thumbnail")
+        except (ValueError, TypeError, KeyError):
+            pass
+
+        content_queue.append({
+            "id": p.id,
+            "title": p.title or "Ohne Titel",
+            "category": p.category,
+            "platform": p.platform,
+            "country": p.country,
+            "status": p.status,
+            "scheduled_date": p.scheduled_date if isinstance(p.scheduled_date, str) else (p.scheduled_date.isoformat() if p.scheduled_date else None),
+            "scheduled_time": p.scheduled_time,
+            "thumbnail_url": thumbnail_url,
+        })
+
+    # ── 2. Student Inbox: pending/analyzed items ──
+    inbox_query = (
+        select(PipelineItem)
+        .where(
+            PipelineItem.user_id == user_id,
+            PipelineItem.status.in_(["pending", "analyzed"]),
+        )
+        .order_by(PipelineItem.created_at.desc())
+        .limit(5)
+    )
+    inbox_result = await db.execute(inbox_query)
+    inbox_items = inbox_result.scalars().all()
+
+    student_inbox = []
+    for item in inbox_items:
+        student_name = None
+        asset_thumbnail = None
+        if item.student_id:
+            s_result = await db.execute(
+                select(Student.name, Student.country).where(Student.id == item.student_id)
+            )
+            s_row = s_result.first()
+            if s_row:
+                student_name = s_row[0]
+                student_country = s_row[1]
+            else:
+                student_country = None
+        else:
+            student_country = None
+
+        student_inbox.append({
+            "id": item.id,
+            "student_name": student_name or "Unbekannt",
+            "student_country": student_country,
+            "status": item.status,
+            "suggested_post_type": item.suggested_post_type,
+            "analysis_summary": item.analysis_summary,
+            "detected_country": item.detected_country,
+            "source_description": item.source_description,
+            "created_at": item.created_at.isoformat() if item.created_at else None,
+        })
+
+    # Total pending inbox count
+    inbox_count_result = await db.execute(
+        select(func.count(PipelineItem.id)).where(
+            PipelineItem.user_id == user_id,
+            PipelineItem.status.in_(["pending", "analyzed"]),
+        )
+    )
+    inbox_total = inbox_count_result.scalar() or 0
+
+    # ── 3. Performance Pulse: posting frequency last 4 weeks ──
+    weeks_data = []
+    for week_offset in range(3, -1, -1):  # 3 weeks ago -> this week
+        week_start = now - timedelta(days=now.weekday() + (week_offset * 7))
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+        count_result = await db.execute(
+            select(func.count(Post.id)).where(
+                Post.user_id == user_id,
+                Post.created_at >= week_start,
+                Post.created_at <= week_end,
+            )
+        )
+        count = count_result.scalar() or 0
+
+        week_label = f"KW {week_start.isocalendar()[1]}"
+        weeks_data.append({
+            "label": week_label,
+            "count": count,
+            "week_start": week_start.date().isoformat(),
+        })
+
+    # Get posting goal from settings
+    goal_result = await db.execute(
+        select(Setting).where(
+            Setting.user_id == user_id,
+            Setting.key == "posts_per_week",
+        )
+    )
+    goal_setting = goal_result.scalar_one_or_none()
+    posts_per_week_goal = int(goal_setting.value) if goal_setting and goal_setting.value else 3
+
+    # Trend direction
+    if len(weeks_data) >= 2:
+        last_week = weeks_data[-1]["count"]
+        prev_week = weeks_data[-2]["count"]
+        if last_week > prev_week:
+            trend = "up"
+        elif last_week < prev_week:
+            trend = "down"
+        else:
+            trend = "stable"
+    else:
+        trend = "stable"
+
+    performance_pulse = {
+        "weeks": weeks_data,
+        "goal": posts_per_week_goal,
+        "trend": trend,
+        "current_week_count": weeks_data[-1]["count"] if weeks_data else 0,
+    }
+
+    # ── 4. Active Campaigns: with progress ──
+    campaigns_query = (
+        select(Campaign)
+        .where(
+            Campaign.user_id == user_id,
+            Campaign.status.in_(["active", "draft"]),
+        )
+        .order_by(Campaign.updated_at.desc())
+        .limit(5)
+    )
+    campaigns_result = await db.execute(campaigns_query)
+    campaigns = campaigns_result.scalars().all()
+
+    active_campaigns = []
+    for c in campaigns:
+        # Count total campaign posts and completed ones
+        total_result = await db.execute(
+            select(func.count(CampaignPost.id)).where(CampaignPost.campaign_id == c.id)
+        )
+        total_posts_count = total_result.scalar() or 0
+
+        # Count posts that are already created (have post_id) and posted/exported
+        completed_result = await db.execute(
+            select(func.count(CampaignPost.id)).where(
+                CampaignPost.campaign_id == c.id,
+                CampaignPost.post_id.isnot(None),
+            )
+        )
+        completed_posts = completed_result.scalar() or 0
+
+        platforms = None
+        if c.platforms:
+            try:
+                platforms = _json.loads(c.platforms)
+            except (ValueError, TypeError):
+                platforms = []
+
+        active_campaigns.append({
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "goal": c.goal,
+            "status": c.status,
+            "start_date": c.start_date,
+            "end_date": c.end_date,
+            "platforms": platforms,
+            "total_posts": total_posts_count,
+            "completed_posts": completed_posts,
+        })
+
+    return {
+        "content_queue": content_queue,
+        "student_inbox": {
+            "items": student_inbox,
+            "total": inbox_total,
+        },
+        "performance_pulse": performance_pulse,
+        "active_campaigns": active_campaigns,
     }

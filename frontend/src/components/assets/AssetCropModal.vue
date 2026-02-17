@@ -461,7 +461,7 @@ onMounted(() => {
               <input
                 type="checkbox"
                 v-model="saveAsNew"
-                class="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 focus:ring-blue-500"
                 data-testid="save-as-new-checkbox"
               />
               Als neues Asset speichern

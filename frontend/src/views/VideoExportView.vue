@@ -434,7 +434,7 @@ onMounted(() => {
             </h3>
             <div class="flex items-start gap-4">
               <div class="w-28 h-16 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
+                <img loading="lazy" v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
                 <div v-else class="w-full h-full flex items-center justify-center text-gray-400">🎥</div>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 text-xs">
@@ -526,7 +526,7 @@ onMounted(() => {
             <div class="flex items-center gap-6">
               <!-- Focus point visual -->
               <div class="relative w-40 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600" data-testid="focus-preview">
-                <img v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
+                <img loading="lazy" v-if="analysisData.thumbnail_path" :src="analysisData.thumbnail_path" class="w-full h-full object-cover" alt="Video-Vorschau" />
                 <!-- Focus indicator dot -->
                 <div
                   class="absolute w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"

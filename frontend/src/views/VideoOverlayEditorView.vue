@@ -517,7 +517,7 @@ onUnmounted(() => {
             class="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-all"
           >
             <div class="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <img v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
+              <img loading="lazy" v-if="asset.thumbnail_path" :src="asset.thumbnail_path" class="w-full h-full object-cover" :alt="asset.original_filename || 'Video-Vorschau'" />
               <span v-else class="text-3xl">🎬</span>
             </div>
             <div class="p-2 text-xs text-gray-700 dark:text-gray-300 truncate">

@@ -7,6 +7,8 @@ __pycache__/
 
 # Environment
 .env
+.env.*
+!.env.example
 backend/.env
 
 # Database
@@ -25,6 +27,17 @@ backend/.env
 dist/
 build/
 *.egg-info/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Temp files
+*.tmp
+*.pem
+!backend/venv/**
 
 # OS files
 .DS_Store
@@ -50,6 +63,8 @@ npm-debug.log*
 .playwright-mcp/
 backend/.playwright-cli/
 frontend/.playwright-cli/
+test-results/
+playwright-report/
 
 # Uploads (runtime artifacts)
 backend/app/static/uploads/composed/
