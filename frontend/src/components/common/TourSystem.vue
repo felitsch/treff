@@ -14,7 +14,7 @@
  *   <!-- plus a manual restart button -->
  *   <button @click="tourRef?.startTour()">Tour starten</button>
  */
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useTour } from '@/composables/useTour'
 import tourConfigs from '@/tours/tourConfigs'
 
@@ -48,128 +48,169 @@ const isLastStep = computed(() => currentStep.value === steps.value.length - 1)
 
 // ─── Positioning ───────────────────────────────────────────
 
+const OFFSET = 12
+const TOOLTIP_WIDTH = 340
+
+function isElementInViewport(el) {
+  const r = el.getBoundingClientRect()
+  return r.top >= 16 && r.bottom <= window.innerHeight - 16
+}
+
+function afterPaint(fn) {
+  requestAnimationFrame(() => requestAnimationFrame(fn))
+}
+
+function resolvePosition(preferred, rect, actualH, actualW, vw, vh) {
+  const space = {
+    bottom: vh - rect.bottom - OFFSET,
+    top: rect.top - OFFSET,
+    right: vw - rect.right - OFFSET,
+    left: rect.left - OFFSET,
+  }
+  const order = {
+    bottom: ['bottom', 'top', 'right', 'left'],
+    top: ['top', 'bottom', 'right', 'left'],
+    right: ['right', 'left', 'bottom', 'top'],
+    left: ['left', 'right', 'bottom', 'top'],
+  }[preferred] || ['bottom', 'top', 'right', 'left']
+
+  for (const dir of order) {
+    if ((dir === 'bottom' || dir === 'top') && space[dir] >= actualH) return dir
+    if ((dir === 'right' || dir === 'left') && space[dir] >= actualW) return dir
+  }
+  return 'center'
+}
+
+function applyPosition(dir, rect, actualH, actualW, vw, vh) {
+  function clampLeft(l) {
+    return Math.max(16, Math.min(l, vw - TOOLTIP_WIDTH - 16))
+  }
+  function clampTop(t) {
+    return Math.max(16, Math.min(t, vh - actualH - 16))
+  }
+
+  if (dir === 'bottom') {
+    tooltipStyle.value = {
+      top: (rect.bottom + OFFSET) + 'px',
+      left: clampLeft(rect.left) + 'px',
+      maxWidth: TOOLTIP_WIDTH + 'px',
+      visibility: 'visible',
+    }
+    arrowStyle.value = {
+      top: '-8px',
+      left: '24px',
+      borderBottom: '8px solid white',
+      borderLeft: '8px solid transparent',
+      borderRight: '8px solid transparent',
+    }
+  } else if (dir === 'top') {
+    tooltipStyle.value = {
+      top: Math.max(16, rect.top - OFFSET - actualH) + 'px',
+      left: clampLeft(rect.left) + 'px',
+      maxWidth: TOOLTIP_WIDTH + 'px',
+      visibility: 'visible',
+    }
+    arrowStyle.value = {
+      bottom: '-8px',
+      left: '24px',
+      borderTop: '8px solid white',
+      borderLeft: '8px solid transparent',
+      borderRight: '8px solid transparent',
+    }
+  } else if (dir === 'right') {
+    tooltipStyle.value = {
+      top: clampTop(rect.top) + 'px',
+      left: clampLeft(rect.right + OFFSET) + 'px',
+      maxWidth: TOOLTIP_WIDTH + 'px',
+      visibility: 'visible',
+    }
+    arrowStyle.value = {
+      top: '20px',
+      left: '-8px',
+      borderRight: '8px solid white',
+      borderTop: '8px solid transparent',
+      borderBottom: '8px solid transparent',
+    }
+  } else if (dir === 'left') {
+    tooltipStyle.value = {
+      top: clampTop(rect.top) + 'px',
+      left: Math.max(16, rect.left - TOOLTIP_WIDTH - OFFSET) + 'px',
+      maxWidth: TOOLTIP_WIDTH + 'px',
+      visibility: 'visible',
+    }
+    arrowStyle.value = {
+      top: '20px',
+      right: '-8px',
+      borderLeft: '8px solid white',
+      borderTop: '8px solid transparent',
+      borderBottom: '8px solid transparent',
+    }
+  } else {
+    // center fallback
+    tooltipStyle.value = {
+      top: Math.max(16, (vh - actualH) / 2) + 'px',
+      left: Math.max(16, (vw - TOOLTIP_WIDTH) / 2) + 'px',
+      maxWidth: TOOLTIP_WIDTH + 'px',
+      visibility: 'visible',
+    }
+    arrowStyle.value = {}
+  }
+}
+
 function positionTooltip() {
   const step = steps.value[currentStep.value]
   if (!step) return
 
   const el = document.querySelector(step.target)
   if (!el) {
-    // Target not found – skip to next or complete
     if (currentStep.value < steps.value.length - 1) {
       currentStep.value++
-      nextTick(() => positionTooltip())
+      positionTooltip()
     } else {
       completeTour()
     }
     return
   }
 
-  // Scroll element into view if needed
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  const needsScroll = !isElementInViewport(el)
+  if (needsScroll) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+  const scrollDelay = needsScroll ? 450 : 0
 
-  // Small delay after scroll to get correct rect
+  // Pass 1: render tooltip invisibly so the browser can calculate its real height
+  tooltipStyle.value = {
+    top: '-9999px',
+    left: '-9999px',
+    maxWidth: TOOLTIP_WIDTH + 'px',
+    visibility: 'hidden',
+  }
+  arrowStyle.value = {}
+
   setTimeout(() => {
-    const rect = el.getBoundingClientRect()
-    const vw = window.innerWidth
-    const vh = window.innerHeight
+    afterPaint(() => {
+      const rect = el.getBoundingClientRect()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
 
-    // Clamp highlight to viewport (for very tall/wide elements)
-    const hlTop = Math.max(0, rect.top - 6)
-    const hlLeft = Math.max(0, rect.left - 6)
-    const hlHeight = Math.min(rect.height + 12, vh - hlTop)
-    const hlWidth = Math.min(rect.width + 12, vw - hlLeft)
+      // Highlight ring
+      const hlTop = Math.max(0, rect.top - 6)
+      const hlLeft = Math.max(0, rect.left - 6)
+      const hlHeight = Math.min(rect.height + 12, vh - hlTop)
+      const hlWidth = Math.min(rect.width + 12, vw - hlLeft)
+      highlightStyle.value = {
+        top: hlTop + 'px',
+        left: hlLeft + 'px',
+        width: hlWidth + 'px',
+        height: hlHeight + 'px',
+      }
 
-    highlightStyle.value = {
-      top: hlTop + 'px',
-      left: hlLeft + 'px',
-      width: hlWidth + 'px',
-      height: hlHeight + 'px',
-    }
-
-    const tooltipWidth = 340
-    const tooltipOffset = 16
-    const tooltipHeight = 200 // approximate max height
-
-    // Helper: clamp a top value so the tooltip stays in view
-    function clampTop(t) {
-      return Math.max(16, Math.min(t, vh - tooltipHeight - 16))
-    }
-    function clampLeft(l) {
-      return Math.max(16, Math.min(l, vw - tooltipWidth - 16))
-    }
-
-    if (step.position === 'right') {
-      tooltipStyle.value = {
-        top: clampTop(rect.top) + 'px',
-        left: clampLeft(rect.right + tooltipOffset) + 'px',
-        maxWidth: tooltipWidth + 'px',
-      }
-      arrowStyle.value = {
-        top: '20px',
-        left: '-8px',
-        borderRight: '8px solid white',
-        borderTop: '8px solid transparent',
-        borderBottom: '8px solid transparent',
-      }
-    } else if (step.position === 'bottom') {
-      // If tooltip would go below viewport, position it inside the element area
-      let topPos = rect.bottom + tooltipOffset
-      if (topPos + tooltipHeight > vh) {
-        topPos = Math.max(16, rect.top + 40)
-      }
-      tooltipStyle.value = {
-        top: topPos + 'px',
-        left: clampLeft(rect.left) + 'px',
-        maxWidth: tooltipWidth + 'px',
-      }
-      arrowStyle.value = {
-        top: '-8px',
-        left: '24px',
-        borderBottom: '8px solid white',
-        borderLeft: '8px solid transparent',
-        borderRight: '8px solid transparent',
-      }
-    } else if (step.position === 'left') {
-      tooltipStyle.value = {
-        top: clampTop(rect.top) + 'px',
-        left: Math.max(16, rect.left - tooltipWidth - tooltipOffset) + 'px',
-        maxWidth: tooltipWidth + 'px',
-      }
-      arrowStyle.value = {
-        top: '20px',
-        right: '-8px',
-        borderLeft: '8px solid white',
-        borderTop: '8px solid transparent',
-        borderBottom: '8px solid transparent',
-      }
-    } else if (step.position === 'top') {
-      tooltipStyle.value = {
-        bottom: Math.max(16, vh - rect.top + tooltipOffset) + 'px',
-        left: clampLeft(rect.left) + 'px',
-        maxWidth: tooltipWidth + 'px',
-      }
-      arrowStyle.value = {
-        bottom: '-8px',
-        left: '24px',
-        borderTop: '8px solid white',
-        borderLeft: '8px solid transparent',
-        borderRight: '8px solid transparent',
-      }
-    }
-
-    // After initial positioning, measure actual height and re-clamp
-    nextTick(() => {
-      if (!tooltipEl.value) return
-      const ttRect = tooltipEl.value.getBoundingClientRect()
-      if (ttRect.bottom > vh - 16) {
-        const corrected = Math.max(16, vh - ttRect.height - 16)
-        tooltipStyle.value = { ...tooltipStyle.value, top: corrected + 'px', bottom: 'auto' }
-      }
-      if (ttRect.top < 16) {
-        tooltipStyle.value = { ...tooltipStyle.value, top: '16px', bottom: 'auto' }
-      }
+      // Pass 2: measure actual tooltip height after browser paint
+      const actualH = tooltipEl.value ? tooltipEl.value.getBoundingClientRect().height : 300
+      const dir = resolvePosition(step.position || 'bottom', rect, actualH, TOOLTIP_WIDTH, vw, vh)
+      applyPosition(dir, rect, actualH, TOOLTIP_WIDTH, vw, vh)
     })
-  }, 100)
+  }, scrollDelay)
 }
 
 // ─── Navigation ────────────────────────────────────────────
@@ -177,7 +218,7 @@ function positionTooltip() {
 function nextStep() {
   if (currentStep.value < steps.value.length - 1) {
     currentStep.value++
-    nextTick(() => positionTooltip())
+    positionTooltip()
   } else {
     completeTour()
   }
@@ -186,7 +227,7 @@ function nextStep() {
 function prevStep() {
   if (currentStep.value > 0) {
     currentStep.value--
-    nextTick(() => positionTooltip())
+    positionTooltip()
   }
 }
 
@@ -205,9 +246,7 @@ function startTour() {
   if (!steps.value.length) return
   currentStep.value = 0
   isVisible.value = true
-  nextTick(() => {
-    setTimeout(() => positionTooltip(), 200)
-  })
+  positionTooltip()
 }
 
 defineExpose({ startTour })
