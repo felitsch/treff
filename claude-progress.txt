@@ -11076,3 +11076,41 @@ Each store file contains comprehensive JSDoc header with:
 
 ### Current state:
 - Feature #285 marked as PASSING
+
+---
+
+## Session - Feature #276: README & Projekt-Dokumentation aktualisieren
+**Date:** 2026-02-17
+**Feature ID:** #276
+**Status:** PASSING
+
+### What was implemented:
+Updated and completed the project documentation for the TREFF Post-Generator relaunch.
+
+1. **README.md** — Already had comprehensive content from a prior session (550 lines). Added:
+   - Screenshots section with 5 UI screenshots in a responsive table layout
+   - Feature Flags section documenting the absence of a feature flag system
+   - All 8 feature steps verified as complete
+
+2. **CONTRIBUTING.md** — Already existed from prior session (226 lines), verified complete
+
+3. **Screenshots** — 5 new screenshots captured via Playwright:
+   - docs/screenshots/dashboard.png (138KB)
+   - docs/screenshots/post-creator.png (164KB)
+   - docs/screenshots/calendar.png (172KB)
+   - docs/screenshots/templates.png (164KB)
+   - docs/screenshots/analytics.png (99KB)
+
+4. **.gitignore** — Updated to allow docs/screenshots/*.png
+
+### Verification completed:
+- Browser: Swagger UI loads with 219 endpoints — PASS
+- Browser: ReDoc loads with full API reference — PASS
+- Browser: Frontend loads login page — PASS
+- Screenshots: All 5 captured and saved — PASS
+- Mock data grep: Zero matches — PASS
+- Git commit: 63aeaa2
+
+### Current state:
+- Feature #276 marked as PASSING
+- 275/321 features passing (85.7%)
