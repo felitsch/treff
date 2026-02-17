@@ -1,5 +1,52 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Features #281, #282, #315: Seasonal Calendar, Student Guide, Strategy Assistant
+**Date:** 2026-02-17
+**Features:** #281, #282, #315
+**Status:** ALL PASSING
+
+### Feature #281: S-04 Saisonaler Content-Kalender Config
+**Created:** `frontend/src/config/seasonalCalendar.js`
+- Complete 12-month content calendar with themes, focus pillars, posting intensity
+- 46 key dates (20+ required): deadlines, departures, returns, holidays, events
+- Departure waves for all 5 countries (USA, CA, AU, NZ, IE)
+- 11 international holidays + 12 German holidays with content recommendations
+- `toSeasonalMarkers()` helper for CalendarView compatibility (fixed UTC timezone issue)
+- Integrated into CalendarView.vue: merges API + config markers
+- Verified: 5 markers visible for Feb 2026, zero console errors
+
+### Feature #282: S-05 Student-Content-Guide Config
+**Created:** `frontend/src/config/studentContentGuide.js`
+- 10 student content types: arrival_story, first_day_school, host_family_moment, cultural_shock, holiday_abroad, school_event, farewell, alumni_reunion, travel_adventure, language_milestone
+- Frequency config: 1-2 pieces/week/student with reminder intervals
+- 10 AI processing rules for auto-suggesting content type from media
+- Content lifecycle with 6 phases (pre-departure to alumni)
+- Platform mapping, AI prompt templates, and helper functions
+- Integrated imports in StudentsView.vue and StoryArcsView.vue
+
+### Feature #315: SI-05 Kalender-Strategie-Assistent
+**Backend:** Added `GET /api/calendar/strategy-recommendations?week=YYYY-Www`
+- Analyzes weekly posts vs goals: frequency, platforms, pillars, countries, video ratio
+- Returns warnings, recommendations, quick actions, seasonal context, optimal posting times
+**Frontend:** Created `WeekStrategyPanel.vue`
+- Collapsible sidebar panel with progress bars, warnings, seasonal tips
+- Quick action buttons navigate to CreatePost with preselection
+- Optimal posting times per platform displayed
+- Toggle button in CalendarView toolbar (emerald "Strategie" button)
+
+### Verification:
+- All 3 features browser-tested with Playwright screenshots
+- Zero JavaScript console errors
+- No mock data patterns found
+- All data from real backend API
+
+### Git Commits:
+- 3f83ad3: feat: implement saisonaler Content-Kalender config (Feature #281)
+- d157e31: feat: implement Student-Content-Guide config (Feature #282)
+- fd8bcc5: feat: implement Kalender-Strategie-Assistent (Feature #315)
+
+---
+
 ## Session - Feature #310: Dashboard 6-Widget-Architektur
 **Date:** 2026-02-17
 **Feature ID:** #310
