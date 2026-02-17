@@ -1,5 +1,54 @@
 # TREFF Post-Generator - Development Progress
 
+## Session - Feature #267: Rate-Limiting & API-Sicherheit
+**Date:** 2026-02-17
+**Feature ID:** #267
+**Status:** PASSING
+
+### What was verified:
+Feature #267 required rate-limiting middleware for all API endpoints with specific limits. Upon investigation, the entire feature was already fully implemented across backend and frontend:
+
+### Backend (rate_limiter.py):
+1. **RateLimitMiddleware** - Starlette BaseHTTPMiddleware with multi-tier rate limiting
+2. **Sliding-window rate limiter** - In-memory timestamp tracking per (identifier, bucket) pair
+3. **Tier configuration**:
+   - General: 100 req/min per IP + per user
+   - AI endpoints (/ai/*): 10 req/min per user
+   - Upload endpoints: 50 req/hour per user
+   - Per-endpoint overrides for expensive AI operations (generate-image: 5/min, regenerate-field: 15/min)
+4. **Response headers on every request**: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+5. **429 Too Many Requests** with Retry-After header and German error message
+6. **IP-based + user-based** rate limiting with JWT token extraction (lightweight, no DB hit)
+7. **Exempt paths**: /api/health, /docs, /openapi.json, /uploads/*, OPTIONS requests
+8. **Violation logging**: logger.warning with identifier, path, tier, and limit info
+9. **CORS configured** to expose rate limit headers (main.py line 548)
+
+### Frontend (api.js + composables):
+1. **showRateLimitToast()** - Reads Retry-After header, shows warning toast with countdown timer
+2. **Global 429 interceptor** in axios response interceptor (api.js lines 141-144)
+3. **Component-level handling** in AITextGenerator.vue, AIImageGenerator.vue, CreatePostView.vue, EngagementBoostPanel.vue
+4. **useApi composable** documents 429 handling in JSDoc
+
+### Verification completed:
+- API Test 1: General endpoint returns X-RateLimit-Limit=100, X-RateLimit-Remaining decrements correctly
+- API Test 2: AI endpoint returns X-RateLimit-Limit=10 (different tier)
+- API Test 3: After 10 AI requests, 429 triggered with Retry-After=59 and proper JSON body
+- API Test 4: Health endpoint exempt (no rate limit headers)
+- Browser: Dashboard, Quick Post, and Home pages load with zero console errors
+- Mock data grep: Zero matches for globalThis/devStore/mockData patterns
+- No code changes needed - implementation was already complete
+
+### Files involved (no modifications):
+- backend/app/core/rate_limiter.py - Rate limiter engine + middleware (~320 lines)
+- backend/app/main.py - Middleware registration (line 553) + CORS headers (line 548)
+- frontend/src/utils/api.js - 429 handling with showRateLimitToast() + axios interceptor
+- frontend/src/composables/useApi.js - Documents 429 rate limit handling
+- frontend/src/components/common/AITextGenerator.vue - Component-level 429 handling
+- frontend/src/components/common/AIImageGenerator.vue - Component-level 429 handling
+
+### Current state:
+- Feature #267 marked as PASSING
+
 ## Session - Feature #247: Template-Variablen & Platzhalter
 **Date:** 2026-02-16
 **Feature ID:** #247
