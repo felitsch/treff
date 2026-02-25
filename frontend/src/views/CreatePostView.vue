@@ -254,7 +254,7 @@ const categories = [
 
 // Step 3: Platform (static data)
 const platforms = [
-  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '1:1 / 4:5' },
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '4:5' },
   { id: 'instagram_story', label: 'Instagram Story', icon: 'device-phone-mobile', format: '9:16' },
   { id: 'tiktok', label: 'TikTok', icon: 'musical-note', format: '9:16' },
 ]
@@ -463,7 +463,7 @@ const canProceed = computed(() => {
     case 2: return !!selectedTemplate.value
     case 3: return selectedPlatforms.value.length > 0
     case 4: return true  // topic/keypoints are optional, country optional
-    case 5: return !!generatedContent.value
+    case 5: return !!generatedContent.value || slides.value.length > 0
     case 6: return slides.value.length > 0
     case 7: return slides.value.length > 0
     case 8: return true  // background image is optional
@@ -525,7 +525,7 @@ watch(selectedPlatform, (val) => {
 
 // ── Platform-specific aspect ratio for image generation ──────────────
 const platformAspectRatioMap = {
-  instagram_feed: '1:1',
+  instagram_feed: '4:5',
   instagram_story: '9:16',
   tiktok: '9:16',
 }
@@ -833,6 +833,33 @@ function dismissPendingGeneration() {
   pendingGenerationData.value = null
   showOverwriteDialog.value = false
   toast.info('Manuelle Änderungen beibehalten.')
+}
+
+// Skip AI generation and proceed with a manual blank slide
+function skipToManualContent() {
+  const slideCount = selectedTemplate.value?.slide_count || 1
+  const manualSlides = []
+  for (let i = 0; i < slideCount; i++) {
+    manualSlides.push({
+      headline: '',
+      subheadline: '',
+      body_text: '',
+      cta_text: '',
+      background_type: 'color',
+      background_value: '#1A1A2E',
+    })
+  }
+  slides.value = manualSlides
+  generatedContent.value = { source: 'manual', slides: manualSlides }
+  captionInstagram.value = ''
+  captionTiktok.value = ''
+  hashtagsInstagram.value = ''
+  hashtagsTiktok.value = ''
+  currentPreviewSlide.value = 0
+  error.value = ''
+  ensureDragIds()
+  initFromState(getEditableState())
+  toast.info('Manuelle Bearbeitung: Bitte fuege deine Texte in Schritt 7 ein.')
 }
 
 async function regenerateField(field, slideIndex = 0) {
@@ -1401,13 +1428,23 @@ function handleCtrlS(e) {
   }
 }
 
-function downloadAsImage(slideIndex = null) {
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('Image load failed'))
+    img.src = src
+  })
+}
+
+async function downloadAsImage(slideIndex = null) {
   // Guard against click event being passed as argument
   if (slideIndex !== null && typeof slideIndex !== 'number') {
     slideIndex = null
   }
   const targetSlide = slideIndex !== null ? slideIndex : currentPreviewSlide.value
-  const canvas = renderSlideToCanvas(targetSlide)
+  const canvas = await renderSlideToCanvas(targetSlide)
   if (!canvas) return
 
   // Download with proper naming convention: TREFF_[category]_[platform]_[date]_[slide].png
@@ -1419,7 +1456,7 @@ function downloadAsImage(slideIndex = null) {
   link.click()
 }
 
-function renderSlideToCanvas(slideIndex) {
+async function renderSlideToCanvas(slideIndex) {
   // Render a single slide to a canvas and return it
   const dims = getDimensions()
   const scale = exportQuality.value === '2160' ? 2 : 1
@@ -1433,8 +1470,29 @@ function renderSlideToCanvas(slideIndex) {
   if (!slide) return null
 
   // Background
-  ctx.fillStyle = slide.background_value || '#1A1A2E'
-  ctx.fillRect(0, 0, dims.w, dims.h)
+  if (slide.background_type === 'image' && slide.background_value) {
+    try {
+      const img = await loadImage(slide.background_value)
+      // Draw with object-cover logic
+      const imgRatio = img.width / img.height
+      const canvasRatio = dims.w / dims.h
+      let sx = 0, sy = 0, sw = img.width, sh = img.height
+      if (imgRatio > canvasRatio) {
+        sw = img.height * canvasRatio
+        sx = (img.width - sw) / 2
+      } else {
+        sh = img.width / canvasRatio
+        sy = (img.height - sh) / 2
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dims.w, dims.h)
+    } catch {
+      ctx.fillStyle = '#1A1A2E'
+      ctx.fillRect(0, 0, dims.w, dims.h)
+    }
+  } else {
+    ctx.fillStyle = slide.background_value || '#1A1A2E'
+    ctx.fillRect(0, 0, dims.w, dims.h)
+  }
 
   // Gradient overlay
   const gradient = ctx.createLinearGradient(0, 0, 0, dims.h)
@@ -1528,7 +1586,7 @@ function renderSlideToCanvas(slideIndex) {
   return canvas
 }
 
-function renderSlideToCanvasForPlatform(slideIndex, platform) {
+async function renderSlideToCanvasForPlatform(slideIndex, platform) {
   // Render a single slide to a canvas for a specific platform's dimensions
   const dims = getDimensionsForPlatform(platform)
   const scale = exportQuality.value === '2160' ? 2 : 1
@@ -1542,8 +1600,28 @@ function renderSlideToCanvasForPlatform(slideIndex, platform) {
   if (!slide) return null
 
   // Background
-  ctx.fillStyle = slide.background_value || '#1A1A2E'
-  ctx.fillRect(0, 0, dims.w, dims.h)
+  if (slide.background_type === 'image' && slide.background_value) {
+    try {
+      const img = await loadImage(slide.background_value)
+      const imgRatio = img.width / img.height
+      const canvasRatio = dims.w / dims.h
+      let sx = 0, sy = 0, sw = img.width, sh = img.height
+      if (imgRatio > canvasRatio) {
+        sw = img.height * canvasRatio
+        sx = (img.width - sw) / 2
+      } else {
+        sh = img.width / canvasRatio
+        sy = (img.height - sh) / 2
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dims.w, dims.h)
+    } catch {
+      ctx.fillStyle = '#1A1A2E'
+      ctx.fillRect(0, 0, dims.w, dims.h)
+    }
+  } else {
+    ctx.fillStyle = slide.background_value || '#1A1A2E'
+    ctx.fillRect(0, 0, dims.w, dims.h)
+  }
 
   // Gradient overlay
   const gradient = ctx.createLinearGradient(0, 0, 0, dims.h)
@@ -1649,7 +1727,7 @@ async function downloadAsZip() {
   const date = new Date().toISOString().split('T')[0]
 
   for (let i = 0; i < slides.value.length; i++) {
-    const canvas = renderSlideToCanvas(i)
+    const canvas = await renderSlideToCanvas(i)
     if (!canvas) continue
     const blob = await canvasToBlob(canvas)
     const slideNum = String(i + 1).padStart(2, '0')
@@ -1727,7 +1805,7 @@ async function exportAllPlatforms() {
     for (const platform of selectedPlatforms.value) {
       const platformFolder = zip.folder(platform)
       for (let i = 0; i < slides.value.length; i++) {
-        const canvas = renderSlideToCanvasForPlatform(i, platform)
+        const canvas = await renderSlideToCanvasForPlatform(i, platform)
         if (!canvas) continue
         const blob = await canvasToBlob(canvas)
         const slideNum = String(i + 1).padStart(2, '0')
@@ -1796,7 +1874,7 @@ function roundRect(ctx, x, y, w, h, r) {
 
 function getDimensionsForPlatform(platform) {
   const dims = {
-    instagram_feed: { w: 1080, h: 1080 },
+    instagram_feed: { w: 1080, h: 1350 },
     instagram_story: { w: 1080, h: 1920 },
     tiktok: { w: 1080, h: 1920 },
   }
@@ -2867,6 +2945,25 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           </template>
 
           <template #after-generation>
+            <!-- Manual skip when error occurs -->
+            <div v-if="error && !generatingText && !generatedContent" class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+              <p class="text-sm text-red-700 dark:text-red-300 mb-3">{{ error }}</p>
+              <div class="flex items-center justify-center gap-3">
+                <button
+                  @click="selectedHumorFormat ? generateHumorContent() : generateText()"
+                  class="px-4 py-2 text-sm font-medium bg-[#3B7AB1] text-white rounded-lg hover:bg-[#2E6A9E] transition-colors"
+                >
+                  Erneut versuchen
+                </button>
+                <button
+                  @click="skipToManualContent"
+                  class="px-4 py-2 text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Manuell fortfahren
+                </button>
+              </div>
+            </div>
+
             <!-- Hook / Attention-Grabber Selector (shown after content is generated) -->
             <div v-if="generatedContent" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <HookSelector
@@ -2925,7 +3022,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             id="post-preview-container"
             class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]"
             :class="{
-              'aspect-square w-full max-w-[400px]': effectivePreviewPlatform === 'instagram_feed',
+              'aspect-[4/5] w-full max-w-[400px]': effectivePreviewPlatform === 'instagram_feed',
               'aspect-[9/16] w-full max-w-[320px]': effectivePreviewPlatform === 'instagram_story' || effectivePreviewPlatform === 'tiktok',
             }"
           >
@@ -3514,7 +3611,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div
             class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
             :class="{
-              'aspect-square': effectivePreviewPlatform === 'instagram_feed',
+              'aspect-[4/5]': effectivePreviewPlatform === 'instagram_feed',
               'aspect-[9/16]': effectivePreviewPlatform === 'instagram_story' || effectivePreviewPlatform === 'tiktok',
             }"
             :style="{
@@ -3639,7 +3736,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div
             class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
             :class="{
-              'aspect-square': selectedPlatform === 'instagram_feed',
+              'aspect-[4/5]': selectedPlatform === 'instagram_feed',
               'aspect-[9/16]': selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok',
             }"
             :style="{

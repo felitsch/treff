@@ -111,11 +111,11 @@ function goToSlide(idx) {
 
 // ── Aspect ratio ─────────────────────────────────────────────────────
 const isPortrait = computed(() => activePlatform.value === 'instagram_story' || activePlatform.value === 'tiktok')
-const isSquare = computed(() => activePlatform.value === 'instagram_feed')
+const isFourFive = computed(() => activePlatform.value === 'instagram_feed')
 
 // ── Platform pill display data ───────────────────────────────────────
 const platformData = {
-  instagram_feed: { icon: 'camera', label: 'Feed', format: '1:1' },
+  instagram_feed: { icon: 'camera', label: 'Feed', format: '4:5' },
   instagram_story: { icon: 'device-mobile', label: 'Story', format: '9:16' },
   tiktok: { icon: 'musical-note', label: 'TikTok', format: '9:16' },
 }
@@ -248,7 +248,7 @@ const hasTemplateHtml = computed(() => {
           <div
             class="relative bg-white dark:bg-[#1A1A2E] rounded-[2rem] overflow-hidden"
             :class="{
-              'aspect-square': isSquare,
+              'aspect-[4/5]': isFourFive,
               'aspect-[9/16]': isPortrait,
             }"
           >
@@ -650,7 +650,7 @@ const hasTemplateHtml = computed(() => {
               <div
                 class="relative bg-white dark:bg-[#1A1A2E] rounded-[1.75rem] overflow-hidden"
                 :class="{
-                  'aspect-square': isSquare,
+                  'aspect-[4/5]': isFourFive,
                   'aspect-[9/16]': isPortrait,
                 }"
               >

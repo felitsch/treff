@@ -72,6 +72,18 @@ backend/app/static/uploads/music/
 backend/app/static/uploads/thumbnails/
 backend/app/static/uploads/video_exports/
 
+# Video/media artifacts
+*.mp4
+
+# Archive exports
+*.zip
+
+# Claude plans
+.claude/plans/
+
+# Dev progress logs
+claude-progress.txt
+
 # Autoforge internal
 .autoforge/features.db-shm
 .autoforge/features.db-wal

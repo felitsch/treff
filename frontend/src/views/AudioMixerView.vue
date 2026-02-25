@@ -112,7 +112,7 @@ const moodLabels = {
 const fetchVideoAssets = async () => {
   loadingAssets.value = true
   try {
-    const { data } = await api.get('/api/assets', { params: { type: 'video' } })
+    const { data } = await api.get('/api/assets', { params: { file_type: 'video' } })
     // Filter to only video assets
     videoAssets.value = (Array.isArray(data) ? data : data.items || []).filter(a =>
       a.file_type && a.file_type.startsWith('video/')
@@ -142,7 +142,7 @@ const fetchMusicTracks = async () => {
 
 const fetchUserAudioAssets = async () => {
   try {
-    const { data } = await api.get('/api/assets', { params: { type: 'audio' } })
+    const { data } = await api.get('/api/assets', { params: { file_type: 'audio' } })
     userAudioAssets.value = (Array.isArray(data) ? data : data.items || []).filter(a =>
       a.file_type && a.file_type.startsWith('audio/')
     )

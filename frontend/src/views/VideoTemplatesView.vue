@@ -109,7 +109,7 @@ async function fetchTemplates() {
 
 async function fetchVideoAssets() {
   try {
-    const res = await api.get('/api/assets?category=video')
+    const res = await api.get('/api/assets?file_type=video')
     videoAssets.value = (res.data.assets || res.data || []).filter(
       a => a.file_type && a.file_type.startsWith('video/')
     )
