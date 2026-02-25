@@ -94,10 +94,23 @@ const {
   episodePreviouslyText,
   episodeCliffhangerText,
   episodeNextHint,
+  customColors,
 } = storeToRefs(store)
 
 const totalSteps = 9
 const tourRef = ref(null)
+
+// ── Text Color Presets ─────────────────────────────────────────────────
+const colorPresets = [
+  { name: 'Standard', headline: '#3B7AB1', subheadline: '#FDD000', body: '#D1D5DB' },
+  { name: 'Weiss', headline: '#FFFFFF', subheadline: '#FDD000', body: '#F5F5F5' },
+  { name: 'Gold auf Blau', headline: '#FDD000', subheadline: '#FFFFFF', body: '#93C5FD' },
+  { name: 'Hell', headline: '#1A1A2E', subheadline: '#3B7AB1', body: '#4B5563' },
+]
+
+function applyColorPreset(preset) {
+  customColors.value = { headline: preset.headline, subheadline: preset.subheadline, body: preset.body }
+}
 
 // KI image edit state (for Step 8 background images)
 const showImageEditInCreator = ref(false)
@@ -1511,21 +1524,21 @@ async function renderSlideToCanvas(slideIndex) {
   ctx.fillText('Sprachreisen', 158, 80)
 
   // Headline
-  ctx.fillStyle = '#3B7AB1'
+  ctx.fillStyle = customColors.value.headline
   ctx.font = 'bold 52px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
 
   // Subheadline
   if (slide.subheadline) {
-    ctx.fillStyle = '#FDD000'
+    ctx.fillStyle = customColors.value.subheadline
     ctx.font = 'bold 32px Inter, Arial, sans-serif'
     wrapText(ctx, slide.subheadline, dims.w / 2, 400, dims.w - 160, 40)
   }
 
   // Body text
   if (slide.body_text) {
-    ctx.fillStyle = '#D1D5DB'
+    ctx.fillStyle = customColors.value.body
     ctx.font = '24px Inter, Arial, sans-serif'
     wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
   }
@@ -1535,7 +1548,7 @@ async function renderSlideToCanvas(slideIndex) {
     ctx.fillStyle = 'rgba(255,255,255,0.08)'
     roundRect(ctx, 60, 600, dims.w - 120, 60, 8)
     ctx.fill()
-    ctx.fillStyle = '#D1D5DB'
+    ctx.fillStyle = customColors.value.body
     ctx.font = 'italic 18px Inter, Arial, sans-serif'
     ctx.textAlign = 'center'
     wrapText(ctx, episodePreviouslyText.value, dims.w / 2, 632, dims.w - 180, 22)
@@ -1640,21 +1653,21 @@ async function renderSlideToCanvasForPlatform(slideIndex, platform) {
   ctx.fillText('Sprachreisen', 158, 80)
 
   // Headline
-  ctx.fillStyle = '#3B7AB1'
+  ctx.fillStyle = customColors.value.headline
   ctx.font = 'bold 52px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   wrapText(ctx, slide.headline || '', dims.w / 2, 260, dims.w - 160, 62)
 
   // Subheadline
   if (slide.subheadline) {
-    ctx.fillStyle = '#FDD000'
+    ctx.fillStyle = customColors.value.subheadline
     ctx.font = 'bold 32px Inter, Arial, sans-serif'
     wrapText(ctx, slide.subheadline, dims.w / 2, 400, dims.w - 160, 40)
   }
 
   // Body text
   if (slide.body_text) {
-    ctx.fillStyle = '#D1D5DB'
+    ctx.fillStyle = customColors.value.body
     ctx.font = '24px Inter, Arial, sans-serif'
     wrapText(ctx, slide.body_text, dims.w / 2, 520, dims.w - 160, 32)
   }
@@ -1664,7 +1677,7 @@ async function renderSlideToCanvasForPlatform(slideIndex, platform) {
     ctx.fillStyle = 'rgba(255,255,255,0.08)'
     roundRect(ctx, 60, 600, dims.w - 120, 60, 8)
     ctx.fill()
-    ctx.fillStyle = '#D1D5DB'
+    ctx.fillStyle = customColors.value.body
     ctx.font = 'italic 18px Inter, Arial, sans-serif'
     ctx.textAlign = 'center'
     wrapText(ctx, episodePreviouslyText.value, dims.w / 2, 632, dims.w - 180, 22)
@@ -3041,13 +3054,13 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
 
               <!-- Content -->
               <div class="flex-1 flex flex-col justify-center py-4">
-                <h3 class="text-[#3B7AB1] text-xl font-extrabold leading-tight mb-2">
+                <h3 class="text-xl font-extrabold leading-tight mb-2" :style="{ color: customColors.headline }">
                   {{ slides[currentPreviewSlide]?.headline || '' }}
                 </h3>
-                <p v-if="slides[currentPreviewSlide]?.subheadline" class="text-[#FDD000] text-sm font-semibold mb-2">
+                <p v-if="slides[currentPreviewSlide]?.subheadline" class="text-sm font-semibold mb-2" :style="{ color: customColors.subheadline }">
                   {{ slides[currentPreviewSlide].subheadline }}
                 </p>
-                <p v-if="slides[currentPreviewSlide]?.body_text" class="text-gray-300 text-xs leading-relaxed line-clamp-5">
+                <p v-if="slides[currentPreviewSlide]?.body_text" class="text-xs leading-relaxed line-clamp-5" :style="{ color: customColors.body }">
                   {{ slides[currentPreviewSlide].body_text }}
                 </p>
 
@@ -3421,6 +3434,53 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             </div>
           </div>
 
+          <!-- Text Color Presets -->
+          <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Textfarben</label>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button
+                v-for="preset in colorPresets"
+                :key="preset.name"
+                @click="applyColorPreset(preset)"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all hover:scale-105"
+                :class="customColors.headline === preset.headline && customColors.subheadline === preset.subheadline && customColors.body === preset.body
+                  ? 'border-[#3B7AB1] ring-2 ring-[#3B7AB1]/30 bg-[#3B7AB1]/5 dark:bg-[#3B7AB1]/10 text-[#3B7AB1]'
+                  : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'"
+                data-testid="color-text-preset"
+              >
+                <span class="flex gap-0.5">
+                  <span class="w-3 h-3 rounded-full border border-gray-200 dark:border-gray-600" :style="{ backgroundColor: preset.headline }"></span>
+                  <span class="w-3 h-3 rounded-full border border-gray-200 dark:border-gray-600" :style="{ backgroundColor: preset.subheadline }"></span>
+                  <span class="w-3 h-3 rounded-full border border-gray-200 dark:border-gray-600" :style="{ backgroundColor: preset.body }"></span>
+                </span>
+                {{ preset.name }}
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[10px] text-gray-400 dark:text-gray-500 block mb-1">Headline</label>
+                <div class="flex items-center gap-1">
+                  <input type="color" v-model="customColors.headline" class="w-6 h-6 rounded cursor-pointer border border-gray-300 dark:border-gray-600" />
+                  <span class="text-[10px] text-gray-400 font-mono">{{ customColors.headline }}</span>
+                </div>
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 dark:text-gray-500 block mb-1">Subheadline</label>
+                <div class="flex items-center gap-1">
+                  <input type="color" v-model="customColors.subheadline" class="w-6 h-6 rounded cursor-pointer border border-gray-300 dark:border-gray-600" />
+                  <span class="text-[10px] text-gray-400 font-mono">{{ customColors.subheadline }}</span>
+                </div>
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 dark:text-gray-500 block mb-1">Fliesstext</label>
+                <div class="flex items-center gap-1">
+                  <input type="color" v-model="customColors.body" class="w-6 h-6 rounded cursor-pointer border border-gray-300 dark:border-gray-600" />
+                  <span class="text-[10px] text-gray-400 font-mono">{{ customColors.body }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Apply Template to all slides button -->
           <div v-if="selectedTemplate && slides.length > 1" class="p-3 rounded-xl border border-[#3B7AB1]/20 bg-[#3B7AB1]/5 dark:bg-[#3B7AB1]/10 flex items-center justify-between">
             <div>
@@ -3629,9 +3689,9 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
               </div>
               <div v-if="selectedArcId && episodePreviouslyText && currentPreviewSlide === 0" class="mt-1 px-1.5 py-0.5 bg-white/10 rounded text-gray-300 text-[8px] italic leading-tight line-clamp-1">{{ episodePreviouslyText }}</div>
               <div class="flex-1 flex flex-col justify-center py-3">
-                <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
-                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
-                <p v-if="slides[currentPreviewSlide].body_text" class="text-gray-200 text-[10px] leading-relaxed line-clamp-4 drop-shadow" data-testid="preview-body">{{ slides[currentPreviewSlide].body_text }}</p>
+                <h3 class="text-base font-extrabold leading-tight mb-1.5 drop-shadow-md" :style="{ color: customColors.headline }" data-testid="preview-headline">{{ slides[currentPreviewSlide].headline }}</h3>
+                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[11px] font-semibold mb-1.5 drop-shadow" :style="{ color: customColors.subheadline }">{{ slides[currentPreviewSlide].subheadline }}</p>
+                <p v-if="slides[currentPreviewSlide].body_text" class="text-[10px] leading-relaxed line-clamp-4 drop-shadow" :style="{ color: customColors.body }" data-testid="preview-body">{{ slides[currentPreviewSlide].body_text }}</p>
               </div>
               <div v-if="selectedArcId && episodeCliffhangerText && currentPreviewSlide === slides.length - 1" class="mb-1 px-1.5 py-0.5 bg-white/10 rounded text-[#FDD000] text-[8px] font-semibold italic line-clamp-1">{{ episodeCliffhangerText }}</div>
               <div v-if="slides[currentPreviewSlide].cta_text">
@@ -3751,8 +3811,8 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
                 <div class="bg-[#3B7AB1] rounded px-2 py-0.5"><span class="text-white text-[10px] font-bold">TREFF</span></div>
               </div>
               <div class="flex-1 flex flex-col justify-center py-3">
-                <h3 class="text-white text-base font-extrabold leading-tight mb-1.5 drop-shadow">{{ slides[currentPreviewSlide].headline }}</h3>
-                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[#FDD000] text-[11px] font-semibold drop-shadow">{{ slides[currentPreviewSlide].subheadline }}</p>
+                <h3 class="text-base font-extrabold leading-tight mb-1.5 drop-shadow" :style="{ color: customColors.headline }">{{ slides[currentPreviewSlide].headline }}</h3>
+                <p v-if="slides[currentPreviewSlide].subheadline" class="text-[11px] font-semibold drop-shadow" :style="{ color: customColors.subheadline }">{{ slides[currentPreviewSlide].subheadline }}</p>
               </div>
             </div>
           </div>
@@ -3985,6 +4045,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
       :episode-next-hint="episodeNextHint"
       :template-placeholder-values="templatePlaceholderValues"
       :selected-template="selectedTemplate"
+      :custom-colors="customColors"
       @update:platform="previewPlatform = $event"
       @update:current-slide-index="currentPreviewSlide = $event"
       data-testid="live-preview-panel"

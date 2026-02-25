@@ -51,6 +51,8 @@ const props = defineProps({
   templatePlaceholderValues: { type: Object, default: () => ({}) },
   /** Selected template object (with html_content, css_content, placeholder_fields) */
   selectedTemplate: { type: Object, default: null },
+  /** Custom text colors { headline, subheadline, body } */
+  customColors: { type: Object, default: () => ({ headline: '#3B7AB1', subheadline: '#FDD000', body: '#D1D5DB' }) },
 })
 
 const emit = defineEmits(['update:platform', 'update:currentSlideIndex'])
@@ -302,13 +304,13 @@ const hasTemplateHtml = computed(() => {
 
                   <!-- Content -->
                   <div class="flex-1 flex flex-col justify-center py-2">
-                    <h4 class="text-[#3B7AB1] text-sm font-extrabold leading-tight mb-1 line-clamp-3">
+                    <h4 class="text-sm font-extrabold leading-tight mb-1 line-clamp-3" :style="{ color: props.customColors.headline }">
                       {{ resolvedSlide.headline || '' }}
                     </h4>
-                    <p v-if="resolvedSlide.subheadline" class="text-[#FDD000] text-[9px] font-semibold mb-1 line-clamp-2">
+                    <p v-if="resolvedSlide.subheadline" class="text-[9px] font-semibold mb-1 line-clamp-2" :style="{ color: props.customColors.subheadline }">
                       {{ resolvedSlide.subheadline }}
                     </p>
-                    <p v-if="resolvedSlide.body_text" class="text-gray-300 text-[8px] leading-relaxed line-clamp-4">
+                    <p v-if="resolvedSlide.body_text" class="text-[8px] leading-relaxed line-clamp-4" :style="{ color: props.customColors.body }">
                       {{ resolvedSlide.body_text }}
                     </p>
                     <ul v-if="resolvedSlide.bullet_points?.length" class="mt-1 space-y-0.5">
@@ -670,8 +672,8 @@ const hasTemplateHtml = computed(() => {
                   <div class="flex-1 relative bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e]">
                     <img loading="lazy" v-if="backgroundImage" :src="backgroundImage" class="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
                     <div v-if="resolvedSlide" class="absolute inset-0 p-3 flex flex-col justify-center z-10">
-                      <h4 class="text-[#3B7AB1] text-[11px] font-extrabold leading-tight mb-1 line-clamp-2">{{ resolvedSlide.headline }}</h4>
-                      <p v-if="resolvedSlide.body_text" class="text-gray-300 text-[7px] line-clamp-3">{{ resolvedSlide.body_text }}</p>
+                      <h4 class="text-[11px] font-extrabold leading-tight mb-1 line-clamp-2" :style="{ color: props.customColors.headline }">{{ resolvedSlide.headline }}</h4>
+                      <p v-if="resolvedSlide.body_text" class="text-[7px] line-clamp-3" :style="{ color: props.customColors.body }">{{ resolvedSlide.body_text }}</p>
                     </div>
                   </div>
                   <div class="px-2 py-1 bg-white dark:bg-gray-900 text-[7px]">

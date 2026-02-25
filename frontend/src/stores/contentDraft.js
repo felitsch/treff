@@ -82,6 +82,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
   const ctaText = ref('')
   const currentPreviewSlide = ref(0)
   const previewPlatform = ref('')
+  const customColors = ref({ headline: '#3B7AB1', subheadline: '#FDD000', body: '#D1D5DB' })
 
   // ═══════════════════════════════════════════════════════════════════
   // MEDIA & AI IMAGE (6 refs)
@@ -177,6 +178,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     episodePreviouslyText.value = ''
     episodeCliffhangerText.value = ''
     episodeNextHint.value = ''
+    customColors.value = { headline: '#3B7AB1', subheadline: '#FDD000', body: '#D1D5DB' }
     assets.value = []
     templates.value = []
     loadingTemplates.value = false
@@ -232,6 +234,7 @@ export const useContentDraftStore = defineStore('contentDraft', () => {
     ctaText,
     currentPreviewSlide,
     previewPlatform,
+    customColors,
     // Interactive Story Elements
     interactiveElements,
     // Story-Arc / Episode
