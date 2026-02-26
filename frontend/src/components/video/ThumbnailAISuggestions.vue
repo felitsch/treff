@@ -199,7 +199,7 @@ watch(() => props.videoAsset, (asset) => {
   <div class="space-y-5" data-testid="thumbnail-ai-suggestions">
     <!-- No video -->
     <div v-if="!videoAsset" class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-      Bitte waehle zuerst ein Video aus (Schritt 1).
+      Bitte wähle zuerst ein Video aus (Schritt 1).
     </div>
 
     <template v-else>
@@ -213,7 +213,7 @@ watch(() => props.videoAsset, (asset) => {
           <AppIcon name="sparkles" class="w-5 h-5" /> Beste Frames extrahieren (AI)
         </button>
         <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-          Extrahiert 5-8 der besten Frames aus dem Video fuer Thumbnails.
+          Extrahiert 5-8 der besten Frames aus dem Video für Thumbnails.
         </p>
       </div>
 

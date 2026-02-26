@@ -104,7 +104,7 @@ onUnmounted(() => {
       <TopBar @toggle-sidebar="toggleSidebar" />
       <BreadcrumbNav />
 
-      <main id="main-content" class="flex-1 overflow-y-auto p-6 pb-20 md:pb-6" role="main" aria-label="Hauptinhalt">
+      <main id="main-content" class="flex-1 min-h-0 overflow-y-auto p-6 pb-20 md:pb-6" role="main" aria-label="Hauptinhalt">
         <RouterView v-slot="{ Component, route }">
           <Transition :name="transitionName" mode="out-in">
             <div :key="route.path" class="page-wrapper">

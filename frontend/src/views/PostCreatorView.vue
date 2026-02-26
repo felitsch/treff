@@ -90,7 +90,7 @@ onMounted(() => {
           class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
           data-testid="reset-btn"
         >
-          Zuruecksetzen
+          Zurücksetzen
         </button>
       </div>
     </div>
@@ -128,7 +128,7 @@ onMounted(() => {
         class="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
         data-testid="prev-btn"
       >
-        &#8592; Zurueck
+        &#8592; Zurück
       </button>
       <div v-else></div>
 

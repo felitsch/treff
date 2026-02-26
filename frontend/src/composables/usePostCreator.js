@@ -138,11 +138,11 @@ export function usePostCreator() {
         validationMessage.value = 'Bitte gib ein Thema ein oder generiere Inhalte mit KI.'
         break
       case 2:
-        if (!selectedTemplate.value) validationMessage.value = 'Bitte waehle ein Template aus.'
+        if (!selectedTemplate.value) validationMessage.value = 'Bitte wähle ein Template aus.'
         else if (slides.value.length === 0) validationMessage.value = 'Bitte generiere zuerst Inhalte in Schritt 1.'
         break
       case 3:
-        validationMessage.value = 'Bitte waehle mindestens eine Plattform aus.'
+        validationMessage.value = 'Bitte wähle mindestens eine Plattform aus.'
         break
     }
   }

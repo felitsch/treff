@@ -171,7 +171,7 @@ onBeforeUnmount(() => {
                 v-if="closable"
                 type="button"
                 class="shrink-0 p-1 -mr-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-150"
-                aria-label="Schliessen"
+                aria-label="Schließen"
                 @click="close"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

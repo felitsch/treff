@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { parseDate } from '@/utils/dateUtils'
 
 const props = defineProps({
   campaigns: {
@@ -69,7 +70,8 @@ function dateRange(start, end) {
   if (!start && !end) return ''
   const fmt = (d) => {
     if (!d) return '?'
-    const date = new Date(d)
+    const date = parseDate(d)
+    if (!date) return '?'
     return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })
   }
   return `${fmt(start)} - ${fmt(end)}`

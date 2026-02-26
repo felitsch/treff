@@ -23,6 +23,7 @@ import PipelineDashboardWidget from '@/components/pipeline/PipelineDashboardWidg
 import SkeletonBase from '@/components/common/SkeletonBase.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
+import { formatDate, formatDateShort } from '@/utils/dateUtils'
 
 const router = useRouter()
 const { execute: apiExecute, loading, error } = useApi()
@@ -190,24 +191,7 @@ function platformLabel(platform) {
   }
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: 'short',
-  })
-}
+// formatDate and formatDateShort imported from @/utils/dateUtils
 
 // Generate new AI content suggestions (delegates to ContentSuggestions component)
 async function generateSuggestions() {

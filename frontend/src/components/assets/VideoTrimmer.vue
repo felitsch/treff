@@ -595,7 +595,7 @@ onBeforeUnmount(() => {
                 class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
                 data-testid="reset-trim-btn"
               >
-                Zuruecksetzen
+                Zurücksetzen
               </button>
             </div>
           </div>

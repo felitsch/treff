@@ -2238,7 +2238,7 @@ onUnmounted(() => {
                 getCategoryStyle(post.category).border,
                 isPostSelected(post.id) ? 'ring-2 ring-blue-500 ring-offset-1' : '',
               ]"
-              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''} – Klick zum Bearbeiten | Cmd+Klick fuer Mehrfachauswahl`"
+              :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.episode_number ? ' (Episode ' + post.episode_number + ')' : ''} – Klick zum Bearbeiten | Cmd+Klick für Mehrfachauswahl`"
             >
               <div class="flex items-center gap-1">
                 <!-- Selection checkbox in multi-select mode -->
@@ -2254,7 +2254,7 @@ onUnmounted(() => {
                 <span
                   v-if="post.is_recurring_instance || post.recurring_rule_id"
                   class="flex-shrink-0 text-[10px] cursor-pointer hover:scale-125 transition-transform"
-                  title="Wiederkehrender Post – Klicken fuer Einstellungen"
+                  title="Wiederkehrender Post – Klicken für Einstellungen"
                   @click.stop="openRecurringSettings(post)"
                 ><AppIcon name="arrow-path" class="w-3 h-3 inline-block" /></span>
                 <span
@@ -2704,7 +2704,7 @@ onUnmounted(() => {
         <!-- Linked groups info -->
         <div v-if="crossPlatformStats.linked_groups > 0" class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
-            <AppIcon name="link" class="w-3.5 h-3.5 inline-block" /> {{ crossPlatformStats.linked_groups }} verknuepfte Gruppen
+            <AppIcon name="link" class="w-3.5 h-3.5 inline-block" /> {{ crossPlatformStats.linked_groups }} verknüpfte Gruppen
           </span>
           <span>Posts werden parallel auf mehreren Plattformen geplant</span>
         </div>
@@ -2723,7 +2723,7 @@ onUnmounted(() => {
         <div v-if="detailedCrossStats && detailedCrossStats.multi_platform" class="mt-3 grid grid-cols-3 gap-2 text-center">
           <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
             <div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ detailedCrossStats.multi_platform.linked_groups || 0 }}</div>
-            <div class="text-[10px] text-blue-500 dark:text-blue-400">Verknuepfte Gruppen</div>
+            <div class="text-[10px] text-blue-500 dark:text-blue-400">Verknüpfte Gruppen</div>
           </div>
           <div class="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
             <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ detailedCrossStats.multi_platform.multi_platform_groups || 0 }}</div>
@@ -2831,7 +2831,7 @@ onUnmounted(() => {
                   getCategoryStyle(post.category).text,
                   getCategoryStyle(post.category).border,
                 ]"
-                :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' Verknuepft' : ''}`"
+                :title="`${post.title || 'Unbenannt'} - ${getCategoryLabel(post.category)} - ${getStatusMeta(post.status).label}${post.scheduled_time ? ' um ' + post.scheduled_time : ''}${post.linked_post_group_id ? ' Verknüpft' : ''}`"
                 @click="router.push(`/create/post/${post.id}/edit`)"
               >
                 <div class="flex items-center gap-0.5">
@@ -2840,7 +2840,7 @@ onUnmounted(() => {
                   <span
                     v-if="post.linked_post_group_id"
                     class="flex-shrink-0 ml-auto text-[9px]"
-                    title="Verknuepfter Multi-Plattform Post"
+                    title="Verknüpfter Multi-Plattform Post"
                   ><AppIcon name="link" class="w-2.5 h-2.5 inline-block" /></span>
                 </div>
                 <div v-if="post.scheduled_time" class="opacity-70 text-[9px] flex items-center gap-0.5">
@@ -3074,7 +3074,7 @@ onUnmounted(() => {
       class="mt-6"
       svgIcon="calendar-days"
       title="Dein Kalender ist noch leer"
-      description="Nutze den KI-Wochenplaner, um automatisch Content fuer eine ganze Woche zu planen. Oder erstelle einzelne Posts und plane sie manuell ein."
+      description="Nutze den KI-Wochenplaner, um automatisch Content für eine ganze Woche zu planen. Oder erstelle einzelne Posts und plane sie manuell ein."
       actionLabel="Zum Wochenplaner"
       actionTo="/calendar/week-planner"
       secondaryLabel="Post erstellen"

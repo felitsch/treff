@@ -10,6 +10,7 @@ import TourSystem from '@/components/common/TourSystem.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import SkeletonImage from '@/components/common/SkeletonImage.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { formatDate as formatDateUtil } from '@/utils/dateUtils'
 
 const tourRef = ref(null)
 
@@ -358,11 +359,9 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-// Format date
+// Format date — delegates to shared utility with em-dash fallback
 function formatDate(dateStr) {
-  if (!dateStr) return '\u2014'
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return formatDateUtil(dateStr, '\u2014')
 }
 
 // Get file type label

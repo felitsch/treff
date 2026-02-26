@@ -274,7 +274,7 @@ function simulateLoading() {
       <!-- Large Modal -->
       <TModal v-model="showLgModal" size="lg" title="Template-Vorschau">
         <div class="text-gray-600 dark:text-gray-400">
-          <p class="mb-4">Dies ist ein grosses Modal fuer umfangreichere Inhalte wie Template-Vorschauen oder Detailansichten.</p>
+          <p class="mb-4">Dies ist ein großes Modal für umfangreichere Inhalte wie Template-Vorschauen oder Detailansichten.</p>
           <div class="grid grid-cols-3 gap-4">
             <div v-for="i in 6" :key="i" class="aspect-square rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400">
               {{ i }}
@@ -282,7 +282,7 @@ function simulateLoading() {
           </div>
         </div>
         <template #footer>
-          <TButton variant="ghost" @click="showLgModal = false">Schliessen</TButton>
+          <TButton variant="ghost" @click="showLgModal = false">Schließen</TButton>
         </template>
       </TModal>
 
@@ -292,11 +292,11 @@ function simulateLoading() {
           <TEmptyState
             icon="photo"
             title="Vollbild-Modus"
-            description="Dieses Modal nutzt den gesamten Bildschirm fuer maximalen Arbeitsbereich."
+            description="Dieses Modal nutzt den gesamten Bildschirm für maximalen Arbeitsbereich."
           />
         </div>
         <template #footer>
-          <TButton variant="ghost" @click="showFullModal = false">Schliessen</TButton>
+          <TButton variant="ghost" @click="showFullModal = false">Schließen</TButton>
         </template>
       </TModal>
     </section>
@@ -331,7 +331,7 @@ function simulateLoading() {
           <TEmptyState
             icon="calendar"
             title="Kalender ist leer"
-            description="Plane deine ersten Posts fuer die naechste Woche."
+            description="Plane deine ersten Posts für die nächste Woche."
             action-label="Zum Kalender"
             action-route="/calendar"
           />
@@ -340,8 +340,8 @@ function simulateLoading() {
         <div class="border border-gray-200 dark:border-gray-700 rounded-xl">
           <TEmptyState
             icon="users"
-            title="Keine Schueler"
-            description="Schueler-Profile werden hier angezeigt."
+            title="Keine Schüler"
+            description="Schüler-Profile werden hier angezeigt."
             compact
           />
         </div>

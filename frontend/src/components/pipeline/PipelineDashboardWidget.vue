@@ -265,7 +265,7 @@ onMounted(async () => {
         v-else-if="totalItems === 0 && !pipelineStore.loading"
         svgIcon="funnel"
         title="Pipeline ist leer"
-        description="Wenn Schueler neue Inhalte teilen oder du Medien hochlaedst, erscheinen sie hier im Workflow."
+        description="Wenn Schüler neue Inhalte teilen oder du Medien hochlädst, erscheinen sie hier im Workflow."
         :compact="true"
       />
 

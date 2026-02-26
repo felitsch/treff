@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { parseDate } from '@/utils/dateUtils'
 
 const props = defineProps({
   items: {
@@ -58,8 +59,9 @@ function statusBadge(status) {
 // Time ago formatting
 function timeAgo(dateStr) {
   if (!dateStr) return ''
+  const date = parseDate(dateStr)
+  if (!date) return ''
   const now = new Date()
-  const date = new Date(dateStr)
   const diff = now.getTime() - date.getTime()
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(minutes / 60)
@@ -138,7 +140,7 @@ function viewInbox() {
         v-else-if="items.length === 0"
         svgIcon="academic-cap"
         title="Keine neuen Inhalte"
-        description="Wenn Schueler neue Fotos oder Videos teilen, erscheinen sie hier."
+        description="Wenn Schüler neue Fotos oder Videos teilen, erscheinen sie hier."
         :compact="true"
       />
 

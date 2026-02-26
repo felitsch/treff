@@ -106,7 +106,7 @@ onMounted(() => {
           class="text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
           data-testid="overdue-badge"
         >
-          {{ seriesData.overdue_count }} ueberfaellig
+          {{ seriesData.overdue_count }} überfällig
         </span>
       </div>
     </div>
@@ -179,7 +179,7 @@ onMounted(() => {
           <div class="flex items-center gap-3 text-xs">
             <!-- Next due -->
             <span v-if="series.next_due_date" :class="dueUrgencyClass(series.days_until_next)">
-              {{ calendarEmoji }} Naechste: {{ formatDate(series.next_due_date) }}
+              {{ calendarEmoji }} Nächste: {{ formatDate(series.next_due_date) }}
               <span v-if="series.next_due_time"> {{ series.next_due_time }}</span>
               <span v-if="series.days_until_next !== null">
                 ({{ series.days_until_next <= 0 ? 'Heute!' : series.days_until_next === 1 ? 'Morgen' : `in ${series.days_until_next} Tagen` }})

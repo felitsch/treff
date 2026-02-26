@@ -130,7 +130,7 @@ function getCardClasses(index, hookType) {
 
     <!-- Description -->
     <p v-if="!hasGenerated" class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-      Die ersten 1-3 Sekunden entscheiden, ob jemand weiterliest. Generiere mehrere Hook-Varianten und waehle den besten!
+      Die ersten 1-3 Sekunden entscheiden, ob jemand weiterliest. Generiere mehrere Hook-Varianten und wähle den besten!
     </p>
 
     <!-- Hook Cards -->

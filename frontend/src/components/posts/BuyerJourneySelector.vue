@@ -123,7 +123,7 @@ function toggleDetails(stageId) {
         class="ml-auto px-2 py-0.5 text-white rounded text-xs font-medium hover:opacity-90 transition whitespace-nowrap"
         :style="{ backgroundColor: stageConfig[missingStageHint.id]?.color }"
       >
-        Waehlen
+        Wählen
       </button>
     </div>
 
@@ -206,7 +206,7 @@ function toggleDetails(stageId) {
       <div class="flex items-center gap-2 mb-2">
         <AppIcon :name="stageConfig[modelValue]?.icon" class="w-4 h-4" :class="stageConfig[modelValue]?.textClass" />
         <h5 class="text-xs font-bold" :class="stageConfig[modelValue]?.textClass">
-          Passende Hook-Formeln fuer {{ stages.find(s => s.id === modelValue)?.name.split(' — ')[0] }}
+          Passende Hook-Formeln für {{ stages.find(s => s.id === modelValue)?.name.split(' — ')[0] }}
         </h5>
       </div>
       <div class="space-y-1">

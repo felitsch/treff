@@ -13,10 +13,38 @@
 import { ref, readonly } from 'vue'
 import api from '@/utils/api'
 
+// LocalStorage key for fast synchronous tour persistence (resilient to API failures)
+const TOUR_STORAGE_KEY = 'treff_tour_progress'
+
 // Module-level cache so every component shares the same state
-const seenTours = ref({})       // { dashboard: true, templates: true, ... }
+const seenTours = ref(loadFromLocalStorage())       // { dashboard: true, templates: true, ... }
 const loadedFromBackend = ref(false)
 const loading = ref(false)
+
+/**
+ * Load tour progress from localStorage synchronously.
+ * This ensures tours are never shown again even if the backend API is slow or fails.
+ */
+function loadFromLocalStorage() {
+  try {
+    const stored = localStorage.getItem(TOUR_STORAGE_KEY)
+    if (stored) return JSON.parse(stored)
+  } catch {
+    // Corrupted data – ignore
+  }
+  return {}
+}
+
+/**
+ * Persist tour progress to localStorage for instant access on next page load.
+ */
+function saveToLocalStorage(data) {
+  try {
+    localStorage.setItem(TOUR_STORAGE_KEY, JSON.stringify(data))
+  } catch {
+    // Storage full – ignore
+  }
+}
 
 // Tour start request – a shared reactive ref for cross-component communication
 // When TopBar sets this to a pageKey, the matching TourSystem picks it up
@@ -35,14 +63,17 @@ async function loadTourProgress() {
     const raw = res.data?.tour_progress
     if (raw) {
       try {
-        seenTours.value = JSON.parse(raw)
+        const backendData = JSON.parse(raw)
+        // Merge: a tour marked as seen in either source stays seen
+        seenTours.value = { ...seenTours.value, ...backendData }
+        saveToLocalStorage(seenTours.value)
       } catch {
-        seenTours.value = {}
+        // Keep localStorage data if backend data is corrupted
       }
     }
     loadedFromBackend.value = true
   } catch {
-    // Silently fail – tour will just show again
+    // Silently fail – localStorage data is already loaded as fallback
   } finally {
     loading.value = false
   }
@@ -63,9 +94,11 @@ async function saveTourProgress() {
 
 /**
  * Mark a page tour as completed/seen.
+ * Saves to both localStorage (instant) and backend (durable).
  */
 async function markTourSeen(pageKey) {
   seenTours.value = { ...seenTours.value, [pageKey]: true }
+  saveToLocalStorage(seenTours.value)
   await saveTourProgress()
 }
 
@@ -83,6 +116,7 @@ async function resetTour(pageKey) {
   const copy = { ...seenTours.value }
   delete copy[pageKey]
   seenTours.value = copy
+  saveToLocalStorage(seenTours.value)
   await saveTourProgress()
 }
 
@@ -91,6 +125,7 @@ async function resetTour(pageKey) {
  */
 async function resetAllTours() {
   seenTours.value = {}
+  saveToLocalStorage(seenTours.value)
   await saveTourProgress()
 }
 

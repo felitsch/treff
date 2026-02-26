@@ -91,7 +91,7 @@ const monthlyProgress = computed(() => {
 // Category display names
 function categoryLabel(cat) {
   const labels = {
-    laender_spotlight: 'Laender-Spotlight',
+    laender_spotlight: 'Länder-Spotlight',
     erfahrungsberichte: 'Erfahrungsbericht',
     infografiken: 'Infografik',
     fristen_cta: 'Fristen/CTA',
@@ -902,7 +902,7 @@ onMounted(() => {
             v-if="platforms.length === 0"
             svgIcon="device-phone-mobile"
             title="Noch keine Daten"
-            description="Erstelle Posts fuer Instagram oder TikTok, um die Plattformverteilung zu sehen."
+            description="Erstelle Posts für Instagram oder TikTok, um die Plattformverteilung zu sehen."
             actionLabel="Post erstellen"
             actionTo="/create/quick"
             :compact="true"
@@ -947,12 +947,12 @@ onMounted(() => {
         </BaseCard>
 
         <!-- Country distribution (moved into 2-col grid for better layout) -->
-        <BaseCard padding="lg" title="Laenderverteilung" :header-divider="false" data-testid="country-distribution">
+        <BaseCard padding="lg" title="Länderverteilung" :header-divider="false" data-testid="country-distribution">
           <EmptyState
             v-if="countries.length === 0"
             svgIcon="globe-alt"
-            title="Noch keine Laenderdaten"
-            description="Weise Posts Laender zu, um die Verteilung hier zu sehen."
+            title="Noch keine Länderdaten"
+            description="Weise Posts Länder zu, um die Verteilung hier zu sehen."
             actionLabel="Post erstellen"
             actionTo="/create/quick"
             :compact="true"
@@ -981,7 +981,7 @@ onMounted(() => {
             {{ performanceReminder.count }} Post{{ performanceReminder.count > 1 ? 's' : '' }} warten auf Metriken-Eingabe
           </p>
           <p class="text-xs text-amber-600 dark:text-amber-400">
-            Trage Likes, Kommentare und Reichweite fuer Posts der letzten Woche ein.
+            Trage Likes, Kommentare und Reichweite für Posts der letzten Woche ein.
           </p>
         </div>
         <div class="flex gap-2">

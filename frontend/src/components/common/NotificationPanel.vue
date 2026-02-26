@@ -52,10 +52,10 @@ function typeIcon(type) {
 
 function typeLabel(type) {
   const labels = {
-    upcoming_episode: 'Episode faellig',
+    upcoming_episode: 'Episode fällig',
     series_paused: 'Serie pausiert',
     series_ending: 'Letzte Episode',
-    gap_warning: 'Luecke erkannt',
+    gap_warning: 'Lücke erkannt',
   }
   return labels[type] || type
 }
@@ -167,7 +167,7 @@ onUnmounted(() => {
             <button
               @click="closePanel"
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
-              aria-label="Schliessen"
+              aria-label="Schließen"
             >
               &#x2715;
             </button>

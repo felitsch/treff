@@ -260,7 +260,7 @@ const hasTemplateHtml = computed(() => {
                 <AppIcon :name="activePlatform === 'tiktok' ? 'musical-note' : 'camera'" class="w-8 h-8 mx-auto" />
               </div>
               <p class="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                Waehle Kategorie, Template &amp; erstelle Inhalte — die Vorschau aktualisiert sich in Echtzeit.
+                Wähle Kategorie, Template &amp; erstelle Inhalte — die Vorschau aktualisiert sich in Echtzeit.
               </p>
             </div>
 

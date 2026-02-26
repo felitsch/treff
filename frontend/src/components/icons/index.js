@@ -228,7 +228,7 @@ export {
  *   📊 Dashboard    → ChartBarIcon
  *   ✏️ Erstellen    → PencilSquareIcon
  *   ⚡ Quick Post   → BoltIcon
- *   💾 Entwuerfe    → DocumentIcon / InboxIcon
+ *   💾 Entwürfe     → DocumentIcon / InboxIcon
  *   📅 Kampagne     → CalendarDaysIcon
  *   📅 Kalender     → CalendarIcon
  *   🗓️ Wochenplaner → CalendarDaysIcon
@@ -237,7 +237,7 @@ export {
  *   🖼️ Assets       → PhotoIcon
  *   📄 Templates    → DocumentTextIcon
  *   📋 Posts        → ClipboardDocumentListIcon
- *   🎓 Schueler     → AcademicCapIcon
+ *   🎓 Schüler      → AcademicCapIcon
  *   🎬 Thumbnails   → FilmIcon
  *   🎞️ Video-Overlay→ VideoCameraIcon
  *   ✂️ Video-Schnitt→ ScissorsIcon
@@ -258,7 +258,7 @@ export {
  *   📊 Infografik   → ChartBarIcon
  *
  * Content Pillars:
- *   🌍 Laender      → GlobeAltIcon
+ *   🌍 Länder       → GlobeAltIcon
  *   💡 Tipps        → LightBulbIcon
  *   ❓ FAQ          → QuestionMarkCircleIcon
  *   💬 Erfahrungen  → ChatBubbleLeftRightIcon

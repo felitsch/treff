@@ -1,12 +1,36 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'
+import { parseDateOnly } from '@/utils/dateUtils'
 
 const POLL_INTERVAL_MS = 60000 // Check every 60 seconds
+const ACKNOWLEDGED_STORAGE_KEY = 'treff_acknowledged_reminders'
 const activeReminders = ref([])
-const acknowledgedIds = new Set() // Track already-shown reminders in this session
 let pollTimer = null
 let isPolling = false
+
+// Persist acknowledged IDs to localStorage so they survive page reloads
+function loadAcknowledgedIds() {
+  try {
+    const stored = localStorage.getItem(ACKNOWLEDGED_STORAGE_KEY)
+    if (stored) return new Set(JSON.parse(stored))
+  } catch {
+    // Corrupted data – ignore
+  }
+  return new Set()
+}
+
+function saveAcknowledgedIds(ids) {
+  try {
+    // Keep only the last 200 IDs to prevent unbounded growth
+    const arr = Array.from(ids).slice(-200)
+    localStorage.setItem(ACKNOWLEDGED_STORAGE_KEY, JSON.stringify(arr))
+  } catch {
+    // Storage full – ignore
+  }
+}
+
+const acknowledgedIds = loadAcknowledgedIds()
 
 export function useReminders() {
   const toast = useToast()
@@ -29,6 +53,7 @@ export function useReminders() {
       for (const reminder of reminders) {
         if (!acknowledgedIds.has(reminder.id)) {
           acknowledgedIds.add(reminder.id)
+          saveAcknowledgedIds(acknowledgedIds)
 
           // Build notification message referencing the correct post
           const timeStr = reminder.scheduled_time || '00:00'
@@ -36,13 +61,13 @@ export function useReminders() {
           const title = reminder.title || 'Unbenannter Post'
           const platform = formatPlatform(reminder.platform)
 
-          const message = `\uD83D\uDD14 Post faellig: "${title}" (${platform}) war fuer ${dateStr} um ${timeStr} Uhr geplant.`
+          const message = `\uD83D\uDD14 Post fällig: "${title}" (${platform}) war für ${dateStr} um ${timeStr} Uhr geplant.`
 
-          // Show as info toast with longer duration (15 seconds)
+          // Show as warning toast with 8-second auto-dismiss
           toast.addToast({
             message,
-            type: 'info',
-            duration: 15000,
+            type: 'warning',
+            duration: 8000,
           })
         }
       }
@@ -58,16 +83,13 @@ export function useReminders() {
 
   function formatDate(dateStr) {
     if (!dateStr) return ''
-    try {
-      const d = new Date(dateStr + 'T00:00:00')
-      return d.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    } catch {
-      return dateStr
-    }
+    const d = parseDateOnly(dateStr)
+    if (!d) return dateStr
+    return d.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
   }
 
   function formatPlatform(platform) {

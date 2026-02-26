@@ -191,7 +191,7 @@ if (localStorage.getItem('darkMode') === 'true') {
           :class="hasTourForCurrentPage
             ? 'text-gray-500 hover:bg-blue-50 hover:text-treff-blue dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-400 cursor-pointer'
             : 'text-gray-300 dark:text-gray-600 cursor-default'"
-          :aria-label="hasTourForCurrentPage ? 'Seiten-Tour starten' : 'Keine Tour fuer diese Seite'"
+          :aria-label="hasTourForCurrentPage ? 'Seiten-Tour starten' : 'Keine Tour für diese Seite'"
         >
           <!-- Pulse animation ring on first visit -->
           <span
@@ -209,7 +209,7 @@ if (localStorage.getItem('darkMode') === 'true') {
           v-if="showTooltip"
           class="absolute right-0 top-full mt-2 z-50 whitespace-nowrap rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg dark:bg-gray-700"
         >
-          {{ hasTourForCurrentPage ? 'Seiten-Tour starten' : 'Keine Tour fuer diese Seite' }}
+          {{ hasTourForCurrentPage ? 'Seiten-Tour starten' : 'Keine Tour für diese Seite' }}
           <!-- Tooltip arrow -->
           <div class="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"></div>
         </div>

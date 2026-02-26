@@ -347,7 +347,7 @@ defineExpose({ refresh: fetchStrategyHealth })
         <!-- Country Rotation -->
         <BaseCard padding="lg" :header-divider="false" data-testid="country-health">
           <template #header>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Laender-Rotation</h3>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Länder-Rotation</h3>
           </template>
           <div class="space-y-2.5 mt-1">
             <div v-for="country in data.country_health" :key="country.id" class="flex items-center gap-2">

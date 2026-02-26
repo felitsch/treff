@@ -44,7 +44,7 @@ const shareUrl = ref('')
 
 // ── Constants ──────────────────────────────
 const countries = [
-  { value: '', label: 'Alle Laender' },
+  { value: '', label: 'Alle Länder' },
   { value: 'usa', label: '🇺🇸 USA' },
   { value: 'canada', label: '🇨🇦 Kanada' },
   { value: 'australia', label: '🇦🇺 Australien' },
@@ -130,7 +130,7 @@ async function loadVideoScripts() {
 // ── Actions ────────────────────────────────
 async function generateShotList() {
   if (!selectedContentType.value) {
-    toast.error('Bitte waehle einen Content-Typ')
+    toast.error('Bitte wähle einen Content-Typ')
     return
   }
   isGenerating.value = true
@@ -227,7 +227,7 @@ function copyShareLink() {
         Shot-List & Filming-Guide
       </h1>
       <p class="text-gray-600 dark:text-gray-400 mt-1">
-        Erstelle konkrete Filmauftraege fuer Austauschschueler — mit Beispielen, Tipps und Checklisten
+        Erstelle konkrete Filmaufträge für Austauschschüler — mit Beispielen, Tipps und Checklisten
       </p>
     </div>
 
@@ -258,7 +258,7 @@ function copyShareLink() {
             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
         ]"
       >
-        Uebersicht
+        Übersicht
       </button>
       <button
         @click="activeTab = 'generate'"
@@ -306,7 +306,7 @@ function copyShareLink() {
           Noch keine Shot-Lists
         </h3>
         <p class="text-gray-500 dark:text-gray-400 mb-4">
-          Erstelle deine erste Shot-List fuer einen Austauschschueler.
+          Erstelle deine erste Shot-List für einen Austauschschüler.
         </p>
         <button
           @click="activeTab = 'generate'"
@@ -338,10 +338,10 @@ function copyShareLink() {
       <!-- Content Type Selection -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          1. Content-Typ waehlen
+          1. Content-Typ wählen
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Waehle welche Art von Content der Schueler filmen soll. Saisonale Empfehlungen sind hervorgehoben.
+          Wähle welche Art von Content der Schüler filmen soll. Saisonale Empfehlungen sind hervorgehoben.
         </p>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -393,12 +393,12 @@ function copyShareLink() {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Schueler-Name (optional)
+              Schüler-Name (optional)
             </label>
             <input
               v-model="studentName"
               type="text"
-              placeholder="z.B. Lisa Mueller"
+              placeholder="z.B. Lisa Müller"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
@@ -466,7 +466,7 @@ function copyShareLink() {
           Shot-List teilen
         </h3>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Sende diesen Link an den Schueler. Die Shot-List wird als mobile-freundliche Checkliste angezeigt.
+          Sende diesen Link an den Schüler. Die Shot-List wird als mobile-freundliche Checkliste angezeigt.
         </p>
         <div class="flex items-center gap-2 mb-4">
           <input
@@ -486,7 +486,7 @@ function copyShareLink() {
             @click="shareModalOpen = false"
             class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
           >
-            Schliessen
+            Schließen
           </button>
         </div>
       </div>

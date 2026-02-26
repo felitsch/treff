@@ -47,7 +47,7 @@ async function handleUpload(files) {
   if (!files || files.length === 0) return
   const file = files[0]
   if (!file.type.startsWith('video/')) {
-    toast.error('Bitte waehle eine Videodatei aus (MP4, MOV, WebM).')
+    toast.error('Bitte wähle eine Videodatei aus (MP4, MOV, WebM).')
     return
   }
   uploading.value = true
@@ -193,7 +193,7 @@ onMounted(loadAssets)
     <!-- Video library -->
     <div v-if="!selectedAsset">
       <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Oder waehle ein vorhandenes Video:
+        Oder wähle ein vorhandenes Video:
       </h4>
       <div v-if="loadingAssets" class="text-center py-4">
         <div class="animate-spin inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />

@@ -102,7 +102,7 @@ function handleAction(toast) {
           'text-blue-600 dark:text-blue-300': toast.type === 'info',
           'text-indigo-600 dark:text-indigo-300': toast.type === 'progress',
         }"
-        aria-label="Schliessen"
+        aria-label="Schließen"
         data-testid="toast-close-button"
       >
         &times;

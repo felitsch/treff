@@ -639,7 +639,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <AppIcon name="link" class="w-4 h-4 inline-block" />
-              <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Verknuepfte Plattform-Posts</span>
+              <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Verknüpfte Plattform-Posts</span>
             </div>
             <button
               @click="showSyncDialog = true"

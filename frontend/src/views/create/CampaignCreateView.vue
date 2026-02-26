@@ -183,7 +183,7 @@ async function saveCampaign() {
       status: 'active',
     })
 
-    toast.success('Kampagne aktiviert! Posts wurden als Entwuerfe gespeichert.')
+    toast.success('Kampagne aktiviert! Posts wurden als Entwürfe gespeichert.')
     router.push('/calendar')
   } catch (err) {
     toast.error('Speichern fehlgeschlagen.')
@@ -436,7 +436,7 @@ function formatDateLong(dateStr) {
 
       <!-- Country focus -->
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">Laender-Fokus (optional)</label>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">Länder-Fokus (optional)</label>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="opt in countryOptions"

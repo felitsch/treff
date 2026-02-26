@@ -495,7 +495,7 @@ defineExpose({ generate })
 
       <!-- Empty state when no variant selected -->
       <div v-else class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-        Waehle eine Variante aus
+        Wähle eine Variante aus
       </div>
     </div>
 

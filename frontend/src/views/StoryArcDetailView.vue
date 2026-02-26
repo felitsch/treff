@@ -101,7 +101,7 @@ onMounted(() => {
         @click="goBack"
       >
         <span>&#x2190;</span>
-        <span>Zurueck zu Story-Arcs</span>
+        <span>Zurück zu Story-Arcs</span>
       </button>
 
       <!-- Header Section -->
@@ -189,7 +189,7 @@ onMounted(() => {
           <AppIcon name="document-text" class="w-10 h-10 mx-auto mb-3" />
           <p class="text-gray-500 dark:text-gray-400">Noch keine Episoden erstellt</p>
           <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">
-            Episoden werden ueber den Story-Wizard oder die Kalender-Ansicht erstellt.
+            Episoden werden über den Story-Wizard oder die Kalender-Ansicht erstellt.
           </p>
         </div>
 
@@ -261,7 +261,7 @@ onMounted(() => {
                     </span>
                   </div>
                   <div v-else class="text-xs text-gray-400 dark:text-gray-500 italic">
-                    Noch kein Post verknuepft
+                    Noch kein Post verknüpft
                   </div>
                 </div>
 

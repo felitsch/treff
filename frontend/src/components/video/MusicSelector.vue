@@ -89,7 +89,7 @@ async function uploadCustomTrack(e) {
   const file = e.target.files?.[0]
   if (!file) return
   if (!file.type.startsWith('audio/')) {
-    toast.error('Bitte waehle eine Audiodatei aus (MP3, WAV, OGG).')
+    toast.error('Bitte wähle eine Audiodatei aus (MP3, WAV, OGG).')
     return
   }
   uploadingTrack.value = true

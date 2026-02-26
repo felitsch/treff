@@ -336,7 +336,7 @@ const saving = ref(false)
 const saveName = ref('')
 const saveCategory = ref('laender_spotlight')
 const saveCategories = [
-  { value: 'laender_spotlight', label: 'Laender-Spotlight' },
+  { value: 'laender_spotlight', label: 'Länder-Spotlight' },
   { value: 'erfahrungsberichte', label: 'Erfahrungsberichte' },
   { value: 'infografiken', label: 'Infografiken' },
   { value: 'fristen_cta', label: 'Fristen & CTA' },

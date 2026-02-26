@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
+import { formatDate } from '@/utils/dateUtils'
 
 const router = useRouter()
 
@@ -38,15 +39,7 @@ function scoreColor(score) {
   return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700'
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
+// formatDate imported from @/utils/dateUtils
 
 const filteredSuggestions = computed(() => {
   if (filterEvergreen.value) {

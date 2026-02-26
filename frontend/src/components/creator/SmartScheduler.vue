@@ -212,7 +212,7 @@ onMounted(() => {
 
       <!-- Recommended Time Slots -->
       <div>
-        <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Empfohlene Zeiten fuer {{ targetDayName }}:</div>
+        <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Empfohlene Zeiten für {{ targetDayName }}:</div>
         <div class="grid grid-cols-5 gap-2" data-testid="recommended-slots">
           <button
             v-for="slot in recommendedSlots"
@@ -382,7 +382,7 @@ onMounted(() => {
       <div v-if="selectedTime" class="px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg" data-testid="schedule-summary">
         <div class="text-xs text-green-800 dark:text-green-300 flex items-center gap-2">
           <AppIcon name="check-circle" class="w-4 h-4 flex-shrink-0" />
-          <span>Geplant fuer: <strong>{{ new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) }}, {{ selectedTime }} Uhr</strong></span>
+          <span>Geplant für: <strong>{{ new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) }}, {{ selectedTime }} Uhr</strong></span>
         </div>
       </div>
     </template>

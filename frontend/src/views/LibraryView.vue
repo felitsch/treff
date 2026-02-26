@@ -74,7 +74,7 @@ const mainTabs = [
 
 // ── Template sub-tabs ──────────────────────────────────────────
 const templateSubTabs = [
-  { key: 'templates', label: 'Uebersicht', path: '/library/templates' },
+  { key: 'templates', label: 'Übersicht', path: '/library/templates' },
   { key: 'template-gallery', label: 'Galerie', path: '/library/template-gallery' },
   { key: 'template-editor', label: 'Editor', path: '/library/template-editor' },
 ]

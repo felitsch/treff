@@ -60,7 +60,7 @@ export const POSTING_STRATEGY = {
       minPerWeek: 3,
       maxPerWeek: 5,
       idealPerWeek: 4,
-      description: '3-5 Feed-Posts pro Woche fuer konsistente Praesenz',
+      description: '3-5 Feed-Posts pro Woche für konsistente Präsenz',
     },
     bestTimes: {
       montag:     { times: ['17:00', '18:00', '19:00'], peak: '18:00', score: 80 },
@@ -96,7 +96,7 @@ export const POSTING_STRATEGY = {
       minPerWeek: 5,
       maxPerWeek: 14,
       idealPerWeek: 7,
-      description: 'Taeglich mindestens 1 Story, idealerweise 3-5 Frames pro Tag',
+      description: 'Täglich mindestens 1 Story, idealerweise 3-5 Frames pro Tag',
     },
     bestTimes: {
       montag:     { times: ['07:30', '12:00', '17:30', '20:00'], peak: '17:30', score: 85 },
@@ -122,8 +122,8 @@ export const POSTING_STRATEGY = {
       'Interaktive Sticker nutzen: Umfragen, Quiz, Fragen-Box',
       'Maximal 7 Frames pro Story-Sequenz',
       'Text gross und zentriert — viele schauen ohne Ton',
-      'Hintergrundmusik/Trending Audio fuer Atmosphaere',
-      'Stories-Highlights fuer dauerhafte Themen nutzen',
+      'Hintergrundmusik/Trending Audio für Atmosphäre',
+      'Stories-Highlights für dauerhafte Themen nutzen',
     ],
   },
 
@@ -157,14 +157,14 @@ export const POSTING_STRATEGY = {
       minSeconds: 5,
       maxSeconds: 90,
       idealRangeSeconds: [15, 60],
-      description: '15-60 Sekunden fuer maximale Watch-Time',
+      description: '15-60 Sekunden für maximale Watch-Time',
     },
     bestDays: ['Dienstag', 'Donnerstag', 'Freitag'],
     bestPractices: [
       'Die ersten 2 Sekunden entscheiden alles — Hook sofort',
-      'Trending Audio verwenden fuer mehr Reichweite',
+      'Trending Audio verwenden für mehr Reichweite',
       'Vertikales Format 9:16 ist Pflicht',
-      'Text-Overlays fuer Informations-Vermittlung',
+      'Text-Overlays für Informations-Vermittlung',
       'CTA am Ende: Folgen, Speichern, Kommentieren',
     ],
   },
@@ -174,7 +174,7 @@ export const POSTING_STRATEGY = {
       minPerWeek: 5,
       maxPerWeek: 14,
       idealPerWeek: 7,
-      description: 'TikTok belohnt Konsistenz: 1-2x taeglich fuer optimalen Algorithmus-Boost',
+      description: 'TikTok belohnt Konsistenz: 1-2x täglich für optimalen Algorithmus-Boost',
     },
     bestTimes: {
       montag:     { times: ['16:00', '17:00', '19:00', '21:00'], peak: '17:00', score: 80 },
@@ -199,13 +199,13 @@ export const POSTING_STRATEGY = {
       minSeconds: 5,
       maxSeconds: 180,
       idealRangeSeconds: [15, 60],
-      description: '15-60 Sekunden fuer maximale Watch-Time. Laengere Videos nur bei Storytelling.',
+      description: '15-60 Sekunden für maximale Watch-Time. Längere Videos nur bei Storytelling.',
     },
     bestDays: ['Dienstag', 'Donnerstag', 'Samstag'],
     bestPractices: [
       'Die ersten 2 Sekunden entscheiden ALLES',
       'Trending Sounds verwenden',
-      'Authentizitaet schlaegt Perfektion',
+      'Authentizität schlägt Perfektion',
       'Untertitel sind Pflicht (40% schauen ohne Ton)',
       'Kommentare innerhalb der ersten Stunde beantworten',
     ],
@@ -301,9 +301,9 @@ export function evaluatePostingTime(platformId, dateTime) {
   // Warning for very early or late hours
   let warning = null
   const hour = dateTime.getHours()
-  if (hour < 7) warning = 'Sehr fruehe Uhrzeit — wenige User online'
-  else if (hour >= 22) warning = 'Spaete Uhrzeit — sinkende Reichweite'
-  else if (!isRecommended) warning = 'Ausserhalb der empfohlenen Zeiten fuer diese Plattform'
+  if (hour < 7) warning = 'Sehr frühe Uhrzeit — wenige User online'
+  else if (hour >= 22) warning = 'Späte Uhrzeit — sinkende Reichweite'
+  else if (!isRecommended) warning = 'Außerhalb der empfohlenen Zeiten für diese Plattform'
 
   return { score, isPeak, isRecommended, warning }
 }

@@ -50,7 +50,7 @@ const navGroups = [
     items: [
       { name: 'Erstellen', path: '/create', icon: markRaw(PencilSquareIcon) },
       { name: 'Quick Post', path: '/create/quick', icon: markRaw(BoltIcon) },
-      { name: 'Entwuerfe', path: '/create/drafts', icon: markRaw(DocumentIcon) },
+      { name: 'Entwürfe', path: '/create/drafts', icon: markRaw(DocumentIcon) },
       { name: 'Kampagne', path: '/create/campaign', icon: markRaw(CalendarDaysIcon) },
     ],
   },
@@ -74,10 +74,10 @@ const navGroups = [
     ],
   },
   {
-    label: 'Schueler',
+    label: 'Schüler',
     key: 'students',
     items: [
-      { name: 'Schueler', path: '/students', icon: markRaw(AcademicCapIcon) },
+      { name: 'Schüler', path: '/students', icon: markRaw(AcademicCapIcon) },
     ],
   },
   {

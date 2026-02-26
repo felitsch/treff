@@ -95,7 +95,7 @@ onMounted(() => {
     <div v-else class="max-w-4xl mx-auto px-6">
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Quell-Video auswaehlen
+          Quell-Video auswählen
         </h3>
 
         <!-- Loading -->
@@ -131,7 +131,7 @@ onMounted(() => {
                 <span>&#183; #{{ p.id }}</span>
               </div>
             </div>
-            <span class="text-[#3B7AB1] text-sm font-medium">Auswaehlen &#8594;</span>
+            <span class="text-[#3B7AB1] text-sm font-medium">Auswählen &#8594;</span>
           </button>
         </div>
 

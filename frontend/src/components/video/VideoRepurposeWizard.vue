@@ -573,7 +573,7 @@ watch(() => props.postId, (newId) => {
         <div>
           <span class="text-sm font-medium text-gray-900 dark:text-white">Im Kalender verteilen</span>
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Derivative werden automatisch ueber die Woche verteilt (optimale Posting-Zeiten)
+            Derivative werden automatisch über die Woche verteilt (optimale Posting-Zeiten)
           </p>
         </div>
       </label>

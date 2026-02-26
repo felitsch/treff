@@ -79,7 +79,7 @@ function categoryHexColor(cat) {
 // Category labels
 function categoryLabel(cat) {
   const labels = {
-    laender_spotlight: 'Laender',
+    laender_spotlight: 'Länder',
     erfahrungsberichte: 'Erfahrung',
     infografiken: 'Infografik',
     fristen_cta: 'Fristen',
@@ -395,7 +395,7 @@ const arcStats = computed(() => {
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
             <div class="text-lg font-bold text-gray-900 dark:text-white">{{ mixData.countries.length }}</div>
-            <div class="text-[10px] text-gray-500 dark:text-gray-400">Laender</div>
+            <div class="text-[10px] text-gray-500 dark:text-gray-400">Länder</div>
           </div>
         </div>
 

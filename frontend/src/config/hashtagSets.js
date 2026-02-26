@@ -36,8 +36,8 @@ export const NICHE_HASHTAGS = {
   auslandsjahr: {
     name: 'Auslandsjahr & Austausch',
     hashtags: [
-      '#Auslandsjahr', '#Schueleraustausch', '#HighSchoolAbroad',
-      '#StudyAbroad', '#GapYear', '#Austauschschueler',
+      '#Auslandsjahr', '#Schüleraustausch', '#HighSchoolAbroad',
+      '#StudyAbroad', '#GapYear', '#Austauschschüler',
       '#AuslandsjahrUSA', '#AuslandsjahrKanada',
     ],
   },
@@ -113,22 +113,22 @@ export const PREDEFINED_SETS = [
   {
     id: 'brand_standard',
     name: 'Brand Standard',
-    description: 'Basis-Set fuer jeden Post — immer mindestens diese verwenden',
+    description: 'Basis-Set für jeden Post — immer mindestens diese verwenden',
     category: 'brand',
     hashtags: [
       '#TREFFSprachreisen', '#HighschoolYear', '#MeinTREFFJahr',
-      '#Auslandsjahr', '#Schueleraustausch',
+      '#Auslandsjahr', '#Schüleraustausch',
     ],
     platformRecommendation: 'alle',
   },
   {
     id: 'erfahrungsbericht',
     name: 'Erfahrungsbericht',
-    description: 'Fuer Testimonials und persoenliche Geschichten',
+    description: 'Für Testimonials und persönliche Geschichten',
     category: 'thema',
     hashtags: [
       '#TREFFSprachreisen', '#MeinTREFFJahr', '#Auslandsjahr',
-      '#Schueleraustausch', '#HighSchoolAbroad', '#StudyAbroad',
+      '#Schüleraustausch', '#HighSchoolAbroad', '#StudyAbroad',
       '#GapYear', '#Fernweh', '#WeltEntdecken',
       '#TREFFAlumni',
     ],
@@ -137,7 +137,7 @@ export const PREDEFINED_SETS = [
   {
     id: 'laender_spotlight_usa',
     name: 'USA Spotlight',
-    description: 'Fuer USA-bezogene Posts und Vergleiche',
+    description: 'Für USA-bezogene Posts und Vergleiche',
     category: 'land',
     country: 'usa',
     hashtags: [
@@ -151,7 +151,7 @@ export const PREDEFINED_SETS = [
   {
     id: 'laender_spotlight_kanada',
     name: 'Kanada Spotlight',
-    description: 'Fuer Kanada-bezogene Posts',
+    description: 'Für Kanada-bezogene Posts',
     category: 'land',
     country: 'kanada',
     hashtags: [
@@ -165,7 +165,7 @@ export const PREDEFINED_SETS = [
   {
     id: 'laender_spotlight_australien',
     name: 'Australien Spotlight',
-    description: 'Fuer Australien-bezogene Posts',
+    description: 'Für Australien-bezogene Posts',
     category: 'land',
     country: 'australien',
     hashtags: [
@@ -179,7 +179,7 @@ export const PREDEFINED_SETS = [
   {
     id: 'laender_spotlight_neuseeland',
     name: 'Neuseeland Spotlight',
-    description: 'Fuer Neuseeland-bezogene Posts',
+    description: 'Für Neuseeland-bezogene Posts',
     category: 'land',
     country: 'neuseeland',
     hashtags: [
@@ -193,7 +193,7 @@ export const PREDEFINED_SETS = [
   {
     id: 'laender_spotlight_irland',
     name: 'Irland Spotlight',
-    description: 'Fuer Irland-bezogene Posts',
+    description: 'Für Irland-bezogene Posts',
     category: 'land',
     country: 'irland',
     hashtags: [
@@ -207,10 +207,10 @@ export const PREDEFINED_SETS = [
   {
     id: 'tipps_tricks',
     name: 'Tipps & Tricks',
-    description: 'Fuer Ratgeber, Packlisten, How-Tos',
+    description: 'Für Ratgeber, Packlisten, How-Tos',
     category: 'thema',
     hashtags: [
-      '#TREFFSprachreisen', '#Auslandsjahr', '#Schueleraustausch',
+      '#TREFFSprachreisen', '#Auslandsjahr', '#Schüleraustausch',
       '#AustauschjährTipps', '#HighSchoolAbroad',
       '#Reisetipps', '#PacklisteAusland', '#StudyAbroadTips',
       '#Fernweh', '#WeltEntdecken',
@@ -220,20 +220,20 @@ export const PREDEFINED_SETS = [
   {
     id: 'bewerbung_fristen',
     name: 'Bewerbung & Fristen',
-    description: 'Fuer Bewerbungsaufrufe und Frist-Erinnerungen',
+    description: 'Für Bewerbungsaufrufe und Frist-Erinnerungen',
     category: 'thema',
     hashtags: [
       '#TREFFSprachreisen', '#Auslandsjahr', '#DeinAuslandsjahr2027',
       '#BewerbungAusland', '#Highschool2027',
       '#TraumVomAusland', '#JetztBewerben',
-      '#Schueleraustausch', '#MeinTREFFJahr',
+      '#Schüleraustausch', '#MeinTREFFJahr',
     ],
     platformRecommendation: 'instagram_feed',
   },
   {
     id: 'tiktok_standard',
     name: 'TikTok Standard',
-    description: 'Optimiert fuer TikTok (3-5 Hashtags + Trending)',
+    description: 'Optimiert für TikTok (3-5 Hashtags + Trending)',
     category: 'plattform',
     hashtags: [
       '#TREFFSprachreisen', '#Auslandsjahr', '#HighSchoolAbroad',
@@ -244,11 +244,11 @@ export const PREDEFINED_SETS = [
   {
     id: 'reels_standard',
     name: 'Reels Standard',
-    description: 'Optimiert fuer Instagram Reels',
+    description: 'Optimiert für Instagram Reels',
     category: 'plattform',
     hashtags: [
       '#TREFFSprachreisen', '#MeinTREFFJahr', '#Auslandsjahr',
-      '#Schueleraustausch', '#HighSchoolAbroad',
+      '#Schüleraustausch', '#HighSchoolAbroad',
       '#Reels', '#InstagramReels',
     ],
     platformRecommendation: 'instagram_reels',

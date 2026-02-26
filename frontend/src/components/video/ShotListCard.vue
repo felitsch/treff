@@ -163,7 +163,7 @@ function formatDate(iso) {
           @click.stop="emit('open', shotList.id)"
           class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Oeffnen
+          Öffnen
         </button>
         <button
           @click.stop="emit('share', shotList.id)"

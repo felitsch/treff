@@ -169,7 +169,7 @@ const editorPreviewHtml = computed(() => {
   html = html.replace(/\{\{cta_text\}\}/g, escapeHtml(c.ctaText))
   html = html.replace(/\{\{cta\}\}/g, escapeHtml(c.ctaText))
   html = html.replace(/\{\{quote_text\}\}/g, escapeHtml(c.bodyText))
-  html = html.replace(/\{\{quote_author\}\}/g, escapeHtml('Max M., Austauschschueler'))
+  html = html.replace(/\{\{quote_author\}\}/g, escapeHtml('Max M., Austauschschüler'))
   html = html.replace(/\{\{bullet_points\}\}/g, escapeHtml('Punkt 1, Punkt 2, Punkt 3'))
   html = html.replace(/\{\{previously_text\}\}/g, escapeHtml('Bisher bei Jonathan: Nach der Ankunft in Seattle hat er seine Gastfamilie kennengelernt...'))
   html = html.replace(/\{\{cliffhanger_text\}\}/g, escapeHtml('Aber was Jonathan am nächsten Tag erlebt, hätte niemand erwartet...'))

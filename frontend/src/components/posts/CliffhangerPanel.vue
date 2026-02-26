@@ -32,7 +32,7 @@
         <textarea
           v-model="cliffhangerText"
           rows="2"
-          placeholder="Ein packender Cliffhanger fuer das Ende der Episode..."
+          placeholder="Ein packender Cliffhanger für das Ende der Episode..."
           class="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
           data-testid="cliffhanger-text-input"
           @input="emitUpdate"
@@ -67,7 +67,7 @@
       <!-- Days Until Next (for countdown variant) -->
       <div v-if="selectedVariant === 'countdown'" class="flex items-center gap-3">
         <label class="text-xs font-semibold text-amber-800 dark:text-amber-300 whitespace-nowrap">
-          <AppIcon name="clock" class="w-3.5 h-3.5 inline-block" /> Tage bis naechste Episode:
+          <AppIcon name="clock" class="w-3.5 h-3.5 inline-block" /> Tage bis nächste Episode:
         </label>
         <input
           v-model.number="daysUntilNext"
@@ -125,7 +125,7 @@
           <div class="flex items-center gap-2">
             <AppIcon name="link" class="w-4 h-4 shrink-0" />
             <div>
-              <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">Naechste Episode verknuepft:</span>
+              <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">Nächste Episode verknüpft:</span>
               <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
                 E{{ nextEpisodeInfo.episode_number }}: {{ nextEpisodeInfo.episode_title }}
                 <span v-if="nextEpisodeInfo.post && nextEpisodeInfo.post.scheduled_date" class="text-blue-500 dark:text-blue-500">
@@ -140,7 +140,7 @@
             class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 underline"
             data-testid="next-episode-link"
           >
-            Oeffnen →
+            Öffnen →
           </a>
         </div>
       </div>
@@ -194,7 +194,7 @@ const isLastEpisode = ref(false)
 const teaserVariants = {
   countdown: { label: 'Countdown', description: 'Noch X Tage...', icon: 'clock' },
   question: { label: 'Frage', description: 'Was passiert...?', icon: 'question-mark-circle' },
-  spoiler: { label: 'Spoiler', description: 'Naechstes Mal:', icon: 'eye' },
+  spoiler: { label: 'Spoiler', description: 'Nächstes Mal:', icon: 'eye' },
 }
 
 const variantIcons = { countdown: 'clock', question: 'question-mark-circle', spoiler: 'eye' }
@@ -203,9 +203,9 @@ const teaserPlaceholder = computed(() => {
   const placeholders = {
     countdown: 'Noch 2 Tage bis...',
     question: 'Was passiert, wenn...?',
-    spoiler: 'Naechstes Mal: Der erste Schnee',
+    spoiler: 'Nächstes Mal: Der erste Schnee',
   }
-  return placeholders[selectedVariant.value] || 'Teaser fuer die naechste Episode...'
+  return placeholders[selectedVariant.value] || 'Teaser für die nächste Episode...'
 })
 
 const progressWidth = computed(() => {

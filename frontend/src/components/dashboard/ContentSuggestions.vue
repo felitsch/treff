@@ -20,6 +20,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import { tooltipTexts } from '@/utils/tooltipTexts'
+import { formatDate } from '@/utils/dateUtils'
 
 const props = defineProps({
   /** Initial suggestions loaded from dashboard API */
@@ -134,15 +135,7 @@ function formatIcon(format) {
   return icons[format] || 'document-text'
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
+// formatDate imported from @/utils/dateUtils
 
 // ── Actions ──
 

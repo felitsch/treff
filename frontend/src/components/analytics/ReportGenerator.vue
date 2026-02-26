@@ -28,7 +28,7 @@ const historyLoading = ref(false)
 
 // Category/platform labels
 const categoryLabels = {
-  laender_spotlight: 'Laender-Spotlight',
+  laender_spotlight: 'Länder-Spotlight',
   erfahrungsberichte: 'Erfahrungsberichte',
   infografiken: 'Infografiken',
   fristen_cta: 'Fristen/CTA',

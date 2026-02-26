@@ -41,6 +41,7 @@ const routes = [
         component: () => import('@/views/DashboardView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Home',
           breadcrumb: [{ label: 'Home', path: '/home' }],
         },
       },
@@ -54,6 +55,7 @@ const routes = [
         component: () => import('@/views/CreateHubView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Erstellen',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Erstellen', path: '/create' }],
         },
       },
@@ -63,6 +65,7 @@ const routes = [
         component: () => import('@/views/PostCreatorView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Quick Post',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
@@ -90,6 +93,7 @@ const routes = [
         component: () => import('@/views/CreatePostView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Erweiterter Modus',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
@@ -131,6 +135,7 @@ const routes = [
         component: () => import('@/views/EditPostView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Bearbeiten',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
@@ -145,10 +150,11 @@ const routes = [
         component: () => import('@/views/DraftsListView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Entwürfe',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Erstellen', path: '/create' },
-            { label: 'Entwuerfe', path: '/create/drafts' },
+            { label: 'Entwürfe', path: '/create/drafts' },
           ],
         },
       },
@@ -162,6 +168,7 @@ const routes = [
         component: () => import('@/views/CalendarView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Kalender',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Kalender', path: '/calendar' }],
         },
       },
@@ -171,6 +178,7 @@ const routes = [
         component: () => import('@/views/WeekPlannerView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Wochenplaner',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Kalender', path: '/calendar' },
@@ -184,6 +192,7 @@ const routes = [
         component: () => import('@/views/StoryArcsView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Story-Arcs',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Kalender', path: '/calendar' },
@@ -197,6 +206,7 @@ const routes = [
         component: () => import('@/views/StoryArcDetailView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Story-Arc Detail',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Kalender', path: '/calendar' },
@@ -211,6 +221,7 @@ const routes = [
         component: () => import('@/views/StoryArcWizardView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Story-Arc Wizard',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Kalender', path: '/calendar' },
@@ -225,6 +236,7 @@ const routes = [
         component: () => import('@/views/RecurringFormatsView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Formate',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Kalender', path: '/calendar' },
@@ -253,6 +265,7 @@ const routes = [
             component: () => import('@/views/TemplatesView.vue'),
             meta: {
               requiresAuth: true,
+              title: 'Templates',
               breadcrumb: [
                 { label: 'Home', path: '/home' },
                 { label: 'Bibliothek', path: '/library' },
@@ -294,6 +307,7 @@ const routes = [
             component: () => import('@/views/AssetsView.vue'),
             meta: {
               requiresAuth: true,
+              title: 'Assets',
               breadcrumb: [
                 { label: 'Home', path: '/home' },
                 { label: 'Bibliothek', path: '/library' },
@@ -307,6 +321,7 @@ const routes = [
             component: () => import('@/views/HistoryView.vue'),
             meta: {
               requiresAuth: true,
+              title: 'History',
               breadcrumb: [
                 { label: 'Home', path: '/home' },
                 { label: 'Bibliothek', path: '/library' },
@@ -318,7 +333,7 @@ const routes = [
       },
 
       // ═══════════════════════════════════════════════════════
-      // SECTION 5: STUDENTS (Schueler)
+      // SECTION 5: STUDENTS (Schüler)
       // ═══════════════════════════════════════════════════════
       {
         path: 'students',
@@ -333,9 +348,10 @@ const routes = [
             component: () => import('@/views/StudentsView.vue'),
             meta: {
               requiresAuth: true,
+              title: 'Schüler',
               breadcrumb: [
                 { label: 'Home', path: '/home' },
-                { label: 'Schueler', path: '/students' },
+                { label: 'Schüler', path: '/students' },
               ],
             },
           },
@@ -345,9 +361,10 @@ const routes = [
             component: () => import('@/views/StudentDetailView.vue'),
             meta: {
               requiresAuth: true,
+              title: 'Schüler-Detail',
               breadcrumb: [
                 { label: 'Home', path: '/home' },
-                { label: 'Schueler', path: '/students' },
+                { label: 'Schüler', path: '/students' },
                 { label: 'Detail', path: '' },
               ],
             },
@@ -364,6 +381,7 @@ const routes = [
         component: () => import('@/views/AnalyticsView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Analytics',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Analytics', path: '/analytics' }],
         },
       },
@@ -377,6 +395,7 @@ const routes = [
         component: () => import('@/views/PromptHistoryView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'KI-History',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'KI-History', path: '/ai/prompt-history' },
@@ -393,6 +412,7 @@ const routes = [
         component: () => import('@/views/SettingsView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Einstellungen',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Einstellungen', path: '/settings' }],
         },
       },
@@ -406,6 +426,7 @@ const routes = [
         component: () => import('@/views/DesignSystemView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Design-System',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'Design-System', path: '/design-system' }],
         },
       },
@@ -415,6 +436,7 @@ const routes = [
         component: () => import('@/views/UIShowcaseView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'UI Showcase',
           breadcrumb: [{ label: 'Home', path: '/home' }, { label: 'UI Showcase', path: '/ui-showcase' }],
         },
       },
@@ -428,6 +450,7 @@ const routes = [
         component: () => import('@/views/ThumbnailGeneratorView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Thumbnails',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -441,6 +464,7 @@ const routes = [
         component: () => import('@/views/VideoOverlayEditorView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Overlays',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -454,6 +478,7 @@ const routes = [
         component: () => import('@/views/VideoComposerView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Schnitt',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -467,6 +492,7 @@ const routes = [
         component: () => import('@/views/VideoTemplatesView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Branding',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -480,6 +506,7 @@ const routes = [
         component: () => import('@/views/VideoExportView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Export',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -493,6 +520,7 @@ const routes = [
         component: () => import('@/views/AudioMixerView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Audio-Mixer',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },
@@ -506,6 +534,7 @@ const routes = [
         component: () => import('@/views/VideoScriptView.vue'),
         meta: {
           requiresAuth: true,
+          title: 'Script-Generator',
           breadcrumb: [
             { label: 'Home', path: '/home' },
             { label: 'Video-Tools', path: '/create/video' },

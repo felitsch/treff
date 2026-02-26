@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router'
 import BaseCard from '@/components/common/BaseCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { parseDateOnly } from '@/utils/dateUtils'
 
 const props = defineProps({
   posts: {
@@ -60,16 +61,22 @@ function categoryColor(cat) {
 function countdown(scheduledDate, scheduledTime) {
   if (!scheduledDate) return ''
 
+  // Extract just the date portion (YYYY-MM-DD) in case the API returns a full ISO datetime
+  const datePart = scheduledDate.substring(0, 10)
+
+  // Normalize time to HH:MM:SS — handles both "09:00" and "09:00:00"
+  const timePart = scheduledTime
+    ? (scheduledTime.length === 5 ? scheduledTime + ':00' : scheduledTime)
+    : '09:00:00'
+
   const now = new Date()
-  let target
-  if (scheduledTime) {
-    target = new Date(`${scheduledDate}T${scheduledTime}:00`)
-  } else {
-    target = new Date(`${scheduledDate}T09:00:00`)
-  }
+  const target = new Date(`${datePart}T${timePart}`)
+
+  // Guard against invalid dates producing NaN
+  if (isNaN(target.getTime())) return 'Geplant'
 
   const diff = target.getTime() - now.getTime()
-  if (diff <= 0) return 'Jetzt faellig'
+  if (diff <= 0) return 'Überfällig'
 
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(minutes / 60)
@@ -84,7 +91,8 @@ function countdown(scheduledDate, scheduledTime) {
 // Format scheduled date/time nicely
 function formatSchedule(scheduledDate, scheduledTime) {
   if (!scheduledDate) return ''
-  const d = new Date(scheduledDate)
+  const d = parseDateOnly(scheduledDate)
+  if (!d) return ''
   const dateStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short' })
   if (scheduledTime) {
     return `${dateStr}, ${scheduledTime} Uhr`
@@ -143,7 +151,7 @@ function editPost(postId) {
         v-else-if="posts.length === 0"
         svgIcon="calendar-days"
         title="Keine geplanten Posts"
-        description="Plane deinen naechsten Post im Kalender oder erstelle einen neuen."
+        description="Plane deinen nächsten Post im Kalender oder erstelle einen neuen."
         actionLabel="Post erstellen"
         actionTo="/create/quick"
         :compact="true"

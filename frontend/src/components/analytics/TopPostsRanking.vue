@@ -40,7 +40,7 @@ const periodOptions = [
 // Category labels
 function categoryLabel(cat) {
   const labels = {
-    laender_spotlight: 'Laender-Spotlight',
+    laender_spotlight: 'Länder-Spotlight',
     erfahrungsberichte: 'Erfahrungsbericht',
     infografiken: 'Infografik',
     fristen_cta: 'Fristen/CTA',
@@ -184,7 +184,7 @@ onMounted(() => {
       v-else-if="posts.length === 0"
       svgIcon="chart-bar"
       title="Noch keine Performance-Daten"
-      description="Trage Metriken (Likes, Kommentare, Reichweite) fuer deine Posts ein, um das Ranking zu sehen."
+      description="Trage Metriken (Likes, Kommentare, Reichweite) für deine Posts ein, um das Ranking zu sehen."
       actionLabel="Post bearbeiten"
       actionTo="/library/history"
       :compact="true"

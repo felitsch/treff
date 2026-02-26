@@ -1927,7 +1927,7 @@ const STANDARD_PLACEHOLDERS = {
   headline: { label: 'Überschrift', desc: 'Hauptüberschrift des Posts', icon: 'document-text' },
   subheadline: { label: 'Unterüberschrift', desc: 'Zweite Zeile / Untertitel', icon: 'clipboard-document-list' },
   body_text: { label: 'Fließtext', desc: 'Haupttext / Beschreibung', icon: 'document' },
-  name: { label: 'Name', desc: 'Person oder Schueler-Name', icon: 'user' },
+  name: { label: 'Name', desc: 'Person oder Schüler-Name', icon: 'user' },
   land: { label: 'Land', desc: 'Zielland (z.B. USA, Kanada)', icon: 'globe-alt' },
   stadt: { label: 'Stadt', desc: 'Stadt oder Region', icon: 'building-office-2' },
   datum: { label: 'Datum', desc: 'Datum oder Zeitangabe', icon: 'calendar' },

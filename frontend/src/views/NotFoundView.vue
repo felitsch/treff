@@ -12,7 +12,7 @@ import { RouterLink } from 'vue-router'
         to="/home"
         class="mt-6 inline-block rounded-lg bg-treff-blue px-6 py-2.5 text-sm font-medium text-white hover:bg-treff-blue/90 focus-ring no-underline"
       >
-        Zurueck zur Startseite
+        Zurück zur Startseite
       </router-link>
     </div>
   </div>
