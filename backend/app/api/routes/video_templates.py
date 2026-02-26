@@ -86,13 +86,14 @@ class ApplyTemplateRequest(BaseModel):
     video_asset_id: int
     intro_template_id: Optional[int] = None
     outro_template_id: Optional[int] = None
-    output_format: str = Field(default="9:16", pattern="^(9:16|1:1|16:9)$")
+    output_format: str = Field(default="9:16", pattern="^(9:16|1:1|4:5|16:9)$")
     save_as_asset: bool = True
 
 
 # Output format presets (same as video_composer)
 OUTPUT_FORMATS = {
     "9:16": {"width": 1080, "height": 1920},
+    "4:5": {"width": 1080, "height": 1350},
     "1:1": {"width": 1080, "height": 1080},
     "16:9": {"width": 1920, "height": 1080},
 }

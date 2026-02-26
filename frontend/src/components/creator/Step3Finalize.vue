@@ -68,7 +68,7 @@ function onMultiExportComplete(results) {
 }
 
 const platforms = [
-  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '1:1' },
+  { id: 'instagram_feed', label: 'Instagram Feed', icon: 'camera', format: '4:5' },
   { id: 'instagram_story', label: 'Instagram Story', icon: 'device-mobile', format: '9:16' },
   { id: 'tiktok', label: 'TikTok', icon: 'musical-note', format: '9:16' },
 ]

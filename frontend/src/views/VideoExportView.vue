@@ -48,14 +48,14 @@ const workflowTourRef = ref(null)
 // Available formats
 const aspectRatios = {
   '9:16': { width: 1080, height: 1920, label: 'Reel/TikTok (9:16)', icon: 'device-mobile' },
-  '1:1': { width: 1080, height: 1080, label: 'Feed Quadrat (1:1)', icon: 'grid' },
+  '1:1': { width: 1080, height: 1080, label: 'Quadrat (1:1)', icon: 'grid' },
   '4:5': { width: 1080, height: 1350, label: 'Feed Portrait (4:5)', icon: 'photo' },
 }
 
 const platformPresets = {
   instagram_reel: { label: 'Instagram Reel', aspect_ratio: '9:16', max_duration: 90, icon: 'camera' },
-  instagram_feed: { label: 'Instagram Feed', aspect_ratio: '1:1', max_duration: 60, icon: 'camera' },
-  instagram_feed_portrait: { label: 'Instagram Feed (Portrait)', aspect_ratio: '4:5', max_duration: 60, icon: 'camera' },
+  instagram_feed: { label: 'Instagram Feed', aspect_ratio: '4:5', max_duration: 60, icon: 'camera' },
+  instagram_feed_square: { label: 'Instagram Feed (Quadrat)', aspect_ratio: '1:1', max_duration: 60, icon: 'camera' },
   tiktok: { label: 'TikTok', aspect_ratio: '9:16', max_duration: 180, icon: 'musical-note' },
 }
 
@@ -132,13 +132,13 @@ async function selectAsset(asset) {
     const srcRatio = resp.data.source_width / resp.data.source_height
     if (srcRatio > 0.9 && srcRatio < 1.1) {
       selectedAspectRatio.value = '1:1'
-      selectedPlatform.value = 'instagram_feed'
+      selectedPlatform.value = 'instagram_feed_square'
     } else if (srcRatio < 0.7) {
       selectedAspectRatio.value = '9:16'
       selectedPlatform.value = 'instagram_reel'
     } else {
       selectedAspectRatio.value = '4:5'
-      selectedPlatform.value = 'instagram_feed_portrait'
+      selectedPlatform.value = 'instagram_feed'
     }
 
     // Load export history for this asset
@@ -288,10 +288,10 @@ watch(selectedAspectRatio, (ratio) => {
   // Auto-select a matching platform
   if (ratio === '9:16' && !['instagram_reel', 'tiktok'].includes(selectedPlatform.value)) {
     selectedPlatform.value = 'instagram_reel'
-  } else if (ratio === '1:1' && selectedPlatform.value !== 'instagram_feed') {
+  } else if (ratio === '4:5' && selectedPlatform.value !== 'instagram_feed') {
     selectedPlatform.value = 'instagram_feed'
-  } else if (ratio === '4:5' && selectedPlatform.value !== 'instagram_feed_portrait') {
-    selectedPlatform.value = 'instagram_feed_portrait'
+  } else if (ratio === '1:1' && selectedPlatform.value !== 'instagram_feed_square') {
+    selectedPlatform.value = 'instagram_feed_square'
   }
 })
 

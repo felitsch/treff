@@ -223,7 +223,7 @@ OPENAPI_TAGS = [
     },
     {
         "name": "Templates",
-        "description": "HTML/CSS templates for post rendering. Includes system defaults and user-created custom templates. Supports categories, platform formats (1:1, 9:16, 4:5), and country theming.",
+        "description": "HTML/CSS templates for post rendering. Includes system defaults and user-created custom templates. Supports categories, platform formats (4:5, 9:16, 1:1), and country theming.",
     },
     {
         "name": "Template Favorites",
@@ -265,7 +265,7 @@ OPENAPI_TAGS = [
     },
     {
         "name": "Video Export",
-        "description": "Export videos in social media aspect ratios (9:16, 1:1, 4:5) with smart cropping, compression, and batch export.",
+        "description": "Export videos in social media aspect ratios (4:5, 9:16, 1:1) with smart cropping, compression, and batch export.",
     },
     {
         "name": "Video Scripts",

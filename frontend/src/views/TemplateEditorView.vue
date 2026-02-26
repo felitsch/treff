@@ -27,7 +27,7 @@ const formats = {
   feed_portrait: { label: '4:5 Portrait', w: 1080, h: 1350 },
   story: { label: '9:16 Story', w: 1080, h: 1920 },
 }
-const selectedFormat = ref('feed_square')
+const selectedFormat = ref('feed_portrait')
 const canvasW = computed(() => formats[selectedFormat.value].w)
 const canvasH = computed(() => formats[selectedFormat.value].h)
 
@@ -463,7 +463,7 @@ async function loadTemplate(id) {
     const t = res.data
     saveName.value = t.name + ' (Kopie)'
     saveCategory.value = t.category
-    selectedFormat.value = t.platform_format || 'feed_square'
+    selectedFormat.value = t.platform_format || 'feed_portrait'
 
     // Try to parse editor JSON from default_colors (contains our editor state)
     // Otherwise generate elements from HTML

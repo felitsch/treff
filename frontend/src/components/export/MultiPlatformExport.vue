@@ -40,12 +40,12 @@ const formats = [
   {
     key: 'instagram_feed',
     label: 'Instagram Feed',
-    aspect: '1:1',
+    aspect: '4:5',
     width: 1080,
-    height: 1080,
+    height: 1350,
     icon: 'camera',
     color: 'pink',
-    previewW: 80,
+    previewW: 64,
     previewH: 80,
   },
   {

@@ -53,7 +53,7 @@ const variants = ref([])
 const selectedVariant = ref(null)
 
 // Export
-const exportSize = ref('1080x1080')
+const exportSize = ref('1080x1350')
 const exporting = ref(false)
 
 // ─── Frame extraction ───────────────────────────────────────
@@ -181,7 +181,7 @@ const positionOptions = [
 ]
 
 const exportSizes = [
-  { value: '1080x1080', label: '1080x1080 (Feed)', icon: 'photo' },
+  { value: '1080x1350', label: '1080x1350 (Feed)', icon: 'photo' },
   { value: '1080x1920', label: '1080x1920 (Reel/Story)', icon: 'device-mobile' },
 ]
 

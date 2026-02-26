@@ -21,7 +21,7 @@ const successMsg = ref('')
 const tourRef = ref(null)
 const workflowTourRef = ref(null)
 
-// Export format: '9:16' for Reels/TikTok, '1:1' for Feed preview
+// Export format: '9:16' for Reels/TikTok, '4:5' for Feed, '1:1' for Square
 const exportFormat = ref('9:16')
 
 // Predefined TREFF brand color schemes
@@ -49,7 +49,8 @@ const fontSizeOptions = [
 // Export format options
 const formatOptions = [
   { id: '9:16', label: '9:16', desc: 'Reels & TikTok', width: 1080, height: 1920, previewW: 270, previewH: 480 },
-  { id: '1:1', label: '1:1', desc: 'Feed Vorschau', width: 1080, height: 1080, previewW: 340, previewH: 340 },
+  { id: '4:5', label: '4:5', desc: 'Feed', width: 1080, height: 1350, previewW: 320, previewH: 400 },
+  { id: '1:1', label: '1:1', desc: 'Quadrat', width: 1080, height: 1080, previewW: 340, previewH: 340 },
 ]
 
 // Dynamic dimensions based on selected format
@@ -275,7 +276,7 @@ function downloadAsPng() {
   const link = document.createElement('a')
   const date = new Date().toISOString().split('T')[0]
   const safeHook = hookText.value.trim().substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_')
-  const formatTag = exportFormat.value === '1:1' ? '1x1' : '9x16'
+  const formatTag = exportFormat.value === '4:5' ? '4x5' : exportFormat.value === '1:1' ? '1x1' : '9x16'
   link.download = `TREFF_thumbnail_${formatTag}_${date}_${safeHook}.png`
   link.href = canvas.toDataURL('image/png')
   link.click()
@@ -320,7 +321,7 @@ function downloadAsPngWithImage() {
       const link = document.createElement('a')
       const date = new Date().toISOString().split('T')[0]
       const safeHook = hookText.value.trim().substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_')
-      const formatTag = exportFormat.value === '1:1' ? '1x1' : '9x16'
+      const formatTag = exportFormat.value === '4:5' ? '4x5' : exportFormat.value === '1:1' ? '1x1' : '9x16'
       link.download = `TREFF_thumbnail_${formatTag}_${date}_${safeHook}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
@@ -440,7 +441,7 @@ async function saveAndExport() {
     const postData = {
       category: 'reel_tiktok_thumbnails',
       country: null,
-      platform: exportFormat.value === '1:1' ? 'instagram_feed' : 'tiktok',
+      platform: (exportFormat.value === '4:5' || exportFormat.value === '1:1') ? 'instagram_feed' : 'tiktok',
       template_id: null,
       title: hookText.value.trim().substring(0, 100),
       status: 'draft',
@@ -459,7 +460,7 @@ async function saveAndExport() {
     // Record export
     await api.post('/api/export/render', {
       post_id: response.data.id,
-      platform: exportFormat.value === '1:1' ? 'instagram_feed' : 'tiktok',
+      platform: (exportFormat.value === '4:5' || exportFormat.value === '1:1') ? 'instagram_feed' : 'tiktok',
       resolution: '1080',
       slide_count: 1,
     })
@@ -502,7 +503,7 @@ loadAssets()
     <div data-tour="tg-header" class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Thumbnail Generator</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Erstelle Video-Thumbnails im 9:16 oder 1:1 Format</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Erstelle Video-Thumbnails im 9:16, 4:5 oder 1:1 Format</p>
       </div>
       <div class="flex items-center gap-2">
         <button
@@ -681,8 +682,8 @@ loadAssets()
                   <div
                     class="flex-shrink-0 rounded border border-gray-300 dark:border-gray-500 bg-gray-200 dark:bg-gray-600"
                     :style="{
-                      width: fmt.id === '9:16' ? '20px' : '28px',
-                      height: fmt.id === '9:16' ? '36px' : '28px',
+                      width: fmt.id === '9:16' ? '20px' : fmt.id === '4:5' ? '24px' : '28px',
+                      height: fmt.id === '9:16' ? '36px' : fmt.id === '4:5' ? '30px' : '28px',
                     }"
                   ></div>
                   <div>

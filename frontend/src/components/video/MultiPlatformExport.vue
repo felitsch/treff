@@ -28,13 +28,13 @@ const formats = [
     height: 1920,
   },
   {
-    key: '1:1',
-    label: 'Feed Quadrat',
-    sublabel: '1080 x 1080',
+    key: '4:5',
+    label: 'Feed Portrait',
+    sublabel: '1080 x 1350',
     icon: 'photo',
     platforms: ['Instagram Feed'],
     width: 1080,
-    height: 1080,
+    height: 1350,
   },
   {
     key: '16:9',

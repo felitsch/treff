@@ -40,7 +40,7 @@ FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 # ---- Aspect ratio definitions ----
 ASPECT_RATIOS = {
     "9:16": {"width": 1080, "height": 1920, "label": "Reel/TikTok (9:16)", "ratio": 9 / 16},
-    "1:1": {"width": 1080, "height": 1080, "label": "Feed Quadrat (1:1)", "ratio": 1.0},
+    "1:1": {"width": 1080, "height": 1080, "label": "Quadrat (1:1)", "ratio": 1.0},
     "4:5": {"width": 1080, "height": 1350, "label": "Feed Portrait (4:5)", "ratio": 4 / 5},
 }
 
@@ -56,15 +56,15 @@ PLATFORM_PRESETS = {
     },
     "instagram_feed": {
         "label": "Instagram Feed",
-        "aspect_ratio": "1:1",
+        "aspect_ratio": "4:5",
         "max_duration": 60,
         "max_file_size_mb": 250,
         "recommended_quality": 80,
         "codec": "h264",
     },
-    "instagram_feed_portrait": {
-        "label": "Instagram Feed (Portrait)",
-        "aspect_ratio": "4:5",
+    "instagram_feed_square": {
+        "label": "Instagram Feed (Quadrat)",
+        "aspect_ratio": "1:1",
         "max_duration": 60,
         "max_file_size_mb": 250,
         "recommended_quality": 80,
@@ -86,7 +86,7 @@ class VideoExportRequest(BaseModel):
     """Request to export a video in a specific format."""
     asset_id: int
     aspect_ratio: str = "9:16"  # 9:16, 1:1, 4:5
-    platform: str = "instagram_reel"  # instagram_reel, instagram_feed, instagram_feed_portrait, tiktok
+    platform: str = "instagram_reel"  # instagram_reel, instagram_feed, instagram_feed_square, tiktok
     quality: int = Field(default=75, ge=1, le=100)  # 1-100
     focus_x: float = Field(default=50.0, ge=0, le=100)  # Focus point X percentage
     focus_y: float = Field(default=50.0, ge=0, le=100)  # Focus point Y percentage

@@ -55,8 +55,8 @@ const categories = {
 }
 
 const platformLabels = {
-  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
   feed_portrait: { label: '4:5 Portrait', icon: 'device-mobile', dim: '1080x1350' },
+  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
   story: { label: '9:16 Story', icon: 'device-mobile', dim: '1080x1920' },
   tiktok: { label: '9:16 TikTok', icon: 'musical-note', dim: '1080x1920' },
 }

@@ -35,7 +35,8 @@ TRANSITION_TYPES = ["cut", "fade", "crossdissolve"]
 # Output format presets
 OUTPUT_FORMATS = {
     "9:16": {"width": 1080, "height": 1920, "label": "Reel/TikTok (9:16)"},
-    "1:1": {"width": 1080, "height": 1080, "label": "Feed (1:1)"},
+    "4:5": {"width": 1080, "height": 1350, "label": "Feed Portrait (4:5)"},
+    "1:1": {"width": 1080, "height": 1080, "label": "Quadrat (1:1)"},
     "16:9": {"width": 1920, "height": 1080, "label": "Landscape (16:9)"},
 }
 

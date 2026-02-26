@@ -9,7 +9,7 @@ export const tooltipTexts = {
   createPost: {
     stepCategory: 'Wähle die Art des Posts. Jede Kategorie hat passende Templates und KI-Vorschläge.',
     stepTemplate: 'Templates definieren das visuelle Layout deines Posts. Wähle eines, das zu deiner Kategorie passt.',
-    stepPlatform: 'Verschiedene Plattformen haben unterschiedliche Formate: Instagram Feed (1:1/4:5), Story (9:16), TikTok (9:16). Du kannst mehrere gleichzeitig wählen.',
+    stepPlatform: 'Verschiedene Plattformen haben unterschiedliche Formate: Instagram Feed (4:5), Story (9:16), TikTok (9:16). Du kannst mehrere gleichzeitig wählen.',
     stepTopic: 'Beschreibe kurz, worum es im Post geht. Die KI nutzt diese Infos für die Textgenerierung.',
     stepKeyPoints: 'Stichpunkte helfen der KI, die wichtigsten Informationen in den Text einzubauen.',
     stepCountry: 'Wähle das Zielland, damit KI-Texte und Hashtags länderspezifisch angepasst werden.',
@@ -31,7 +31,7 @@ export const tooltipTexts = {
     interactiveElements: 'Füge interaktive Story-Elemente wie Umfragen, Quiz oder Slider hinzu, um das Engagement zu steigern.',
     humorFormat: 'Humor-Formate machen Posts einprägsamer. Wähle ein Format, das zum Thema passt.',
     aiImagePrompt: 'Beschreibe das gewünschte Bild auf Englisch. Je detaillierter, desto besser das Ergebnis.',
-    aiImageAspectRatio: 'Das Seitenverhältnis sollte zur Plattform passen: 1:1 für Feed, 9:16 für Stories/Reels.',
+    aiImageAspectRatio: 'Das Seitenverhältnis sollte zur Plattform passen: 4:5 für Feed, 9:16 für Stories/Reels.',
     exportQuality: 'Höhere Qualität erzeugt größere Dateien. "Hoch" für Print, "Standard" reicht für Social Media.',
     studentSelector: 'Verknüpfe einen Studenten mit dem Post. Die KI übernimmt dann dessen Persönlichkeits-Preset für die Textgenerierung.',
     storyArcSelector: 'Verknüpfe den Post mit einem Story-Arc, um ihn als Episode in eine Serie einzubetten.',
@@ -93,8 +93,8 @@ export const tooltipTexts = {
 
   // ─── Video Tools ──────────────────────────────────────────────────
   video: {
-    videoExport: 'Exportiere Videos in verschiedenen Formaten: 9:16 (Reel/TikTok), 1:1 (Feed), 4:5 (Portrait).',
-    aspectRatio: 'Das Seitenverhältnis bestimmt den Zuschnitt: 9:16 für Hochformat (Stories/Reels), 1:1 für Quadrat (Feed), 4:5 für Portrait.',
+    videoExport: 'Exportiere Videos in verschiedenen Formaten: 9:16 (Reel/TikTok), 4:5 (Feed), 1:1 (Quadrat).',
+    aspectRatio: 'Das Seitenverhältnis bestimmt den Zuschnitt: 9:16 für Hochformat (Stories/Reels), 4:5 für Feed, 1:1 für Quadrat.',
     focusPoint: 'Bestimmt den Mittelpunkt des Zuschnitts. Verschiebe den Regler, um den Bildausschnitt anzupassen.',
     qualitySlider: 'Höhere Qualität (> 80%) für wichtige Posts, niedrigere für Entwürfe. Standard reicht für Social Media.',
     platformPreset: 'Plattform-Presets setzen automatisch das richtige Format und die maximale Videolänge.',

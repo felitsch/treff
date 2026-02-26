@@ -201,7 +201,7 @@ async def multi_platform_export(
     Body: {
         "post_id": int,
         "formats": [
-            {"platform": "instagram_feed", "width": 1080, "height": 1080, "label": "Instagram Feed (1:1)"},
+            {"platform": "instagram_feed", "width": 1080, "height": 1350, "label": "Instagram Feed (4:5)"},
             {"platform": "instagram_story", "width": 1080, "height": 1920, "label": "Instagram Story (9:16)"},
             ...
         ],

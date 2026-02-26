@@ -42,6 +42,7 @@ const resizeHandle = ref(null)
 // Aspect ratio options
 const ratioOptions = [
   { value: 'free', label: 'Frei', ratio: null },
+  { value: '4:5', label: '4:5', ratio: 4 / 5 },
   { value: '1:1', label: '1:1', ratio: 1 },
   { value: '4:3', label: '4:3', ratio: 4 / 3 },
   { value: '3:4', label: '3:4', ratio: 3 / 4 },

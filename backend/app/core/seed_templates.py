@@ -40,7 +40,7 @@ COUNTRY_THEMES = {
 
 def _make_story_teaser_html(variant: str) -> str:
     """Generate HTML for story-teaser feed templates with Story-Frame mockup and arrow icons."""
-    d = {"w": 1080, "h": 1080}  # Feed square for teaser posts
+    d = {"w": 1080, "h": 1350}  # Feed portrait (4:5) for teaser posts
 
     # Different headlines based on variant
     variant_labels = {
@@ -426,7 +426,7 @@ def _make_html(category: str, platform: str, variant: str = "default") -> str:
         "story": {"w": 1080, "h": 1920},
         "tiktok": {"w": 1080, "h": 1920},
     }
-    d = dims.get(platform, dims["feed_square"])
+    d = dims.get(platform, dims["feed_portrait"])
 
     return f"""<div class="template-wrapper" style="width:{d['w']}px;height:{d['h']}px;position:relative;overflow:hidden;">
   <div class="template-bg" style="position:absolute;inset:0;background:var(--bg-color, {TREFF_DARK});"></div>
@@ -473,7 +473,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Laender-Spotlight Feed",
         "category": "laender_spotlight",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "cta_text", "image"]),
         "is_default": True,
@@ -492,7 +492,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Erfahrungsbericht Quote",
         "category": "erfahrungsberichte",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["quote_text", "quote_author", "headline", "image"]),
         "is_default": True,
@@ -511,7 +511,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Infografik Vergleich",
         "category": "infografiken",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "bullet_points"]),
         "is_default": True,
@@ -530,7 +530,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Fristen & CTA Bold",
         "category": "fristen_cta",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["headline", "subheadline", "cta_text"]),
         "is_default": True,
@@ -549,7 +549,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Tipps & Tricks Carousel",
         "category": "tipps_tricks",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "bullet_points", "cta_text"]),
         "is_default": True,
@@ -568,7 +568,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "FAQ Carousel",
         "category": "faq",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "cta_text"]),
         "is_default": True,
@@ -587,7 +587,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Foto-Post mit Overlay",
         "category": "foto_posts",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["headline", "image", "cta_text"]),
         "is_default": True,
@@ -644,7 +644,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Story-Teaser: Neue Serie startet!",
         "category": "story_teaser",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
         "is_default": True,
@@ -654,7 +654,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Story-Teaser: Fortsetzung in Stories!",
         "category": "story_teaser",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
         "is_default": True,
@@ -664,7 +664,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Story-Teaser: Finale Episode heute!",
         "category": "story_teaser",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["arc_title", "episode_preview", "student_name", "student_photo", "cta_text"]),
         "is_default": True,
@@ -677,7 +677,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "USA Highschool Spotlight",
         "category": "laender_spotlight",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "cta_text", "image"]),
         "is_default": True,
@@ -687,7 +687,7 @@ DEFAULT_TEMPLATES = [
     {
         "name": "Kanada Abenteuer",
         "category": "laender_spotlight",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps(["headline", "subheadline", "body_text", "cta_text", "image"]),
         "is_default": True,

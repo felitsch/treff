@@ -139,7 +139,7 @@ const previewSrc = computed(() => {
     story: { w: 1080, h: 1920 },
     tiktok: { w: 1080, h: 1920 },
   }
-  const d = dims[t.platform_format] || dims.feed_square
+  const d = dims[t.platform_format] || dims.feed_portrait
 
   return `<!DOCTYPE html>
 <html>
@@ -252,7 +252,7 @@ const previewDims = computed(() => {
     story: { w: 1080, h: 1920 },
     tiktok: { w: 1080, h: 1920 },
   }
-  return dims[props.template.platform_format] || dims.feed_square
+  return dims[props.template.platform_format] || dims.feed_portrait
 })
 
 const previewScale = computed(() => {

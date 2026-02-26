@@ -488,7 +488,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Erfahrungsbericht",
         "category": "erfahrungsberichte",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps([
             "image", "quote_text", "quote_author", "quote_author_initial", "country_label"
@@ -501,7 +501,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Countdown",
         "category": "fristen_cta",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps([
             "headline", "countdown_number", "subheadline", "cta_text"
@@ -533,7 +533,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Motivations-Quote",
         "category": "foto_posts",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps(["quote_text"]),
         "is_default": True,
@@ -544,7 +544,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Vorher/Nachher",
         "category": "infografiken",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps([
             "headline", "label_before", "icon_before", "text_before",
@@ -558,7 +558,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Event-Ankuendigung",
         "category": "fristen_cta",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps([
             "headline", "body_text", "event_date", "event_location",
@@ -603,7 +603,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Bewerbungs-CTA",
         "category": "fristen_cta",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 1,
         "placeholder_fields": json.dumps([
             "headline", "subheadline", "body_text", "deadline",
@@ -617,7 +617,7 @@ TREFF_STANDARD_TEMPLATES = [
     {
         "name": "TREFF Standard: Carousel-Slide",
         "category": "infografiken",
-        "platform_format": "feed_square",
+        "platform_format": "feed_portrait",
         "slide_count": 5,
         "placeholder_fields": json.dumps([
             "headline", "body_text", "slide_number", "total_slides",

@@ -32,7 +32,8 @@ const transitionTypes = [
 const outputFormat = ref('9:16')
 const outputFormats = {
   '9:16': { width: 1080, height: 1920, label: 'Reel/TikTok (9:16)' },
-  '1:1': { width: 1080, height: 1080, label: 'Feed (1:1)' },
+  '4:5': { width: 1080, height: 1350, label: 'Feed (4:5)' },
+  '1:1': { width: 1080, height: 1080, label: 'Quadrat (1:1)' },
   '16:9': { width: 1920, height: 1080, label: 'Landscape (16:9)' },
 }
 

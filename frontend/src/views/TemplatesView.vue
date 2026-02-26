@@ -45,7 +45,7 @@ const createFieldErrors = ref({
 const newTemplate = ref({
   name: '',
   category: '',
-  platform_format: 'feed_square',
+  platform_format: 'feed_portrait',
   slide_count: 1,
   html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
   css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #3B7AB1 100%);\n  min-height: 100%;\n}',
@@ -420,7 +420,7 @@ function getPreviewDimensions(platformFormat) {
     story: { width: 1080, height: 1920 },
     tiktok: { width: 1080, height: 1920 },
   }
-  return dims[platformFormat] || dims.feed_square
+  return dims[platformFormat] || dims.feed_portrait
 }
 
 function getPreviewScale(platformFormat) {
@@ -446,8 +446,8 @@ const categories = {
 
 // Platform format labels
 const platformLabels = {
-  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
   feed_portrait: { label: '4:5 Portrait', icon: 'device-mobile', dim: '1080x1350' },
+  feed_square: { label: '1:1 Feed', icon: 'square-2-stack', dim: '1080x1080' },
   story: { label: '9:16 Story', icon: 'device-mobile', dim: '1080x1920' },
   tiktok: { label: '9:16 TikTok', icon: 'musical-note', dim: '1080x1920' },
 }
@@ -615,7 +615,7 @@ function openCreateModal() {
   newTemplate.value = {
     name: '',
     category: '',
-    platform_format: 'feed_square',
+    platform_format: 'feed_portrait',
     slide_count: 1,
     html_content: '<div class="template">\n  <h1>{{title}}</h1>\n  <p>{{content}}</p>\n</div>',
     css_content: '.template {\n  padding: 40px;\n  font-family: Inter, sans-serif;\n  color: #FFFFFF;\n  background: linear-gradient(135deg, #1A1A2E 0%, #3B7AB1 100%);\n  min-height: 100%;\n}',

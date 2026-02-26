@@ -500,7 +500,7 @@ onMounted(() => {
             <label class="block text-sm font-medium mb-1">Ausgabeformat</label>
             <div class="flex gap-2">
               <button
-                v-for="fmt in ['9:16', '1:1', '16:9']"
+                v-for="fmt in ['9:16', '4:5', '1:1', '16:9']"
                 :key="fmt"
                 @click="outputFormat = fmt; fetchPreview()"
                 :class="[
@@ -510,7 +510,7 @@ onMounted(() => {
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                 ]"
               >
-                {{ fmt === '9:16' ? 'Reel' : fmt === '1:1' ? 'Feed' : 'Quer' }}
+                {{ fmt === '9:16' ? 'Reel' : fmt === '4:5' ? 'Feed' : fmt === '1:1' ? 'Quadrat' : 'Quer' }}
               </button>
             </div>
           </div>

@@ -72,20 +72,20 @@ const styleOptions = [
 
 // ── Aspect ratio options ────────────────────────────────────────────────
 const aspectRatioOptions = [
-  { value: '1:1', label: '1:1', sublabel: 'Feed', icon: 'photo' },
-  { value: '4:5', label: '4:5', sublabel: 'Portrait', icon: 'device-mobile' },
+  { value: '4:5', label: '4:5', sublabel: 'Feed', icon: 'photo' },
+  { value: '1:1', label: '1:1', sublabel: 'Quadrat', icon: 'photo' },
   { value: '9:16', label: '9:16', sublabel: 'Story', icon: 'device-mobile' },
 ]
 
 // ── Platform to default aspect ratio mapping ────────────────────────────
 const platformAspectRatioMap = {
-  instagram_feed: '1:1',
+  instagram_feed: '4:5',
   instagram_story: '9:16',
   tiktok: '9:16',
 }
 
 const platformDefaultAspectRatio = computed(() =>
-  platformAspectRatioMap[props.platform] || '1:1'
+  platformAspectRatioMap[props.platform] || '4:5'
 )
 
 const effectiveAspectRatio = computed(() =>

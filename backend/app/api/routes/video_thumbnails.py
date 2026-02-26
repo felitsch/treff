@@ -79,7 +79,7 @@ class VariantResult(BaseModel):
 
 class ExportThumbnailRequest(BaseModel):
     source_filename: str
-    size: str = "1080x1080"  # 1080x1080, 1080x1920
+    size: str = "1080x1350"  # 1080x1350, 1080x1080, 1080x1920
 
 
 # ─── Endpoints ────────────────────────────────────────────────

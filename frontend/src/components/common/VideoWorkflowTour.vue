@@ -34,7 +34,7 @@ const steps = [
     icon: 'film',
     title: '1. Thumbnail-Generator',
     description:
-      'Erstelle klickstarke Vorschaubilder für deine Videos und Reels. Wähle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Wörter) und exportiere in verschiedenen Größen (YouTube 1280x720, Instagram 1080x1080, Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
+      'Erstelle klickstarke Vorschaubilder für deine Videos und Reels. Wähle einen Hintergrund, schreibe einen Hook-Text (max 5-7 Wörter) und exportiere in verschiedenen Größen (YouTube 1280x720, Instagram 1080x1350 (4:5 Feed), Reels 1080x1920). Gute Thumbnails steigern die Klickrate um bis zu 150%!',
     page: '/video/thumbnails',
     navLabel: 'Thumbnails öffnen',
   },
@@ -50,7 +50,7 @@ const steps = [
     icon: 'scissors',
     title: '3. Video-Composer (Schnitt)',
     description:
-      'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kürze sie auf die optimale Länge und füge Übergänge (Crossfade, Cut) hinzu. Wähle das Ausgabeformat: 9:16 für Reels/TikTok, 1:1 für Instagram Feed, 16:9 für YouTube. Ideal sind 15-60 Sekunden für Social Media.',
+      'Kombiniere mehrere Clips zu einem fertigen Video. Ziehe Clips per Drag & Drop in die Timeline, kürze sie auf die optimale Länge und füge Übergänge (Crossfade, Cut) hinzu. Wähle das Ausgabeformat: 9:16 für Reels/TikTok, 4:5 für Instagram Feed, 16:9 für YouTube. Ideal sind 15-60 Sekunden für Social Media.',
     page: '/video/composer',
     navLabel: 'Composer öffnen',
   },
@@ -66,7 +66,7 @@ const steps = [
     icon: 'export',
     title: '5. Video-Export',
     description:
-      'Optimiere deine Videos für verschiedene Plattformen mit dem richtigen Seitenverhältnis, Fokuspunkt und Qualitätseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 für Reels UND 1:1 für den Feed. Alle Varianten als ZIP herunterladen.',
+      'Optimiere deine Videos für verschiedene Plattformen mit dem richtigen Seitenverhältnis, Fokuspunkt und Qualitätseinstellungen. Nutze Batch-Export, um ein Video gleichzeitig in mehreren Formaten zu exportieren — z.B. 9:16 für Reels UND 4:5 für den Feed. Alle Varianten als ZIP herunterladen.',
     page: '/video/export',
     navLabel: 'Export öffnen',
   },

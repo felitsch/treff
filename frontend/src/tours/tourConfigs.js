@@ -137,7 +137,7 @@ const tourConfigs = {
         target: '[data-testid="create-card-red"]',
         title: 'Video Create: Plattform-gerechte Videos (5 Min)',
         description:
-          'Die unified Video-Pipeline: Lade ein Video hoch, füge automatisch TREFF Intro/Outro-Branding hinzu, wähle Lower Thirds und Musik aus, und exportiere in allen Formaten (9:16 für Reels/TikTok, 1:1 für Feed). Ein Schritt für alles!',
+          'Die unified Video-Pipeline: Lade ein Video hoch, füge automatisch TREFF Intro/Outro-Branding hinzu, wähle Lower Thirds und Musik aus, und exportiere in allen Formaten (9:16 für Reels/TikTok, 4:5 für Feed). Ein Schritt für alles!',
         position: 'right',
       },
       {
@@ -536,7 +536,7 @@ const tourConfigs = {
         target: '[data-tour="assets-grid"]',
         title: 'Crop-Tool & Video-Trimmer',
         description:
-          'Bewege die Maus über ein Asset, um die Bearbeitungs-Buttons zu sehen: Bei Bildern erscheint ein Crop-Button zum Zuschneiden (z.B. auf Instagram-Formate 1:1, 4:5, 9:16). Bei Videos gibt es einen Trim-Button zum Kürzen und einen Audio-Mix-Button. So bereitest du Medien direkt hier für Social Media vor — ohne externe Tools.',
+          'Bewege die Maus über ein Asset, um die Bearbeitungs-Buttons zu sehen: Bei Bildern erscheint ein Crop-Button zum Zuschneiden (z.B. auf Instagram-Formate 4:5, 1:1, 9:16). Bei Videos gibt es einen Trim-Button zum Kürzen und einen Audio-Mix-Button. So bereitest du Medien direkt hier für Social Media vor — ohne externe Tools.',
         position: 'top',
       },
       {
@@ -826,7 +826,7 @@ const tourConfigs = {
         target: '[data-tour="tg-export"]',
         title: 'Export-Optionen',
         description:
-          'Exportiere dein Thumbnail als PNG oder JPG. Wähle die passende Größe: 1280x720 (YouTube/Standard), 1080x1080 (Instagram Feed), oder 1080x1920 (Stories/Reels). Du kannst auch mehrere Größen gleichzeitig exportieren für verschiedene Plattformen.',
+          'Exportiere dein Thumbnail als PNG oder JPG. Wähle die passende Größe: 1280x720 (YouTube/Standard), 1080x1350 (Instagram Feed 4:5), oder 1080x1920 (Stories/Reels). Du kannst auch mehrere Größen gleichzeitig exportieren für verschiedene Plattformen.',
         position: 'top',
       },
       {
@@ -915,7 +915,7 @@ const tourConfigs = {
         target: '[data-tour="vc-format"]',
         title: 'Ausgabeformat wählen',
         description:
-          'Wähle das Seitenverhältnis: 9:16 (Reels/TikTok), 1:1 (Feed), 4:5 (Feed optimal), oder 16:9 (YouTube). Das Format bestimmt, wie deine Clips zugeschnitten werden.',
+          'Wähle das Seitenverhältnis: 9:16 (Reels/TikTok), 4:5 (Feed), 1:1 (Quadrat), oder 16:9 (YouTube). Das Format bestimmt, wie deine Clips zugeschnitten werden.',
         position: 'bottom',
       },
       {
@@ -1011,7 +1011,7 @@ const tourConfigs = {
         target: '[data-tour="ve-aspect-ratio"]',
         title: 'Seitenverhältnis',
         description:
-          'Wähle das Seitenverhältnis: 9:16 (Reels, TikTok, Stories), 1:1 (Feed quadratisch), 4:5 (Feed optimal), oder 16:9 (YouTube). Das Video wird entsprechend zugeschnitten.',
+          'Wähle das Seitenverhältnis: 9:16 (Reels, TikTok, Stories), 4:5 (Feed), 1:1 (Quadrat), oder 16:9 (YouTube). Das Video wird entsprechend zugeschnitten.',
         position: 'bottom',
       },
       {
@@ -1039,7 +1039,7 @@ const tourConfigs = {
         target: '[data-tour="ve-batch"]',
         title: 'Batch-Export',
         description:
-          'Exportiere ein Video gleichzeitig in mehreren Formaten — z.B. 9:16 für Reels UND 1:1 für den Feed. Alle Varianten werden als ZIP heruntergeladen.',
+          'Exportiere ein Video gleichzeitig in mehreren Formaten — z.B. 9:16 für Reels UND 4:5 für den Feed. Alle Varianten werden als ZIP heruntergeladen.',
         position: 'bottom',
       },
       {

@@ -74,8 +74,8 @@ const stylePresets = [
 
 // Aspect ratio presets for outpainting
 const ratioPresets = [
-  { id: '1:1', label: '1:1', desc: 'Quadrat (Instagram Feed)' },
-  { id: '4:5', label: '4:5', desc: 'Hochformat (Instagram Feed)' },
+  { id: '4:5', label: '4:5', desc: 'Instagram Feed' },
+  { id: '1:1', label: '1:1', desc: 'Quadrat' },
   { id: '9:16', label: '9:16', desc: 'Story / Reel / TikTok' },
   { id: '16:9', label: '16:9', desc: 'Querformat (YouTube)' },
 ]

@@ -544,19 +544,19 @@ const platformAspectRatioMap = {
 }
 
 const aspectRatioOptions = [
+  { value: '4:5', label: '4:5 (Instagram Feed)' },
   { value: '1:1', label: '1:1 (Quadrat)' },
   { value: '9:16', label: '9:16 (Hochformat)' },
   { value: '16:9', label: '16:9 (Querformat)' },
-  { value: '4:5', label: '4:5 (Instagram)' },
 ]
 
 const platformDefaultAspectRatio = computed(() =>
-  platformAspectRatioMap[selectedPlatform.value] || '1:1'
+  platformAspectRatioMap[selectedPlatform.value] || '4:5'
 )
 
 const platformAspectRatioLabel = computed(() => {
   const ratio = platformAspectRatioMap[selectedPlatform.value]
-  if (!ratio) return '1:1'
+  if (!ratio) return '4:5'
   const option = aspectRatioOptions.find(o => o.value === ratio)
   return option ? option.label : ratio
 })
@@ -3750,7 +3750,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
             :accepted-types="['image/jpeg', 'image/png', 'image/webp']"
             category="background"
             :enable-crop="true"
-            :crop-aspect-ratio="selectedPlatform === 'instagram_feed' ? '1:1' : selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok' ? '9:16' : ''"
+            :crop-aspect-ratio="selectedPlatform === 'instagram_feed' ? '4:5' : selectedPlatform === 'instagram_story' || selectedPlatform === 'tiktok' ? '9:16' : ''"
             :carousel="slides.length > 1"
             @upload="onImageUploaderUpload"
             @remove="onImageUploaderRemove"

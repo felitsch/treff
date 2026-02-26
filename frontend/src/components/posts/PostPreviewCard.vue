@@ -5,7 +5,7 @@
  * Realistic Instagram-style feed post mockup showing how a post will appear
  * on Instagram. Includes:
  *  - Profile header (TREFF avatar + @treff_sprachreisen)
- *  - Image area (1:1 or 4:5 aspect ratio)
+ *  - Image area (4:5 aspect ratio for Feed)
  *  - Like/Comment/Share/Save action icons
  *  - Caption preview (truncated)
  *  - Hashtag display
@@ -169,8 +169,8 @@ function goToSlide(idx) {
       <div class="text-gray-400" :class="sizeClasses.iconSize">&#8943;</div>
     </div>
 
-    <!-- Image area (1:1 aspect ratio for Feed) -->
-    <div class="relative aspect-square bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e] overflow-hidden">
+    <!-- Image area (4:5 aspect ratio for Feed) -->
+    <div class="relative aspect-[4/5] bg-gradient-to-br from-[#1A1A2E] to-[#2a2a4e] overflow-hidden">
       <!-- Background image -->
       <img
         v-if="imageUrl"

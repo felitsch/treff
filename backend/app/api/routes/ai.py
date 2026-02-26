@@ -232,7 +232,7 @@ async def _generate_with_gemini(
 
     # Validate aspect_ratio
     if aspect_ratio not in VALID_ASPECT_RATIOS:
-        aspect_ratio = "1:1"
+        aspect_ratio = "4:5"
 
     # Default image size
     if not image_size:
@@ -1052,7 +1052,7 @@ def _optimize_caption_local(
 
 # Platform-to-aspect-ratio mapping for automatic ratio selection
 PLATFORM_ASPECT_RATIOS = {
-    "instagram_feed": "1:1",
+    "instagram_feed": "4:5",
     "instagram_story": "9:16",
     "instagram_stories": "9:16",
     "instagram_reels": "9:16",
@@ -1062,7 +1062,7 @@ PLATFORM_ASPECT_RATIOS = {
 
 # Platform-to-dimension mapping for placeholder image generation
 PLATFORM_DIMENSIONS = {
-    "instagram_feed": (1024, 1024),
+    "instagram_feed": (1024, 1280),
     "instagram_story": (1024, 1820),
     "instagram_stories": (1024, 1820),
     "instagram_reels": (1024, 1820),
@@ -1082,7 +1082,7 @@ async def generate_image(
     Expects:
     - prompt (str): Image description / prompt
     - platform (str, optional): Target platform for automatic aspect ratio.
-      Supported: instagram_feed (1:1), instagram_story (9:16), instagram_stories (9:16),
+      Supported: instagram_feed (4:5), instagram_story (9:16), instagram_stories (9:16),
       instagram_reels (9:16), tiktok (9:16), youtube (16:9).
     - aspect_ratio (str, optional): Manual aspect ratio override. Takes precedence
       over platform if both are provided. (e.g. '1:1', '9:16', '16:9', '3:4', '4:3')
@@ -1211,7 +1211,7 @@ async def generate_image(
             "image_url": f"/api/uploads/assets/{unique_filename}",
             "asset": asset_data,
             "source": source,
-            "aspect_ratio": aspect_ratio or "1:1",
+            "aspect_ratio": aspect_ratio or "4:5",
             "platform": platform,
             "style": style,
             "message": "Bild erfolgreich generiert!" if source == "gemini" else "Bild generiert (lokale Vorschau - fuer KI-Bilder Gemini API-Key in Einstellungen hinterlegen)",

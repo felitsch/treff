@@ -319,7 +319,7 @@ onMounted(() => {
         <div
           class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
           :class="{
-            'aspect-square': effectivePreviewPlatform === 'instagram_feed',
+            'aspect-[4/5]': effectivePreviewPlatform === 'instagram_feed',
             'aspect-[9/16]': effectivePreviewPlatform === 'instagram_story' || effectivePreviewPlatform === 'tiktok',
           }"
           :style="{

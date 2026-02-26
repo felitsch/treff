@@ -1076,7 +1076,7 @@ const { showLeaveDialog, confirmLeave, cancelLeave, markClean } = useUnsavedChan
         <div
           class="rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700 relative"
           :class="{
-            'aspect-square': post.platform === 'instagram_feed',
+            'aspect-[4/5]': post.platform === 'instagram_feed',
             'aspect-[9/16]': post.platform === 'instagram_story' || post.platform === 'tiktok',
           }"
           :style="{

@@ -744,7 +744,7 @@ async def create_multi_platform_posts(
         "instagram_feed": {
             "caption_style": "Laengere Captions (bis 2200 Zeichen), Storytelling, Hashtags am Ende, ausfuehrlicher CTA",
             "max_caption_length": 2200,
-            "format_note": "Quadratisch (1:1) oder Hochformat (4:5)",
+            "format_note": "Hochformat (4:5, Standard) oder Quadratisch (1:1)",
         },
         "instagram_story": {
             "caption_style": "Kurz und knackig (max 100 Zeichen), CTA mit Swipe-Up/Link, 1-2 Emojis, Frage oder Poll",
